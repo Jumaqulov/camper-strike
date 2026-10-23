@@ -1216,11 +1216,19 @@ export class Room {
     this.winner = '';
     this.scores = { red: 0, blue: 0 };
     this.matchEndsAt = this.now() + this.opts.timeLimit * 60;
+    // Loot rejimida (FFA/TDM + lootPreview) yangi raund uchun konteynerlarni qayta to'ldiramiz,
+    // aks holda o'yinchilar qurolsiz qayta tug'iladi va konteynerlar bo'sh qoladi.
+    if (this.lootEnabled) {
+      this.roundId++;
+      const roundLootSeed = ((this.secretLootSeed + this.roundId * 104729) >>> 0) || 1;
+      this.loot.resetForRound(this.roundId, roundLootSeed);
+    }
     for (const p of this.players.values()) {
       p.kills = 0;
       p.deaths = 0;
       if (p.ready) this.spawn(p);
     }
+    if (this.lootEnabled) this.io.to(this.channel).emit('loot:snapshot', this.loot.getPublicLootSnapshot());
     this.rosterDirty = true;
     this.sendMatch();
     this.systemChat('Yangi raund boshlandi!');
@@ -1244,7 +1252,9 @@ export class Room {
     if (this.destroyed) return;
     const t = this.now();
     const rawDt = t - this.lastTick;
-    const dt = rawDt < 0.005 ? 1 / TICK_RATE : Math.min(0.1, rawDt);
+    // Haqiqiy o'tgan vaqtni ishlatamiz: kechikishdan keyingi yetib olish tick'lari (~4 ms oraliq)
+    // har biriga 1/30 s berilsa, vaqt ikki marta sanalardi (botlar/granatalar tezlashardi).
+    const dt = rawDt <= 0 ? 1 / TICK_RATE : Math.min(0.1, rawDt);
     this.lastTick = t;
     this.serverTick++;
 

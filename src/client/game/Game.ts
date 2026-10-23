@@ -1765,7 +1765,7 @@ export class Game {
     this.updateLootInteraction();
     this.updateRemotes(dt, t);
     this.fx.update(dt);
-    this.world.stage04a?.containers.updateDampedAnimations(dt);
+    // Konteyner qopqoq animatsiyalari lootWorld.update() ichida yangilanadi (bir kadrda bir marta).
     this.updateCamera(dt, t);
     if (import.meta.env.DEV && this.collisionDebug?.isEnabled()) {
       const snap = this.lastAuthoritativeSnap;
@@ -1899,8 +1899,10 @@ export class Game {
 
     // Stage 06: [0] Qurolni g'ilofga solish (qo'lni bo'shatish)
     if (inp.justPressed('Digit0') && !notPlaying && (this.lootPreview || this.inventorySnap?.lootPreview)) {
+      const holstered = me.weapon;
       if (me.switchTo(null, t)) {
-        this.prevWeapon = me.weapon;
+        // switchTo(null) dan keyin me.weapon doim null — Q ishlashi uchun avvalgi qurolni saqlaymiz
+        if (holstered) this.prevWeapon = holstered;
         this.vm.setWeapon(null);
         this.myModel.setWeapon(null);
         void this.requestEquipWeapon(null);
@@ -1931,7 +1933,7 @@ export class Game {
       } else {
         const prev = me.weapon;
         if (me.switchTo(w, t)) {
-          this.prevWeapon = prev;
+          if (prev) this.prevWeapon = prev;
           this.vm.setWeapon(w);
           this.myModel.setWeapon(w);
           this.vm.startSwitch(WEAPONS[w].switchTime);
