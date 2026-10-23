@@ -1,0 +1,1531 @@
+{
+  "timestamp": "2026-10-22T14:48:51.984Z",
+  "durationMs": 14,
+  "assetPack": "GRASS-ASSET-01",
+  "totalModels": 17,
+  "passedModels": 17,
+  "failedModels": 0,
+  "allPassed": true,
+  "aggregates": {
+    "totalTriangles": 1748,
+    "totalVertices": 5244,
+    "totalDuplicatePairs": 874,
+    "totalBytes": 211640,
+    "totalKilobytes": 206.68,
+    "categories": {
+      "grass": 12,
+      "flower": 3,
+      "fern": 2
+    }
+  },
+  "specRulesChecked": [
+    "Binary GLB container integrity (header magic 0x46546c67, version 2, valid lengths)",
+    "glTF scene cleanliness (exactly 1 mesh, 1 primitive, 0 cameras, 0 lights, 0 animations, 0 skins)",
+    "Required attributes present: POSITION, NORMAL, COLOR_0 (all VEC3 Float32)",
+    "Single standard material: vegetation (FrontSide, doubleSided: false, roughness: 0.92, metalness: 0)",
+    "Numerical correctness: 0 NaN / Infinity vertices, 0 non-unit normals, 0 downward normals (ny >= 0)",
+    "Vertex colors valid: all RGB components in [0.0, 1.0]",
+    "Geometrical cleanliness: 0 zero-area degenerate triangles, 0 collapsed edges",
+    "Two-sided geometry winding: 100% pairwise duplicate inverted triangles for FrontSide two-sided rendering",
+    "Manifest conformance: exact triangle counts, bounding boxes, dimensions, and height specs",
+    "Origin root anchor: grounding contact at y ~ 0 with ~1cm ground penetration ([-0.015m, -0.008m])"
+  ],
+  "results": [
+    {
+      "file": "fern_small_01.glb",
+      "modelName": "fern_small_01",
+      "fileBytes": 16456,
+      "valid": true,
+      "checks": {
+        "container": true,
+        "noCamerasOrLights": true,
+        "attributesPresent": true,
+        "noNaNOrInf": true,
+        "unitNormals": true,
+        "upwardNormals": true,
+        "colorsInRange": true,
+        "noDegenerateTriangles": true,
+        "duplicateTriangleWinding": true,
+        "accessorBoundsMatch": true,
+        "manifestTrianglesMatch": true,
+        "manifestBytesMatch": true,
+        "manifestBBoxMatch": true,
+        "manifestDimensionsMatch": true,
+        "heightInSpec": true,
+        "originRootOk": true
+      },
+      "metrics": {
+        "isNonIndexed": true,
+        "material": {
+          "name": "vegetation",
+          "doubleSided": false,
+          "roughness": 0.92,
+          "metallic": 0
+        },
+        "vertexCount": 420,
+        "triangleCount": 140,
+        "normalYStats": {
+          "min": 0.9069,
+          "max": 0.9994,
+          "avg": 0.9646
+        },
+        "colorStats": {
+          "min": [
+            0.0122,
+            0.0331,
+            0.0085
+          ],
+          "max": [
+            0.4339,
+            0.64,
+            0.1597
+          ],
+          "avg": [
+            0.1106,
+            0.2231,
+            0.0429
+          ]
+        },
+        "triangleAreas": {
+          "minArea": 0.00015016,
+          "maxArea": 0.0029271,
+          "totalSurfaceArea": 0.1875
+        },
+        "windingPairs": {
+          "totalTriangles": 140,
+          "duplicatePairs": 70,
+          "windingMismatches": 0,
+          "normalPairedMismatches": 0,
+          "colorPairedMismatches": 0
+        },
+        "boundingBox": {
+          "min": [
+            -0.3034,
+            -0.0108,
+            -0.4109
+          ],
+          "max": [
+            0.2849,
+            0.34,
+            0.3635
+          ]
+        },
+        "dimensions": {
+          "x": 0.588,
+          "y": 0.351,
+          "z": 0.774
+        },
+        "height": 0.34
+      },
+      "issues": []
+    },
+    {
+      "file": "fern_wide_01.glb",
+      "modelName": "fern_wide_01",
+      "fileBytes": 24012,
+      "valid": true,
+      "checks": {
+        "container": true,
+        "noCamerasOrLights": true,
+        "attributesPresent": true,
+        "noNaNOrInf": true,
+        "unitNormals": true,
+        "upwardNormals": true,
+        "colorsInRange": true,
+        "noDegenerateTriangles": true,
+        "duplicateTriangleWinding": true,
+        "accessorBoundsMatch": true,
+        "manifestTrianglesMatch": true,
+        "manifestBytesMatch": true,
+        "manifestBBoxMatch": true,
+        "manifestDimensionsMatch": true,
+        "heightInSpec": true,
+        "originRootOk": true
+      },
+      "metrics": {
+        "isNonIndexed": true,
+        "material": {
+          "name": "vegetation",
+          "doubleSided": false,
+          "roughness": 0.92,
+          "metallic": 0
+        },
+        "vertexCount": 630,
+        "triangleCount": 210,
+        "normalYStats": {
+          "min": 0.9014,
+          "max": 1,
+          "avg": 0.9658
+        },
+        "colorStats": {
+          "min": [
+            0.0075,
+            0.0228,
+            0.0131
+          ],
+          "max": [
+            0.2106,
+            0.4017,
+            0.1106
+          ],
+          "avg": [
+            0.0687,
+            0.1667,
+            0.0503
+          ]
+        },
+        "triangleAreas": {
+          "minArea": 0.00054862,
+          "maxArea": 0.0065309,
+          "totalSurfaceArea": 0.6421
+        },
+        "windingPairs": {
+          "totalTriangles": 210,
+          "duplicatePairs": 105,
+          "windingMismatches": 0,
+          "normalPairedMismatches": 0,
+          "colorPairedMismatches": 0
+        },
+        "boundingBox": {
+          "min": [
+            -0.5691,
+            -0.0094,
+            -0.6881
+          ],
+          "max": [
+            0.4225,
+            0.6,
+            0.5491
+          ]
+        },
+        "dimensions": {
+          "x": 0.992,
+          "y": 0.609,
+          "z": 1.237
+        },
+        "height": 0.6
+      },
+      "issues": []
+    },
+    {
+      "file": "flower_purple_01.glb",
+      "modelName": "flower_purple_01",
+      "fileBytes": 15600,
+      "valid": true,
+      "checks": {
+        "container": true,
+        "noCamerasOrLights": true,
+        "attributesPresent": true,
+        "noNaNOrInf": true,
+        "unitNormals": true,
+        "upwardNormals": true,
+        "colorsInRange": true,
+        "noDegenerateTriangles": true,
+        "duplicateTriangleWinding": true,
+        "accessorBoundsMatch": true,
+        "manifestTrianglesMatch": true,
+        "manifestBytesMatch": true,
+        "manifestBBoxMatch": true,
+        "manifestDimensionsMatch": true,
+        "heightInSpec": true,
+        "originRootOk": true
+      },
+      "metrics": {
+        "isNonIndexed": true,
+        "material": {
+          "name": "vegetation",
+          "doubleSided": false,
+          "roughness": 0.92,
+          "metallic": 0
+        },
+        "vertexCount": 396,
+        "triangleCount": 132,
+        "normalYStats": {
+          "min": 0.8762,
+          "max": 0.998,
+          "avg": 0.8958
+        },
+        "colorStats": {
+          "min": [
+            0.0128,
+            0.0284,
+            0.0072
+          ],
+          "max": [
+            0.4564,
+            0.5175,
+            0.7454
+          ],
+          "avg": [
+            0.1609,
+            0.136,
+            0.2795
+          ]
+        },
+        "triangleAreas": {
+          "minArea": 0.0000261,
+          "maxArea": 0.00033484,
+          "totalSurfaceArea": 0.0155
+        },
+        "windingPairs": {
+          "totalTriangles": 132,
+          "duplicatePairs": 66,
+          "windingMismatches": 0,
+          "normalPairedMismatches": 0,
+          "colorPairedMismatches": 0
+        },
+        "boundingBox": {
+          "min": [
+            -0.0863,
+            -0.0103,
+            -0.1234
+          ],
+          "max": [
+            0.0854,
+            0.42,
+            0.0831
+          ]
+        },
+        "dimensions": {
+          "x": 0.172,
+          "y": 0.43,
+          "z": 0.206
+        },
+        "height": 0.42
+      },
+      "issues": []
+    },
+    {
+      "file": "flower_white_01.glb",
+      "modelName": "flower_white_01",
+      "fileBytes": 14948,
+      "valid": true,
+      "checks": {
+        "container": true,
+        "noCamerasOrLights": true,
+        "attributesPresent": true,
+        "noNaNOrInf": true,
+        "unitNormals": true,
+        "upwardNormals": true,
+        "colorsInRange": true,
+        "noDegenerateTriangles": true,
+        "duplicateTriangleWinding": true,
+        "accessorBoundsMatch": true,
+        "manifestTrianglesMatch": true,
+        "manifestBytesMatch": true,
+        "manifestBBoxMatch": true,
+        "manifestDimensionsMatch": true,
+        "heightInSpec": true,
+        "originRootOk": true
+      },
+      "metrics": {
+        "isNonIndexed": true,
+        "material": {
+          "name": "vegetation",
+          "doubleSided": false,
+          "roughness": 0.92,
+          "metallic": 0
+        },
+        "vertexCount": 378,
+        "triangleCount": 126,
+        "normalYStats": {
+          "min": 0.8881,
+          "max": 0.9996,
+          "avg": 0.9744
+        },
+        "colorStats": {
+          "min": [
+            0.0137,
+            0.0329,
+            0.0077
+          ],
+          "max": [
+            0.9047,
+            0.8796,
+            0.807
+          ],
+          "avg": [
+            0.5309,
+            0.4992,
+            0.3097
+          ]
+        },
+        "triangleAreas": {
+          "minArea": 0.000055344,
+          "maxArea": 0.00038651,
+          "totalSurfaceArea": 0.021
+        },
+        "windingPairs": {
+          "totalTriangles": 126,
+          "duplicatePairs": 63,
+          "windingMismatches": 0,
+          "normalPairedMismatches": 0,
+          "colorPairedMismatches": 0
+        },
+        "boundingBox": {
+          "min": [
+            -0.1075,
+            -0.012,
+            -0.128
+          ],
+          "max": [
+            0.1195,
+            0.26,
+            0.0882
+          ]
+        },
+        "dimensions": {
+          "x": 0.227,
+          "y": 0.272,
+          "z": 0.216
+        },
+        "height": 0.26
+      },
+      "issues": []
+    },
+    {
+      "file": "flower_yellow_01.glb",
+      "modelName": "flower_yellow_01",
+      "fileBytes": 14712,
+      "valid": true,
+      "checks": {
+        "container": true,
+        "noCamerasOrLights": true,
+        "attributesPresent": true,
+        "noNaNOrInf": true,
+        "unitNormals": true,
+        "upwardNormals": true,
+        "colorsInRange": true,
+        "noDegenerateTriangles": true,
+        "duplicateTriangleWinding": true,
+        "accessorBoundsMatch": true,
+        "manifestTrianglesMatch": true,
+        "manifestBytesMatch": true,
+        "manifestBBoxMatch": true,
+        "manifestDimensionsMatch": true,
+        "heightInSpec": true,
+        "originRootOk": true
+      },
+      "metrics": {
+        "isNonIndexed": true,
+        "material": {
+          "name": "vegetation",
+          "doubleSided": false,
+          "roughness": 0.92,
+          "metallic": 0
+        },
+        "vertexCount": 372,
+        "triangleCount": 124,
+        "normalYStats": {
+          "min": 0.8762,
+          "max": 0.9997,
+          "avg": 0.948
+        },
+        "colorStats": {
+          "min": [
+            0.0142,
+            0.0343,
+            0.008
+          ],
+          "max": [
+            1,
+            0.6867,
+            0.1098
+          ],
+          "avg": [
+            0.5306,
+            0.4014,
+            0.0375
+          ]
+        },
+        "triangleAreas": {
+          "minArea": 0.000022244,
+          "maxArea": 0.00042516,
+          "totalSurfaceArea": 0.0175
+        },
+        "windingPairs": {
+          "totalTriangles": 124,
+          "duplicatePairs": 62,
+          "windingMismatches": 0,
+          "normalPairedMismatches": 0,
+          "colorPairedMismatches": 0
+        },
+        "boundingBox": {
+          "min": [
+            -0.1031,
+            -0.0109,
+            -0.0759
+          ],
+          "max": [
+            0.1431,
+            0.3,
+            0.0908
+          ]
+        },
+        "dimensions": {
+          "x": 0.246,
+          "y": 0.311,
+          "z": 0.167
+        },
+        "height": 0.3
+      },
+      "issues": []
+    },
+    {
+      "file": "grass_dry_straw_01.glb",
+      "modelName": "grass_dry_straw_01",
+      "fileBytes": 11060,
+      "valid": true,
+      "checks": {
+        "container": true,
+        "noCamerasOrLights": true,
+        "attributesPresent": true,
+        "noNaNOrInf": true,
+        "unitNormals": true,
+        "upwardNormals": true,
+        "colorsInRange": true,
+        "noDegenerateTriangles": true,
+        "duplicateTriangleWinding": true,
+        "accessorBoundsMatch": true,
+        "manifestTrianglesMatch": true,
+        "manifestBytesMatch": true,
+        "manifestBBoxMatch": true,
+        "manifestDimensionsMatch": true,
+        "heightInSpec": true,
+        "originRootOk": true
+      },
+      "metrics": {
+        "isNonIndexed": true,
+        "material": {
+          "name": "vegetation",
+          "doubleSided": false,
+          "roughness": 0.92,
+          "metallic": 0
+        },
+        "vertexCount": 270,
+        "triangleCount": 90,
+        "normalYStats": {
+          "min": 0.9007,
+          "max": 0.9967,
+          "avg": 0.9528
+        },
+        "colorStats": {
+          "min": [
+            0.051,
+            0.0456,
+            0.0142
+          ],
+          "max": [
+            0.7949,
+            0.6272,
+            0.2563
+          ],
+          "avg": [
+            0.3521,
+            0.2631,
+            0.0847
+          ]
+        },
+        "triangleAreas": {
+          "minArea": 0.00027094,
+          "maxArea": 0.00085145,
+          "totalSurfaceArea": 0.0456
+        },
+        "windingPairs": {
+          "totalTriangles": 90,
+          "duplicatePairs": 45,
+          "windingMismatches": 0,
+          "normalPairedMismatches": 0,
+          "colorPairedMismatches": 0
+        },
+        "boundingBox": {
+          "min": [
+            -0.2463,
+            -0.0121,
+            -0.3193
+          ],
+          "max": [
+            0.3056,
+            0.36,
+            0.2906
+          ]
+        },
+        "dimensions": {
+          "x": 0.552,
+          "y": 0.372,
+          "z": 0.61
+        },
+        "height": 0.36
+      },
+      "issues": []
+    },
+    {
+      "file": "grass_forest_sparse_01.glb",
+      "modelName": "grass_forest_sparse_01",
+      "fileBytes": 7832,
+      "valid": true,
+      "checks": {
+        "container": true,
+        "noCamerasOrLights": true,
+        "attributesPresent": true,
+        "noNaNOrInf": true,
+        "unitNormals": true,
+        "upwardNormals": true,
+        "colorsInRange": true,
+        "noDegenerateTriangles": true,
+        "duplicateTriangleWinding": true,
+        "accessorBoundsMatch": true,
+        "manifestTrianglesMatch": true,
+        "manifestBytesMatch": true,
+        "manifestBBoxMatch": true,
+        "manifestDimensionsMatch": true,
+        "heightInSpec": true,
+        "originRootOk": true
+      },
+      "metrics": {
+        "isNonIndexed": true,
+        "material": {
+          "name": "vegetation",
+          "doubleSided": false,
+          "roughness": 0.92,
+          "metallic": 0
+        },
+        "vertexCount": 180,
+        "triangleCount": 60,
+        "normalYStats": {
+          "min": 0.8963,
+          "max": 0.9905,
+          "avg": 0.9362
+        },
+        "colorStats": {
+          "min": [
+            0.0121,
+            0.0256,
+            0.0086
+          ],
+          "max": [
+            0.4465,
+            0.4144,
+            0.1284
+          ],
+          "avg": [
+            0.1416,
+            0.1653,
+            0.0445
+          ]
+        },
+        "triangleAreas": {
+          "minArea": 0.00011193,
+          "maxArea": 0.00041626,
+          "totalSurfaceArea": 0.014
+        },
+        "windingPairs": {
+          "totalTriangles": 60,
+          "duplicatePairs": 30,
+          "windingMismatches": 0,
+          "normalPairedMismatches": 0,
+          "colorPairedMismatches": 0
+        },
+        "boundingBox": {
+          "min": [
+            -0.145,
+            -0.0095,
+            -0.2149
+          ],
+          "max": [
+            0.1704,
+            0.22,
+            0.1967
+          ]
+        },
+        "dimensions": {
+          "x": 0.315,
+          "y": 0.229,
+          "z": 0.412
+        },
+        "height": 0.22
+      },
+      "issues": []
+    },
+    {
+      "file": "grass_meadow_thin_01.glb",
+      "modelName": "grass_meadow_thin_01",
+      "fileBytes": 11716,
+      "valid": true,
+      "checks": {
+        "container": true,
+        "noCamerasOrLights": true,
+        "attributesPresent": true,
+        "noNaNOrInf": true,
+        "unitNormals": true,
+        "upwardNormals": true,
+        "colorsInRange": true,
+        "noDegenerateTriangles": true,
+        "duplicateTriangleWinding": true,
+        "accessorBoundsMatch": true,
+        "manifestTrianglesMatch": true,
+        "manifestBytesMatch": true,
+        "manifestBBoxMatch": true,
+        "manifestDimensionsMatch": true,
+        "heightInSpec": true,
+        "originRootOk": true
+      },
+      "metrics": {
+        "isNonIndexed": true,
+        "material": {
+          "name": "vegetation",
+          "doubleSided": false,
+          "roughness": 0.92,
+          "metallic": 0
+        },
+        "vertexCount": 288,
+        "triangleCount": 96,
+        "normalYStats": {
+          "min": 0.8958,
+          "max": 0.9857,
+          "avg": 0.9357
+        },
+        "colorStats": {
+          "min": [
+            0.016,
+            0.0361,
+            0.0104
+          ],
+          "max": [
+            0.4423,
+            0.6511,
+            0.1607
+          ],
+          "avg": [
+            0.1144,
+            0.2211,
+            0.0437
+          ]
+        },
+        "triangleAreas": {
+          "minArea": 0.00019991,
+          "maxArea": 0.00051478,
+          "totalSurfaceArea": 0.0306
+        },
+        "windingPairs": {
+          "totalTriangles": 96,
+          "duplicatePairs": 48,
+          "windingMismatches": 0,
+          "normalPairedMismatches": 0,
+          "colorPairedMismatches": 0
+        },
+        "boundingBox": {
+          "min": [
+            -0.2217,
+            -0.0099,
+            -0.2153
+          ],
+          "max": [
+            0.1986,
+            0.3,
+            0.1843
+          ]
+        },
+        "dimensions": {
+          "x": 0.42,
+          "y": 0.31,
+          "z": 0.4
+        },
+        "height": 0.3
+      },
+      "issues": []
+    },
+    {
+      "file": "grass_meadow_wide_01.glb",
+      "modelName": "grass_meadow_wide_01",
+      "fileBytes": 11072,
+      "valid": true,
+      "checks": {
+        "container": true,
+        "noCamerasOrLights": true,
+        "attributesPresent": true,
+        "noNaNOrInf": true,
+        "unitNormals": true,
+        "upwardNormals": true,
+        "colorsInRange": true,
+        "noDegenerateTriangles": true,
+        "duplicateTriangleWinding": true,
+        "accessorBoundsMatch": true,
+        "manifestTrianglesMatch": true,
+        "manifestBytesMatch": true,
+        "manifestBBoxMatch": true,
+        "manifestDimensionsMatch": true,
+        "heightInSpec": true,
+        "originRootOk": true
+      },
+      "metrics": {
+        "isNonIndexed": true,
+        "material": {
+          "name": "vegetation",
+          "doubleSided": false,
+          "roughness": 0.92,
+          "metallic": 0
+        },
+        "vertexCount": 270,
+        "triangleCount": 90,
+        "normalYStats": {
+          "min": 0.899,
+          "max": 0.9942,
+          "avg": 0.9482
+        },
+        "colorStats": {
+          "min": [
+            0.0127,
+            0.0306,
+            0.0071
+          ],
+          "max": [
+            0.5152,
+            0.6707,
+            0.1549
+          ],
+          "avg": [
+            0.137,
+            0.2472,
+            0.0446
+          ]
+        },
+        "triangleAreas": {
+          "minArea": 0.00051522,
+          "maxArea": 0.0013526,
+          "totalSurfaceArea": 0.0766
+        },
+        "windingPairs": {
+          "totalTriangles": 90,
+          "duplicatePairs": 45,
+          "windingMismatches": 0,
+          "normalPairedMismatches": 0,
+          "colorPairedMismatches": 0
+        },
+        "boundingBox": {
+          "min": [
+            -0.3058,
+            -0.0116,
+            -0.2405
+          ],
+          "max": [
+            0.2602,
+            0.34,
+            0.2908
+          ]
+        },
+        "dimensions": {
+          "x": 0.566,
+          "y": 0.352,
+          "z": 0.531
+        },
+        "height": 0.34
+      },
+      "issues": []
+    },
+    {
+      "file": "grass_olive_tuft_01.glb",
+      "modelName": "grass_olive_tuft_01",
+      "fileBytes": 10424,
+      "valid": true,
+      "checks": {
+        "container": true,
+        "noCamerasOrLights": true,
+        "attributesPresent": true,
+        "noNaNOrInf": true,
+        "unitNormals": true,
+        "upwardNormals": true,
+        "colorsInRange": true,
+        "noDegenerateTriangles": true,
+        "duplicateTriangleWinding": true,
+        "accessorBoundsMatch": true,
+        "manifestTrianglesMatch": true,
+        "manifestBytesMatch": true,
+        "manifestBBoxMatch": true,
+        "manifestDimensionsMatch": true,
+        "heightInSpec": true,
+        "originRootOk": true
+      },
+      "metrics": {
+        "isNonIndexed": true,
+        "material": {
+          "name": "vegetation",
+          "doubleSided": false,
+          "roughness": 0.92,
+          "metallic": 0
+        },
+        "vertexCount": 252,
+        "triangleCount": 84,
+        "normalYStats": {
+          "min": 0.936,
+          "max": 0.9995,
+          "avg": 0.9731
+        },
+        "colorStats": {
+          "min": [
+            0.0221,
+            0.0288,
+            0.0086
+          ],
+          "max": [
+            0.4497,
+            0.4438,
+            0.1197
+          ],
+          "avg": [
+            0.1375,
+            0.1588,
+            0.0374
+          ]
+        },
+        "triangleAreas": {
+          "minArea": 0.00062051,
+          "maxArea": 0.0012521,
+          "totalSurfaceArea": 0.0706
+        },
+        "windingPairs": {
+          "totalTriangles": 84,
+          "duplicatePairs": 42,
+          "windingMismatches": 0,
+          "normalPairedMismatches": 0,
+          "colorPairedMismatches": 0
+        },
+        "boundingBox": {
+          "min": [
+            -0.3037,
+            -0.0129,
+            -0.273
+          ],
+          "max": [
+            0.3088,
+            0.26,
+            0.2454
+          ]
+        },
+        "dimensions": {
+          "x": 0.613,
+          "y": 0.273,
+          "z": 0.518
+        },
+        "height": 0.26
+      },
+      "issues": []
+    },
+    {
+      "file": "grass_path_edge_01.glb",
+      "modelName": "grass_path_edge_01",
+      "fileBytes": 11064,
+      "valid": true,
+      "checks": {
+        "container": true,
+        "noCamerasOrLights": true,
+        "attributesPresent": true,
+        "noNaNOrInf": true,
+        "unitNormals": true,
+        "upwardNormals": true,
+        "colorsInRange": true,
+        "noDegenerateTriangles": true,
+        "duplicateTriangleWinding": true,
+        "accessorBoundsMatch": true,
+        "manifestTrianglesMatch": true,
+        "manifestBytesMatch": true,
+        "manifestBBoxMatch": true,
+        "manifestDimensionsMatch": true,
+        "heightInSpec": true,
+        "originRootOk": true
+      },
+      "metrics": {
+        "isNonIndexed": true,
+        "material": {
+          "name": "vegetation",
+          "doubleSided": false,
+          "roughness": 0.92,
+          "metallic": 0
+        },
+        "vertexCount": 270,
+        "triangleCount": 90,
+        "normalYStats": {
+          "min": 0.9444,
+          "max": 0.9995,
+          "avg": 0.9762
+        },
+        "colorStats": {
+          "min": [
+            0.0644,
+            0.0501,
+            0.0258
+          ],
+          "max": [
+            0.4097,
+            0.575,
+            0.1291
+          ],
+          "avg": [
+            0.1605,
+            0.2206,
+            0.0553
+          ]
+        },
+        "triangleAreas": {
+          "minArea": 0.00030591,
+          "maxArea": 0.00096221,
+          "totalSurfaceArea": 0.0575
+        },
+        "windingPairs": {
+          "totalTriangles": 90,
+          "duplicatePairs": 45,
+          "windingMismatches": 0,
+          "normalPairedMismatches": 0,
+          "colorPairedMismatches": 0
+        },
+        "boundingBox": {
+          "min": [
+            -0.0648,
+            -0.0125,
+            -0.1057
+          ],
+          "max": [
+            0.3466,
+            0.22,
+            0.1714
+          ]
+        },
+        "dimensions": {
+          "x": 0.411,
+          "y": 0.233,
+          "z": 0.277
+        },
+        "height": 0.22
+      },
+      "issues": []
+    },
+    {
+      "file": "grass_shade_dark_01.glb",
+      "modelName": "grass_shade_dark_01",
+      "fileBytes": 8908,
+      "valid": true,
+      "checks": {
+        "container": true,
+        "noCamerasOrLights": true,
+        "attributesPresent": true,
+        "noNaNOrInf": true,
+        "unitNormals": true,
+        "upwardNormals": true,
+        "colorsInRange": true,
+        "noDegenerateTriangles": true,
+        "duplicateTriangleWinding": true,
+        "accessorBoundsMatch": true,
+        "manifestTrianglesMatch": true,
+        "manifestBytesMatch": true,
+        "manifestBBoxMatch": true,
+        "manifestDimensionsMatch": true,
+        "heightInSpec": true,
+        "originRootOk": true
+      },
+      "metrics": {
+        "isNonIndexed": true,
+        "material": {
+          "name": "vegetation",
+          "doubleSided": false,
+          "roughness": 0.92,
+          "metallic": 0
+        },
+        "vertexCount": 210,
+        "triangleCount": 70,
+        "normalYStats": {
+          "min": 0.9324,
+          "max": 0.9995,
+          "avg": 0.9707
+        },
+        "colorStats": {
+          "min": [
+            0.0051,
+            0.0152,
+            0.0078
+          ],
+          "max": [
+            0.1254,
+            0.3029,
+            0.1145
+          ],
+          "avg": [
+            0.0362,
+            0.1082,
+            0.0439
+          ]
+        },
+        "triangleAreas": {
+          "minArea": 0.000914,
+          "maxArea": 0.002681,
+          "totalSurfaceArea": 0.1216
+        },
+        "windingPairs": {
+          "totalTriangles": 70,
+          "duplicatePairs": 35,
+          "windingMismatches": 0,
+          "normalPairedMismatches": 0,
+          "colorPairedMismatches": 0
+        },
+        "boundingBox": {
+          "min": [
+            -0.3251,
+            -0.0146,
+            -0.4393
+          ],
+          "max": [
+            0.2465,
+            0.24,
+            0.289
+          ]
+        },
+        "dimensions": {
+          "x": 0.572,
+          "y": 0.255,
+          "z": 0.728
+        },
+        "height": 0.24
+      },
+      "issues": []
+    },
+    {
+      "file": "grass_short_dense_01.glb",
+      "modelName": "grass_short_dense_01",
+      "fileBytes": 10428,
+      "valid": true,
+      "checks": {
+        "container": true,
+        "noCamerasOrLights": true,
+        "attributesPresent": true,
+        "noNaNOrInf": true,
+        "unitNormals": true,
+        "upwardNormals": true,
+        "colorsInRange": true,
+        "noDegenerateTriangles": true,
+        "duplicateTriangleWinding": true,
+        "accessorBoundsMatch": true,
+        "manifestTrianglesMatch": true,
+        "manifestBytesMatch": true,
+        "manifestBBoxMatch": true,
+        "manifestDimensionsMatch": true,
+        "heightInSpec": true,
+        "originRootOk": true
+      },
+      "metrics": {
+        "isNonIndexed": true,
+        "material": {
+          "name": "vegetation",
+          "doubleSided": false,
+          "roughness": 0.92,
+          "metallic": 0
+        },
+        "vertexCount": 252,
+        "triangleCount": 84,
+        "normalYStats": {
+          "min": 0.9013,
+          "max": 0.9606,
+          "avg": 0.9301
+        },
+        "colorStats": {
+          "min": [
+            0.0078,
+            0.0228,
+            0.0061
+          ],
+          "max": [
+            0.2362,
+            0.4711,
+            0.0701
+          ],
+          "avg": [
+            0.0527,
+            0.1418,
+            0.0227
+          ]
+        },
+        "triangleAreas": {
+          "minArea": 0.00047502,
+          "maxArea": 0.0010196,
+          "totalSurfaceArea": 0.0522
+        },
+        "windingPairs": {
+          "totalTriangles": 84,
+          "duplicatePairs": 42,
+          "windingMismatches": 0,
+          "normalPairedMismatches": 0,
+          "colorPairedMismatches": 0
+        },
+        "boundingBox": {
+          "min": [
+            -0.1239,
+            -0.0111,
+            -0.0838
+          ],
+          "max": [
+            0.0919,
+            0.15,
+            0.1102
+          ]
+        },
+        "dimensions": {
+          "x": 0.216,
+          "y": 0.161,
+          "z": 0.194
+        },
+        "height": 0.15
+      },
+      "issues": []
+    },
+    {
+      "file": "grass_short_soft_01.glb",
+      "modelName": "grass_short_soft_01",
+      "fileBytes": 7832,
+      "valid": true,
+      "checks": {
+        "container": true,
+        "noCamerasOrLights": true,
+        "attributesPresent": true,
+        "noNaNOrInf": true,
+        "unitNormals": true,
+        "upwardNormals": true,
+        "colorsInRange": true,
+        "noDegenerateTriangles": true,
+        "duplicateTriangleWinding": true,
+        "accessorBoundsMatch": true,
+        "manifestTrianglesMatch": true,
+        "manifestBytesMatch": true,
+        "manifestBBoxMatch": true,
+        "manifestDimensionsMatch": true,
+        "heightInSpec": true,
+        "originRootOk": true
+      },
+      "metrics": {
+        "isNonIndexed": true,
+        "material": {
+          "name": "vegetation",
+          "doubleSided": false,
+          "roughness": 0.92,
+          "metallic": 0
+        },
+        "vertexCount": 180,
+        "triangleCount": 60,
+        "normalYStats": {
+          "min": 0.9062,
+          "max": 0.9894,
+          "avg": 0.9437
+        },
+        "colorStats": {
+          "min": [
+            0.0127,
+            0.0306,
+            0.0071
+          ],
+          "max": [
+            0.3702,
+            0.6147,
+            0.1139
+          ],
+          "avg": [
+            0.0879,
+            0.1989,
+            0.0328
+          ]
+        },
+        "triangleAreas": {
+          "minArea": 0.00029635,
+          "maxArea": 0.00062656,
+          "totalSurfaceArea": 0.0257
+        },
+        "windingPairs": {
+          "totalTriangles": 60,
+          "duplicatePairs": 30,
+          "windingMismatches": 0,
+          "normalPairedMismatches": 0,
+          "colorPairedMismatches": 0
+        },
+        "boundingBox": {
+          "min": [
+            -0.1366,
+            -0.0105,
+            -0.1334
+          ],
+          "max": [
+            0.1474,
+            0.17,
+            0.1636
+          ]
+        },
+        "dimensions": {
+          "x": 0.284,
+          "y": 0.181,
+          "z": 0.297
+        },
+        "height": 0.17
+      },
+      "issues": []
+    },
+    {
+      "file": "grass_tall_seeded_01.glb",
+      "modelName": "grass_tall_seeded_01",
+      "fileBytes": 12364,
+      "valid": true,
+      "checks": {
+        "container": true,
+        "noCamerasOrLights": true,
+        "attributesPresent": true,
+        "noNaNOrInf": true,
+        "unitNormals": true,
+        "upwardNormals": true,
+        "colorsInRange": true,
+        "noDegenerateTriangles": true,
+        "duplicateTriangleWinding": true,
+        "accessorBoundsMatch": true,
+        "manifestTrianglesMatch": true,
+        "manifestBytesMatch": true,
+        "manifestBBoxMatch": true,
+        "manifestDimensionsMatch": true,
+        "heightInSpec": true,
+        "originRootOk": true
+      },
+      "metrics": {
+        "isNonIndexed": true,
+        "material": {
+          "name": "vegetation",
+          "doubleSided": false,
+          "roughness": 0.92,
+          "metallic": 0
+        },
+        "vertexCount": 306,
+        "triangleCount": 102,
+        "normalYStats": {
+          "min": 0.8762,
+          "max": 0.9934,
+          "avg": 0.926
+        },
+        "colorStats": {
+          "min": [
+            0.0191,
+            0.0407,
+            0.0089
+          ],
+          "max": [
+            0.7913,
+            0.6858,
+            0.3613
+          ],
+          "avg": [
+            0.2639,
+            0.3114,
+            0.0944
+          ]
+        },
+        "triangleAreas": {
+          "minArea": 0.00025888,
+          "maxArea": 0.00076627,
+          "totalSurfaceArea": 0.0457
+        },
+        "windingPairs": {
+          "totalTriangles": 102,
+          "duplicatePairs": 51,
+          "windingMismatches": 0,
+          "normalPairedMismatches": 0,
+          "colorPairedMismatches": 0
+        },
+        "boundingBox": {
+          "min": [
+            -0.2159,
+            -0.0109,
+            -0.1759
+          ],
+          "max": [
+            0.2097,
+            0.54,
+            0.2341
+          ]
+        },
+        "dimensions": {
+          "x": 0.426,
+          "y": 0.551,
+          "z": 0.41
+        },
+        "height": 0.54
+      },
+      "issues": []
+    },
+    {
+      "file": "grass_tall_wild_01.glb",
+      "modelName": "grass_tall_wild_01",
+      "fileBytes": 11064,
+      "valid": true,
+      "checks": {
+        "container": true,
+        "noCamerasOrLights": true,
+        "attributesPresent": true,
+        "noNaNOrInf": true,
+        "unitNormals": true,
+        "upwardNormals": true,
+        "colorsInRange": true,
+        "noDegenerateTriangles": true,
+        "duplicateTriangleWinding": true,
+        "accessorBoundsMatch": true,
+        "manifestTrianglesMatch": true,
+        "manifestBytesMatch": true,
+        "manifestBBoxMatch": true,
+        "manifestDimensionsMatch": true,
+        "heightInSpec": true,
+        "originRootOk": true
+      },
+      "metrics": {
+        "isNonIndexed": true,
+        "material": {
+          "name": "vegetation",
+          "doubleSided": false,
+          "roughness": 0.92,
+          "metallic": 0
+        },
+        "vertexCount": 270,
+        "triangleCount": 90,
+        "normalYStats": {
+          "min": 0.8881,
+          "max": 0.9984,
+          "avg": 0.9405
+        },
+        "colorStats": {
+          "min": [
+            0.014,
+            0.0336,
+            0.0087
+          ],
+          "max": [
+            0.5816,
+            0.5298,
+            0.1554
+          ],
+          "avg": [
+            0.1515,
+            0.2171,
+            0.0463
+          ]
+        },
+        "triangleAreas": {
+          "minArea": 0.00044641,
+          "maxArea": 0.0014043,
+          "totalSurfaceArea": 0.082
+        },
+        "windingPairs": {
+          "totalTriangles": 90,
+          "duplicatePairs": 45,
+          "windingMismatches": 0,
+          "normalPairedMismatches": 0,
+          "colorPairedMismatches": 0
+        },
+        "boundingBox": {
+          "min": [
+            -0.2459,
+            -0.0113,
+            -0.2907
+          ],
+          "max": [
+            0.4188,
+            0.52,
+            0.3614
+          ]
+        },
+        "dimensions": {
+          "x": 0.665,
+          "y": 0.531,
+          "z": 0.652
+        },
+        "height": 0.52
+      },
+      "issues": []
+    },
+    {
+      "file": "grass_wavy_broad_01.glb",
+      "modelName": "grass_wavy_broad_01",
+      "fileBytes": 12148,
+      "valid": true,
+      "checks": {
+        "container": true,
+        "noCamerasOrLights": true,
+        "attributesPresent": true,
+        "noNaNOrInf": true,
+        "unitNormals": true,
+        "upwardNormals": true,
+        "colorsInRange": true,
+        "noDegenerateTriangles": true,
+        "duplicateTriangleWinding": true,
+        "accessorBoundsMatch": true,
+        "manifestTrianglesMatch": true,
+        "manifestBytesMatch": true,
+        "manifestBBoxMatch": true,
+        "manifestDimensionsMatch": true,
+        "heightInSpec": true,
+        "originRootOk": true
+      },
+      "metrics": {
+        "isNonIndexed": true,
+        "material": {
+          "name": "vegetation",
+          "doubleSided": false,
+          "roughness": 0.92,
+          "metallic": 0
+        },
+        "vertexCount": 300,
+        "triangleCount": 100,
+        "normalYStats": {
+          "min": 0.9172,
+          "max": 0.9951,
+          "avg": 0.9553
+        },
+        "colorStats": {
+          "min": [
+            0.0082,
+            0.0267,
+            0.0107
+          ],
+          "max": [
+            0.2479,
+            0.5324,
+            0.1357
+          ],
+          "avg": [
+            0.0752,
+            0.2146,
+            0.0578
+          ]
+        },
+        "triangleAreas": {
+          "minArea": 0.00077479,
+          "maxArea": 0.0016329,
+          "totalSurfaceArea": 0.117
+        },
+        "windingPairs": {
+          "totalTriangles": 100,
+          "duplicatePairs": 50,
+          "windingMismatches": 0,
+          "normalPairedMismatches": 0,
+          "colorPairedMismatches": 0
+        },
+        "boundingBox": {
+          "min": [
+            -0.238,
+            -0.013,
+            -0.3967
+          ],
+          "max": [
+            0.3359,
+            0.3,
+            0.3732
+          ]
+        },
+        "dimensions": {
+          "x": 0.574,
+          "y": 0.313,
+          "z": 0.77
+        },
+        "height": 0.3
+      },
+      "issues": []
+    }
+  ]
+}

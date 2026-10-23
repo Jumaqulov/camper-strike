@@ -1,0 +1,5240 @@
+{
+  "stage": "BOSQICH 06 — Qurolsiz Boshlash, Loot Qutilari, Inventar va Qurol Topish Tizimi",
+  "timestamp": "2026-10-21T13:44:36.492Z",
+  "methodology": {
+    "warmupSeconds": 10,
+    "measurementSeconds": 30,
+    "repeatsPerScene": 3,
+    "viewport": "1280x720",
+    "devicePixelRatio": 1,
+    "qualities": [
+      "medium",
+      "low"
+    ],
+    "scenes": [
+      "open_forest_movement",
+      "poi_loot_containers_open",
+      "moving_pvp_combat"
+    ],
+    "bots": 4,
+    "mapId": "forest_square",
+    "worldVersion": 1,
+    "publicLayoutSeed": 6501,
+    "gameplayHash": "c4064b17f166cd42",
+    "lootPreview": true
+  },
+  "environment": {
+    "platform": "win32 10.0.26300 (x64)",
+    "cpuModel": "Intel(R) Core(TM) i5-14400",
+    "cpuCores": 16,
+    "totalRamGB": 31.67,
+    "nodeVersion": "v24.11.1",
+    "chromeVersion": "Chrome/155.0.8059.80",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+    "gpu": {
+      "vendor": "Google Inc. (Intel)",
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 730 (0x0000A782) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    }
+  },
+  "verification": {
+    "multiplayerLootSync": {
+      "mapId": "forest_square",
+      "publicLayoutSeed": 6501,
+      "client1GameplayHash": "c4064b17f166cd42",
+      "client2GameplayHash": "c4064b17f166cd42",
+      "gameplayHashMatch": true,
+      "lootPreview": true,
+      "totalContainers": 26,
+      "allClosedContainersZeroItemsLeaked": true
+    },
+    "unarmedSpawnVerification": {
+      "client1EquippedWeapon": null,
+      "client1OwnedWeapons": [],
+      "client1UnarmedBannerVisible": true,
+      "client2EquippedWeapon": null,
+      "client2OwnedWeapons": [],
+      "client2UnarmedBannerVisible": true,
+      "passed": true
+    },
+    "containerOpenAnd3DLootVerification": {
+      "containerId": "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01",
+      "openedOk": true,
+      "idempotentReplayOk": true,
+      "revealedItems": [
+        {
+          "id": "itm:r26bn14:c3:0",
+          "catalogId": "weapon:shotgun",
+          "kind": "weapon",
+          "nameUz": "Drobovik",
+          "quantity": 1
+        },
+        {
+          "id": "itm:r26bn14:c3:1",
+          "catalogId": "ammo:shotgun",
+          "kind": "ammo",
+          "nameUz": "Drobovik patronlari",
+          "quantity": 14
+        }
+      ],
+      "client1ActiveItemMeshes": 2,
+      "client2ActiveItemMeshes": 2,
+      "interiorLockerOpenedId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+      "interiorToolboxOpenedId": "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+      "passed": true
+    },
+    "concurrentPickupRaceVerification": {
+      "containerId": "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01",
+      "itemId": "itm:r26bn14:c3:0",
+      "catalogId": "weapon:shotgun",
+      "client1WinnerOk": true,
+      "client2LoserOk": false,
+      "client2LoserCode": "ITEM_ALREADY_TAKEN",
+      "passed": true
+    },
+    "weaponEquipAndFireVerification": {
+      "lootedWeapon": "shotgun",
+      "holsterToNullOk": true,
+      "reEquipWeaponOk": true,
+      "triggerFireOk": true,
+      "ammoAfterFire": {
+        "mag": 7,
+        "reserve": 21
+      },
+      "emptyContainerStatus": "empty",
+      "medkitTest": null,
+      "passed": true
+    },
+    "adversarialSecurityChecks": {
+      "unownedWeaponEquipRejectedCode": "WEAPON_NOT_OWNED",
+      "closedContainerPickupRejectedCode": "CONTAINER_CLOSED",
+      "outOfRangeOpenRejectedCode": "OUT_OF_RANGE",
+      "losBlockedOpenRejectedCode": "LOS_BLOCKED",
+      "passed": true
+    },
+    "multiRoomAndLegacyMaps": [
+      {
+        "label": "SQ_Seed_6501_LootA",
+        "roomId": "r19v1le",
+        "mapId": "forest_square",
+        "worldVersion": 1,
+        "publicLayoutSeed": 6501,
+        "gameplayHash": "c4064b17f166cd42",
+        "lootPreview": true,
+        "containerCount": 26,
+        "equippedWeaponOnSpawn": null,
+        "readyOk": true
+      },
+      {
+        "label": "SQ_Seed_6501_LootB",
+        "roomId": "r20awuj",
+        "mapId": "forest_square",
+        "worldVersion": 1,
+        "publicLayoutSeed": 6501,
+        "gameplayHash": "c4064b17f166cd42",
+        "lootPreview": false,
+        "containerCount": 26,
+        "equippedWeaponOnSpawn": "rifle",
+        "readyOk": true
+      },
+      {
+        "label": "SQ_Seed_7777_Loot",
+        "roomId": "r21g3jh",
+        "mapId": "forest_square",
+        "worldVersion": 1,
+        "publicLayoutSeed": 7777,
+        "gameplayHash": "b1051dea85cc06b3",
+        "lootPreview": true,
+        "containerCount": 26,
+        "equippedWeaponOnSpawn": null,
+        "readyOk": true
+      },
+      {
+        "label": "SQ_Seed_9021_Loot",
+        "roomId": "r22smtd",
+        "mapId": "forest_square",
+        "worldVersion": 1,
+        "publicLayoutSeed": 9021,
+        "gameplayHash": "990b664a2e80491f",
+        "lootPreview": true,
+        "containerCount": 26,
+        "equippedWeaponOnSpawn": null,
+        "readyOk": true
+      },
+      {
+        "label": "Legacy_Stage04A",
+        "roomId": "r23egz0",
+        "mapId": "forest_assets_preview",
+        "worldVersion": 1,
+        "publicLayoutSeed": 6501,
+        "gameplayHash": "7f36e84b1b9c12e2",
+        "lootPreview": false,
+        "containerCount": 6,
+        "equippedWeaponOnSpawn": "rifle",
+        "readyOk": true
+      },
+      {
+        "label": "Legacy_ForestSample",
+        "roomId": "r24342o",
+        "mapId": "forest_sample",
+        "worldVersion": 1,
+        "publicLayoutSeed": 6501,
+        "gameplayHash": "ecb479eed8061144",
+        "lootPreview": false,
+        "containerCount": 1,
+        "equippedWeaponOnSpawn": "rifle",
+        "readyOk": true
+      },
+      {
+        "label": "Legacy_DustArena",
+        "roomId": "r25xw05",
+        "mapId": "dust_arena",
+        "worldVersion": 1,
+        "publicLayoutSeed": 6501,
+        "gameplayHash": "07aee7f1a347517c",
+        "lootPreview": false,
+        "containerCount": 0,
+        "equippedWeaponOnSpawn": "rifle",
+        "readyOk": true
+      }
+    ],
+    "glbAssets": {
+      "totalExpected": 28,
+      "totalLoaded": 28,
+      "weaponAssetsLoaded": 4,
+      "forestAssetsLoaded": 7,
+      "buildingAssetsLoaded": 8,
+      "interiorAssetsLoaded": 6,
+      "containerAssetsLoaded": 3,
+      "allLoaded": true
+    },
+    "consoleErrorsCount": 0,
+    "networkErrorsCount": 0,
+    "consoleErrors": [],
+    "networkErrors": []
+  },
+  "resultsByQuality": {
+    "medium": {
+      "open_forest_movement": {
+        "quality": "medium",
+        "scene": "open_forest_movement",
+        "description": "Active authoritative player movement & camera sweep in dense forest cover with 4 bots",
+        "warmupSeconds": 10,
+        "measurementSeconds": 30,
+        "repeats": 3,
+        "avgFps": 194.46,
+        "p50Fps": 232.56,
+        "p10Fps": 116.28,
+        "onePercentLowFps": 56.82,
+        "avgFrameTimeMs": 5.142,
+        "p50FrameTimeMs": 4.3,
+        "p95FrameTimeMs": 10.5,
+        "p99FrameTimeMs": 17.6,
+        "fpsMean": 194.46,
+        "fpsMedian": 232.56,
+        "fpsP10": 116.28,
+        "fps1PctLow": 56.82,
+        "frameTimeMedianMs": 4.3,
+        "frameTimeP95Ms": 10.5,
+        "frameTimeP99Ms": 17.6,
+        "cullCpuMedianMs": 0,
+        "cullCpuP95Ms": 0.1,
+        "drawCalls": 66,
+        "sceneCalls": 66,
+        "vmCalls": 0,
+        "triangles": 176198,
+        "geometries": 149,
+        "textures": 14,
+        "programs": 30,
+        "lootWorldRenderer": {
+          "version": 7,
+          "activeItemMeshCount": 5,
+          "visibleItemMeshCount": 0,
+          "openContainerIds": [
+            "poi:poi_ranger_house:cnt_1:metal_locker_01",
+            "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+            "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+          ],
+          "renderedItemIds": [
+            "itm:r26bn14:c2:0",
+            "itm:r26bn14:c2:1",
+            "itm:r26bn14:c1:0",
+            "itm:r26bn14:c1:1",
+            "itm:r26bn14:c1:2"
+          ],
+          "highlightedContainerId": null,
+          "highlightedItemId": null
+        },
+        "cullingProfile": {
+          "calls": 6872,
+          "evaluatedFrames": 542,
+          "skippedStaticFrames": 6330,
+          "batchBufferUploads": 350,
+          "batchBufferSkips": 9948,
+          "lastCpuMs": 0,
+          "avgCpuMs": 0.007,
+          "p95CpuMs": 0.1,
+          "maxCpuMs": 0.2
+        },
+        "heapUsedMB": 81.09,
+        "predictionDiagnostics": {
+          "spawnId": 1,
+          "currentSeq": 10307,
+          "lastAckedSeq": 4108,
+          "pendingInputs": 120,
+          "lastServerTick": 2088,
+          "lastPositionError": 0,
+          "maxPositionError": 0.269,
+          "reconcileCount": 2052,
+          "smoothCorrectionCount": 3,
+          "hardSnapCount": 0,
+          "smoothOffsetMag": 0,
+          "authoritativePos": {
+            "x": -62.475,
+            "y": -0.004,
+            "z": -127.237
+          },
+          "predictedPos": {
+            "x": -62.3451,
+            "y": -0.0044,
+            "z": -126.953
+          },
+          "smoothedPos": {
+            "x": -62.3451,
+            "y": -0.0044,
+            "z": -126.953
+          },
+          "divergenceM": 0.3123,
+          "netSim": {
+            "rttMs": 0,
+            "jitterMs": 0,
+            "dropRate": 0
+          }
+        },
+        "runs": [
+          {
+            "repeat": 1,
+            "frames": 4597,
+            "durationMs": 30017.6,
+            "fpsMean": 153.14,
+            "fpsMedian": 169.49,
+            "fpsP10": 88.5,
+            "fps1PctLow": 38.31,
+            "frameTimeMedianMs": 5.9,
+            "frameTimeP95Ms": 14.5,
+            "frameTimeP99Ms": 26.1,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.3,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 5.709,
+            "gpuTimeP95Ms": 7.862,
+            "render": {
+              "calls": 100,
+              "sceneCalls": 100,
+              "vmCalls": 0,
+              "triangles": 388690,
+              "sceneTris": 388690,
+              "vmTris": 0,
+              "geometries": 157,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 4597,
+              "evaluatedFrames": 573,
+              "skippedStaticFrames": 4024,
+              "batchBufferUploads": 813,
+              "batchBufferSkips": 10074,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0126,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.3
+            },
+            "heapUsedMB": 75.86,
+            "heapTotalMB": 95.64,
+            "programs": 30,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 6101,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 120,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -78.205,
+                "y": 1.32,
+                "z": -69.064
+              },
+              "predictedPos": {
+                "x": -78.2936,
+                "y": 1.32,
+                "z": -69.3432
+              },
+              "smoothedPos": {
+                "x": -78.2936,
+                "y": 1.32,
+                "z": -69.3432
+              },
+              "divergenceM": 0.2929,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 7,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": null,
+              "highlightedItemId": null
+            }
+          },
+          {
+            "repeat": 2,
+            "frames": 5835,
+            "durationMs": 30006.8,
+            "fpsMean": 194.46,
+            "fpsMedian": 232.56,
+            "fpsP10": 116.28,
+            "fps1PctLow": 56.82,
+            "frameTimeMedianMs": 4.3,
+            "frameTimeP95Ms": 10.5,
+            "frameTimeP99Ms": 17.6,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 4.64,
+            "gpuTimeP95Ms": 5.559,
+            "render": {
+              "calls": 68,
+              "sceneCalls": 68,
+              "vmCalls": 0,
+              "triangles": 177353,
+              "sceneTris": 177353,
+              "vmTris": 0,
+              "geometries": 149,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 5835,
+              "evaluatedFrames": 569,
+              "skippedStaticFrames": 5266,
+              "batchBufferUploads": 641,
+              "batchBufferSkips": 10170,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.009,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.2
+            },
+            "heapUsedMB": 65.86,
+            "heapTotalMB": 128,
+            "programs": 30,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 8150,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 120,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -71.206,
+                "y": -0.335,
+                "z": -116.819
+              },
+              "predictedPos": {
+                "x": -71.3531,
+                "y": -0.3321,
+                "z": -116.9667
+              },
+              "smoothedPos": {
+                "x": -71.3531,
+                "y": -0.3321,
+                "z": -116.9667
+              },
+              "divergenceM": 0.2085,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 7,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 0,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": null,
+              "highlightedItemId": null
+            }
+          },
+          {
+            "repeat": 3,
+            "frames": 6872,
+            "durationMs": 30010.6,
+            "fpsMean": 228.99,
+            "fpsMedian": 294.12,
+            "fpsP10": 208.33,
+            "fps1PctLow": 99.01,
+            "frameTimeMedianMs": 3.4,
+            "frameTimeP95Ms": 5.6,
+            "frameTimeP99Ms": 10.1,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 3.585,
+            "gpuTimeP95Ms": 4.56,
+            "render": {
+              "calls": 66,
+              "sceneCalls": 66,
+              "vmCalls": 0,
+              "triangles": 176198,
+              "sceneTris": 176198,
+              "vmTris": 0,
+              "geometries": 149,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 6872,
+              "evaluatedFrames": 542,
+              "skippedStaticFrames": 6330,
+              "batchBufferUploads": 350,
+              "batchBufferSkips": 9948,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.007,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.2
+            },
+            "heapUsedMB": 81.09,
+            "heapTotalMB": 127.35,
+            "programs": 30,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 10307,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 120,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -62.475,
+                "y": -0.004,
+                "z": -127.237
+              },
+              "predictedPos": {
+                "x": -62.3451,
+                "y": -0.0044,
+                "z": -126.953
+              },
+              "smoothedPos": {
+                "x": -62.3451,
+                "y": -0.0044,
+                "z": -126.953
+              },
+              "divergenceM": 0.3123,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 7,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 0,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": null,
+              "highlightedItemId": null
+            }
+          }
+        ]
+      },
+      "poi_loot_containers_open": {
+        "quality": "medium",
+        "scene": "poi_loot_containers_open",
+        "description": "POI interior & courtyard with opened containers (metal_locker_01, old_toolbox_01, wooden_loot_crate_01) and 3D world loot items rendered",
+        "warmupSeconds": 10,
+        "measurementSeconds": 30,
+        "repeats": 3,
+        "avgFps": 105.03,
+        "p50Fps": 111.11,
+        "p10Fps": 68.49,
+        "onePercentLowFps": 25.91,
+        "avgFrameTimeMs": 9.521,
+        "p50FrameTimeMs": 9,
+        "p95FrameTimeMs": 21.8,
+        "p99FrameTimeMs": 38.6,
+        "fpsMean": 105.03,
+        "fpsMedian": 111.11,
+        "fpsP10": 68.49,
+        "fps1PctLow": 25.91,
+        "frameTimeMedianMs": 9,
+        "frameTimeP95Ms": 21.8,
+        "frameTimeP99Ms": 38.6,
+        "cullCpuMedianMs": 0,
+        "cullCpuP95Ms": 0.1,
+        "drawCalls": 206,
+        "sceneCalls": 206,
+        "vmCalls": 0,
+        "triangles": 467886,
+        "geometries": 177,
+        "textures": 14,
+        "programs": 30,
+        "lootWorldRenderer": {
+          "version": 6,
+          "activeItemMeshCount": 5,
+          "visibleItemMeshCount": 5,
+          "openContainerIds": [
+            "poi:poi_ranger_house:cnt_1:metal_locker_01",
+            "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+            "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+          ],
+          "renderedItemIds": [
+            "itm:r26bn14:c2:0",
+            "itm:r26bn14:c2:1",
+            "itm:r26bn14:c1:0",
+            "itm:r26bn14:c1:1",
+            "itm:r26bn14:c1:2"
+          ],
+          "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+          "highlightedItemId": "itm:r26bn14:c1:0"
+        },
+        "cullingProfile": {
+          "calls": 3185,
+          "evaluatedFrames": 0,
+          "skippedStaticFrames": 3185,
+          "batchBufferUploads": 0,
+          "batchBufferSkips": 0,
+          "lastCpuMs": 0,
+          "avgCpuMs": 0.0046,
+          "p95CpuMs": 0,
+          "maxCpuMs": 0.1
+        },
+        "heapUsedMB": 69.97,
+        "predictionDiagnostics": {
+          "spawnId": 1,
+          "currentSeq": 10307,
+          "lastAckedSeq": 4108,
+          "pendingInputs": 0,
+          "lastServerTick": 2088,
+          "lastPositionError": 0,
+          "maxPositionError": 0.269,
+          "reconcileCount": 2052,
+          "smoothCorrectionCount": 3,
+          "hardSnapCount": 0,
+          "smoothOffsetMag": 0,
+          "authoritativePos": {
+            "x": -90.547,
+            "y": -0.141,
+            "z": 100.2
+          },
+          "predictedPos": {
+            "x": -70.35,
+            "y": 1.32,
+            "z": -64.1
+          },
+          "smoothedPos": {
+            "x": -70.35,
+            "y": 1.32,
+            "z": -64.1
+          },
+          "divergenceM": 165.5432,
+          "netSim": {
+            "rttMs": 0,
+            "jitterMs": 0,
+            "dropRate": 0
+          }
+        },
+        "runs": [
+          {
+            "repeat": 1,
+            "frames": 3142,
+            "durationMs": 30005.6,
+            "fpsMean": 104.71,
+            "fpsMedian": 111.11,
+            "fpsP10": 68.49,
+            "fps1PctLow": 25.91,
+            "frameTimeMedianMs": 9,
+            "frameTimeP95Ms": 30,
+            "frameTimeP99Ms": 38.6,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.1,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 8.582,
+            "gpuTimeP95Ms": 9.365,
+            "render": {
+              "calls": 310,
+              "sceneCalls": 310,
+              "vmCalls": 0,
+              "triangles": 512354,
+              "sceneTris": 512354,
+              "vmTris": 0,
+              "geometries": 168,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 3142,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 3142,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0045,
+              "p95CpuMs": 0,
+              "maxCpuMs": 0.1
+            },
+            "heapUsedMB": 90.04,
+            "heapTotalMB": 127.83,
+            "programs": 30,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 10307,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 0,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -90.547,
+                "y": -0.141,
+                "z": 100.2
+              },
+              "predictedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "smoothedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "divergenceM": 165.5432,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "highlightedItemId": "itm:r26bn14:c1:0"
+            }
+          },
+          {
+            "repeat": 2,
+            "frames": 3152,
+            "durationMs": 30011,
+            "fpsMean": 105.03,
+            "fpsMedian": 111.11,
+            "fpsP10": 68.49,
+            "fps1PctLow": 25.91,
+            "frameTimeMedianMs": 9,
+            "frameTimeP95Ms": 21.8,
+            "frameTimeP99Ms": 38.6,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 8.559,
+            "gpuTimeP95Ms": 9.349,
+            "render": {
+              "calls": 288,
+              "sceneCalls": 288,
+              "vmCalls": 0,
+              "triangles": 493740,
+              "sceneTris": 493740,
+              "vmTris": 0,
+              "geometries": 177,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 3152,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 3152,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0045,
+              "p95CpuMs": 0,
+              "maxCpuMs": 0.1
+            },
+            "heapUsedMB": 63.19,
+            "heapTotalMB": 128.28,
+            "programs": 30,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 10307,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 0,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -90.547,
+                "y": -0.141,
+                "z": 100.2
+              },
+              "predictedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "smoothedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "divergenceM": 165.5432,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "highlightedItemId": "itm:r26bn14:c1:0"
+            }
+          },
+          {
+            "repeat": 3,
+            "frames": 3185,
+            "durationMs": 30015.8,
+            "fpsMean": 106.11,
+            "fpsMedian": 111.11,
+            "fpsP10": 70.42,
+            "fps1PctLow": 26.6,
+            "frameTimeMedianMs": 9,
+            "frameTimeP95Ms": 18.2,
+            "frameTimeP99Ms": 37.6,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 8.459,
+            "gpuTimeP95Ms": 9.249,
+            "render": {
+              "calls": 206,
+              "sceneCalls": 206,
+              "vmCalls": 0,
+              "triangles": 467886,
+              "sceneTris": 467886,
+              "vmTris": 0,
+              "geometries": 177,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 3185,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 3185,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0046,
+              "p95CpuMs": 0,
+              "maxCpuMs": 0.1
+            },
+            "heapUsedMB": 69.97,
+            "heapTotalMB": 127.65,
+            "programs": 30,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 10307,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 0,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -90.547,
+                "y": -0.141,
+                "z": 100.2
+              },
+              "predictedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "smoothedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "divergenceM": 165.5432,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "highlightedItemId": "itm:r26bn14:c1:0"
+            }
+          }
+        ]
+      },
+      "moving_pvp_combat": {
+        "quality": "medium",
+        "scene": "moving_pvp_combat",
+        "description": "1P active PvP combat movement, looted weapon ViewModel & server reconciliation on forest_square with 4 bots",
+        "warmupSeconds": 10,
+        "measurementSeconds": 30,
+        "repeats": 3,
+        "avgFps": 112.46,
+        "p50Fps": 128.21,
+        "p10Fps": 72.99,
+        "onePercentLowFps": 26.6,
+        "avgFrameTimeMs": 8.892,
+        "p50FrameTimeMs": 7.8,
+        "p95FrameTimeMs": 17.5,
+        "p99FrameTimeMs": 37.6,
+        "fpsMean": 112.46,
+        "fpsMedian": 128.21,
+        "fpsP10": 72.99,
+        "fps1PctLow": 26.6,
+        "frameTimeMedianMs": 7.8,
+        "frameTimeP95Ms": 17.5,
+        "frameTimeP99Ms": 37.6,
+        "cullCpuMedianMs": 0,
+        "cullCpuP95Ms": 0.1,
+        "drawCalls": 212,
+        "sceneCalls": 196,
+        "vmCalls": 16,
+        "triangles": 548463,
+        "geometries": 185,
+        "textures": 14,
+        "programs": 30,
+        "lootWorldRenderer": {
+          "version": 6,
+          "activeItemMeshCount": 5,
+          "visibleItemMeshCount": 5,
+          "openContainerIds": [
+            "poi:poi_ranger_house:cnt_1:metal_locker_01",
+            "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+            "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+          ],
+          "renderedItemIds": [
+            "itm:r26bn14:c2:0",
+            "itm:r26bn14:c2:1",
+            "itm:r26bn14:c1:0",
+            "itm:r26bn14:c1:1",
+            "itm:r26bn14:c1:2"
+          ],
+          "highlightedContainerId": null,
+          "highlightedItemId": null
+        },
+        "cullingProfile": {
+          "calls": 3376,
+          "evaluatedFrames": 278,
+          "skippedStaticFrames": 3098,
+          "batchBufferUploads": 493,
+          "batchBufferSkips": 4789,
+          "lastCpuMs": 0,
+          "avgCpuMs": 0.014,
+          "p95CpuMs": 0.1,
+          "maxCpuMs": 0.3
+        },
+        "heapUsedMB": 70.09,
+        "predictionDiagnostics": {
+          "spawnId": 1,
+          "currentSeq": 16841,
+          "lastAckedSeq": 4108,
+          "pendingInputs": 120,
+          "lastServerTick": 2088,
+          "lastPositionError": 0,
+          "maxPositionError": 0.269,
+          "reconcileCount": 2052,
+          "smoothCorrectionCount": 3,
+          "hardSnapCount": 0,
+          "smoothOffsetMag": 0,
+          "authoritativePos": {
+            "x": -98.284,
+            "y": -0.013,
+            "z": -67.441
+          },
+          "predictedPos": {
+            "x": -67.5001,
+            "y": 4.48,
+            "z": -63.6021
+          },
+          "smoothedPos": {
+            "x": -67.5001,
+            "y": 4.48,
+            "z": -63.6021
+          },
+          "divergenceM": 31.346,
+          "netSim": {
+            "rttMs": 0,
+            "jitterMs": 0,
+            "dropRate": 0
+          }
+        },
+        "runs": [
+          {
+            "repeat": 1,
+            "frames": 3231,
+            "durationMs": 30016.5,
+            "fpsMean": 107.64,
+            "fpsMedian": 113.64,
+            "fpsP10": 68.03,
+            "fps1PctLow": 30.12,
+            "frameTimeMedianMs": 8.8,
+            "frameTimeP95Ms": 17.5,
+            "frameTimeP99Ms": 33.2,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 8.386,
+            "gpuTimeP95Ms": 9.331,
+            "render": {
+              "calls": 121,
+              "sceneCalls": 105,
+              "vmCalls": 16,
+              "triangles": 408783,
+              "sceneTris": 402895,
+              "vmTris": 5888,
+              "geometries": 169,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 3231,
+              "evaluatedFrames": 197,
+              "skippedStaticFrames": 3034,
+              "batchBufferUploads": 151,
+              "batchBufferSkips": 3592,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0087,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.2
+            },
+            "heapUsedMB": 76.57,
+            "heapTotalMB": 128.11,
+            "programs": 30,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 12404,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 120,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -90.547,
+                "y": -0.141,
+                "z": 100.2
+              },
+              "predictedPos": {
+                "x": -71.4574,
+                "y": 1.48,
+                "z": -64.1489
+              },
+              "smoothedPos": {
+                "x": -71.4574,
+                "y": 1.48,
+                "z": -64.1489
+              },
+              "divergenceM": 165.4618,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": null,
+              "highlightedItemId": null
+            }
+          },
+          {
+            "repeat": 2,
+            "frames": 3382,
+            "durationMs": 30009.3,
+            "fpsMean": 112.7,
+            "fpsMedian": 128.21,
+            "fpsP10": 72.99,
+            "fps1PctLow": 26.6,
+            "frameTimeMedianMs": 7.8,
+            "frameTimeP95Ms": 16.8,
+            "frameTimeP99Ms": 37.6,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 7.96,
+            "gpuTimeP95Ms": 8.999,
+            "render": {
+              "calls": 297,
+              "sceneCalls": 297,
+              "vmCalls": 0,
+              "triangles": 556809,
+              "sceneTris": 556809,
+              "vmTris": 0,
+              "geometries": 185,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 3382,
+              "evaluatedFrames": 206,
+              "skippedStaticFrames": 3176,
+              "batchBufferUploads": 278,
+              "batchBufferSkips": 3636,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.01,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.2
+            },
+            "heapUsedMB": 71.43,
+            "heapTotalMB": 127.78,
+            "programs": 30,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 14534,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 120,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -98.284,
+                "y": -0.013,
+                "z": -67.441
+              },
+              "predictedPos": {
+                "x": -67.5001,
+                "y": 4.48,
+                "z": -65.1969
+              },
+              "smoothedPos": {
+                "x": -67.5001,
+                "y": 4.48,
+                "z": -65.1969
+              },
+              "divergenceM": 31.1909,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": null,
+              "highlightedItemId": null
+            }
+          },
+          {
+            "repeat": 3,
+            "frames": 3376,
+            "durationMs": 30018.5,
+            "fpsMean": 112.46,
+            "fpsMedian": 142.86,
+            "fpsP10": 82.64,
+            "fps1PctLow": 25.84,
+            "frameTimeMedianMs": 7,
+            "frameTimeP95Ms": 25.3,
+            "frameTimeP99Ms": 38.7,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.3,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 8.384,
+            "gpuTimeP95Ms": 9.514,
+            "render": {
+              "calls": 212,
+              "sceneCalls": 196,
+              "vmCalls": 16,
+              "triangles": 548463,
+              "sceneTris": 542575,
+              "vmTris": 5888,
+              "geometries": 185,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 3376,
+              "evaluatedFrames": 278,
+              "skippedStaticFrames": 3098,
+              "batchBufferUploads": 493,
+              "batchBufferSkips": 4789,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.014,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.3
+            },
+            "heapUsedMB": 70.09,
+            "heapTotalMB": 128.76,
+            "programs": 30,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 16841,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 120,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -98.284,
+                "y": -0.013,
+                "z": -67.441
+              },
+              "predictedPos": {
+                "x": -67.5001,
+                "y": 4.48,
+                "z": -63.6021
+              },
+              "smoothedPos": {
+                "x": -67.5001,
+                "y": 4.48,
+                "z": -63.6021
+              },
+              "divergenceM": 31.346,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": null,
+              "highlightedItemId": null
+            }
+          }
+        ]
+      }
+    },
+    "low": {
+      "poi_loot_containers_open": {
+        "quality": "low",
+        "scene": "poi_loot_containers_open",
+        "description": "POI interior & courtyard with opened containers (metal_locker_01, old_toolbox_01, wooden_loot_crate_01) and 3D world loot items rendered",
+        "warmupSeconds": 10,
+        "measurementSeconds": 30,
+        "repeats": 3,
+        "avgFps": 138.94,
+        "p50Fps": 163.93,
+        "p10Fps": 121.95,
+        "onePercentLowFps": 39.22,
+        "avgFrameTimeMs": 7.197,
+        "p50FrameTimeMs": 6.1,
+        "p95FrameTimeMs": 12.4,
+        "p99FrameTimeMs": 25.5,
+        "fpsMean": 138.94,
+        "fpsMedian": 163.93,
+        "fpsP10": 121.95,
+        "fps1PctLow": 39.22,
+        "frameTimeMedianMs": 6.1,
+        "frameTimeP95Ms": 12.4,
+        "frameTimeP99Ms": 25.5,
+        "cullCpuMedianMs": 0,
+        "cullCpuP95Ms": 0.1,
+        "drawCalls": 143,
+        "sceneCalls": 143,
+        "vmCalls": 0,
+        "triangles": 387506,
+        "geometries": 177,
+        "textures": 14,
+        "programs": 45,
+        "lootWorldRenderer": {
+          "version": 6,
+          "activeItemMeshCount": 5,
+          "visibleItemMeshCount": 5,
+          "openContainerIds": [
+            "poi:poi_ranger_house:cnt_1:metal_locker_01",
+            "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+            "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+          ],
+          "renderedItemIds": [
+            "itm:r26bn14:c2:0",
+            "itm:r26bn14:c2:1",
+            "itm:r26bn14:c1:0",
+            "itm:r26bn14:c1:1",
+            "itm:r26bn14:c1:2"
+          ],
+          "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+          "highlightedItemId": "itm:r26bn14:c1:0"
+        },
+        "cullingProfile": {
+          "calls": 4195,
+          "evaluatedFrames": 0,
+          "skippedStaticFrames": 4195,
+          "batchBufferUploads": 0,
+          "batchBufferSkips": 0,
+          "lastCpuMs": 0,
+          "avgCpuMs": 0.0045,
+          "p95CpuMs": 0,
+          "maxCpuMs": 0.1
+        },
+        "heapUsedMB": 63.37,
+        "predictionDiagnostics": {
+          "spawnId": 1,
+          "currentSeq": 16844,
+          "lastAckedSeq": 4108,
+          "pendingInputs": 0,
+          "lastServerTick": 2088,
+          "lastPositionError": 0,
+          "maxPositionError": 0.269,
+          "reconcileCount": 2052,
+          "smoothCorrectionCount": 3,
+          "hardSnapCount": 0,
+          "smoothOffsetMag": 0,
+          "authoritativePos": {
+            "x": 87.752,
+            "y": 2.366,
+            "z": -40.216
+          },
+          "predictedPos": {
+            "x": -70.35,
+            "y": 1.32,
+            "z": -64.1
+          },
+          "smoothedPos": {
+            "x": -70.35,
+            "y": 1.32,
+            "z": -64.1
+          },
+          "divergenceM": 159.8993,
+          "netSim": {
+            "rttMs": 0,
+            "jitterMs": 0,
+            "dropRate": 0
+          }
+        },
+        "runs": [
+          {
+            "repeat": 1,
+            "frames": 4169,
+            "durationMs": 30006.6,
+            "fpsMean": 138.94,
+            "fpsMedian": 169.49,
+            "fpsP10": 114.94,
+            "fps1PctLow": 36.63,
+            "frameTimeMedianMs": 5.9,
+            "frameTimeP95Ms": 12.6,
+            "frameTimeP99Ms": 27.3,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.1,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 6.282,
+            "gpuTimeP95Ms": 7.109,
+            "render": {
+              "calls": 190,
+              "sceneCalls": 190,
+              "vmCalls": 0,
+              "triangles": 402126,
+              "sceneTris": 402126,
+              "vmTris": 0,
+              "geometries": 177,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 4169,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 4169,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0.1,
+              "avgCpuMs": 0.0051,
+              "p95CpuMs": 0,
+              "maxCpuMs": 0.1
+            },
+            "heapUsedMB": 74.99,
+            "heapTotalMB": 128.47,
+            "programs": 45,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 16844,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 0,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -98.284,
+                "y": -0.013,
+                "z": -67.441
+              },
+              "predictedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "smoothedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "divergenceM": 28.1647,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "highlightedItemId": "itm:r26bn14:c1:0"
+            }
+          },
+          {
+            "repeat": 2,
+            "frames": 4141,
+            "durationMs": 30007.8,
+            "fpsMean": 138,
+            "fpsMedian": 163.93,
+            "fpsP10": 121.95,
+            "fps1PctLow": 39.22,
+            "frameTimeMedianMs": 6.1,
+            "frameTimeP95Ms": 12.4,
+            "frameTimeP99Ms": 25.5,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 6.277,
+            "gpuTimeP95Ms": 7.104,
+            "render": {
+              "calls": 186,
+              "sceneCalls": 186,
+              "vmCalls": 0,
+              "triangles": 400076,
+              "sceneTris": 400076,
+              "vmTris": 0,
+              "geometries": 185,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 4141,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 4141,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0048,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.2
+            },
+            "heapUsedMB": 84.71,
+            "heapTotalMB": 128.26,
+            "programs": 45,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 16844,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 0,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -98.284,
+                "y": -0.013,
+                "z": -67.441
+              },
+              "predictedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "smoothedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "divergenceM": 28.1647,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "highlightedItemId": "itm:r26bn14:c1:0"
+            }
+          },
+          {
+            "repeat": 3,
+            "frames": 4195,
+            "durationMs": 30014.2,
+            "fpsMean": 139.77,
+            "fpsMedian": 156.25,
+            "fpsP10": 123.46,
+            "fps1PctLow": 43.1,
+            "frameTimeMedianMs": 6.4,
+            "frameTimeP95Ms": 9,
+            "frameTimeP99Ms": 23.2,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.1,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 6.242,
+            "gpuTimeP95Ms": 7.067,
+            "render": {
+              "calls": 143,
+              "sceneCalls": 143,
+              "vmCalls": 0,
+              "triangles": 387506,
+              "sceneTris": 387506,
+              "vmTris": 0,
+              "geometries": 177,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 4195,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 4195,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0045,
+              "p95CpuMs": 0,
+              "maxCpuMs": 0.1
+            },
+            "heapUsedMB": 63.37,
+            "heapTotalMB": 128.22,
+            "programs": 45,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 16844,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 0,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 87.752,
+                "y": 2.366,
+                "z": -40.216
+              },
+              "predictedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "smoothedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "divergenceM": 159.8993,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "highlightedItemId": "itm:r26bn14:c1:0"
+            }
+          }
+        ]
+      },
+      "moving_pvp_combat": {
+        "quality": "low",
+        "scene": "moving_pvp_combat",
+        "description": "1P active PvP combat movement, looted weapon ViewModel & server reconciliation on forest_square with 4 bots",
+        "warmupSeconds": 10,
+        "measurementSeconds": 30,
+        "repeats": 3,
+        "avgFps": 135.51,
+        "p50Fps": 136.99,
+        "p10Fps": 128.21,
+        "onePercentLowFps": 112.36,
+        "avgFrameTimeMs": 7.38,
+        "p50FrameTimeMs": 7.3,
+        "p95FrameTimeMs": 8.3,
+        "p99FrameTimeMs": 8.9,
+        "fpsMean": 135.51,
+        "fpsMedian": 136.99,
+        "fpsP10": 128.21,
+        "fps1PctLow": 112.36,
+        "frameTimeMedianMs": 7.3,
+        "frameTimeP95Ms": 8.3,
+        "frameTimeP99Ms": 8.9,
+        "cullCpuMedianMs": 0,
+        "cullCpuP95Ms": 0.1,
+        "drawCalls": 182,
+        "sceneCalls": 182,
+        "vmCalls": 0,
+        "triangles": 411542,
+        "geometries": 177,
+        "textures": 14,
+        "programs": 46,
+        "lootWorldRenderer": {
+          "version": 6,
+          "activeItemMeshCount": 5,
+          "visibleItemMeshCount": 5,
+          "openContainerIds": [
+            "poi:poi_ranger_house:cnt_1:metal_locker_01",
+            "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+            "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+          ],
+          "renderedItemIds": [
+            "itm:r26bn14:c2:0",
+            "itm:r26bn14:c2:1",
+            "itm:r26bn14:c1:0",
+            "itm:r26bn14:c1:1",
+            "itm:r26bn14:c1:2"
+          ],
+          "highlightedContainerId": null,
+          "highlightedItemId": null
+        },
+        "cullingProfile": {
+          "calls": 3888,
+          "evaluatedFrames": 599,
+          "skippedStaticFrames": 3289,
+          "batchBufferUploads": 838,
+          "batchBufferSkips": 10543,
+          "lastCpuMs": 0.1,
+          "avgCpuMs": 0.021,
+          "p95CpuMs": 0.1,
+          "maxCpuMs": 0.3
+        },
+        "heapUsedMB": 63.56,
+        "predictionDiagnostics": {
+          "spawnId": 1,
+          "currentSeq": 23978,
+          "lastAckedSeq": 4108,
+          "pendingInputs": 120,
+          "lastServerTick": 2088,
+          "lastPositionError": 0,
+          "maxPositionError": 0.269,
+          "reconcileCount": 2052,
+          "smoothCorrectionCount": 3,
+          "hardSnapCount": 0,
+          "smoothOffsetMag": 0,
+          "authoritativePos": {
+            "x": 72.607,
+            "y": 0.439,
+            "z": 37.498
+          },
+          "predictedPos": {
+            "x": -52.5319,
+            "y": 1.2381,
+            "z": -65.37
+          },
+          "smoothedPos": {
+            "x": -52.5319,
+            "y": 1.2381,
+            "z": -65.37
+          },
+          "divergenceM": 161.9945,
+          "netSim": {
+            "rttMs": 0,
+            "jitterMs": 0,
+            "dropRate": 0
+          }
+        },
+        "runs": [
+          {
+            "repeat": 1,
+            "frames": 4203,
+            "durationMs": 30017.2,
+            "fpsMean": 140.02,
+            "fpsMedian": 149.25,
+            "fpsP10": 131.58,
+            "fps1PctLow": 68.97,
+            "frameTimeMedianMs": 6.7,
+            "frameTimeP95Ms": 8.5,
+            "frameTimeP99Ms": 14.5,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.3,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 6.445,
+            "gpuTimeP95Ms": 7.337,
+            "render": {
+              "calls": 101,
+              "sceneCalls": 85,
+              "vmCalls": 16,
+              "triangles": 368808,
+              "sceneTris": 362920,
+              "vmTris": 5888,
+              "geometries": 169,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 4203,
+              "evaluatedFrames": 212,
+              "skippedStaticFrames": 3991,
+              "batchBufferUploads": 83,
+              "batchBufferSkips": 3945,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0078,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.3
+            },
+            "heapUsedMB": 88.75,
+            "heapTotalMB": 128.55,
+            "programs": 46,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 19199,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 120,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 88.847,
+                "y": 2.453,
+                "z": -40.686
+              },
+              "predictedPos": {
+                "x": -70.4499,
+                "y": 1.48,
+                "z": -64.8999
+              },
+              "smoothedPos": {
+                "x": -70.4499,
+                "y": 1.48,
+                "z": -64.8999
+              },
+              "divergenceM": 161.1296,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "highlightedItemId": "itm:r26bn14:c1:0"
+            }
+          },
+          {
+            "repeat": 2,
+            "frames": 4067,
+            "durationMs": 30012.3,
+            "fpsMean": 135.51,
+            "fpsMedian": 136.99,
+            "fpsP10": 128.21,
+            "fps1PctLow": 116.28,
+            "frameTimeMedianMs": 7.3,
+            "frameTimeP95Ms": 8,
+            "frameTimeP99Ms": 8.6,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 5.251,
+            "gpuTimeP95Ms": 6.847,
+            "render": {
+              "calls": 208,
+              "sceneCalls": 208,
+              "vmCalls": 0,
+              "triangles": 399308,
+              "sceneTris": 399308,
+              "vmTris": 0,
+              "geometries": 177,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 4067,
+              "evaluatedFrames": 457,
+              "skippedStaticFrames": 3610,
+              "batchBufferUploads": 504,
+              "batchBufferSkips": 8179,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0142,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.2
+            },
+            "heapUsedMB": 64.41,
+            "heapTotalMB": 128.39,
+            "programs": 46,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 21578,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 120,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 20.012,
+                "y": 0.569,
+                "z": -86.118
+              },
+              "predictedPos": {
+                "x": -69.8954,
+                "y": 1.48,
+                "z": -64.5499
+              },
+              "smoothedPos": {
+                "x": -69.8954,
+                "y": 1.48,
+                "z": -64.5499
+              },
+              "divergenceM": 92.4627,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+              "highlightedItemId": "itm:r26bn14:c2:0"
+            }
+          },
+          {
+            "repeat": 3,
+            "frames": 3888,
+            "durationMs": 30015.4,
+            "fpsMean": 129.53,
+            "fpsMedian": 129.87,
+            "fpsP10": 123.46,
+            "fps1PctLow": 112.36,
+            "frameTimeMedianMs": 7.7,
+            "frameTimeP95Ms": 8.3,
+            "frameTimeP99Ms": 8.9,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.3,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 4.473,
+            "gpuTimeP95Ms": 5.672,
+            "render": {
+              "calls": 182,
+              "sceneCalls": 182,
+              "vmCalls": 0,
+              "triangles": 411542,
+              "sceneTris": 411542,
+              "vmTris": 0,
+              "geometries": 177,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 3888,
+              "evaluatedFrames": 599,
+              "skippedStaticFrames": 3289,
+              "batchBufferUploads": 838,
+              "batchBufferSkips": 10543,
+              "lastCpuMs": 0.1,
+              "avgCpuMs": 0.021,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.3
+            },
+            "heapUsedMB": 63.56,
+            "heapTotalMB": 128.84,
+            "programs": 46,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 23978,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 120,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 72.607,
+                "y": 0.439,
+                "z": 37.498
+              },
+              "predictedPos": {
+                "x": -52.5319,
+                "y": 1.2381,
+                "z": -65.37
+              },
+              "smoothedPos": {
+                "x": -52.5319,
+                "y": 1.2381,
+                "z": -65.37
+              },
+              "divergenceM": 161.9945,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": null,
+              "highlightedItemId": null
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenes": {
+    "open_forest_movement": {
+      "quality": "medium",
+      "scene": "open_forest_movement",
+      "description": "Active authoritative player movement & camera sweep in dense forest cover with 4 bots",
+      "warmupSeconds": 10,
+      "measurementSeconds": 30,
+      "repeats": 3,
+      "avgFps": 194.46,
+      "p50Fps": 232.56,
+      "p10Fps": 116.28,
+      "onePercentLowFps": 56.82,
+      "avgFrameTimeMs": 5.142,
+      "p50FrameTimeMs": 4.3,
+      "p95FrameTimeMs": 10.5,
+      "p99FrameTimeMs": 17.6,
+      "fpsMean": 194.46,
+      "fpsMedian": 232.56,
+      "fpsP10": 116.28,
+      "fps1PctLow": 56.82,
+      "frameTimeMedianMs": 4.3,
+      "frameTimeP95Ms": 10.5,
+      "frameTimeP99Ms": 17.6,
+      "cullCpuMedianMs": 0,
+      "cullCpuP95Ms": 0.1,
+      "drawCalls": 66,
+      "sceneCalls": 66,
+      "vmCalls": 0,
+      "triangles": 176198,
+      "geometries": 149,
+      "textures": 14,
+      "programs": 30,
+      "lootWorldRenderer": {
+        "version": 7,
+        "activeItemMeshCount": 5,
+        "visibleItemMeshCount": 0,
+        "openContainerIds": [
+          "poi:poi_ranger_house:cnt_1:metal_locker_01",
+          "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+          "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+        ],
+        "renderedItemIds": [
+          "itm:r26bn14:c2:0",
+          "itm:r26bn14:c2:1",
+          "itm:r26bn14:c1:0",
+          "itm:r26bn14:c1:1",
+          "itm:r26bn14:c1:2"
+        ],
+        "highlightedContainerId": null,
+        "highlightedItemId": null
+      },
+      "cullingProfile": {
+        "calls": 6872,
+        "evaluatedFrames": 542,
+        "skippedStaticFrames": 6330,
+        "batchBufferUploads": 350,
+        "batchBufferSkips": 9948,
+        "lastCpuMs": 0,
+        "avgCpuMs": 0.007,
+        "p95CpuMs": 0.1,
+        "maxCpuMs": 0.2
+      },
+      "heapUsedMB": 81.09,
+      "predictionDiagnostics": {
+        "spawnId": 1,
+        "currentSeq": 10307,
+        "lastAckedSeq": 4108,
+        "pendingInputs": 120,
+        "lastServerTick": 2088,
+        "lastPositionError": 0,
+        "maxPositionError": 0.269,
+        "reconcileCount": 2052,
+        "smoothCorrectionCount": 3,
+        "hardSnapCount": 0,
+        "smoothOffsetMag": 0,
+        "authoritativePos": {
+          "x": -62.475,
+          "y": -0.004,
+          "z": -127.237
+        },
+        "predictedPos": {
+          "x": -62.3451,
+          "y": -0.0044,
+          "z": -126.953
+        },
+        "smoothedPos": {
+          "x": -62.3451,
+          "y": -0.0044,
+          "z": -126.953
+        },
+        "divergenceM": 0.3123,
+        "netSim": {
+          "rttMs": 0,
+          "jitterMs": 0,
+          "dropRate": 0
+        }
+      },
+      "runs": [
+        {
+          "repeat": 1,
+          "frames": 4597,
+          "durationMs": 30017.6,
+          "fpsMean": 153.14,
+          "fpsMedian": 169.49,
+          "fpsP10": 88.5,
+          "fps1PctLow": 38.31,
+          "frameTimeMedianMs": 5.9,
+          "frameTimeP95Ms": 14.5,
+          "frameTimeP99Ms": 26.1,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.3,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 5.709,
+          "gpuTimeP95Ms": 7.862,
+          "render": {
+            "calls": 100,
+            "sceneCalls": 100,
+            "vmCalls": 0,
+            "triangles": 388690,
+            "sceneTris": 388690,
+            "vmTris": 0,
+            "geometries": 157,
+            "textures": 14
+          },
+          "culling": {
+            "calls": 4597,
+            "evaluatedFrames": 573,
+            "skippedStaticFrames": 4024,
+            "batchBufferUploads": 813,
+            "batchBufferSkips": 10074,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0126,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.3
+          },
+          "heapUsedMB": 75.86,
+          "heapTotalMB": 95.64,
+          "programs": 30,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 6101,
+            "lastAckedSeq": 4108,
+            "pendingInputs": 120,
+            "lastServerTick": 2088,
+            "lastPositionError": 0,
+            "maxPositionError": 0.269,
+            "reconcileCount": 2052,
+            "smoothCorrectionCount": 3,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": -78.205,
+              "y": 1.32,
+              "z": -69.064
+            },
+            "predictedPos": {
+              "x": -78.2936,
+              "y": 1.32,
+              "z": -69.3432
+            },
+            "smoothedPos": {
+              "x": -78.2936,
+              "y": 1.32,
+              "z": -69.3432
+            },
+            "divergenceM": 0.2929,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          },
+          "lootWorld": {
+            "version": 7,
+            "activeItemMeshCount": 5,
+            "visibleItemMeshCount": 5,
+            "openContainerIds": [
+              "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+              "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+            ],
+            "renderedItemIds": [
+              "itm:r26bn14:c2:0",
+              "itm:r26bn14:c2:1",
+              "itm:r26bn14:c1:0",
+              "itm:r26bn14:c1:1",
+              "itm:r26bn14:c1:2"
+            ],
+            "highlightedContainerId": null,
+            "highlightedItemId": null
+          }
+        },
+        {
+          "repeat": 2,
+          "frames": 5835,
+          "durationMs": 30006.8,
+          "fpsMean": 194.46,
+          "fpsMedian": 232.56,
+          "fpsP10": 116.28,
+          "fps1PctLow": 56.82,
+          "frameTimeMedianMs": 4.3,
+          "frameTimeP95Ms": 10.5,
+          "frameTimeP99Ms": 17.6,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.2,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 4.64,
+          "gpuTimeP95Ms": 5.559,
+          "render": {
+            "calls": 68,
+            "sceneCalls": 68,
+            "vmCalls": 0,
+            "triangles": 177353,
+            "sceneTris": 177353,
+            "vmTris": 0,
+            "geometries": 149,
+            "textures": 14
+          },
+          "culling": {
+            "calls": 5835,
+            "evaluatedFrames": 569,
+            "skippedStaticFrames": 5266,
+            "batchBufferUploads": 641,
+            "batchBufferSkips": 10170,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.009,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.2
+          },
+          "heapUsedMB": 65.86,
+          "heapTotalMB": 128,
+          "programs": 30,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 8150,
+            "lastAckedSeq": 4108,
+            "pendingInputs": 120,
+            "lastServerTick": 2088,
+            "lastPositionError": 0,
+            "maxPositionError": 0.269,
+            "reconcileCount": 2052,
+            "smoothCorrectionCount": 3,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": -71.206,
+              "y": -0.335,
+              "z": -116.819
+            },
+            "predictedPos": {
+              "x": -71.3531,
+              "y": -0.3321,
+              "z": -116.9667
+            },
+            "smoothedPos": {
+              "x": -71.3531,
+              "y": -0.3321,
+              "z": -116.9667
+            },
+            "divergenceM": 0.2085,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          },
+          "lootWorld": {
+            "version": 7,
+            "activeItemMeshCount": 5,
+            "visibleItemMeshCount": 0,
+            "openContainerIds": [
+              "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+              "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+            ],
+            "renderedItemIds": [
+              "itm:r26bn14:c2:0",
+              "itm:r26bn14:c2:1",
+              "itm:r26bn14:c1:0",
+              "itm:r26bn14:c1:1",
+              "itm:r26bn14:c1:2"
+            ],
+            "highlightedContainerId": null,
+            "highlightedItemId": null
+          }
+        },
+        {
+          "repeat": 3,
+          "frames": 6872,
+          "durationMs": 30010.6,
+          "fpsMean": 228.99,
+          "fpsMedian": 294.12,
+          "fpsP10": 208.33,
+          "fps1PctLow": 99.01,
+          "frameTimeMedianMs": 3.4,
+          "frameTimeP95Ms": 5.6,
+          "frameTimeP99Ms": 10.1,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.2,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 3.585,
+          "gpuTimeP95Ms": 4.56,
+          "render": {
+            "calls": 66,
+            "sceneCalls": 66,
+            "vmCalls": 0,
+            "triangles": 176198,
+            "sceneTris": 176198,
+            "vmTris": 0,
+            "geometries": 149,
+            "textures": 14
+          },
+          "culling": {
+            "calls": 6872,
+            "evaluatedFrames": 542,
+            "skippedStaticFrames": 6330,
+            "batchBufferUploads": 350,
+            "batchBufferSkips": 9948,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.007,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.2
+          },
+          "heapUsedMB": 81.09,
+          "heapTotalMB": 127.35,
+          "programs": 30,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 10307,
+            "lastAckedSeq": 4108,
+            "pendingInputs": 120,
+            "lastServerTick": 2088,
+            "lastPositionError": 0,
+            "maxPositionError": 0.269,
+            "reconcileCount": 2052,
+            "smoothCorrectionCount": 3,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": -62.475,
+              "y": -0.004,
+              "z": -127.237
+            },
+            "predictedPos": {
+              "x": -62.3451,
+              "y": -0.0044,
+              "z": -126.953
+            },
+            "smoothedPos": {
+              "x": -62.3451,
+              "y": -0.0044,
+              "z": -126.953
+            },
+            "divergenceM": 0.3123,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          },
+          "lootWorld": {
+            "version": 7,
+            "activeItemMeshCount": 5,
+            "visibleItemMeshCount": 0,
+            "openContainerIds": [
+              "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+              "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+            ],
+            "renderedItemIds": [
+              "itm:r26bn14:c2:0",
+              "itm:r26bn14:c2:1",
+              "itm:r26bn14:c1:0",
+              "itm:r26bn14:c1:1",
+              "itm:r26bn14:c1:2"
+            ],
+            "highlightedContainerId": null,
+            "highlightedItemId": null
+          }
+        }
+      ]
+    },
+    "poi_loot_containers_open": {
+      "quality": "medium",
+      "scene": "poi_loot_containers_open",
+      "description": "POI interior & courtyard with opened containers (metal_locker_01, old_toolbox_01, wooden_loot_crate_01) and 3D world loot items rendered",
+      "warmupSeconds": 10,
+      "measurementSeconds": 30,
+      "repeats": 3,
+      "avgFps": 105.03,
+      "p50Fps": 111.11,
+      "p10Fps": 68.49,
+      "onePercentLowFps": 25.91,
+      "avgFrameTimeMs": 9.521,
+      "p50FrameTimeMs": 9,
+      "p95FrameTimeMs": 21.8,
+      "p99FrameTimeMs": 38.6,
+      "fpsMean": 105.03,
+      "fpsMedian": 111.11,
+      "fpsP10": 68.49,
+      "fps1PctLow": 25.91,
+      "frameTimeMedianMs": 9,
+      "frameTimeP95Ms": 21.8,
+      "frameTimeP99Ms": 38.6,
+      "cullCpuMedianMs": 0,
+      "cullCpuP95Ms": 0.1,
+      "drawCalls": 206,
+      "sceneCalls": 206,
+      "vmCalls": 0,
+      "triangles": 467886,
+      "geometries": 177,
+      "textures": 14,
+      "programs": 30,
+      "lootWorldRenderer": {
+        "version": 6,
+        "activeItemMeshCount": 5,
+        "visibleItemMeshCount": 5,
+        "openContainerIds": [
+          "poi:poi_ranger_house:cnt_1:metal_locker_01",
+          "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+          "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+        ],
+        "renderedItemIds": [
+          "itm:r26bn14:c2:0",
+          "itm:r26bn14:c2:1",
+          "itm:r26bn14:c1:0",
+          "itm:r26bn14:c1:1",
+          "itm:r26bn14:c1:2"
+        ],
+        "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+        "highlightedItemId": "itm:r26bn14:c1:0"
+      },
+      "cullingProfile": {
+        "calls": 3185,
+        "evaluatedFrames": 0,
+        "skippedStaticFrames": 3185,
+        "batchBufferUploads": 0,
+        "batchBufferSkips": 0,
+        "lastCpuMs": 0,
+        "avgCpuMs": 0.0046,
+        "p95CpuMs": 0,
+        "maxCpuMs": 0.1
+      },
+      "heapUsedMB": 69.97,
+      "predictionDiagnostics": {
+        "spawnId": 1,
+        "currentSeq": 10307,
+        "lastAckedSeq": 4108,
+        "pendingInputs": 0,
+        "lastServerTick": 2088,
+        "lastPositionError": 0,
+        "maxPositionError": 0.269,
+        "reconcileCount": 2052,
+        "smoothCorrectionCount": 3,
+        "hardSnapCount": 0,
+        "smoothOffsetMag": 0,
+        "authoritativePos": {
+          "x": -90.547,
+          "y": -0.141,
+          "z": 100.2
+        },
+        "predictedPos": {
+          "x": -70.35,
+          "y": 1.32,
+          "z": -64.1
+        },
+        "smoothedPos": {
+          "x": -70.35,
+          "y": 1.32,
+          "z": -64.1
+        },
+        "divergenceM": 165.5432,
+        "netSim": {
+          "rttMs": 0,
+          "jitterMs": 0,
+          "dropRate": 0
+        }
+      },
+      "runs": [
+        {
+          "repeat": 1,
+          "frames": 3142,
+          "durationMs": 30005.6,
+          "fpsMean": 104.71,
+          "fpsMedian": 111.11,
+          "fpsP10": 68.49,
+          "fps1PctLow": 25.91,
+          "frameTimeMedianMs": 9,
+          "frameTimeP95Ms": 30,
+          "frameTimeP99Ms": 38.6,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.1,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 8.582,
+          "gpuTimeP95Ms": 9.365,
+          "render": {
+            "calls": 310,
+            "sceneCalls": 310,
+            "vmCalls": 0,
+            "triangles": 512354,
+            "sceneTris": 512354,
+            "vmTris": 0,
+            "geometries": 168,
+            "textures": 14
+          },
+          "culling": {
+            "calls": 3142,
+            "evaluatedFrames": 0,
+            "skippedStaticFrames": 3142,
+            "batchBufferUploads": 0,
+            "batchBufferSkips": 0,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0045,
+            "p95CpuMs": 0,
+            "maxCpuMs": 0.1
+          },
+          "heapUsedMB": 90.04,
+          "heapTotalMB": 127.83,
+          "programs": 30,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 10307,
+            "lastAckedSeq": 4108,
+            "pendingInputs": 0,
+            "lastServerTick": 2088,
+            "lastPositionError": 0,
+            "maxPositionError": 0.269,
+            "reconcileCount": 2052,
+            "smoothCorrectionCount": 3,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": -90.547,
+              "y": -0.141,
+              "z": 100.2
+            },
+            "predictedPos": {
+              "x": -70.35,
+              "y": 1.32,
+              "z": -64.1
+            },
+            "smoothedPos": {
+              "x": -70.35,
+              "y": 1.32,
+              "z": -64.1
+            },
+            "divergenceM": 165.5432,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          },
+          "lootWorld": {
+            "version": 6,
+            "activeItemMeshCount": 5,
+            "visibleItemMeshCount": 5,
+            "openContainerIds": [
+              "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+              "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+            ],
+            "renderedItemIds": [
+              "itm:r26bn14:c2:0",
+              "itm:r26bn14:c2:1",
+              "itm:r26bn14:c1:0",
+              "itm:r26bn14:c1:1",
+              "itm:r26bn14:c1:2"
+            ],
+            "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+            "highlightedItemId": "itm:r26bn14:c1:0"
+          }
+        },
+        {
+          "repeat": 2,
+          "frames": 3152,
+          "durationMs": 30011,
+          "fpsMean": 105.03,
+          "fpsMedian": 111.11,
+          "fpsP10": 68.49,
+          "fps1PctLow": 25.91,
+          "frameTimeMedianMs": 9,
+          "frameTimeP95Ms": 21.8,
+          "frameTimeP99Ms": 38.6,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.2,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 8.559,
+          "gpuTimeP95Ms": 9.349,
+          "render": {
+            "calls": 288,
+            "sceneCalls": 288,
+            "vmCalls": 0,
+            "triangles": 493740,
+            "sceneTris": 493740,
+            "vmTris": 0,
+            "geometries": 177,
+            "textures": 14
+          },
+          "culling": {
+            "calls": 3152,
+            "evaluatedFrames": 0,
+            "skippedStaticFrames": 3152,
+            "batchBufferUploads": 0,
+            "batchBufferSkips": 0,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0045,
+            "p95CpuMs": 0,
+            "maxCpuMs": 0.1
+          },
+          "heapUsedMB": 63.19,
+          "heapTotalMB": 128.28,
+          "programs": 30,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 10307,
+            "lastAckedSeq": 4108,
+            "pendingInputs": 0,
+            "lastServerTick": 2088,
+            "lastPositionError": 0,
+            "maxPositionError": 0.269,
+            "reconcileCount": 2052,
+            "smoothCorrectionCount": 3,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": -90.547,
+              "y": -0.141,
+              "z": 100.2
+            },
+            "predictedPos": {
+              "x": -70.35,
+              "y": 1.32,
+              "z": -64.1
+            },
+            "smoothedPos": {
+              "x": -70.35,
+              "y": 1.32,
+              "z": -64.1
+            },
+            "divergenceM": 165.5432,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          },
+          "lootWorld": {
+            "version": 6,
+            "activeItemMeshCount": 5,
+            "visibleItemMeshCount": 5,
+            "openContainerIds": [
+              "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+              "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+            ],
+            "renderedItemIds": [
+              "itm:r26bn14:c2:0",
+              "itm:r26bn14:c2:1",
+              "itm:r26bn14:c1:0",
+              "itm:r26bn14:c1:1",
+              "itm:r26bn14:c1:2"
+            ],
+            "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+            "highlightedItemId": "itm:r26bn14:c1:0"
+          }
+        },
+        {
+          "repeat": 3,
+          "frames": 3185,
+          "durationMs": 30015.8,
+          "fpsMean": 106.11,
+          "fpsMedian": 111.11,
+          "fpsP10": 70.42,
+          "fps1PctLow": 26.6,
+          "frameTimeMedianMs": 9,
+          "frameTimeP95Ms": 18.2,
+          "frameTimeP99Ms": 37.6,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.2,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 8.459,
+          "gpuTimeP95Ms": 9.249,
+          "render": {
+            "calls": 206,
+            "sceneCalls": 206,
+            "vmCalls": 0,
+            "triangles": 467886,
+            "sceneTris": 467886,
+            "vmTris": 0,
+            "geometries": 177,
+            "textures": 14
+          },
+          "culling": {
+            "calls": 3185,
+            "evaluatedFrames": 0,
+            "skippedStaticFrames": 3185,
+            "batchBufferUploads": 0,
+            "batchBufferSkips": 0,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0046,
+            "p95CpuMs": 0,
+            "maxCpuMs": 0.1
+          },
+          "heapUsedMB": 69.97,
+          "heapTotalMB": 127.65,
+          "programs": 30,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 10307,
+            "lastAckedSeq": 4108,
+            "pendingInputs": 0,
+            "lastServerTick": 2088,
+            "lastPositionError": 0,
+            "maxPositionError": 0.269,
+            "reconcileCount": 2052,
+            "smoothCorrectionCount": 3,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": -90.547,
+              "y": -0.141,
+              "z": 100.2
+            },
+            "predictedPos": {
+              "x": -70.35,
+              "y": 1.32,
+              "z": -64.1
+            },
+            "smoothedPos": {
+              "x": -70.35,
+              "y": 1.32,
+              "z": -64.1
+            },
+            "divergenceM": 165.5432,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          },
+          "lootWorld": {
+            "version": 6,
+            "activeItemMeshCount": 5,
+            "visibleItemMeshCount": 5,
+            "openContainerIds": [
+              "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+              "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+            ],
+            "renderedItemIds": [
+              "itm:r26bn14:c2:0",
+              "itm:r26bn14:c2:1",
+              "itm:r26bn14:c1:0",
+              "itm:r26bn14:c1:1",
+              "itm:r26bn14:c1:2"
+            ],
+            "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+            "highlightedItemId": "itm:r26bn14:c1:0"
+          }
+        }
+      ]
+    },
+    "moving_pvp_combat": {
+      "quality": "medium",
+      "scene": "moving_pvp_combat",
+      "description": "1P active PvP combat movement, looted weapon ViewModel & server reconciliation on forest_square with 4 bots",
+      "warmupSeconds": 10,
+      "measurementSeconds": 30,
+      "repeats": 3,
+      "avgFps": 112.46,
+      "p50Fps": 128.21,
+      "p10Fps": 72.99,
+      "onePercentLowFps": 26.6,
+      "avgFrameTimeMs": 8.892,
+      "p50FrameTimeMs": 7.8,
+      "p95FrameTimeMs": 17.5,
+      "p99FrameTimeMs": 37.6,
+      "fpsMean": 112.46,
+      "fpsMedian": 128.21,
+      "fpsP10": 72.99,
+      "fps1PctLow": 26.6,
+      "frameTimeMedianMs": 7.8,
+      "frameTimeP95Ms": 17.5,
+      "frameTimeP99Ms": 37.6,
+      "cullCpuMedianMs": 0,
+      "cullCpuP95Ms": 0.1,
+      "drawCalls": 212,
+      "sceneCalls": 196,
+      "vmCalls": 16,
+      "triangles": 548463,
+      "geometries": 185,
+      "textures": 14,
+      "programs": 30,
+      "lootWorldRenderer": {
+        "version": 6,
+        "activeItemMeshCount": 5,
+        "visibleItemMeshCount": 5,
+        "openContainerIds": [
+          "poi:poi_ranger_house:cnt_1:metal_locker_01",
+          "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+          "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+        ],
+        "renderedItemIds": [
+          "itm:r26bn14:c2:0",
+          "itm:r26bn14:c2:1",
+          "itm:r26bn14:c1:0",
+          "itm:r26bn14:c1:1",
+          "itm:r26bn14:c1:2"
+        ],
+        "highlightedContainerId": null,
+        "highlightedItemId": null
+      },
+      "cullingProfile": {
+        "calls": 3376,
+        "evaluatedFrames": 278,
+        "skippedStaticFrames": 3098,
+        "batchBufferUploads": 493,
+        "batchBufferSkips": 4789,
+        "lastCpuMs": 0,
+        "avgCpuMs": 0.014,
+        "p95CpuMs": 0.1,
+        "maxCpuMs": 0.3
+      },
+      "heapUsedMB": 70.09,
+      "predictionDiagnostics": {
+        "spawnId": 1,
+        "currentSeq": 16841,
+        "lastAckedSeq": 4108,
+        "pendingInputs": 120,
+        "lastServerTick": 2088,
+        "lastPositionError": 0,
+        "maxPositionError": 0.269,
+        "reconcileCount": 2052,
+        "smoothCorrectionCount": 3,
+        "hardSnapCount": 0,
+        "smoothOffsetMag": 0,
+        "authoritativePos": {
+          "x": -98.284,
+          "y": -0.013,
+          "z": -67.441
+        },
+        "predictedPos": {
+          "x": -67.5001,
+          "y": 4.48,
+          "z": -63.6021
+        },
+        "smoothedPos": {
+          "x": -67.5001,
+          "y": 4.48,
+          "z": -63.6021
+        },
+        "divergenceM": 31.346,
+        "netSim": {
+          "rttMs": 0,
+          "jitterMs": 0,
+          "dropRate": 0
+        }
+      },
+      "runs": [
+        {
+          "repeat": 1,
+          "frames": 3231,
+          "durationMs": 30016.5,
+          "fpsMean": 107.64,
+          "fpsMedian": 113.64,
+          "fpsP10": 68.03,
+          "fps1PctLow": 30.12,
+          "frameTimeMedianMs": 8.8,
+          "frameTimeP95Ms": 17.5,
+          "frameTimeP99Ms": 33.2,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.2,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 8.386,
+          "gpuTimeP95Ms": 9.331,
+          "render": {
+            "calls": 121,
+            "sceneCalls": 105,
+            "vmCalls": 16,
+            "triangles": 408783,
+            "sceneTris": 402895,
+            "vmTris": 5888,
+            "geometries": 169,
+            "textures": 14
+          },
+          "culling": {
+            "calls": 3231,
+            "evaluatedFrames": 197,
+            "skippedStaticFrames": 3034,
+            "batchBufferUploads": 151,
+            "batchBufferSkips": 3592,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0087,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.2
+          },
+          "heapUsedMB": 76.57,
+          "heapTotalMB": 128.11,
+          "programs": 30,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 12404,
+            "lastAckedSeq": 4108,
+            "pendingInputs": 120,
+            "lastServerTick": 2088,
+            "lastPositionError": 0,
+            "maxPositionError": 0.269,
+            "reconcileCount": 2052,
+            "smoothCorrectionCount": 3,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": -90.547,
+              "y": -0.141,
+              "z": 100.2
+            },
+            "predictedPos": {
+              "x": -71.4574,
+              "y": 1.48,
+              "z": -64.1489
+            },
+            "smoothedPos": {
+              "x": -71.4574,
+              "y": 1.48,
+              "z": -64.1489
+            },
+            "divergenceM": 165.4618,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          },
+          "lootWorld": {
+            "version": 6,
+            "activeItemMeshCount": 5,
+            "visibleItemMeshCount": 5,
+            "openContainerIds": [
+              "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+              "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+            ],
+            "renderedItemIds": [
+              "itm:r26bn14:c2:0",
+              "itm:r26bn14:c2:1",
+              "itm:r26bn14:c1:0",
+              "itm:r26bn14:c1:1",
+              "itm:r26bn14:c1:2"
+            ],
+            "highlightedContainerId": null,
+            "highlightedItemId": null
+          }
+        },
+        {
+          "repeat": 2,
+          "frames": 3382,
+          "durationMs": 30009.3,
+          "fpsMean": 112.7,
+          "fpsMedian": 128.21,
+          "fpsP10": 72.99,
+          "fps1PctLow": 26.6,
+          "frameTimeMedianMs": 7.8,
+          "frameTimeP95Ms": 16.8,
+          "frameTimeP99Ms": 37.6,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.2,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 7.96,
+          "gpuTimeP95Ms": 8.999,
+          "render": {
+            "calls": 297,
+            "sceneCalls": 297,
+            "vmCalls": 0,
+            "triangles": 556809,
+            "sceneTris": 556809,
+            "vmTris": 0,
+            "geometries": 185,
+            "textures": 14
+          },
+          "culling": {
+            "calls": 3382,
+            "evaluatedFrames": 206,
+            "skippedStaticFrames": 3176,
+            "batchBufferUploads": 278,
+            "batchBufferSkips": 3636,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.01,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.2
+          },
+          "heapUsedMB": 71.43,
+          "heapTotalMB": 127.78,
+          "programs": 30,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 14534,
+            "lastAckedSeq": 4108,
+            "pendingInputs": 120,
+            "lastServerTick": 2088,
+            "lastPositionError": 0,
+            "maxPositionError": 0.269,
+            "reconcileCount": 2052,
+            "smoothCorrectionCount": 3,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": -98.284,
+              "y": -0.013,
+              "z": -67.441
+            },
+            "predictedPos": {
+              "x": -67.5001,
+              "y": 4.48,
+              "z": -65.1969
+            },
+            "smoothedPos": {
+              "x": -67.5001,
+              "y": 4.48,
+              "z": -65.1969
+            },
+            "divergenceM": 31.1909,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          },
+          "lootWorld": {
+            "version": 6,
+            "activeItemMeshCount": 5,
+            "visibleItemMeshCount": 5,
+            "openContainerIds": [
+              "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+              "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+            ],
+            "renderedItemIds": [
+              "itm:r26bn14:c2:0",
+              "itm:r26bn14:c2:1",
+              "itm:r26bn14:c1:0",
+              "itm:r26bn14:c1:1",
+              "itm:r26bn14:c1:2"
+            ],
+            "highlightedContainerId": null,
+            "highlightedItemId": null
+          }
+        },
+        {
+          "repeat": 3,
+          "frames": 3376,
+          "durationMs": 30018.5,
+          "fpsMean": 112.46,
+          "fpsMedian": 142.86,
+          "fpsP10": 82.64,
+          "fps1PctLow": 25.84,
+          "frameTimeMedianMs": 7,
+          "frameTimeP95Ms": 25.3,
+          "frameTimeP99Ms": 38.7,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.3,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 8.384,
+          "gpuTimeP95Ms": 9.514,
+          "render": {
+            "calls": 212,
+            "sceneCalls": 196,
+            "vmCalls": 16,
+            "triangles": 548463,
+            "sceneTris": 542575,
+            "vmTris": 5888,
+            "geometries": 185,
+            "textures": 14
+          },
+          "culling": {
+            "calls": 3376,
+            "evaluatedFrames": 278,
+            "skippedStaticFrames": 3098,
+            "batchBufferUploads": 493,
+            "batchBufferSkips": 4789,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.014,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.3
+          },
+          "heapUsedMB": 70.09,
+          "heapTotalMB": 128.76,
+          "programs": 30,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 16841,
+            "lastAckedSeq": 4108,
+            "pendingInputs": 120,
+            "lastServerTick": 2088,
+            "lastPositionError": 0,
+            "maxPositionError": 0.269,
+            "reconcileCount": 2052,
+            "smoothCorrectionCount": 3,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": -98.284,
+              "y": -0.013,
+              "z": -67.441
+            },
+            "predictedPos": {
+              "x": -67.5001,
+              "y": 4.48,
+              "z": -63.6021
+            },
+            "smoothedPos": {
+              "x": -67.5001,
+              "y": 4.48,
+              "z": -63.6021
+            },
+            "divergenceM": 31.346,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          },
+          "lootWorld": {
+            "version": 6,
+            "activeItemMeshCount": 5,
+            "visibleItemMeshCount": 5,
+            "openContainerIds": [
+              "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+              "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+            ],
+            "renderedItemIds": [
+              "itm:r26bn14:c2:0",
+              "itm:r26bn14:c2:1",
+              "itm:r26bn14:c1:0",
+              "itm:r26bn14:c1:1",
+              "itm:r26bn14:c1:2"
+            ],
+            "highlightedContainerId": null,
+            "highlightedItemId": null
+          }
+        }
+      ]
+    }
+  },
+  "qualityPresets": {
+    "low": {
+      "poi_loot_containers_open": {
+        "quality": "low",
+        "scene": "poi_loot_containers_open",
+        "description": "POI interior & courtyard with opened containers (metal_locker_01, old_toolbox_01, wooden_loot_crate_01) and 3D world loot items rendered",
+        "warmupSeconds": 10,
+        "measurementSeconds": 30,
+        "repeats": 3,
+        "avgFps": 138.94,
+        "p50Fps": 163.93,
+        "p10Fps": 121.95,
+        "onePercentLowFps": 39.22,
+        "avgFrameTimeMs": 7.197,
+        "p50FrameTimeMs": 6.1,
+        "p95FrameTimeMs": 12.4,
+        "p99FrameTimeMs": 25.5,
+        "fpsMean": 138.94,
+        "fpsMedian": 163.93,
+        "fpsP10": 121.95,
+        "fps1PctLow": 39.22,
+        "frameTimeMedianMs": 6.1,
+        "frameTimeP95Ms": 12.4,
+        "frameTimeP99Ms": 25.5,
+        "cullCpuMedianMs": 0,
+        "cullCpuP95Ms": 0.1,
+        "drawCalls": 143,
+        "sceneCalls": 143,
+        "vmCalls": 0,
+        "triangles": 387506,
+        "geometries": 177,
+        "textures": 14,
+        "programs": 45,
+        "lootWorldRenderer": {
+          "version": 6,
+          "activeItemMeshCount": 5,
+          "visibleItemMeshCount": 5,
+          "openContainerIds": [
+            "poi:poi_ranger_house:cnt_1:metal_locker_01",
+            "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+            "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+          ],
+          "renderedItemIds": [
+            "itm:r26bn14:c2:0",
+            "itm:r26bn14:c2:1",
+            "itm:r26bn14:c1:0",
+            "itm:r26bn14:c1:1",
+            "itm:r26bn14:c1:2"
+          ],
+          "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+          "highlightedItemId": "itm:r26bn14:c1:0"
+        },
+        "cullingProfile": {
+          "calls": 4195,
+          "evaluatedFrames": 0,
+          "skippedStaticFrames": 4195,
+          "batchBufferUploads": 0,
+          "batchBufferSkips": 0,
+          "lastCpuMs": 0,
+          "avgCpuMs": 0.0045,
+          "p95CpuMs": 0,
+          "maxCpuMs": 0.1
+        },
+        "heapUsedMB": 63.37,
+        "predictionDiagnostics": {
+          "spawnId": 1,
+          "currentSeq": 16844,
+          "lastAckedSeq": 4108,
+          "pendingInputs": 0,
+          "lastServerTick": 2088,
+          "lastPositionError": 0,
+          "maxPositionError": 0.269,
+          "reconcileCount": 2052,
+          "smoothCorrectionCount": 3,
+          "hardSnapCount": 0,
+          "smoothOffsetMag": 0,
+          "authoritativePos": {
+            "x": 87.752,
+            "y": 2.366,
+            "z": -40.216
+          },
+          "predictedPos": {
+            "x": -70.35,
+            "y": 1.32,
+            "z": -64.1
+          },
+          "smoothedPos": {
+            "x": -70.35,
+            "y": 1.32,
+            "z": -64.1
+          },
+          "divergenceM": 159.8993,
+          "netSim": {
+            "rttMs": 0,
+            "jitterMs": 0,
+            "dropRate": 0
+          }
+        },
+        "runs": [
+          {
+            "repeat": 1,
+            "frames": 4169,
+            "durationMs": 30006.6,
+            "fpsMean": 138.94,
+            "fpsMedian": 169.49,
+            "fpsP10": 114.94,
+            "fps1PctLow": 36.63,
+            "frameTimeMedianMs": 5.9,
+            "frameTimeP95Ms": 12.6,
+            "frameTimeP99Ms": 27.3,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.1,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 6.282,
+            "gpuTimeP95Ms": 7.109,
+            "render": {
+              "calls": 190,
+              "sceneCalls": 190,
+              "vmCalls": 0,
+              "triangles": 402126,
+              "sceneTris": 402126,
+              "vmTris": 0,
+              "geometries": 177,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 4169,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 4169,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0.1,
+              "avgCpuMs": 0.0051,
+              "p95CpuMs": 0,
+              "maxCpuMs": 0.1
+            },
+            "heapUsedMB": 74.99,
+            "heapTotalMB": 128.47,
+            "programs": 45,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 16844,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 0,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -98.284,
+                "y": -0.013,
+                "z": -67.441
+              },
+              "predictedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "smoothedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "divergenceM": 28.1647,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "highlightedItemId": "itm:r26bn14:c1:0"
+            }
+          },
+          {
+            "repeat": 2,
+            "frames": 4141,
+            "durationMs": 30007.8,
+            "fpsMean": 138,
+            "fpsMedian": 163.93,
+            "fpsP10": 121.95,
+            "fps1PctLow": 39.22,
+            "frameTimeMedianMs": 6.1,
+            "frameTimeP95Ms": 12.4,
+            "frameTimeP99Ms": 25.5,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 6.277,
+            "gpuTimeP95Ms": 7.104,
+            "render": {
+              "calls": 186,
+              "sceneCalls": 186,
+              "vmCalls": 0,
+              "triangles": 400076,
+              "sceneTris": 400076,
+              "vmTris": 0,
+              "geometries": 185,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 4141,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 4141,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0048,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.2
+            },
+            "heapUsedMB": 84.71,
+            "heapTotalMB": 128.26,
+            "programs": 45,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 16844,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 0,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -98.284,
+                "y": -0.013,
+                "z": -67.441
+              },
+              "predictedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "smoothedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "divergenceM": 28.1647,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "highlightedItemId": "itm:r26bn14:c1:0"
+            }
+          },
+          {
+            "repeat": 3,
+            "frames": 4195,
+            "durationMs": 30014.2,
+            "fpsMean": 139.77,
+            "fpsMedian": 156.25,
+            "fpsP10": 123.46,
+            "fps1PctLow": 43.1,
+            "frameTimeMedianMs": 6.4,
+            "frameTimeP95Ms": 9,
+            "frameTimeP99Ms": 23.2,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.1,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 6.242,
+            "gpuTimeP95Ms": 7.067,
+            "render": {
+              "calls": 143,
+              "sceneCalls": 143,
+              "vmCalls": 0,
+              "triangles": 387506,
+              "sceneTris": 387506,
+              "vmTris": 0,
+              "geometries": 177,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 4195,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 4195,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0045,
+              "p95CpuMs": 0,
+              "maxCpuMs": 0.1
+            },
+            "heapUsedMB": 63.37,
+            "heapTotalMB": 128.22,
+            "programs": 45,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 16844,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 0,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 87.752,
+                "y": 2.366,
+                "z": -40.216
+              },
+              "predictedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "smoothedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "divergenceM": 159.8993,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "highlightedItemId": "itm:r26bn14:c1:0"
+            }
+          }
+        ]
+      },
+      "moving_pvp_combat": {
+        "quality": "low",
+        "scene": "moving_pvp_combat",
+        "description": "1P active PvP combat movement, looted weapon ViewModel & server reconciliation on forest_square with 4 bots",
+        "warmupSeconds": 10,
+        "measurementSeconds": 30,
+        "repeats": 3,
+        "avgFps": 135.51,
+        "p50Fps": 136.99,
+        "p10Fps": 128.21,
+        "onePercentLowFps": 112.36,
+        "avgFrameTimeMs": 7.38,
+        "p50FrameTimeMs": 7.3,
+        "p95FrameTimeMs": 8.3,
+        "p99FrameTimeMs": 8.9,
+        "fpsMean": 135.51,
+        "fpsMedian": 136.99,
+        "fpsP10": 128.21,
+        "fps1PctLow": 112.36,
+        "frameTimeMedianMs": 7.3,
+        "frameTimeP95Ms": 8.3,
+        "frameTimeP99Ms": 8.9,
+        "cullCpuMedianMs": 0,
+        "cullCpuP95Ms": 0.1,
+        "drawCalls": 182,
+        "sceneCalls": 182,
+        "vmCalls": 0,
+        "triangles": 411542,
+        "geometries": 177,
+        "textures": 14,
+        "programs": 46,
+        "lootWorldRenderer": {
+          "version": 6,
+          "activeItemMeshCount": 5,
+          "visibleItemMeshCount": 5,
+          "openContainerIds": [
+            "poi:poi_ranger_house:cnt_1:metal_locker_01",
+            "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+            "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+          ],
+          "renderedItemIds": [
+            "itm:r26bn14:c2:0",
+            "itm:r26bn14:c2:1",
+            "itm:r26bn14:c1:0",
+            "itm:r26bn14:c1:1",
+            "itm:r26bn14:c1:2"
+          ],
+          "highlightedContainerId": null,
+          "highlightedItemId": null
+        },
+        "cullingProfile": {
+          "calls": 3888,
+          "evaluatedFrames": 599,
+          "skippedStaticFrames": 3289,
+          "batchBufferUploads": 838,
+          "batchBufferSkips": 10543,
+          "lastCpuMs": 0.1,
+          "avgCpuMs": 0.021,
+          "p95CpuMs": 0.1,
+          "maxCpuMs": 0.3
+        },
+        "heapUsedMB": 63.56,
+        "predictionDiagnostics": {
+          "spawnId": 1,
+          "currentSeq": 23978,
+          "lastAckedSeq": 4108,
+          "pendingInputs": 120,
+          "lastServerTick": 2088,
+          "lastPositionError": 0,
+          "maxPositionError": 0.269,
+          "reconcileCount": 2052,
+          "smoothCorrectionCount": 3,
+          "hardSnapCount": 0,
+          "smoothOffsetMag": 0,
+          "authoritativePos": {
+            "x": 72.607,
+            "y": 0.439,
+            "z": 37.498
+          },
+          "predictedPos": {
+            "x": -52.5319,
+            "y": 1.2381,
+            "z": -65.37
+          },
+          "smoothedPos": {
+            "x": -52.5319,
+            "y": 1.2381,
+            "z": -65.37
+          },
+          "divergenceM": 161.9945,
+          "netSim": {
+            "rttMs": 0,
+            "jitterMs": 0,
+            "dropRate": 0
+          }
+        },
+        "runs": [
+          {
+            "repeat": 1,
+            "frames": 4203,
+            "durationMs": 30017.2,
+            "fpsMean": 140.02,
+            "fpsMedian": 149.25,
+            "fpsP10": 131.58,
+            "fps1PctLow": 68.97,
+            "frameTimeMedianMs": 6.7,
+            "frameTimeP95Ms": 8.5,
+            "frameTimeP99Ms": 14.5,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.3,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 6.445,
+            "gpuTimeP95Ms": 7.337,
+            "render": {
+              "calls": 101,
+              "sceneCalls": 85,
+              "vmCalls": 16,
+              "triangles": 368808,
+              "sceneTris": 362920,
+              "vmTris": 5888,
+              "geometries": 169,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 4203,
+              "evaluatedFrames": 212,
+              "skippedStaticFrames": 3991,
+              "batchBufferUploads": 83,
+              "batchBufferSkips": 3945,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0078,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.3
+            },
+            "heapUsedMB": 88.75,
+            "heapTotalMB": 128.55,
+            "programs": 46,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 19199,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 120,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 88.847,
+                "y": 2.453,
+                "z": -40.686
+              },
+              "predictedPos": {
+                "x": -70.4499,
+                "y": 1.48,
+                "z": -64.8999
+              },
+              "smoothedPos": {
+                "x": -70.4499,
+                "y": 1.48,
+                "z": -64.8999
+              },
+              "divergenceM": 161.1296,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "highlightedItemId": "itm:r26bn14:c1:0"
+            }
+          },
+          {
+            "repeat": 2,
+            "frames": 4067,
+            "durationMs": 30012.3,
+            "fpsMean": 135.51,
+            "fpsMedian": 136.99,
+            "fpsP10": 128.21,
+            "fps1PctLow": 116.28,
+            "frameTimeMedianMs": 7.3,
+            "frameTimeP95Ms": 8,
+            "frameTimeP99Ms": 8.6,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 5.251,
+            "gpuTimeP95Ms": 6.847,
+            "render": {
+              "calls": 208,
+              "sceneCalls": 208,
+              "vmCalls": 0,
+              "triangles": 399308,
+              "sceneTris": 399308,
+              "vmTris": 0,
+              "geometries": 177,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 4067,
+              "evaluatedFrames": 457,
+              "skippedStaticFrames": 3610,
+              "batchBufferUploads": 504,
+              "batchBufferSkips": 8179,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0142,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.2
+            },
+            "heapUsedMB": 64.41,
+            "heapTotalMB": 128.39,
+            "programs": 46,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 21578,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 120,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 20.012,
+                "y": 0.569,
+                "z": -86.118
+              },
+              "predictedPos": {
+                "x": -69.8954,
+                "y": 1.48,
+                "z": -64.5499
+              },
+              "smoothedPos": {
+                "x": -69.8954,
+                "y": 1.48,
+                "z": -64.5499
+              },
+              "divergenceM": 92.4627,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+              "highlightedItemId": "itm:r26bn14:c2:0"
+            }
+          },
+          {
+            "repeat": 3,
+            "frames": 3888,
+            "durationMs": 30015.4,
+            "fpsMean": 129.53,
+            "fpsMedian": 129.87,
+            "fpsP10": 123.46,
+            "fps1PctLow": 112.36,
+            "frameTimeMedianMs": 7.7,
+            "frameTimeP95Ms": 8.3,
+            "frameTimeP99Ms": 8.9,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.3,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 4.473,
+            "gpuTimeP95Ms": 5.672,
+            "render": {
+              "calls": 182,
+              "sceneCalls": 182,
+              "vmCalls": 0,
+              "triangles": 411542,
+              "sceneTris": 411542,
+              "vmTris": 0,
+              "geometries": 177,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 3888,
+              "evaluatedFrames": 599,
+              "skippedStaticFrames": 3289,
+              "batchBufferUploads": 838,
+              "batchBufferSkips": 10543,
+              "lastCpuMs": 0.1,
+              "avgCpuMs": 0.021,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.3
+            },
+            "heapUsedMB": 63.56,
+            "heapTotalMB": 128.84,
+            "programs": 46,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 23978,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 120,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 72.607,
+                "y": 0.439,
+                "z": 37.498
+              },
+              "predictedPos": {
+                "x": -52.5319,
+                "y": 1.2381,
+                "z": -65.37
+              },
+              "smoothedPos": {
+                "x": -52.5319,
+                "y": 1.2381,
+                "z": -65.37
+              },
+              "divergenceM": 161.9945,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": null,
+              "highlightedItemId": null
+            }
+          }
+        ]
+      }
+    },
+    "medium": {
+      "poi_loot_containers_open": {
+        "quality": "medium",
+        "scene": "poi_loot_containers_open",
+        "description": "POI interior & courtyard with opened containers (metal_locker_01, old_toolbox_01, wooden_loot_crate_01) and 3D world loot items rendered",
+        "warmupSeconds": 10,
+        "measurementSeconds": 30,
+        "repeats": 3,
+        "avgFps": 105.03,
+        "p50Fps": 111.11,
+        "p10Fps": 68.49,
+        "onePercentLowFps": 25.91,
+        "avgFrameTimeMs": 9.521,
+        "p50FrameTimeMs": 9,
+        "p95FrameTimeMs": 21.8,
+        "p99FrameTimeMs": 38.6,
+        "fpsMean": 105.03,
+        "fpsMedian": 111.11,
+        "fpsP10": 68.49,
+        "fps1PctLow": 25.91,
+        "frameTimeMedianMs": 9,
+        "frameTimeP95Ms": 21.8,
+        "frameTimeP99Ms": 38.6,
+        "cullCpuMedianMs": 0,
+        "cullCpuP95Ms": 0.1,
+        "drawCalls": 206,
+        "sceneCalls": 206,
+        "vmCalls": 0,
+        "triangles": 467886,
+        "geometries": 177,
+        "textures": 14,
+        "programs": 30,
+        "lootWorldRenderer": {
+          "version": 6,
+          "activeItemMeshCount": 5,
+          "visibleItemMeshCount": 5,
+          "openContainerIds": [
+            "poi:poi_ranger_house:cnt_1:metal_locker_01",
+            "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+            "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+          ],
+          "renderedItemIds": [
+            "itm:r26bn14:c2:0",
+            "itm:r26bn14:c2:1",
+            "itm:r26bn14:c1:0",
+            "itm:r26bn14:c1:1",
+            "itm:r26bn14:c1:2"
+          ],
+          "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+          "highlightedItemId": "itm:r26bn14:c1:0"
+        },
+        "cullingProfile": {
+          "calls": 3185,
+          "evaluatedFrames": 0,
+          "skippedStaticFrames": 3185,
+          "batchBufferUploads": 0,
+          "batchBufferSkips": 0,
+          "lastCpuMs": 0,
+          "avgCpuMs": 0.0046,
+          "p95CpuMs": 0,
+          "maxCpuMs": 0.1
+        },
+        "heapUsedMB": 69.97,
+        "predictionDiagnostics": {
+          "spawnId": 1,
+          "currentSeq": 10307,
+          "lastAckedSeq": 4108,
+          "pendingInputs": 0,
+          "lastServerTick": 2088,
+          "lastPositionError": 0,
+          "maxPositionError": 0.269,
+          "reconcileCount": 2052,
+          "smoothCorrectionCount": 3,
+          "hardSnapCount": 0,
+          "smoothOffsetMag": 0,
+          "authoritativePos": {
+            "x": -90.547,
+            "y": -0.141,
+            "z": 100.2
+          },
+          "predictedPos": {
+            "x": -70.35,
+            "y": 1.32,
+            "z": -64.1
+          },
+          "smoothedPos": {
+            "x": -70.35,
+            "y": 1.32,
+            "z": -64.1
+          },
+          "divergenceM": 165.5432,
+          "netSim": {
+            "rttMs": 0,
+            "jitterMs": 0,
+            "dropRate": 0
+          }
+        },
+        "runs": [
+          {
+            "repeat": 1,
+            "frames": 3142,
+            "durationMs": 30005.6,
+            "fpsMean": 104.71,
+            "fpsMedian": 111.11,
+            "fpsP10": 68.49,
+            "fps1PctLow": 25.91,
+            "frameTimeMedianMs": 9,
+            "frameTimeP95Ms": 30,
+            "frameTimeP99Ms": 38.6,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.1,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 8.582,
+            "gpuTimeP95Ms": 9.365,
+            "render": {
+              "calls": 310,
+              "sceneCalls": 310,
+              "vmCalls": 0,
+              "triangles": 512354,
+              "sceneTris": 512354,
+              "vmTris": 0,
+              "geometries": 168,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 3142,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 3142,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0045,
+              "p95CpuMs": 0,
+              "maxCpuMs": 0.1
+            },
+            "heapUsedMB": 90.04,
+            "heapTotalMB": 127.83,
+            "programs": 30,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 10307,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 0,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -90.547,
+                "y": -0.141,
+                "z": 100.2
+              },
+              "predictedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "smoothedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "divergenceM": 165.5432,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "highlightedItemId": "itm:r26bn14:c1:0"
+            }
+          },
+          {
+            "repeat": 2,
+            "frames": 3152,
+            "durationMs": 30011,
+            "fpsMean": 105.03,
+            "fpsMedian": 111.11,
+            "fpsP10": 68.49,
+            "fps1PctLow": 25.91,
+            "frameTimeMedianMs": 9,
+            "frameTimeP95Ms": 21.8,
+            "frameTimeP99Ms": 38.6,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 8.559,
+            "gpuTimeP95Ms": 9.349,
+            "render": {
+              "calls": 288,
+              "sceneCalls": 288,
+              "vmCalls": 0,
+              "triangles": 493740,
+              "sceneTris": 493740,
+              "vmTris": 0,
+              "geometries": 177,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 3152,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 3152,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0045,
+              "p95CpuMs": 0,
+              "maxCpuMs": 0.1
+            },
+            "heapUsedMB": 63.19,
+            "heapTotalMB": 128.28,
+            "programs": 30,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 10307,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 0,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -90.547,
+                "y": -0.141,
+                "z": 100.2
+              },
+              "predictedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "smoothedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "divergenceM": 165.5432,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "highlightedItemId": "itm:r26bn14:c1:0"
+            }
+          },
+          {
+            "repeat": 3,
+            "frames": 3185,
+            "durationMs": 30015.8,
+            "fpsMean": 106.11,
+            "fpsMedian": 111.11,
+            "fpsP10": 70.42,
+            "fps1PctLow": 26.6,
+            "frameTimeMedianMs": 9,
+            "frameTimeP95Ms": 18.2,
+            "frameTimeP99Ms": 37.6,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 8.459,
+            "gpuTimeP95Ms": 9.249,
+            "render": {
+              "calls": 206,
+              "sceneCalls": 206,
+              "vmCalls": 0,
+              "triangles": 467886,
+              "sceneTris": 467886,
+              "vmTris": 0,
+              "geometries": 177,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 3185,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 3185,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0046,
+              "p95CpuMs": 0,
+              "maxCpuMs": 0.1
+            },
+            "heapUsedMB": 69.97,
+            "heapTotalMB": 127.65,
+            "programs": 30,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 10307,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 0,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -90.547,
+                "y": -0.141,
+                "z": 100.2
+              },
+              "predictedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "smoothedPos": {
+                "x": -70.35,
+                "y": 1.32,
+                "z": -64.1
+              },
+              "divergenceM": 165.5432,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": "poi:poi_ranger_house:cnt_1:metal_locker_01",
+              "highlightedItemId": "itm:r26bn14:c1:0"
+            }
+          }
+        ]
+      },
+      "moving_pvp_combat": {
+        "quality": "medium",
+        "scene": "moving_pvp_combat",
+        "description": "1P active PvP combat movement, looted weapon ViewModel & server reconciliation on forest_square with 4 bots",
+        "warmupSeconds": 10,
+        "measurementSeconds": 30,
+        "repeats": 3,
+        "avgFps": 112.46,
+        "p50Fps": 128.21,
+        "p10Fps": 72.99,
+        "onePercentLowFps": 26.6,
+        "avgFrameTimeMs": 8.892,
+        "p50FrameTimeMs": 7.8,
+        "p95FrameTimeMs": 17.5,
+        "p99FrameTimeMs": 37.6,
+        "fpsMean": 112.46,
+        "fpsMedian": 128.21,
+        "fpsP10": 72.99,
+        "fps1PctLow": 26.6,
+        "frameTimeMedianMs": 7.8,
+        "frameTimeP95Ms": 17.5,
+        "frameTimeP99Ms": 37.6,
+        "cullCpuMedianMs": 0,
+        "cullCpuP95Ms": 0.1,
+        "drawCalls": 212,
+        "sceneCalls": 196,
+        "vmCalls": 16,
+        "triangles": 548463,
+        "geometries": 185,
+        "textures": 14,
+        "programs": 30,
+        "lootWorldRenderer": {
+          "version": 6,
+          "activeItemMeshCount": 5,
+          "visibleItemMeshCount": 5,
+          "openContainerIds": [
+            "poi:poi_ranger_house:cnt_1:metal_locker_01",
+            "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+            "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+          ],
+          "renderedItemIds": [
+            "itm:r26bn14:c2:0",
+            "itm:r26bn14:c2:1",
+            "itm:r26bn14:c1:0",
+            "itm:r26bn14:c1:1",
+            "itm:r26bn14:c1:2"
+          ],
+          "highlightedContainerId": null,
+          "highlightedItemId": null
+        },
+        "cullingProfile": {
+          "calls": 3376,
+          "evaluatedFrames": 278,
+          "skippedStaticFrames": 3098,
+          "batchBufferUploads": 493,
+          "batchBufferSkips": 4789,
+          "lastCpuMs": 0,
+          "avgCpuMs": 0.014,
+          "p95CpuMs": 0.1,
+          "maxCpuMs": 0.3
+        },
+        "heapUsedMB": 70.09,
+        "predictionDiagnostics": {
+          "spawnId": 1,
+          "currentSeq": 16841,
+          "lastAckedSeq": 4108,
+          "pendingInputs": 120,
+          "lastServerTick": 2088,
+          "lastPositionError": 0,
+          "maxPositionError": 0.269,
+          "reconcileCount": 2052,
+          "smoothCorrectionCount": 3,
+          "hardSnapCount": 0,
+          "smoothOffsetMag": 0,
+          "authoritativePos": {
+            "x": -98.284,
+            "y": -0.013,
+            "z": -67.441
+          },
+          "predictedPos": {
+            "x": -67.5001,
+            "y": 4.48,
+            "z": -63.6021
+          },
+          "smoothedPos": {
+            "x": -67.5001,
+            "y": 4.48,
+            "z": -63.6021
+          },
+          "divergenceM": 31.346,
+          "netSim": {
+            "rttMs": 0,
+            "jitterMs": 0,
+            "dropRate": 0
+          }
+        },
+        "runs": [
+          {
+            "repeat": 1,
+            "frames": 3231,
+            "durationMs": 30016.5,
+            "fpsMean": 107.64,
+            "fpsMedian": 113.64,
+            "fpsP10": 68.03,
+            "fps1PctLow": 30.12,
+            "frameTimeMedianMs": 8.8,
+            "frameTimeP95Ms": 17.5,
+            "frameTimeP99Ms": 33.2,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 8.386,
+            "gpuTimeP95Ms": 9.331,
+            "render": {
+              "calls": 121,
+              "sceneCalls": 105,
+              "vmCalls": 16,
+              "triangles": 408783,
+              "sceneTris": 402895,
+              "vmTris": 5888,
+              "geometries": 169,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 3231,
+              "evaluatedFrames": 197,
+              "skippedStaticFrames": 3034,
+              "batchBufferUploads": 151,
+              "batchBufferSkips": 3592,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0087,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.2
+            },
+            "heapUsedMB": 76.57,
+            "heapTotalMB": 128.11,
+            "programs": 30,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 12404,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 120,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -90.547,
+                "y": -0.141,
+                "z": 100.2
+              },
+              "predictedPos": {
+                "x": -71.4574,
+                "y": 1.48,
+                "z": -64.1489
+              },
+              "smoothedPos": {
+                "x": -71.4574,
+                "y": 1.48,
+                "z": -64.1489
+              },
+              "divergenceM": 165.4618,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": null,
+              "highlightedItemId": null
+            }
+          },
+          {
+            "repeat": 2,
+            "frames": 3382,
+            "durationMs": 30009.3,
+            "fpsMean": 112.7,
+            "fpsMedian": 128.21,
+            "fpsP10": 72.99,
+            "fps1PctLow": 26.6,
+            "frameTimeMedianMs": 7.8,
+            "frameTimeP95Ms": 16.8,
+            "frameTimeP99Ms": 37.6,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 7.96,
+            "gpuTimeP95Ms": 8.999,
+            "render": {
+              "calls": 297,
+              "sceneCalls": 297,
+              "vmCalls": 0,
+              "triangles": 556809,
+              "sceneTris": 556809,
+              "vmTris": 0,
+              "geometries": 185,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 3382,
+              "evaluatedFrames": 206,
+              "skippedStaticFrames": 3176,
+              "batchBufferUploads": 278,
+              "batchBufferSkips": 3636,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.01,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.2
+            },
+            "heapUsedMB": 71.43,
+            "heapTotalMB": 127.78,
+            "programs": 30,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 14534,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 120,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -98.284,
+                "y": -0.013,
+                "z": -67.441
+              },
+              "predictedPos": {
+                "x": -67.5001,
+                "y": 4.48,
+                "z": -65.1969
+              },
+              "smoothedPos": {
+                "x": -67.5001,
+                "y": 4.48,
+                "z": -65.1969
+              },
+              "divergenceM": 31.1909,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": null,
+              "highlightedItemId": null
+            }
+          },
+          {
+            "repeat": 3,
+            "frames": 3376,
+            "durationMs": 30018.5,
+            "fpsMean": 112.46,
+            "fpsMedian": 142.86,
+            "fpsP10": 82.64,
+            "fps1PctLow": 25.84,
+            "frameTimeMedianMs": 7,
+            "frameTimeP95Ms": 25.3,
+            "frameTimeP99Ms": 38.7,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.3,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 8.384,
+            "gpuTimeP95Ms": 9.514,
+            "render": {
+              "calls": 212,
+              "sceneCalls": 196,
+              "vmCalls": 16,
+              "triangles": 548463,
+              "sceneTris": 542575,
+              "vmTris": 5888,
+              "geometries": 185,
+              "textures": 14
+            },
+            "culling": {
+              "calls": 3376,
+              "evaluatedFrames": 278,
+              "skippedStaticFrames": 3098,
+              "batchBufferUploads": 493,
+              "batchBufferSkips": 4789,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.014,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.3
+            },
+            "heapUsedMB": 70.09,
+            "heapTotalMB": 128.76,
+            "programs": 30,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 16841,
+              "lastAckedSeq": 4108,
+              "pendingInputs": 120,
+              "lastServerTick": 2088,
+              "lastPositionError": 0,
+              "maxPositionError": 0.269,
+              "reconcileCount": 2052,
+              "smoothCorrectionCount": 3,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -98.284,
+                "y": -0.013,
+                "z": -67.441
+              },
+              "predictedPos": {
+                "x": -67.5001,
+                "y": 4.48,
+                "z": -63.6021
+              },
+              "smoothedPos": {
+                "x": -67.5001,
+                "y": 4.48,
+                "z": -63.6021
+              },
+              "divergenceM": 31.346,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            },
+            "lootWorld": {
+              "version": 6,
+              "activeItemMeshCount": 5,
+              "visibleItemMeshCount": 5,
+              "openContainerIds": [
+                "poi:poi_ranger_house:cnt_1:metal_locker_01",
+                "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+                "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01"
+              ],
+              "renderedItemIds": [
+                "itm:r26bn14:c2:0",
+                "itm:r26bn14:c2:1",
+                "itm:r26bn14:c1:0",
+                "itm:r26bn14:c1:1",
+                "itm:r26bn14:c1:2"
+              ],
+              "highlightedContainerId": null,
+              "highlightedItemId": null
+            }
+          }
+        ]
+      }
+    }
+  },
+  "memoryTest10xReload": {
+    "cycles": [
+      {
+        "cycle": 1,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 82,
+          "textures": 9
+        },
+        "programs": 17,
+        "heapUsedMB": 55.71,
+        "heapTotalMB": 58.01
+      },
+      {
+        "cycle": 2,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 82,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 55.79,
+        "heapTotalMB": 58.01
+      },
+      {
+        "cycle": 3,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 82,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 56.27,
+        "heapTotalMB": 58.26
+      },
+      {
+        "cycle": 4,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 82,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 56.26,
+        "heapTotalMB": 58.51
+      },
+      {
+        "cycle": 5,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 82,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 56.6,
+        "heapTotalMB": 59.01
+      },
+      {
+        "cycle": 6,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 82,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 56.67,
+        "heapTotalMB": 58.76
+      },
+      {
+        "cycle": 7,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 82,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 56.85,
+        "heapTotalMB": 58.51
+      },
+      {
+        "cycle": 8,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 82,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 57.03,
+        "heapTotalMB": 59.01
+      },
+      {
+        "cycle": 9,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 82,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 57.55,
+        "heapTotalMB": 59.51
+      },
+      {
+        "cycle": 10,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 82,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 57.55,
+        "heapTotalMB": 59.26
+      }
+    ],
+    "steadyBaselineCycle": 2,
+    "initialGeometries": 82,
+    "finalGeometries": 82,
+    "geometryDelta": 0,
+    "initialTextures": 9,
+    "finalTextures": 9,
+    "textureDelta": 0,
+    "initialPrograms": 11,
+    "finalPrograms": 11,
+    "programDelta": 0,
+    "initialHeapUsedMB": 55.79,
+    "finalHeapUsedMB": 57.55,
+    "heapDeltaMB": 1.76,
+    "leakDetected": false
+  },
+  "roomReloadMemoryTrend": [
+    {
+      "cycle": 1,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 82,
+        "textures": 9
+      },
+      "programs": 17,
+      "heapUsedMB": 55.71,
+      "heapTotalMB": 58.01
+    },
+    {
+      "cycle": 2,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 82,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 55.79,
+      "heapTotalMB": 58.01
+    },
+    {
+      "cycle": 3,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 82,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 56.27,
+      "heapTotalMB": 58.26
+    },
+    {
+      "cycle": 4,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 82,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 56.26,
+      "heapTotalMB": 58.51
+    },
+    {
+      "cycle": 5,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 82,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 56.6,
+      "heapTotalMB": 59.01
+    },
+    {
+      "cycle": 6,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 82,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 56.67,
+      "heapTotalMB": 58.76
+    },
+    {
+      "cycle": 7,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 82,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 56.85,
+      "heapTotalMB": 58.51
+    },
+    {
+      "cycle": 8,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 82,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 57.03,
+      "heapTotalMB": 59.01
+    },
+    {
+      "cycle": 9,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 82,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 57.55,
+      "heapTotalMB": 59.51
+    },
+    {
+      "cycle": 10,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 82,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 57.55,
+      "heapTotalMB": 59.26
+    }
+  ],
+  "screenshots": [
+    {
+      "filename": "01_unarmed_spawn_3p_hud.png",
+      "bytes": 466110,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "02_unarmed_spawn_1p_empty_hands.png",
+      "bytes": 524398,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "03_closed_container_interaction_prompt.png",
+      "bytes": 323568,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "04_opened_container_3d_loot_and_panel.png",
+      "bytes": 496381,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "05_weapon_equipped_3p_after_pickup.png",
+      "bytes": 491016,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "06_weapon_equipped_1p_viewmodel_and_ammo.png",
+      "bytes": 511730,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "07_empty_container_state_uz.png",
+      "bytes": 518007,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "08_two_clients_loot_sync_pvp.png",
+      "bytes": 478922,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "09_poi_interior_weapon_locker_loot.png",
+      "bytes": 367980,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "10_topdown_256x256_stage06_overview.png",
+      "bytes": 543736,
+      "width": 1280,
+      "height": 720
+    }
+  ]
+}

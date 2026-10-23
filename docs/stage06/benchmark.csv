@@ -1,0 +1,6 @@
+quality,scene,warmupSeconds,measurementSeconds,repeats,avgFps,p50Fps,p10Fps,onePercentLowFps,avgFrameTimeMs,p50FrameTimeMs,p95FrameTimeMs,p99FrameTimeMs,drawCalls,sceneCalls,vmCalls,triangles,geometries,textures,programs,activeLootMeshes,visibleLootMeshes,cullAvgCpuMs,cullP95CpuMs,cullEvaluatedFrames,cullSkippedStaticFrames,heapUsedMB
+medium,open_forest_movement,10,30,3,194.46,232.56,116.28,56.82,5.142,4.3,10.5,17.6,66,66,0,176198,149,14,30,5,0,0.007,0.1,542,6330,81.09
+medium,poi_loot_containers_open,10,30,3,105.03,111.11,68.49,25.91,9.521,9,21.8,38.6,206,206,0,467886,177,14,30,5,5,0.0046,0,0,3185,69.97
+medium,moving_pvp_combat,10,30,3,112.46,128.21,72.99,26.6,8.892,7.8,17.5,37.6,212,196,16,548463,185,14,30,5,5,0.014,0.1,278,3098,70.09
+low,poi_loot_containers_open,10,30,3,138.94,163.93,121.95,39.22,7.197,6.1,12.4,25.5,143,143,0,387506,177,14,45,5,5,0.0045,0,0,4195,63.37
+low,moving_pvp_combat,10,30,3,135.51,136.99,128.21,112.36,7.38,7.3,8.3,8.9,182,182,0,411542,177,14,46,5,5,0.021,0.1,599,3289,63.56

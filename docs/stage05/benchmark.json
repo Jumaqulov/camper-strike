@@ -1,0 +1,4032 @@
+{
+  "stage": "BOSQICH 05 — Server Authoritative Movement, Client Prediction/Reconciliation & Anti-Cheat",
+  "timestamp": "2026-10-21T12:09:35.386Z",
+  "methodology": {
+    "warmupSeconds": 10,
+    "measurementSeconds": 30,
+    "repeatsPerScene": 3,
+    "viewport": "1280x720",
+    "devicePixelRatio": 1,
+    "qualities": [
+      "medium",
+      "low"
+    ],
+    "scenes": [
+      "open_forest_movement",
+      "poi_interior_courtyard",
+      "moving_pvp_combat"
+    ],
+    "bots": 4,
+    "mapId": "forest_square",
+    "worldVersion": 1,
+    "publicLayoutSeed": 6501,
+    "gameplayHash": "c4064b17f166cd42"
+  },
+  "environment": {
+    "platform": "win32 10.0.26300 (x64)",
+    "cpuModel": "Intel(R) Core(TM) i5-14400",
+    "cpuCores": 16,
+    "totalRamGB": 31.67,
+    "nodeVersion": "v24.11.1",
+    "chromeVersion": "Chrome/155.0.8059.80",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+    "gpu": {
+      "vendor": "Google Inc. (Intel)",
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 730 (0x0000A782) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    }
+  },
+  "verification": {
+    "multiplayerSync": {
+      "mapId": "forest_square",
+      "publicLayoutSeed": 6501,
+      "client1GameplayHash": "c4064b17f166cd42",
+      "client2GameplayHash": "c4064b17f166cd42",
+      "gameplayHashMatch": true
+    },
+    "authoritativeMovementTest": {
+      "client1Before": {
+        "spawnId": 1,
+        "currentSeq": 51,
+        "lastAckedSeq": 50,
+        "pendingInputs": 1,
+        "lastServerTick": 77,
+        "lastPositionError": 0.0004,
+        "maxPositionError": 0.0004,
+        "reconcileCount": 67,
+        "smoothCorrectionCount": 0,
+        "hardSnapCount": 0,
+        "smoothOffsetMag": 0,
+        "authoritativePos": {
+          "x": -25.693,
+          "y": 0.1,
+          "z": -83.372
+        },
+        "predictedPos": {
+          "x": -25.693,
+          "y": 0.1004,
+          "z": -83.372
+        },
+        "smoothedPos": {
+          "x": -25.693,
+          "y": 0.1004,
+          "z": -83.372
+        },
+        "divergenceM": 0.0004,
+        "netSim": {
+          "rttMs": 0,
+          "jitterMs": 0,
+          "dropRate": 0
+        }
+      },
+      "client1After": {
+        "spawnId": 1,
+        "currentSeq": 141,
+        "lastAckedSeq": 140,
+        "pendingInputs": 1,
+        "lastServerTick": 123,
+        "lastPositionError": 0.0001,
+        "maxPositionError": 0.0012,
+        "reconcileCount": 113,
+        "smoothCorrectionCount": 0,
+        "hardSnapCount": 0,
+        "smoothOffsetMag": 0,
+        "authoritativePos": {
+          "x": -23.553,
+          "y": 0.045,
+          "z": -76.426
+        },
+        "predictedPos": {
+          "x": -23.553,
+          "y": 0.0451,
+          "z": -76.426
+        },
+        "smoothedPos": {
+          "x": -23.553,
+          "y": 0.0451,
+          "z": -76.426
+        },
+        "divergenceM": 0.0001,
+        "netSim": {
+          "rttMs": 0,
+          "jitterMs": 0,
+          "dropRate": 0
+        }
+      },
+      "client1DistanceMovedM": 7.2682,
+      "client2ObservedDistanceMovedM": 7.2682,
+      "client2RemoteSnapshotAfter": {
+        "id": "wxu_v-_cf6xEDngDAAAK",
+        "x": -23.553,
+        "y": 0.045,
+        "z": -76.426,
+        "vx": 0.057,
+        "vy": 0,
+        "vz": 0.184,
+        "yaw": -2.843,
+        "pitch": 0,
+        "hp": 100,
+        "alive": true,
+        "weapon": "rifle",
+        "onGround": true,
+        "reloading": false,
+        "spawnId": 1,
+        "lastProcessedInputSeq": 127
+      },
+      "client2Before": {
+        "spawnId": 1,
+        "currentSeq": 29,
+        "lastAckedSeq": 28,
+        "pendingInputs": 1,
+        "lastServerTick": 77,
+        "lastPositionError": 0.0001,
+        "maxPositionError": 0.0001,
+        "reconcileCount": 24,
+        "smoothCorrectionCount": 0,
+        "hardSnapCount": 0,
+        "smoothOffsetMag": 0,
+        "authoritativePos": {
+          "x": 92.426,
+          "y": 0.192,
+          "z": 44.995
+        },
+        "predictedPos": {
+          "x": 92.426,
+          "y": 0.1919,
+          "z": 44.995
+        },
+        "smoothedPos": {
+          "x": 92.426,
+          "y": 0.1919,
+          "z": 44.995
+        },
+        "divergenceM": 0.0001,
+        "netSim": {
+          "rttMs": 0,
+          "jitterMs": 0,
+          "dropRate": 0
+        }
+      },
+      "client2After": {
+        "spawnId": 1,
+        "currentSeq": 117,
+        "lastAckedSeq": 115,
+        "pendingInputs": 2,
+        "lastServerTick": 188,
+        "lastPositionError": 0.0001,
+        "maxPositionError": 0.1302,
+        "reconcileCount": 135,
+        "smoothCorrectionCount": 31,
+        "hardSnapCount": 0,
+        "smoothOffsetMag": 0,
+        "authoritativePos": {
+          "x": 87.948,
+          "y": 0.338,
+          "z": 42.815
+        },
+        "predictedPos": {
+          "x": 87.948,
+          "y": 0.3379,
+          "z": 42.815
+        },
+        "smoothedPos": {
+          "x": 87.948,
+          "y": 0.3379,
+          "z": 42.815
+        },
+        "divergenceM": 0.0001,
+        "netSim": {
+          "rttMs": 0,
+          "jitterMs": 0,
+          "dropRate": 0
+        }
+      },
+      "client2DistanceMovedM": 4.9805,
+      "passed": true
+    },
+    "teleportCheatRejectionTest": {
+      "attemptedTeleportTarget": {
+        "x": 88,
+        "y": 40,
+        "z": -88
+      },
+      "packetsSent": 5,
+      "authoritativePosBefore": {
+        "x": -23.553,
+        "y": 0.045,
+        "z": -76.426
+      },
+      "authoritativePosAfter": {
+        "x": -23.553,
+        "y": 0.045,
+        "z": -76.426
+      },
+      "positionShiftM": 0,
+      "distanceFromCheatTargetM": 119.06,
+      "cheatRejected": true
+    },
+    "latencyAndLossReconciliation": [
+      {
+        "label": "0ms_0pct",
+        "netSim": {
+          "rttMs": 0,
+          "jitterMs": 0,
+          "dropRate": 0
+        },
+        "distanceMovedM": 6.1344,
+        "settledDivergenceM": 0.0003,
+        "lastPositionError": 0.0003,
+        "maxPositionError": 0.0012,
+        "reconcileCount": 232,
+        "smoothCorrectionCount": 0,
+        "hardSnapCount": 0,
+        "smoothOffsetMag": 0,
+        "currentSeq": 376,
+        "lastAckedSeq": 375,
+        "lastServerTick": 242,
+        "authoritativePos": {
+          "x": -23.785,
+          "y": -0.064,
+          "z": -70.296
+        },
+        "predictedPos": {
+          "x": -23.785,
+          "y": -0.0637,
+          "z": -70.296
+        },
+        "smoothedPos": {
+          "x": -23.785,
+          "y": -0.0637,
+          "z": -70.296
+        }
+      },
+      {
+        "label": "80ms_5pct",
+        "netSim": {
+          "rttMs": 80,
+          "jitterMs": 10,
+          "dropRate": 0.05
+        },
+        "distanceMovedM": 6.074,
+        "settledDivergenceM": 0.0008,
+        "lastPositionError": 0.0007,
+        "maxPositionError": 0.0012,
+        "reconcileCount": 275,
+        "smoothCorrectionCount": 0,
+        "hardSnapCount": 0,
+        "smoothOffsetMag": 0,
+        "currentSeq": 464,
+        "lastAckedSeq": 456,
+        "lastServerTick": 285,
+        "authoritativePos": {
+          "x": -25.937,
+          "y": 0.039,
+          "z": -75.976
+        },
+        "predictedPos": {
+          "x": -25.9375,
+          "y": 0.0386,
+          "z": -75.9764
+        },
+        "smoothedPos": {
+          "x": -25.9375,
+          "y": 0.0386,
+          "z": -75.9764
+        }
+      },
+      {
+        "label": "150ms_10pct",
+        "netSim": {
+          "rttMs": 150,
+          "jitterMs": 20,
+          "dropRate": 0.1
+        },
+        "distanceMovedM": 6.0538,
+        "settledDivergenceM": 0.0002,
+        "lastPositionError": 0,
+        "maxPositionError": 0.007,
+        "reconcileCount": 314,
+        "smoothCorrectionCount": 1,
+        "hardSnapCount": 0,
+        "smoothOffsetMag": 0,
+        "currentSeq": 551,
+        "lastAckedSeq": 539,
+        "lastServerTick": 330,
+        "authoritativePos": {
+          "x": -21.757,
+          "y": -0.035,
+          "z": -71.597
+        },
+        "predictedPos": {
+          "x": -21.757,
+          "y": -0.0352,
+          "z": -71.597
+        },
+        "smoothedPos": {
+          "x": -21.757,
+          "y": -0.0352,
+          "z": -71.597
+        }
+      },
+      {
+        "label": "200ms_10pct",
+        "netSim": {
+          "rttMs": 200,
+          "jitterMs": 25,
+          "dropRate": 0.1
+        },
+        "distanceMovedM": 6.1634,
+        "settledDivergenceM": 0.0003,
+        "lastPositionError": 0,
+        "maxPositionError": 0.1129,
+        "reconcileCount": 350,
+        "smoothCorrectionCount": 4,
+        "hardSnapCount": 0,
+        "smoothOffsetMag": 0,
+        "currentSeq": 638,
+        "lastAckedSeq": 624,
+        "lastServerTick": 374,
+        "authoritativePos": {
+          "x": -27.413,
+          "y": 0.011,
+          "z": -74.046
+        },
+        "predictedPos": {
+          "x": -27.413,
+          "y": 0.0107,
+          "z": -74.046
+        },
+        "smoothedPos": {
+          "x": -27.413,
+          "y": 0.0107,
+          "z": -74.046
+        }
+      }
+    ],
+    "multiRoomAndLegacyMaps": [
+      {
+        "label": "SQ_Seed_6501_A",
+        "roomId": "r37den1",
+        "mapId": "forest_square",
+        "worldVersion": 1,
+        "publicLayoutSeed": 6501,
+        "gameplayHash": "c4064b17f166cd42",
+        "readyOk": true
+      },
+      {
+        "label": "SQ_Seed_6501_B",
+        "roomId": "r38hqtz",
+        "mapId": "forest_square",
+        "worldVersion": 1,
+        "publicLayoutSeed": 6501,
+        "gameplayHash": "c4064b17f166cd42",
+        "readyOk": true
+      },
+      {
+        "label": "SQ_Seed_7777",
+        "roomId": "r39bfcz",
+        "mapId": "forest_square",
+        "worldVersion": 1,
+        "publicLayoutSeed": 7777,
+        "gameplayHash": "b1051dea85cc06b3",
+        "readyOk": true
+      },
+      {
+        "label": "SQ_Seed_9021",
+        "roomId": "r40esoa",
+        "mapId": "forest_square",
+        "worldVersion": 1,
+        "publicLayoutSeed": 9021,
+        "gameplayHash": "990b664a2e80491f",
+        "readyOk": true
+      },
+      {
+        "label": "Legacy_Stage04A",
+        "roomId": "r41ym7f",
+        "mapId": "forest_assets_preview",
+        "worldVersion": 1,
+        "publicLayoutSeed": 6501,
+        "gameplayHash": "7f36e84b1b9c12e2",
+        "readyOk": true
+      },
+      {
+        "label": "Legacy_ForestSample",
+        "roomId": "r42neof",
+        "mapId": "forest_sample",
+        "worldVersion": 1,
+        "publicLayoutSeed": 6501,
+        "gameplayHash": "ecb479eed8061144",
+        "readyOk": true
+      },
+      {
+        "label": "Legacy_DustArena",
+        "roomId": "r43ejnt",
+        "mapId": "dust_arena",
+        "worldVersion": 1,
+        "publicLayoutSeed": 6501,
+        "gameplayHash": "07aee7f1a347517c",
+        "readyOk": true
+      }
+    ],
+    "glbAssets": {
+      "totalExpected": 28,
+      "totalLoaded": 28,
+      "weaponAssetsLoaded": 4,
+      "forestAssetsLoaded": 7,
+      "buildingAssetsLoaded": 8,
+      "interiorAssetsLoaded": 6,
+      "containerAssetsLoaded": 3,
+      "allLoaded": true
+    },
+    "poiSites": {
+      "poi_ranger_house": {
+        "id": "poi_ranger_house",
+        "center": {
+          "x": -71,
+          "z": -64
+        },
+        "padElevation": 1.32,
+        "roadAnchor": {
+          "x": -69,
+          "z": -54
+        },
+        "terrainY": 1.32,
+        "floorY": 1.48
+      },
+      "poi_cabin_cluster": {
+        "id": "poi_cabin_cluster",
+        "center": {
+          "x": 66,
+          "z": -63
+        },
+        "padElevation": 1.87,
+        "roadAnchor": {
+          "x": 54,
+          "z": -57
+        },
+        "terrainY": 1.87,
+        "floorY": 2.03
+      },
+      "poi_lumber_mill": {
+        "id": "poi_lumber_mill",
+        "center": {
+          "x": -74,
+          "z": 14
+        },
+        "padElevation": 0.89,
+        "roadAnchor": {
+          "x": -62,
+          "z": 14
+        },
+        "terrainY": 0.89,
+        "floorY": 1.05
+      },
+      "poi_service_station": {
+        "id": "poi_service_station",
+        "center": {
+          "x": 20,
+          "z": -8
+        },
+        "padElevation": 0.59,
+        "roadAnchor": {
+          "x": 8,
+          "z": -8
+        },
+        "terrainY": 0.59,
+        "floorY": 0.75
+      },
+      "poi_forest_camp": {
+        "id": "poi_forest_camp",
+        "center": {
+          "x": -57,
+          "z": 71
+        },
+        "padElevation": 0.5,
+        "roadAnchor": {
+          "x": -46,
+          "z": 65
+        },
+        "terrainY": 0.5,
+        "floorY": 0.66
+      },
+      "poi_cliff_watch": {
+        "id": "poi_cliff_watch",
+        "center": {
+          "x": 65,
+          "z": 66
+        },
+        "padElevation": 2.42,
+        "roadAnchor": {
+          "x": 54,
+          "z": 60
+        },
+        "terrainY": 2.42,
+        "floorY": 2.58
+      }
+    },
+    "watchpostSecondFloorPlayerPos": {
+      "x": 63.45,
+      "y": 5.58,
+      "z": 63.55,
+      "yaw": -0.35,
+      "onGround": true
+    },
+    "watchpostSecondFloorVerified": true,
+    "consoleErrorsCount": 0,
+    "networkErrorsCount": 0,
+    "consoleErrors": [],
+    "networkErrors": []
+  },
+  "resultsByQuality": {
+    "medium": {
+      "open_forest_movement": {
+        "quality": "medium",
+        "scene": "open_forest_movement",
+        "description": "Active authoritative player movement & camera sweep in dense forest cover with 4 bots",
+        "warmupSeconds": 10,
+        "measurementSeconds": 30,
+        "repeats": 3,
+        "avgFps": 111.36,
+        "p50Fps": 250,
+        "p10Fps": 75.19,
+        "onePercentLowFps": 8.73,
+        "avgFrameTimeMs": 8.98,
+        "p50FrameTimeMs": 4,
+        "p95FrameTimeMs": 28.8,
+        "p99FrameTimeMs": 114.6,
+        "fpsMean": 111.36,
+        "fpsMedian": 250,
+        "fpsP10": 75.19,
+        "fps1PctLow": 8.73,
+        "frameTimeMedianMs": 4,
+        "frameTimeP95Ms": 28.8,
+        "frameTimeP99Ms": 114.6,
+        "cullCpuMedianMs": 0,
+        "cullCpuP95Ms": 0.2,
+        "drawCalls": 416,
+        "sceneCalls": 416,
+        "vmCalls": 0,
+        "triangles": 631294,
+        "geometries": 150,
+        "textures": 12,
+        "programs": 28,
+        "cullingProfile": {
+          "calls": 3639,
+          "evaluatedFrames": 500,
+          "skippedStaticFrames": 3139,
+          "batchBufferUploads": 1526,
+          "batchBufferSkips": 7974,
+          "lastCpuMs": 0.2,
+          "avgCpuMs": 0.0242,
+          "p95CpuMs": 0.2,
+          "maxCpuMs": 0.4
+        },
+        "heapUsedMB": 71.65,
+        "predictionDiagnostics": {
+          "spawnId": 1,
+          "currentSeq": 5574,
+          "lastAckedSeq": 137,
+          "pendingInputs": 120,
+          "lastServerTick": 91,
+          "lastPositionError": 0.0002,
+          "maxPositionError": 0.0002,
+          "reconcileCount": 58,
+          "smoothCorrectionCount": 0,
+          "hardSnapCount": 0,
+          "smoothOffsetMag": 0,
+          "authoritativePos": {
+            "x": 16.875,
+            "y": 1.825,
+            "z": 89.717
+          },
+          "predictedPos": {
+            "x": 78.2008,
+            "y": -0.1286,
+            "z": -6.3898
+          },
+          "smoothedPos": {
+            "x": 78.2008,
+            "y": -0.1286,
+            "z": -6.3898
+          },
+          "divergenceM": 114.0227,
+          "netSim": {
+            "rttMs": 0,
+            "jitterMs": 0,
+            "dropRate": 0
+          }
+        },
+        "runs": [
+          {
+            "repeat": 1,
+            "frames": 2950,
+            "durationMs": 30015.8,
+            "fpsMean": 98.28,
+            "fpsMedian": 175.44,
+            "fpsP10": 55.56,
+            "fps1PctLow": 16.81,
+            "frameTimeMedianMs": 5.7,
+            "frameTimeP95Ms": 28.8,
+            "frameTimeP99Ms": 59.5,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.2,
+            "cullCpuMaxMs": 0.4,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 7.557,
+            "gpuTimeP95Ms": 12.795,
+            "render": {
+              "calls": 293,
+              "sceneCalls": 293,
+              "vmCalls": 0,
+              "triangles": 585900,
+              "sceneTris": 585900,
+              "vmTris": 0,
+              "geometries": 140,
+              "textures": 12
+            },
+            "culling": {
+              "calls": 2950,
+              "evaluatedFrames": 508,
+              "skippedStaticFrames": 2442,
+              "batchBufferUploads": 1346,
+              "batchBufferSkips": 8306,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0301,
+              "p95CpuMs": 0.2,
+              "maxCpuMs": 0.4
+            },
+            "heapUsedMB": 62.63,
+            "heapTotalMB": 129.16,
+            "programs": 27,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 1911,
+              "lastAckedSeq": 137,
+              "pendingInputs": 120,
+              "lastServerTick": 91,
+              "lastPositionError": 0.0002,
+              "maxPositionError": 0.0002,
+              "reconcileCount": 58,
+              "smoothCorrectionCount": 0,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -92.998,
+                "y": 2.225,
+                "z": 46.336
+              },
+              "predictedPos": {
+                "x": 75.8485,
+                "y": -0.1399,
+                "z": -6.0415
+              },
+              "smoothedPos": {
+                "x": 75.8485,
+                "y": -0.1399,
+                "z": -6.0415
+              },
+              "divergenceM": 176.7997,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            }
+          },
+          {
+            "repeat": 2,
+            "frames": 3346,
+            "durationMs": 30046.8,
+            "fpsMean": 111.36,
+            "fpsMedian": 250,
+            "fpsP10": 75.19,
+            "fps1PctLow": 6.25,
+            "frameTimeMedianMs": 4,
+            "frameTimeP95Ms": 22.5,
+            "frameTimeP99Ms": 159.9,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.2,
+            "cullCpuMaxMs": 0.9,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 6.835,
+            "gpuTimeP95Ms": 10.515,
+            "render": {
+              "calls": 291,
+              "sceneCalls": 291,
+              "vmCalls": 0,
+              "triangles": 598696,
+              "sceneTris": 598696,
+              "vmTris": 0,
+              "geometries": 142,
+              "textures": 12
+            },
+            "culling": {
+              "calls": 3346,
+              "evaluatedFrames": 480,
+              "skippedStaticFrames": 2866,
+              "batchBufferUploads": 1316,
+              "batchBufferSkips": 7804,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.027,
+              "p95CpuMs": 0.2,
+              "maxCpuMs": 0.9
+            },
+            "heapUsedMB": 68.6,
+            "heapTotalMB": 130.05,
+            "programs": 28,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 3681,
+              "lastAckedSeq": 137,
+              "pendingInputs": 120,
+              "lastServerTick": 91,
+              "lastPositionError": 0.0002,
+              "maxPositionError": 0.0002,
+              "reconcileCount": 58,
+              "smoothCorrectionCount": 0,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -93.053,
+                "y": 2.231,
+                "z": 46.316
+              },
+              "predictedPos": {
+                "x": 77.0883,
+                "y": 0.6427,
+                "z": 6.9158
+              },
+              "smoothedPos": {
+                "x": 77.0883,
+                "y": 0.6427,
+                "z": 6.9158
+              },
+              "divergenceM": 174.651,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            }
+          },
+          {
+            "repeat": 3,
+            "frames": 3639,
+            "durationMs": 30011,
+            "fpsMean": 121.26,
+            "fpsMedian": 277.78,
+            "fpsP10": 86.96,
+            "fps1PctLow": 8.73,
+            "frameTimeMedianMs": 3.6,
+            "frameTimeP95Ms": 31.1,
+            "frameTimeP99Ms": 114.6,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.2,
+            "cullCpuMaxMs": 0.4,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 6.83,
+            "gpuTimeP95Ms": 8.776,
+            "render": {
+              "calls": 416,
+              "sceneCalls": 416,
+              "vmCalls": 0,
+              "triangles": 631294,
+              "sceneTris": 631294,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 12
+            },
+            "culling": {
+              "calls": 3639,
+              "evaluatedFrames": 500,
+              "skippedStaticFrames": 3139,
+              "batchBufferUploads": 1526,
+              "batchBufferSkips": 7974,
+              "lastCpuMs": 0.2,
+              "avgCpuMs": 0.0242,
+              "p95CpuMs": 0.2,
+              "maxCpuMs": 0.4
+            },
+            "heapUsedMB": 71.65,
+            "heapTotalMB": 129.1,
+            "programs": 28,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 5574,
+              "lastAckedSeq": 137,
+              "pendingInputs": 120,
+              "lastServerTick": 91,
+              "lastPositionError": 0.0002,
+              "maxPositionError": 0.0002,
+              "reconcileCount": 58,
+              "smoothCorrectionCount": 0,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 16.875,
+                "y": 1.825,
+                "z": 89.717
+              },
+              "predictedPos": {
+                "x": 78.2008,
+                "y": -0.1286,
+                "z": -6.3898
+              },
+              "smoothedPos": {
+                "x": 78.2008,
+                "y": -0.1286,
+                "z": -6.3898
+              },
+              "divergenceM": 114.0227,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            }
+          }
+        ]
+      },
+      "poi_interior_courtyard": {
+        "quality": "medium",
+        "scene": "poi_interior_courtyard",
+        "description": "POI 4 (Eski Servis va Ombor) courtyard & interior view with buildings, furniture, and containers",
+        "warmupSeconds": 10,
+        "measurementSeconds": 30,
+        "repeats": 3,
+        "avgFps": 120.75,
+        "p50Fps": 135.14,
+        "p10Fps": 78.74,
+        "onePercentLowFps": 29.33,
+        "avgFrameTimeMs": 8.282,
+        "p50FrameTimeMs": 7.4,
+        "p95FrameTimeMs": 28.5,
+        "p99FrameTimeMs": 34.1,
+        "fpsMean": 120.75,
+        "fpsMedian": 135.14,
+        "fpsP10": 78.74,
+        "fps1PctLow": 29.33,
+        "frameTimeMedianMs": 7.4,
+        "frameTimeP95Ms": 28.5,
+        "frameTimeP99Ms": 34.1,
+        "cullCpuMedianMs": 0,
+        "cullCpuP95Ms": 0.1,
+        "drawCalls": 307,
+        "sceneCalls": 307,
+        "vmCalls": 0,
+        "triangles": 579603,
+        "geometries": 150,
+        "textures": 12,
+        "programs": 27,
+        "cullingProfile": {
+          "calls": 3623,
+          "evaluatedFrames": 0,
+          "skippedStaticFrames": 3623,
+          "batchBufferUploads": 0,
+          "batchBufferSkips": 0,
+          "lastCpuMs": 0,
+          "avgCpuMs": 0.0059,
+          "p95CpuMs": 0.1,
+          "maxCpuMs": 0.1
+        },
+        "heapUsedMB": 77.1,
+        "predictionDiagnostics": {
+          "spawnId": 1,
+          "currentSeq": 5577,
+          "lastAckedSeq": 137,
+          "pendingInputs": 0,
+          "lastServerTick": 91,
+          "lastPositionError": 0.0002,
+          "maxPositionError": 0.0002,
+          "reconcileCount": 58,
+          "smoothCorrectionCount": 0,
+          "hardSnapCount": 0,
+          "smoothOffsetMag": 0,
+          "authoritativePos": {
+            "x": 92.426,
+            "y": 0.192,
+            "z": 44.995
+          },
+          "predictedPos": {
+            "x": 30,
+            "y": 0.59,
+            "z": 4
+          },
+          "smoothedPos": {
+            "x": 30,
+            "y": 0.59,
+            "z": 4
+          },
+          "divergenceM": 74.6844,
+          "netSim": {
+            "rttMs": 0,
+            "jitterMs": 0,
+            "dropRate": 0
+          }
+        },
+        "runs": [
+          {
+            "repeat": 1,
+            "frames": 3610,
+            "durationMs": 30012.8,
+            "fpsMean": 120.28,
+            "fpsMedian": 135.14,
+            "fpsP10": 71.94,
+            "fps1PctLow": 28.99,
+            "frameTimeMedianMs": 7.4,
+            "frameTimeP95Ms": 30.2,
+            "frameTimeP99Ms": 34.5,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 7.198,
+            "gpuTimeP95Ms": 8.951,
+            "render": {
+              "calls": 313,
+              "sceneCalls": 313,
+              "vmCalls": 0,
+              "triangles": 572335,
+              "sceneTris": 572335,
+              "vmTris": 0,
+              "geometries": 144,
+              "textures": 12
+            },
+            "culling": {
+              "calls": 3610,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 3610,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0047,
+              "p95CpuMs": 0,
+              "maxCpuMs": 0.1
+            },
+            "heapUsedMB": 86.85,
+            "heapTotalMB": 128.3,
+            "programs": 27,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 5577,
+              "lastAckedSeq": 137,
+              "pendingInputs": 0,
+              "lastServerTick": 91,
+              "lastPositionError": 0.0002,
+              "maxPositionError": 0.0002,
+              "reconcileCount": 58,
+              "smoothCorrectionCount": 0,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 16.875,
+                "y": 1.825,
+                "z": 89.717
+              },
+              "predictedPos": {
+                "x": 30,
+                "y": 0.59,
+                "z": 4
+              },
+              "smoothedPos": {
+                "x": 30,
+                "y": 0.59,
+                "z": 4
+              },
+              "divergenceM": 86.7248,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            }
+          },
+          {
+            "repeat": 2,
+            "frames": 3633,
+            "durationMs": 30008.5,
+            "fpsMean": 121.07,
+            "fpsMedian": 135.14,
+            "fpsP10": 79.37,
+            "fps1PctLow": 29.33,
+            "frameTimeMedianMs": 7.4,
+            "frameTimeP95Ms": 28.5,
+            "frameTimeP99Ms": 34.1,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 7.153,
+            "gpuTimeP95Ms": 8.839,
+            "render": {
+              "calls": 345,
+              "sceneCalls": 345,
+              "vmCalls": 0,
+              "triangles": 582065,
+              "sceneTris": 582065,
+              "vmTris": 0,
+              "geometries": 159,
+              "textures": 12
+            },
+            "culling": {
+              "calls": 3633,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 3633,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0.1,
+              "avgCpuMs": 0.0051,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.2
+            },
+            "heapUsedMB": 79.07,
+            "heapTotalMB": 128.07,
+            "programs": 27,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 5577,
+              "lastAckedSeq": 137,
+              "pendingInputs": 0,
+              "lastServerTick": 91,
+              "lastPositionError": 0.0002,
+              "maxPositionError": 0.0002,
+              "reconcileCount": 58,
+              "smoothCorrectionCount": 0,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 16.875,
+                "y": 1.825,
+                "z": 89.717
+              },
+              "predictedPos": {
+                "x": 30,
+                "y": 0.59,
+                "z": 4
+              },
+              "smoothedPos": {
+                "x": 30,
+                "y": 0.59,
+                "z": 4
+              },
+              "divergenceM": 86.7248,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            }
+          },
+          {
+            "repeat": 3,
+            "frames": 3623,
+            "durationMs": 30005.3,
+            "fpsMean": 120.75,
+            "fpsMedian": 135.14,
+            "fpsP10": 78.74,
+            "fps1PctLow": 29.85,
+            "frameTimeMedianMs": 7.4,
+            "frameTimeP95Ms": 27.8,
+            "frameTimeP99Ms": 33.5,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 7.183,
+            "gpuTimeP95Ms": 8.304,
+            "render": {
+              "calls": 307,
+              "sceneCalls": 307,
+              "vmCalls": 0,
+              "triangles": 579603,
+              "sceneTris": 579603,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 12
+            },
+            "culling": {
+              "calls": 3623,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 3623,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0059,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.1
+            },
+            "heapUsedMB": 77.1,
+            "heapTotalMB": 128.46,
+            "programs": 27,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 5577,
+              "lastAckedSeq": 137,
+              "pendingInputs": 0,
+              "lastServerTick": 91,
+              "lastPositionError": 0.0002,
+              "maxPositionError": 0.0002,
+              "reconcileCount": 58,
+              "smoothCorrectionCount": 0,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 92.426,
+                "y": 0.192,
+                "z": 44.995
+              },
+              "predictedPos": {
+                "x": 30,
+                "y": 0.59,
+                "z": 4
+              },
+              "smoothedPos": {
+                "x": 30,
+                "y": 0.59,
+                "z": 4
+              },
+              "divergenceM": 74.6844,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            }
+          }
+        ]
+      },
+      "moving_pvp_combat": {
+        "quality": "medium",
+        "scene": "moving_pvp_combat",
+        "description": "1P active PvP combat movement, weapon view & server reconciliation on forest_square with 4 bots",
+        "warmupSeconds": 10,
+        "measurementSeconds": 30,
+        "repeats": 3,
+        "avgFps": 126.25,
+        "p50Fps": 142.86,
+        "p10Fps": 78.12,
+        "onePercentLowFps": 37.04,
+        "avgFrameTimeMs": 7.921,
+        "p50FrameTimeMs": 7,
+        "p95FrameTimeMs": 15.1,
+        "p99FrameTimeMs": 27,
+        "fpsMean": 126.25,
+        "fpsMedian": 142.86,
+        "fpsP10": 78.12,
+        "fps1PctLow": 37.04,
+        "frameTimeMedianMs": 7,
+        "frameTimeP95Ms": 15.1,
+        "frameTimeP99Ms": 27,
+        "cullCpuMedianMs": 0,
+        "cullCpuP95Ms": 0.1,
+        "drawCalls": 122,
+        "sceneCalls": 108,
+        "vmCalls": 14,
+        "triangles": 454677,
+        "geometries": 158,
+        "textures": 13,
+        "programs": 35,
+        "cullingProfile": {
+          "calls": 4005,
+          "evaluatedFrames": 518,
+          "skippedStaticFrames": 3487,
+          "batchBufferUploads": 835,
+          "batchBufferSkips": 9007,
+          "lastCpuMs": 0,
+          "avgCpuMs": 0.0178,
+          "p95CpuMs": 0.1,
+          "maxCpuMs": 0.5
+        },
+        "heapUsedMB": 62.15,
+        "predictionDiagnostics": {
+          "spawnId": 1,
+          "currentSeq": 11949,
+          "lastAckedSeq": 137,
+          "pendingInputs": 120,
+          "lastServerTick": 91,
+          "lastPositionError": 0.0002,
+          "maxPositionError": 0.0002,
+          "reconcileCount": 58,
+          "smoothCorrectionCount": 0,
+          "hardSnapCount": 0,
+          "smoothOffsetMag": 0,
+          "authoritativePos": {
+            "x": 92.426,
+            "y": 0.192,
+            "z": 44.995
+          },
+          "predictedPos": {
+            "x": 34.1935,
+            "y": 0.098,
+            "z": -37.0679
+          },
+          "smoothedPos": {
+            "x": 34.1935,
+            "y": 0.098,
+            "z": -37.0679
+          },
+          "divergenceM": 100.6248,
+          "netSim": {
+            "rttMs": 0,
+            "jitterMs": 0,
+            "dropRate": 0
+          }
+        },
+        "runs": [
+          {
+            "repeat": 1,
+            "frames": 3709,
+            "durationMs": 30014.4,
+            "fpsMean": 123.57,
+            "fpsMedian": 138.89,
+            "fpsP10": 69.93,
+            "fps1PctLow": 32.57,
+            "frameTimeMedianMs": 7.2,
+            "frameTimeP95Ms": 16.2,
+            "frameTimeP99Ms": 30.7,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.3,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 6.921,
+            "gpuTimeP95Ms": 8.547,
+            "render": {
+              "calls": 115,
+              "sceneCalls": 101,
+              "vmCalls": 14,
+              "triangles": 502424,
+              "sceneTris": 491408,
+              "vmTris": 11016,
+              "geometries": 157,
+              "textures": 13
+            },
+            "culling": {
+              "calls": 3709,
+              "evaluatedFrames": 598,
+              "skippedStaticFrames": 3111,
+              "batchBufferUploads": 1188,
+              "batchBufferSkips": 10174,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.024,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.3
+            },
+            "heapUsedMB": 76.55,
+            "heapTotalMB": 128.32,
+            "programs": 29,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 7734,
+              "lastAckedSeq": 137,
+              "pendingInputs": 120,
+              "lastServerTick": 91,
+              "lastPositionError": 0.0002,
+              "maxPositionError": 0.0002,
+              "reconcileCount": 58,
+              "smoothCorrectionCount": 0,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 92.426,
+                "y": 0.192,
+                "z": 44.995
+              },
+              "predictedPos": {
+                "x": 31.8682,
+                "y": 0.59,
+                "z": -12.5853
+              },
+              "smoothedPos": {
+                "x": 31.8682,
+                "y": 0.59,
+                "z": -12.5853
+              },
+              "divergenceM": 83.5637,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            }
+          },
+          {
+            "repeat": 2,
+            "frames": 3789,
+            "durationMs": 30012.5,
+            "fpsMean": 126.25,
+            "fpsMedian": 142.86,
+            "fpsP10": 78.12,
+            "fps1PctLow": 37.04,
+            "frameTimeMedianMs": 7,
+            "frameTimeP95Ms": 15.1,
+            "frameTimeP99Ms": 27,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.3,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 6.763,
+            "gpuTimeP95Ms": 8.312,
+            "render": {
+              "calls": 165,
+              "sceneCalls": 151,
+              "vmCalls": 14,
+              "triangles": 493085,
+              "sceneTris": 482069,
+              "vmTris": 11016,
+              "geometries": 156,
+              "textures": 13
+            },
+            "culling": {
+              "calls": 3789,
+              "evaluatedFrames": 583,
+              "skippedStaticFrames": 3206,
+              "batchBufferUploads": 1088,
+              "batchBufferSkips": 9989,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0216,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.3
+            },
+            "heapUsedMB": 85.4,
+            "heapTotalMB": 128.27,
+            "programs": 29,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 9888,
+              "lastAckedSeq": 137,
+              "pendingInputs": 120,
+              "lastServerTick": 91,
+              "lastPositionError": 0.0002,
+              "maxPositionError": 0.0002,
+              "reconcileCount": 58,
+              "smoothCorrectionCount": 0,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 92.426,
+                "y": 0.192,
+                "z": 44.995
+              },
+              "predictedPos": {
+                "x": 33.638,
+                "y": 0.2154,
+                "z": -29.1244
+              },
+              "smoothedPos": {
+                "x": 33.638,
+                "y": 0.2154,
+                "z": -29.1244
+              },
+              "divergenceM": 94.6029,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            }
+          },
+          {
+            "repeat": 3,
+            "frames": 4005,
+            "durationMs": 30012.1,
+            "fpsMean": 133.45,
+            "fpsMedian": 196.08,
+            "fpsP10": 105.26,
+            "fps1PctLow": 40,
+            "frameTimeMedianMs": 5.1,
+            "frameTimeP95Ms": 13.3,
+            "frameTimeP99Ms": 25,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.5,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 6.425,
+            "gpuTimeP95Ms": 8.158,
+            "render": {
+              "calls": 122,
+              "sceneCalls": 108,
+              "vmCalls": 14,
+              "triangles": 454677,
+              "sceneTris": 443661,
+              "vmTris": 11016,
+              "geometries": 158,
+              "textures": 13
+            },
+            "culling": {
+              "calls": 4005,
+              "evaluatedFrames": 518,
+              "skippedStaticFrames": 3487,
+              "batchBufferUploads": 835,
+              "batchBufferSkips": 9007,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0178,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.5
+            },
+            "heapUsedMB": 62.15,
+            "heapTotalMB": 67.95,
+            "programs": 35,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 11949,
+              "lastAckedSeq": 137,
+              "pendingInputs": 120,
+              "lastServerTick": 91,
+              "lastPositionError": 0.0002,
+              "maxPositionError": 0.0002,
+              "reconcileCount": 58,
+              "smoothCorrectionCount": 0,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 92.426,
+                "y": 0.192,
+                "z": 44.995
+              },
+              "predictedPos": {
+                "x": 34.1935,
+                "y": 0.098,
+                "z": -37.0679
+              },
+              "smoothedPos": {
+                "x": 34.1935,
+                "y": 0.098,
+                "z": -37.0679
+              },
+              "divergenceM": 100.6248,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            }
+          }
+        ]
+      }
+    },
+    "low": {
+      "poi_interior_courtyard": {
+        "quality": "low",
+        "scene": "poi_interior_courtyard",
+        "description": "POI 4 (Eski Servis va Ombor) courtyard & interior view with buildings, furniture, and containers",
+        "warmupSeconds": 10,
+        "measurementSeconds": 30,
+        "repeats": 3,
+        "avgFps": 161.79,
+        "p50Fps": 166.67,
+        "p10Fps": 151.52,
+        "onePercentLowFps": 81.3,
+        "avgFrameTimeMs": 6.181,
+        "p50FrameTimeMs": 6,
+        "p95FrameTimeMs": 7.3,
+        "p99FrameTimeMs": 12.3,
+        "fpsMean": 161.79,
+        "fpsMedian": 166.67,
+        "fpsP10": 151.52,
+        "fps1PctLow": 81.3,
+        "frameTimeMedianMs": 6,
+        "frameTimeP95Ms": 7.3,
+        "frameTimeP99Ms": 12.3,
+        "cullCpuMedianMs": 0,
+        "cullCpuP95Ms": 0.1,
+        "drawCalls": 245,
+        "sceneCalls": 245,
+        "vmCalls": 0,
+        "triangles": 405516,
+        "geometries": 158,
+        "textures": 13,
+        "programs": 49,
+        "cullingProfile": {
+          "calls": 2801,
+          "evaluatedFrames": 0,
+          "skippedStaticFrames": 2801,
+          "batchBufferUploads": 0,
+          "batchBufferSkips": 0,
+          "lastCpuMs": 0,
+          "avgCpuMs": 0.0058,
+          "p95CpuMs": 0.1,
+          "maxCpuMs": 0.1
+        },
+        "heapUsedMB": 66,
+        "predictionDiagnostics": {
+          "spawnId": 1,
+          "currentSeq": 11949,
+          "lastAckedSeq": 137,
+          "pendingInputs": 0,
+          "lastServerTick": 91,
+          "lastPositionError": 0.0002,
+          "maxPositionError": 0.0002,
+          "reconcileCount": 58,
+          "smoothCorrectionCount": 0,
+          "hardSnapCount": 0,
+          "smoothOffsetMag": 0,
+          "authoritativePos": {
+            "x": 92.426,
+            "y": 0.192,
+            "z": 44.995
+          },
+          "predictedPos": {
+            "x": 30,
+            "y": 0.59,
+            "z": 4
+          },
+          "smoothedPos": {
+            "x": 30,
+            "y": 0.59,
+            "z": 4
+          },
+          "divergenceM": 74.6844,
+          "netSim": {
+            "rttMs": 0,
+            "jitterMs": 0,
+            "dropRate": 0
+          }
+        },
+        "runs": [
+          {
+            "repeat": 1,
+            "frames": 5003,
+            "durationMs": 30007.3,
+            "fpsMean": 166.73,
+            "fpsMedian": 178.57,
+            "fpsP10": 153.85,
+            "fps1PctLow": 81.3,
+            "frameTimeMedianMs": 5.6,
+            "frameTimeP95Ms": 7.3,
+            "frameTimeP99Ms": 12.3,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 4.459,
+            "gpuTimeP95Ms": 5.729,
+            "render": {
+              "calls": 304,
+              "sceneCalls": 304,
+              "vmCalls": 0,
+              "triangles": 433760,
+              "sceneTris": 433760,
+              "vmTris": 0,
+              "geometries": 164,
+              "textures": 13
+            },
+            "culling": {
+              "calls": 5003,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 5003,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0057,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.1
+            },
+            "heapUsedMB": 62.66,
+            "heapTotalMB": 79.81,
+            "programs": 48,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 11949,
+              "lastAckedSeq": 137,
+              "pendingInputs": 0,
+              "lastServerTick": 91,
+              "lastPositionError": 0.0002,
+              "maxPositionError": 0.0002,
+              "reconcileCount": 58,
+              "smoothCorrectionCount": 0,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 92.426,
+                "y": 0.192,
+                "z": 44.995
+              },
+              "predictedPos": {
+                "x": 30,
+                "y": 0.59,
+                "z": 4
+              },
+              "smoothedPos": {
+                "x": 30,
+                "y": 0.59,
+                "z": 4
+              },
+              "divergenceM": 74.6844,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            }
+          },
+          {
+            "repeat": 2,
+            "frames": 4855,
+            "durationMs": 30007.4,
+            "fpsMean": 161.79,
+            "fpsMedian": 166.67,
+            "fpsP10": 151.52,
+            "fps1PctLow": 112.36,
+            "frameTimeMedianMs": 6,
+            "frameTimeP95Ms": 7,
+            "frameTimeP99Ms": 8.9,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 4.454,
+            "gpuTimeP95Ms": 5.202,
+            "render": {
+              "calls": 306,
+              "sceneCalls": 306,
+              "vmCalls": 0,
+              "triangles": 428456,
+              "sceneTris": 428456,
+              "vmTris": 0,
+              "geometries": 156,
+              "textures": 13
+            },
+            "culling": {
+              "calls": 4855,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 4855,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0056,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.1
+            },
+            "heapUsedMB": 61.7,
+            "heapTotalMB": 95.61,
+            "programs": 48,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 11949,
+              "lastAckedSeq": 137,
+              "pendingInputs": 0,
+              "lastServerTick": 91,
+              "lastPositionError": 0.0002,
+              "maxPositionError": 0.0002,
+              "reconcileCount": 58,
+              "smoothCorrectionCount": 0,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 92.426,
+                "y": 0.192,
+                "z": 44.995
+              },
+              "predictedPos": {
+                "x": 30,
+                "y": 0.59,
+                "z": 4
+              },
+              "smoothedPos": {
+                "x": 30,
+                "y": 0.59,
+                "z": 4
+              },
+              "divergenceM": 74.6844,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            }
+          },
+          {
+            "repeat": 3,
+            "frames": 2801,
+            "durationMs": 30153.6,
+            "fpsMean": 92.89,
+            "fpsMedian": 149.25,
+            "fpsP10": 59.88,
+            "fps1PctLow": 14.97,
+            "frameTimeMedianMs": 6.7,
+            "frameTimeP95Ms": 22,
+            "frameTimeP99Ms": 66.8,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 4.452,
+            "gpuTimeP95Ms": 17.093,
+            "render": {
+              "calls": 245,
+              "sceneCalls": 245,
+              "vmCalls": 0,
+              "triangles": 405516,
+              "sceneTris": 405516,
+              "vmTris": 0,
+              "geometries": 158,
+              "textures": 13
+            },
+            "culling": {
+              "calls": 2801,
+              "evaluatedFrames": 0,
+              "skippedStaticFrames": 2801,
+              "batchBufferUploads": 0,
+              "batchBufferSkips": 0,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0058,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.1
+            },
+            "heapUsedMB": 66,
+            "heapTotalMB": 95.94,
+            "programs": 49,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 11949,
+              "lastAckedSeq": 137,
+              "pendingInputs": 0,
+              "lastServerTick": 91,
+              "lastPositionError": 0.0002,
+              "maxPositionError": 0.0002,
+              "reconcileCount": 58,
+              "smoothCorrectionCount": 0,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 92.426,
+                "y": 0.192,
+                "z": 44.995
+              },
+              "predictedPos": {
+                "x": 30,
+                "y": 0.59,
+                "z": 4
+              },
+              "smoothedPos": {
+                "x": 30,
+                "y": 0.59,
+                "z": 4
+              },
+              "divergenceM": 74.6844,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            }
+          }
+        ]
+      },
+      "moving_pvp_combat": {
+        "quality": "low",
+        "scene": "moving_pvp_combat",
+        "description": "1P active PvP combat movement, weapon view & server reconciliation on forest_square with 4 bots",
+        "warmupSeconds": 10,
+        "measurementSeconds": 30,
+        "repeats": 3,
+        "avgFps": 92.07,
+        "p50Fps": 147.06,
+        "p10Fps": 103.09,
+        "onePercentLowFps": 25.32,
+        "avgFrameTimeMs": 10.861,
+        "p50FrameTimeMs": 6.8,
+        "p95FrameTimeMs": 18.3,
+        "p99FrameTimeMs": 39.5,
+        "fpsMean": 92.07,
+        "fpsMedian": 147.06,
+        "fpsP10": 103.09,
+        "fps1PctLow": 25.32,
+        "frameTimeMedianMs": 6.8,
+        "frameTimeP95Ms": 18.3,
+        "frameTimeP99Ms": 39.5,
+        "cullCpuMedianMs": 0,
+        "cullCpuP95Ms": 0.1,
+        "drawCalls": 109,
+        "sceneCalls": 95,
+        "vmCalls": 14,
+        "triangles": 357006,
+        "geometries": 140,
+        "textures": 13,
+        "programs": 49,
+        "cullingProfile": {
+          "calls": 2763,
+          "evaluatedFrames": 451,
+          "skippedStaticFrames": 2312,
+          "batchBufferUploads": 409,
+          "batchBufferSkips": 8160,
+          "lastCpuMs": 0,
+          "avgCpuMs": 0.0176,
+          "p95CpuMs": 0.1,
+          "maxCpuMs": 0.2
+        },
+        "heapUsedMB": 61.23,
+        "predictionDiagnostics": {
+          "spawnId": 1,
+          "currentSeq": 17376,
+          "lastAckedSeq": 137,
+          "pendingInputs": 120,
+          "lastServerTick": 91,
+          "lastPositionError": 0.0002,
+          "maxPositionError": 0.0002,
+          "reconcileCount": 58,
+          "smoothCorrectionCount": 0,
+          "hardSnapCount": 0,
+          "smoothOffsetMag": 0,
+          "authoritativePos": {
+            "x": -43.471,
+            "y": 0.458,
+            "z": -65.068
+          },
+          "predictedPos": {
+            "x": 69.093,
+            "y": 1.87,
+            "z": -59.9927
+          },
+          "smoothedPos": {
+            "x": 69.093,
+            "y": 1.87,
+            "z": -59.9927
+          },
+          "divergenceM": 112.6872,
+          "netSim": {
+            "rttMs": 0,
+            "jitterMs": 0,
+            "dropRate": 0
+          }
+        },
+        "runs": [
+          {
+            "repeat": 1,
+            "frames": 2822,
+            "durationMs": 30022.5,
+            "fpsMean": 94,
+            "fpsMedian": 153.85,
+            "fpsP10": 74.63,
+            "fps1PctLow": 25.64,
+            "frameTimeMedianMs": 6.5,
+            "frameTimeP95Ms": 18.3,
+            "frameTimeP99Ms": 39,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.4,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 4.543,
+            "gpuTimeP95Ms": 15.981,
+            "render": {
+              "calls": 91,
+              "sceneCalls": 77,
+              "vmCalls": 14,
+              "triangles": 386644,
+              "sceneTris": 375628,
+              "vmTris": 11016,
+              "geometries": 156,
+              "textures": 13
+            },
+            "culling": {
+              "calls": 2822,
+              "evaluatedFrames": 461,
+              "skippedStaticFrames": 2361,
+              "batchBufferUploads": 907,
+              "batchBufferSkips": 7852,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0218,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.4
+            },
+            "heapUsedMB": 63.31,
+            "heapTotalMB": 95.77,
+            "programs": 49,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 13770,
+              "lastAckedSeq": 137,
+              "pendingInputs": 120,
+              "lastServerTick": 91,
+              "lastPositionError": 0.0002,
+              "maxPositionError": 0.0002,
+              "reconcileCount": 58,
+              "smoothCorrectionCount": 0,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": 92.426,
+                "y": 0.192,
+                "z": 44.995
+              },
+              "predictedPos": {
+                "x": 36.4894,
+                "y": 0.2681,
+                "z": -23.093
+              },
+              "smoothedPos": {
+                "x": 36.4894,
+                "y": 0.2681,
+                "z": -23.093
+              },
+              "divergenceM": 88.1186,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            }
+          },
+          {
+            "repeat": 2,
+            "frames": 2687,
+            "durationMs": 30018.3,
+            "fpsMean": 89.51,
+            "fpsMedian": 147.06,
+            "fpsP10": 103.09,
+            "fps1PctLow": 23.31,
+            "frameTimeMedianMs": 6.8,
+            "frameTimeP95Ms": 19.2,
+            "frameTimeP99Ms": 42.9,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.3,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 4.648,
+            "gpuTimeP95Ms": 14.372,
+            "render": {
+              "calls": 151,
+              "sceneCalls": 137,
+              "vmCalls": 14,
+              "triangles": 382932,
+              "sceneTris": 371916,
+              "vmTris": 11016,
+              "geometries": 148,
+              "textures": 13
+            },
+            "culling": {
+              "calls": 2687,
+              "evaluatedFrames": 447,
+              "skippedStaticFrames": 2240,
+              "batchBufferUploads": 705,
+              "batchBufferSkips": 7788,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0206,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.3
+            },
+            "heapUsedMB": 79.98,
+            "heapTotalMB": 118.85,
+            "programs": 49,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 15576,
+              "lastAckedSeq": 137,
+              "pendingInputs": 120,
+              "lastServerTick": 91,
+              "lastPositionError": 0.0002,
+              "maxPositionError": 0.0002,
+              "reconcileCount": 58,
+              "smoothCorrectionCount": 0,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -43.522,
+                "y": 0.461,
+                "z": -65.096
+              },
+              "predictedPos": {
+                "x": 50.5205,
+                "y": 1.6906,
+                "z": -48.4231
+              },
+              "smoothedPos": {
+                "x": 50.5205,
+                "y": 1.6906,
+                "z": -48.4231
+              },
+              "divergenceM": 95.517,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            }
+          },
+          {
+            "repeat": 3,
+            "frames": 2763,
+            "durationMs": 30011.2,
+            "fpsMean": 92.07,
+            "fpsMedian": 144.93,
+            "fpsP10": 113.64,
+            "fps1PctLow": 25.32,
+            "frameTimeMedianMs": 6.9,
+            "frameTimeP95Ms": 17,
+            "frameTimeP99Ms": 39.5,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.3,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 4.468,
+            "gpuTimeP95Ms": 18.173,
+            "render": {
+              "calls": 109,
+              "sceneCalls": 95,
+              "vmCalls": 14,
+              "triangles": 357006,
+              "sceneTris": 345990,
+              "vmTris": 11016,
+              "geometries": 140,
+              "textures": 13
+            },
+            "culling": {
+              "calls": 2763,
+              "evaluatedFrames": 451,
+              "skippedStaticFrames": 2312,
+              "batchBufferUploads": 409,
+              "batchBufferSkips": 8160,
+              "lastCpuMs": 0,
+              "avgCpuMs": 0.0176,
+              "p95CpuMs": 0.1,
+              "maxCpuMs": 0.2
+            },
+            "heapUsedMB": 61.23,
+            "heapTotalMB": 67.46,
+            "programs": 49,
+            "prediction": {
+              "spawnId": 1,
+              "currentSeq": 17376,
+              "lastAckedSeq": 137,
+              "pendingInputs": 120,
+              "lastServerTick": 91,
+              "lastPositionError": 0.0002,
+              "maxPositionError": 0.0002,
+              "reconcileCount": 58,
+              "smoothCorrectionCount": 0,
+              "hardSnapCount": 0,
+              "smoothOffsetMag": 0,
+              "authoritativePos": {
+                "x": -43.471,
+                "y": 0.458,
+                "z": -65.068
+              },
+              "predictedPos": {
+                "x": 69.093,
+                "y": 1.87,
+                "z": -59.9927
+              },
+              "smoothedPos": {
+                "x": 69.093,
+                "y": 1.87,
+                "z": -59.9927
+              },
+              "divergenceM": 112.6872,
+              "netSim": {
+                "rttMs": 0,
+                "jitterMs": 0,
+                "dropRate": 0
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenes": {
+    "open_forest_movement": {
+      "quality": "medium",
+      "scene": "open_forest_movement",
+      "description": "Active authoritative player movement & camera sweep in dense forest cover with 4 bots",
+      "warmupSeconds": 10,
+      "measurementSeconds": 30,
+      "repeats": 3,
+      "avgFps": 111.36,
+      "p50Fps": 250,
+      "p10Fps": 75.19,
+      "onePercentLowFps": 8.73,
+      "avgFrameTimeMs": 8.98,
+      "p50FrameTimeMs": 4,
+      "p95FrameTimeMs": 28.8,
+      "p99FrameTimeMs": 114.6,
+      "fpsMean": 111.36,
+      "fpsMedian": 250,
+      "fpsP10": 75.19,
+      "fps1PctLow": 8.73,
+      "frameTimeMedianMs": 4,
+      "frameTimeP95Ms": 28.8,
+      "frameTimeP99Ms": 114.6,
+      "cullCpuMedianMs": 0,
+      "cullCpuP95Ms": 0.2,
+      "drawCalls": 416,
+      "sceneCalls": 416,
+      "vmCalls": 0,
+      "triangles": 631294,
+      "geometries": 150,
+      "textures": 12,
+      "programs": 28,
+      "cullingProfile": {
+        "calls": 3639,
+        "evaluatedFrames": 500,
+        "skippedStaticFrames": 3139,
+        "batchBufferUploads": 1526,
+        "batchBufferSkips": 7974,
+        "lastCpuMs": 0.2,
+        "avgCpuMs": 0.0242,
+        "p95CpuMs": 0.2,
+        "maxCpuMs": 0.4
+      },
+      "heapUsedMB": 71.65,
+      "predictionDiagnostics": {
+        "spawnId": 1,
+        "currentSeq": 5574,
+        "lastAckedSeq": 137,
+        "pendingInputs": 120,
+        "lastServerTick": 91,
+        "lastPositionError": 0.0002,
+        "maxPositionError": 0.0002,
+        "reconcileCount": 58,
+        "smoothCorrectionCount": 0,
+        "hardSnapCount": 0,
+        "smoothOffsetMag": 0,
+        "authoritativePos": {
+          "x": 16.875,
+          "y": 1.825,
+          "z": 89.717
+        },
+        "predictedPos": {
+          "x": 78.2008,
+          "y": -0.1286,
+          "z": -6.3898
+        },
+        "smoothedPos": {
+          "x": 78.2008,
+          "y": -0.1286,
+          "z": -6.3898
+        },
+        "divergenceM": 114.0227,
+        "netSim": {
+          "rttMs": 0,
+          "jitterMs": 0,
+          "dropRate": 0
+        }
+      },
+      "runs": [
+        {
+          "repeat": 1,
+          "frames": 2950,
+          "durationMs": 30015.8,
+          "fpsMean": 98.28,
+          "fpsMedian": 175.44,
+          "fpsP10": 55.56,
+          "fps1PctLow": 16.81,
+          "frameTimeMedianMs": 5.7,
+          "frameTimeP95Ms": 28.8,
+          "frameTimeP99Ms": 59.5,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.2,
+          "cullCpuMaxMs": 0.4,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 7.557,
+          "gpuTimeP95Ms": 12.795,
+          "render": {
+            "calls": 293,
+            "sceneCalls": 293,
+            "vmCalls": 0,
+            "triangles": 585900,
+            "sceneTris": 585900,
+            "vmTris": 0,
+            "geometries": 140,
+            "textures": 12
+          },
+          "culling": {
+            "calls": 2950,
+            "evaluatedFrames": 508,
+            "skippedStaticFrames": 2442,
+            "batchBufferUploads": 1346,
+            "batchBufferSkips": 8306,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0301,
+            "p95CpuMs": 0.2,
+            "maxCpuMs": 0.4
+          },
+          "heapUsedMB": 62.63,
+          "heapTotalMB": 129.16,
+          "programs": 27,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 1911,
+            "lastAckedSeq": 137,
+            "pendingInputs": 120,
+            "lastServerTick": 91,
+            "lastPositionError": 0.0002,
+            "maxPositionError": 0.0002,
+            "reconcileCount": 58,
+            "smoothCorrectionCount": 0,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": -92.998,
+              "y": 2.225,
+              "z": 46.336
+            },
+            "predictedPos": {
+              "x": 75.8485,
+              "y": -0.1399,
+              "z": -6.0415
+            },
+            "smoothedPos": {
+              "x": 75.8485,
+              "y": -0.1399,
+              "z": -6.0415
+            },
+            "divergenceM": 176.7997,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "frames": 3346,
+          "durationMs": 30046.8,
+          "fpsMean": 111.36,
+          "fpsMedian": 250,
+          "fpsP10": 75.19,
+          "fps1PctLow": 6.25,
+          "frameTimeMedianMs": 4,
+          "frameTimeP95Ms": 22.5,
+          "frameTimeP99Ms": 159.9,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.2,
+          "cullCpuMaxMs": 0.9,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 6.835,
+          "gpuTimeP95Ms": 10.515,
+          "render": {
+            "calls": 291,
+            "sceneCalls": 291,
+            "vmCalls": 0,
+            "triangles": 598696,
+            "sceneTris": 598696,
+            "vmTris": 0,
+            "geometries": 142,
+            "textures": 12
+          },
+          "culling": {
+            "calls": 3346,
+            "evaluatedFrames": 480,
+            "skippedStaticFrames": 2866,
+            "batchBufferUploads": 1316,
+            "batchBufferSkips": 7804,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.027,
+            "p95CpuMs": 0.2,
+            "maxCpuMs": 0.9
+          },
+          "heapUsedMB": 68.6,
+          "heapTotalMB": 130.05,
+          "programs": 28,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 3681,
+            "lastAckedSeq": 137,
+            "pendingInputs": 120,
+            "lastServerTick": 91,
+            "lastPositionError": 0.0002,
+            "maxPositionError": 0.0002,
+            "reconcileCount": 58,
+            "smoothCorrectionCount": 0,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": -93.053,
+              "y": 2.231,
+              "z": 46.316
+            },
+            "predictedPos": {
+              "x": 77.0883,
+              "y": 0.6427,
+              "z": 6.9158
+            },
+            "smoothedPos": {
+              "x": 77.0883,
+              "y": 0.6427,
+              "z": 6.9158
+            },
+            "divergenceM": 174.651,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          }
+        },
+        {
+          "repeat": 3,
+          "frames": 3639,
+          "durationMs": 30011,
+          "fpsMean": 121.26,
+          "fpsMedian": 277.78,
+          "fpsP10": 86.96,
+          "fps1PctLow": 8.73,
+          "frameTimeMedianMs": 3.6,
+          "frameTimeP95Ms": 31.1,
+          "frameTimeP99Ms": 114.6,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.2,
+          "cullCpuMaxMs": 0.4,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 6.83,
+          "gpuTimeP95Ms": 8.776,
+          "render": {
+            "calls": 416,
+            "sceneCalls": 416,
+            "vmCalls": 0,
+            "triangles": 631294,
+            "sceneTris": 631294,
+            "vmTris": 0,
+            "geometries": 150,
+            "textures": 12
+          },
+          "culling": {
+            "calls": 3639,
+            "evaluatedFrames": 500,
+            "skippedStaticFrames": 3139,
+            "batchBufferUploads": 1526,
+            "batchBufferSkips": 7974,
+            "lastCpuMs": 0.2,
+            "avgCpuMs": 0.0242,
+            "p95CpuMs": 0.2,
+            "maxCpuMs": 0.4
+          },
+          "heapUsedMB": 71.65,
+          "heapTotalMB": 129.1,
+          "programs": 28,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 5574,
+            "lastAckedSeq": 137,
+            "pendingInputs": 120,
+            "lastServerTick": 91,
+            "lastPositionError": 0.0002,
+            "maxPositionError": 0.0002,
+            "reconcileCount": 58,
+            "smoothCorrectionCount": 0,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": 16.875,
+              "y": 1.825,
+              "z": 89.717
+            },
+            "predictedPos": {
+              "x": 78.2008,
+              "y": -0.1286,
+              "z": -6.3898
+            },
+            "smoothedPos": {
+              "x": 78.2008,
+              "y": -0.1286,
+              "z": -6.3898
+            },
+            "divergenceM": 114.0227,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          }
+        }
+      ]
+    },
+    "poi_interior_courtyard": {
+      "quality": "medium",
+      "scene": "poi_interior_courtyard",
+      "description": "POI 4 (Eski Servis va Ombor) courtyard & interior view with buildings, furniture, and containers",
+      "warmupSeconds": 10,
+      "measurementSeconds": 30,
+      "repeats": 3,
+      "avgFps": 120.75,
+      "p50Fps": 135.14,
+      "p10Fps": 78.74,
+      "onePercentLowFps": 29.33,
+      "avgFrameTimeMs": 8.282,
+      "p50FrameTimeMs": 7.4,
+      "p95FrameTimeMs": 28.5,
+      "p99FrameTimeMs": 34.1,
+      "fpsMean": 120.75,
+      "fpsMedian": 135.14,
+      "fpsP10": 78.74,
+      "fps1PctLow": 29.33,
+      "frameTimeMedianMs": 7.4,
+      "frameTimeP95Ms": 28.5,
+      "frameTimeP99Ms": 34.1,
+      "cullCpuMedianMs": 0,
+      "cullCpuP95Ms": 0.1,
+      "drawCalls": 307,
+      "sceneCalls": 307,
+      "vmCalls": 0,
+      "triangles": 579603,
+      "geometries": 150,
+      "textures": 12,
+      "programs": 27,
+      "cullingProfile": {
+        "calls": 3623,
+        "evaluatedFrames": 0,
+        "skippedStaticFrames": 3623,
+        "batchBufferUploads": 0,
+        "batchBufferSkips": 0,
+        "lastCpuMs": 0,
+        "avgCpuMs": 0.0059,
+        "p95CpuMs": 0.1,
+        "maxCpuMs": 0.1
+      },
+      "heapUsedMB": 77.1,
+      "predictionDiagnostics": {
+        "spawnId": 1,
+        "currentSeq": 5577,
+        "lastAckedSeq": 137,
+        "pendingInputs": 0,
+        "lastServerTick": 91,
+        "lastPositionError": 0.0002,
+        "maxPositionError": 0.0002,
+        "reconcileCount": 58,
+        "smoothCorrectionCount": 0,
+        "hardSnapCount": 0,
+        "smoothOffsetMag": 0,
+        "authoritativePos": {
+          "x": 92.426,
+          "y": 0.192,
+          "z": 44.995
+        },
+        "predictedPos": {
+          "x": 30,
+          "y": 0.59,
+          "z": 4
+        },
+        "smoothedPos": {
+          "x": 30,
+          "y": 0.59,
+          "z": 4
+        },
+        "divergenceM": 74.6844,
+        "netSim": {
+          "rttMs": 0,
+          "jitterMs": 0,
+          "dropRate": 0
+        }
+      },
+      "runs": [
+        {
+          "repeat": 1,
+          "frames": 3610,
+          "durationMs": 30012.8,
+          "fpsMean": 120.28,
+          "fpsMedian": 135.14,
+          "fpsP10": 71.94,
+          "fps1PctLow": 28.99,
+          "frameTimeMedianMs": 7.4,
+          "frameTimeP95Ms": 30.2,
+          "frameTimeP99Ms": 34.5,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.2,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 7.198,
+          "gpuTimeP95Ms": 8.951,
+          "render": {
+            "calls": 313,
+            "sceneCalls": 313,
+            "vmCalls": 0,
+            "triangles": 572335,
+            "sceneTris": 572335,
+            "vmTris": 0,
+            "geometries": 144,
+            "textures": 12
+          },
+          "culling": {
+            "calls": 3610,
+            "evaluatedFrames": 0,
+            "skippedStaticFrames": 3610,
+            "batchBufferUploads": 0,
+            "batchBufferSkips": 0,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0047,
+            "p95CpuMs": 0,
+            "maxCpuMs": 0.1
+          },
+          "heapUsedMB": 86.85,
+          "heapTotalMB": 128.3,
+          "programs": 27,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 5577,
+            "lastAckedSeq": 137,
+            "pendingInputs": 0,
+            "lastServerTick": 91,
+            "lastPositionError": 0.0002,
+            "maxPositionError": 0.0002,
+            "reconcileCount": 58,
+            "smoothCorrectionCount": 0,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": 16.875,
+              "y": 1.825,
+              "z": 89.717
+            },
+            "predictedPos": {
+              "x": 30,
+              "y": 0.59,
+              "z": 4
+            },
+            "smoothedPos": {
+              "x": 30,
+              "y": 0.59,
+              "z": 4
+            },
+            "divergenceM": 86.7248,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "frames": 3633,
+          "durationMs": 30008.5,
+          "fpsMean": 121.07,
+          "fpsMedian": 135.14,
+          "fpsP10": 79.37,
+          "fps1PctLow": 29.33,
+          "frameTimeMedianMs": 7.4,
+          "frameTimeP95Ms": 28.5,
+          "frameTimeP99Ms": 34.1,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.2,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 7.153,
+          "gpuTimeP95Ms": 8.839,
+          "render": {
+            "calls": 345,
+            "sceneCalls": 345,
+            "vmCalls": 0,
+            "triangles": 582065,
+            "sceneTris": 582065,
+            "vmTris": 0,
+            "geometries": 159,
+            "textures": 12
+          },
+          "culling": {
+            "calls": 3633,
+            "evaluatedFrames": 0,
+            "skippedStaticFrames": 3633,
+            "batchBufferUploads": 0,
+            "batchBufferSkips": 0,
+            "lastCpuMs": 0.1,
+            "avgCpuMs": 0.0051,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.2
+          },
+          "heapUsedMB": 79.07,
+          "heapTotalMB": 128.07,
+          "programs": 27,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 5577,
+            "lastAckedSeq": 137,
+            "pendingInputs": 0,
+            "lastServerTick": 91,
+            "lastPositionError": 0.0002,
+            "maxPositionError": 0.0002,
+            "reconcileCount": 58,
+            "smoothCorrectionCount": 0,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": 16.875,
+              "y": 1.825,
+              "z": 89.717
+            },
+            "predictedPos": {
+              "x": 30,
+              "y": 0.59,
+              "z": 4
+            },
+            "smoothedPos": {
+              "x": 30,
+              "y": 0.59,
+              "z": 4
+            },
+            "divergenceM": 86.7248,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          }
+        },
+        {
+          "repeat": 3,
+          "frames": 3623,
+          "durationMs": 30005.3,
+          "fpsMean": 120.75,
+          "fpsMedian": 135.14,
+          "fpsP10": 78.74,
+          "fps1PctLow": 29.85,
+          "frameTimeMedianMs": 7.4,
+          "frameTimeP95Ms": 27.8,
+          "frameTimeP99Ms": 33.5,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.2,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 7.183,
+          "gpuTimeP95Ms": 8.304,
+          "render": {
+            "calls": 307,
+            "sceneCalls": 307,
+            "vmCalls": 0,
+            "triangles": 579603,
+            "sceneTris": 579603,
+            "vmTris": 0,
+            "geometries": 150,
+            "textures": 12
+          },
+          "culling": {
+            "calls": 3623,
+            "evaluatedFrames": 0,
+            "skippedStaticFrames": 3623,
+            "batchBufferUploads": 0,
+            "batchBufferSkips": 0,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0059,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.1
+          },
+          "heapUsedMB": 77.1,
+          "heapTotalMB": 128.46,
+          "programs": 27,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 5577,
+            "lastAckedSeq": 137,
+            "pendingInputs": 0,
+            "lastServerTick": 91,
+            "lastPositionError": 0.0002,
+            "maxPositionError": 0.0002,
+            "reconcileCount": 58,
+            "smoothCorrectionCount": 0,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": 92.426,
+              "y": 0.192,
+              "z": 44.995
+            },
+            "predictedPos": {
+              "x": 30,
+              "y": 0.59,
+              "z": 4
+            },
+            "smoothedPos": {
+              "x": 30,
+              "y": 0.59,
+              "z": 4
+            },
+            "divergenceM": 74.6844,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          }
+        }
+      ]
+    },
+    "moving_pvp_combat": {
+      "quality": "medium",
+      "scene": "moving_pvp_combat",
+      "description": "1P active PvP combat movement, weapon view & server reconciliation on forest_square with 4 bots",
+      "warmupSeconds": 10,
+      "measurementSeconds": 30,
+      "repeats": 3,
+      "avgFps": 126.25,
+      "p50Fps": 142.86,
+      "p10Fps": 78.12,
+      "onePercentLowFps": 37.04,
+      "avgFrameTimeMs": 7.921,
+      "p50FrameTimeMs": 7,
+      "p95FrameTimeMs": 15.1,
+      "p99FrameTimeMs": 27,
+      "fpsMean": 126.25,
+      "fpsMedian": 142.86,
+      "fpsP10": 78.12,
+      "fps1PctLow": 37.04,
+      "frameTimeMedianMs": 7,
+      "frameTimeP95Ms": 15.1,
+      "frameTimeP99Ms": 27,
+      "cullCpuMedianMs": 0,
+      "cullCpuP95Ms": 0.1,
+      "drawCalls": 122,
+      "sceneCalls": 108,
+      "vmCalls": 14,
+      "triangles": 454677,
+      "geometries": 158,
+      "textures": 13,
+      "programs": 35,
+      "cullingProfile": {
+        "calls": 4005,
+        "evaluatedFrames": 518,
+        "skippedStaticFrames": 3487,
+        "batchBufferUploads": 835,
+        "batchBufferSkips": 9007,
+        "lastCpuMs": 0,
+        "avgCpuMs": 0.0178,
+        "p95CpuMs": 0.1,
+        "maxCpuMs": 0.5
+      },
+      "heapUsedMB": 62.15,
+      "predictionDiagnostics": {
+        "spawnId": 1,
+        "currentSeq": 11949,
+        "lastAckedSeq": 137,
+        "pendingInputs": 120,
+        "lastServerTick": 91,
+        "lastPositionError": 0.0002,
+        "maxPositionError": 0.0002,
+        "reconcileCount": 58,
+        "smoothCorrectionCount": 0,
+        "hardSnapCount": 0,
+        "smoothOffsetMag": 0,
+        "authoritativePos": {
+          "x": 92.426,
+          "y": 0.192,
+          "z": 44.995
+        },
+        "predictedPos": {
+          "x": 34.1935,
+          "y": 0.098,
+          "z": -37.0679
+        },
+        "smoothedPos": {
+          "x": 34.1935,
+          "y": 0.098,
+          "z": -37.0679
+        },
+        "divergenceM": 100.6248,
+        "netSim": {
+          "rttMs": 0,
+          "jitterMs": 0,
+          "dropRate": 0
+        }
+      },
+      "runs": [
+        {
+          "repeat": 1,
+          "frames": 3709,
+          "durationMs": 30014.4,
+          "fpsMean": 123.57,
+          "fpsMedian": 138.89,
+          "fpsP10": 69.93,
+          "fps1PctLow": 32.57,
+          "frameTimeMedianMs": 7.2,
+          "frameTimeP95Ms": 16.2,
+          "frameTimeP99Ms": 30.7,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.3,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 6.921,
+          "gpuTimeP95Ms": 8.547,
+          "render": {
+            "calls": 115,
+            "sceneCalls": 101,
+            "vmCalls": 14,
+            "triangles": 502424,
+            "sceneTris": 491408,
+            "vmTris": 11016,
+            "geometries": 157,
+            "textures": 13
+          },
+          "culling": {
+            "calls": 3709,
+            "evaluatedFrames": 598,
+            "skippedStaticFrames": 3111,
+            "batchBufferUploads": 1188,
+            "batchBufferSkips": 10174,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.024,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.3
+          },
+          "heapUsedMB": 76.55,
+          "heapTotalMB": 128.32,
+          "programs": 29,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 7734,
+            "lastAckedSeq": 137,
+            "pendingInputs": 120,
+            "lastServerTick": 91,
+            "lastPositionError": 0.0002,
+            "maxPositionError": 0.0002,
+            "reconcileCount": 58,
+            "smoothCorrectionCount": 0,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": 92.426,
+              "y": 0.192,
+              "z": 44.995
+            },
+            "predictedPos": {
+              "x": 31.8682,
+              "y": 0.59,
+              "z": -12.5853
+            },
+            "smoothedPos": {
+              "x": 31.8682,
+              "y": 0.59,
+              "z": -12.5853
+            },
+            "divergenceM": 83.5637,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "frames": 3789,
+          "durationMs": 30012.5,
+          "fpsMean": 126.25,
+          "fpsMedian": 142.86,
+          "fpsP10": 78.12,
+          "fps1PctLow": 37.04,
+          "frameTimeMedianMs": 7,
+          "frameTimeP95Ms": 15.1,
+          "frameTimeP99Ms": 27,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.3,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 6.763,
+          "gpuTimeP95Ms": 8.312,
+          "render": {
+            "calls": 165,
+            "sceneCalls": 151,
+            "vmCalls": 14,
+            "triangles": 493085,
+            "sceneTris": 482069,
+            "vmTris": 11016,
+            "geometries": 156,
+            "textures": 13
+          },
+          "culling": {
+            "calls": 3789,
+            "evaluatedFrames": 583,
+            "skippedStaticFrames": 3206,
+            "batchBufferUploads": 1088,
+            "batchBufferSkips": 9989,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0216,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.3
+          },
+          "heapUsedMB": 85.4,
+          "heapTotalMB": 128.27,
+          "programs": 29,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 9888,
+            "lastAckedSeq": 137,
+            "pendingInputs": 120,
+            "lastServerTick": 91,
+            "lastPositionError": 0.0002,
+            "maxPositionError": 0.0002,
+            "reconcileCount": 58,
+            "smoothCorrectionCount": 0,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": 92.426,
+              "y": 0.192,
+              "z": 44.995
+            },
+            "predictedPos": {
+              "x": 33.638,
+              "y": 0.2154,
+              "z": -29.1244
+            },
+            "smoothedPos": {
+              "x": 33.638,
+              "y": 0.2154,
+              "z": -29.1244
+            },
+            "divergenceM": 94.6029,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          }
+        },
+        {
+          "repeat": 3,
+          "frames": 4005,
+          "durationMs": 30012.1,
+          "fpsMean": 133.45,
+          "fpsMedian": 196.08,
+          "fpsP10": 105.26,
+          "fps1PctLow": 40,
+          "frameTimeMedianMs": 5.1,
+          "frameTimeP95Ms": 13.3,
+          "frameTimeP99Ms": 25,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.5,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 6.425,
+          "gpuTimeP95Ms": 8.158,
+          "render": {
+            "calls": 122,
+            "sceneCalls": 108,
+            "vmCalls": 14,
+            "triangles": 454677,
+            "sceneTris": 443661,
+            "vmTris": 11016,
+            "geometries": 158,
+            "textures": 13
+          },
+          "culling": {
+            "calls": 4005,
+            "evaluatedFrames": 518,
+            "skippedStaticFrames": 3487,
+            "batchBufferUploads": 835,
+            "batchBufferSkips": 9007,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0178,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.5
+          },
+          "heapUsedMB": 62.15,
+          "heapTotalMB": 67.95,
+          "programs": 35,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 11949,
+            "lastAckedSeq": 137,
+            "pendingInputs": 120,
+            "lastServerTick": 91,
+            "lastPositionError": 0.0002,
+            "maxPositionError": 0.0002,
+            "reconcileCount": 58,
+            "smoothCorrectionCount": 0,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": 92.426,
+              "y": 0.192,
+              "z": 44.995
+            },
+            "predictedPos": {
+              "x": 34.1935,
+              "y": 0.098,
+              "z": -37.0679
+            },
+            "smoothedPos": {
+              "x": 34.1935,
+              "y": 0.098,
+              "z": -37.0679
+            },
+            "divergenceM": 100.6248,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          }
+        }
+      ]
+    }
+  },
+  "qualityPresets": {
+    "low": {
+      "quality": "low",
+      "scene": "moving_pvp_combat",
+      "description": "1P active PvP combat movement, weapon view & server reconciliation on forest_square with 4 bots",
+      "warmupSeconds": 10,
+      "measurementSeconds": 30,
+      "repeats": 3,
+      "avgFps": 92.07,
+      "p50Fps": 147.06,
+      "p10Fps": 103.09,
+      "onePercentLowFps": 25.32,
+      "avgFrameTimeMs": 10.861,
+      "p50FrameTimeMs": 6.8,
+      "p95FrameTimeMs": 18.3,
+      "p99FrameTimeMs": 39.5,
+      "fpsMean": 92.07,
+      "fpsMedian": 147.06,
+      "fpsP10": 103.09,
+      "fps1PctLow": 25.32,
+      "frameTimeMedianMs": 6.8,
+      "frameTimeP95Ms": 18.3,
+      "frameTimeP99Ms": 39.5,
+      "cullCpuMedianMs": 0,
+      "cullCpuP95Ms": 0.1,
+      "drawCalls": 109,
+      "sceneCalls": 95,
+      "vmCalls": 14,
+      "triangles": 357006,
+      "geometries": 140,
+      "textures": 13,
+      "programs": 49,
+      "cullingProfile": {
+        "calls": 2763,
+        "evaluatedFrames": 451,
+        "skippedStaticFrames": 2312,
+        "batchBufferUploads": 409,
+        "batchBufferSkips": 8160,
+        "lastCpuMs": 0,
+        "avgCpuMs": 0.0176,
+        "p95CpuMs": 0.1,
+        "maxCpuMs": 0.2
+      },
+      "heapUsedMB": 61.23,
+      "predictionDiagnostics": {
+        "spawnId": 1,
+        "currentSeq": 17376,
+        "lastAckedSeq": 137,
+        "pendingInputs": 120,
+        "lastServerTick": 91,
+        "lastPositionError": 0.0002,
+        "maxPositionError": 0.0002,
+        "reconcileCount": 58,
+        "smoothCorrectionCount": 0,
+        "hardSnapCount": 0,
+        "smoothOffsetMag": 0,
+        "authoritativePos": {
+          "x": -43.471,
+          "y": 0.458,
+          "z": -65.068
+        },
+        "predictedPos": {
+          "x": 69.093,
+          "y": 1.87,
+          "z": -59.9927
+        },
+        "smoothedPos": {
+          "x": 69.093,
+          "y": 1.87,
+          "z": -59.9927
+        },
+        "divergenceM": 112.6872,
+        "netSim": {
+          "rttMs": 0,
+          "jitterMs": 0,
+          "dropRate": 0
+        }
+      },
+      "runs": [
+        {
+          "repeat": 1,
+          "frames": 2822,
+          "durationMs": 30022.5,
+          "fpsMean": 94,
+          "fpsMedian": 153.85,
+          "fpsP10": 74.63,
+          "fps1PctLow": 25.64,
+          "frameTimeMedianMs": 6.5,
+          "frameTimeP95Ms": 18.3,
+          "frameTimeP99Ms": 39,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.4,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 4.543,
+          "gpuTimeP95Ms": 15.981,
+          "render": {
+            "calls": 91,
+            "sceneCalls": 77,
+            "vmCalls": 14,
+            "triangles": 386644,
+            "sceneTris": 375628,
+            "vmTris": 11016,
+            "geometries": 156,
+            "textures": 13
+          },
+          "culling": {
+            "calls": 2822,
+            "evaluatedFrames": 461,
+            "skippedStaticFrames": 2361,
+            "batchBufferUploads": 907,
+            "batchBufferSkips": 7852,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0218,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.4
+          },
+          "heapUsedMB": 63.31,
+          "heapTotalMB": 95.77,
+          "programs": 49,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 13770,
+            "lastAckedSeq": 137,
+            "pendingInputs": 120,
+            "lastServerTick": 91,
+            "lastPositionError": 0.0002,
+            "maxPositionError": 0.0002,
+            "reconcileCount": 58,
+            "smoothCorrectionCount": 0,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": 92.426,
+              "y": 0.192,
+              "z": 44.995
+            },
+            "predictedPos": {
+              "x": 36.4894,
+              "y": 0.2681,
+              "z": -23.093
+            },
+            "smoothedPos": {
+              "x": 36.4894,
+              "y": 0.2681,
+              "z": -23.093
+            },
+            "divergenceM": 88.1186,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "frames": 2687,
+          "durationMs": 30018.3,
+          "fpsMean": 89.51,
+          "fpsMedian": 147.06,
+          "fpsP10": 103.09,
+          "fps1PctLow": 23.31,
+          "frameTimeMedianMs": 6.8,
+          "frameTimeP95Ms": 19.2,
+          "frameTimeP99Ms": 42.9,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.3,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 4.648,
+          "gpuTimeP95Ms": 14.372,
+          "render": {
+            "calls": 151,
+            "sceneCalls": 137,
+            "vmCalls": 14,
+            "triangles": 382932,
+            "sceneTris": 371916,
+            "vmTris": 11016,
+            "geometries": 148,
+            "textures": 13
+          },
+          "culling": {
+            "calls": 2687,
+            "evaluatedFrames": 447,
+            "skippedStaticFrames": 2240,
+            "batchBufferUploads": 705,
+            "batchBufferSkips": 7788,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0206,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.3
+          },
+          "heapUsedMB": 79.98,
+          "heapTotalMB": 118.85,
+          "programs": 49,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 15576,
+            "lastAckedSeq": 137,
+            "pendingInputs": 120,
+            "lastServerTick": 91,
+            "lastPositionError": 0.0002,
+            "maxPositionError": 0.0002,
+            "reconcileCount": 58,
+            "smoothCorrectionCount": 0,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": -43.522,
+              "y": 0.461,
+              "z": -65.096
+            },
+            "predictedPos": {
+              "x": 50.5205,
+              "y": 1.6906,
+              "z": -48.4231
+            },
+            "smoothedPos": {
+              "x": 50.5205,
+              "y": 1.6906,
+              "z": -48.4231
+            },
+            "divergenceM": 95.517,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          }
+        },
+        {
+          "repeat": 3,
+          "frames": 2763,
+          "durationMs": 30011.2,
+          "fpsMean": 92.07,
+          "fpsMedian": 144.93,
+          "fpsP10": 113.64,
+          "fps1PctLow": 25.32,
+          "frameTimeMedianMs": 6.9,
+          "frameTimeP95Ms": 17,
+          "frameTimeP99Ms": 39.5,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.3,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 4.468,
+          "gpuTimeP95Ms": 18.173,
+          "render": {
+            "calls": 109,
+            "sceneCalls": 95,
+            "vmCalls": 14,
+            "triangles": 357006,
+            "sceneTris": 345990,
+            "vmTris": 11016,
+            "geometries": 140,
+            "textures": 13
+          },
+          "culling": {
+            "calls": 2763,
+            "evaluatedFrames": 451,
+            "skippedStaticFrames": 2312,
+            "batchBufferUploads": 409,
+            "batchBufferSkips": 8160,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0176,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.2
+          },
+          "heapUsedMB": 61.23,
+          "heapTotalMB": 67.46,
+          "programs": 49,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 17376,
+            "lastAckedSeq": 137,
+            "pendingInputs": 120,
+            "lastServerTick": 91,
+            "lastPositionError": 0.0002,
+            "maxPositionError": 0.0002,
+            "reconcileCount": 58,
+            "smoothCorrectionCount": 0,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": -43.471,
+              "y": 0.458,
+              "z": -65.068
+            },
+            "predictedPos": {
+              "x": 69.093,
+              "y": 1.87,
+              "z": -59.9927
+            },
+            "smoothedPos": {
+              "x": 69.093,
+              "y": 1.87,
+              "z": -59.9927
+            },
+            "divergenceM": 112.6872,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          }
+        }
+      ]
+    },
+    "medium": {
+      "quality": "medium",
+      "scene": "moving_pvp_combat",
+      "description": "1P active PvP combat movement, weapon view & server reconciliation on forest_square with 4 bots",
+      "warmupSeconds": 10,
+      "measurementSeconds": 30,
+      "repeats": 3,
+      "avgFps": 126.25,
+      "p50Fps": 142.86,
+      "p10Fps": 78.12,
+      "onePercentLowFps": 37.04,
+      "avgFrameTimeMs": 7.921,
+      "p50FrameTimeMs": 7,
+      "p95FrameTimeMs": 15.1,
+      "p99FrameTimeMs": 27,
+      "fpsMean": 126.25,
+      "fpsMedian": 142.86,
+      "fpsP10": 78.12,
+      "fps1PctLow": 37.04,
+      "frameTimeMedianMs": 7,
+      "frameTimeP95Ms": 15.1,
+      "frameTimeP99Ms": 27,
+      "cullCpuMedianMs": 0,
+      "cullCpuP95Ms": 0.1,
+      "drawCalls": 122,
+      "sceneCalls": 108,
+      "vmCalls": 14,
+      "triangles": 454677,
+      "geometries": 158,
+      "textures": 13,
+      "programs": 35,
+      "cullingProfile": {
+        "calls": 4005,
+        "evaluatedFrames": 518,
+        "skippedStaticFrames": 3487,
+        "batchBufferUploads": 835,
+        "batchBufferSkips": 9007,
+        "lastCpuMs": 0,
+        "avgCpuMs": 0.0178,
+        "p95CpuMs": 0.1,
+        "maxCpuMs": 0.5
+      },
+      "heapUsedMB": 62.15,
+      "predictionDiagnostics": {
+        "spawnId": 1,
+        "currentSeq": 11949,
+        "lastAckedSeq": 137,
+        "pendingInputs": 120,
+        "lastServerTick": 91,
+        "lastPositionError": 0.0002,
+        "maxPositionError": 0.0002,
+        "reconcileCount": 58,
+        "smoothCorrectionCount": 0,
+        "hardSnapCount": 0,
+        "smoothOffsetMag": 0,
+        "authoritativePos": {
+          "x": 92.426,
+          "y": 0.192,
+          "z": 44.995
+        },
+        "predictedPos": {
+          "x": 34.1935,
+          "y": 0.098,
+          "z": -37.0679
+        },
+        "smoothedPos": {
+          "x": 34.1935,
+          "y": 0.098,
+          "z": -37.0679
+        },
+        "divergenceM": 100.6248,
+        "netSim": {
+          "rttMs": 0,
+          "jitterMs": 0,
+          "dropRate": 0
+        }
+      },
+      "runs": [
+        {
+          "repeat": 1,
+          "frames": 3709,
+          "durationMs": 30014.4,
+          "fpsMean": 123.57,
+          "fpsMedian": 138.89,
+          "fpsP10": 69.93,
+          "fps1PctLow": 32.57,
+          "frameTimeMedianMs": 7.2,
+          "frameTimeP95Ms": 16.2,
+          "frameTimeP99Ms": 30.7,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.3,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 6.921,
+          "gpuTimeP95Ms": 8.547,
+          "render": {
+            "calls": 115,
+            "sceneCalls": 101,
+            "vmCalls": 14,
+            "triangles": 502424,
+            "sceneTris": 491408,
+            "vmTris": 11016,
+            "geometries": 157,
+            "textures": 13
+          },
+          "culling": {
+            "calls": 3709,
+            "evaluatedFrames": 598,
+            "skippedStaticFrames": 3111,
+            "batchBufferUploads": 1188,
+            "batchBufferSkips": 10174,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.024,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.3
+          },
+          "heapUsedMB": 76.55,
+          "heapTotalMB": 128.32,
+          "programs": 29,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 7734,
+            "lastAckedSeq": 137,
+            "pendingInputs": 120,
+            "lastServerTick": 91,
+            "lastPositionError": 0.0002,
+            "maxPositionError": 0.0002,
+            "reconcileCount": 58,
+            "smoothCorrectionCount": 0,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": 92.426,
+              "y": 0.192,
+              "z": 44.995
+            },
+            "predictedPos": {
+              "x": 31.8682,
+              "y": 0.59,
+              "z": -12.5853
+            },
+            "smoothedPos": {
+              "x": 31.8682,
+              "y": 0.59,
+              "z": -12.5853
+            },
+            "divergenceM": 83.5637,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "frames": 3789,
+          "durationMs": 30012.5,
+          "fpsMean": 126.25,
+          "fpsMedian": 142.86,
+          "fpsP10": 78.12,
+          "fps1PctLow": 37.04,
+          "frameTimeMedianMs": 7,
+          "frameTimeP95Ms": 15.1,
+          "frameTimeP99Ms": 27,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.3,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 6.763,
+          "gpuTimeP95Ms": 8.312,
+          "render": {
+            "calls": 165,
+            "sceneCalls": 151,
+            "vmCalls": 14,
+            "triangles": 493085,
+            "sceneTris": 482069,
+            "vmTris": 11016,
+            "geometries": 156,
+            "textures": 13
+          },
+          "culling": {
+            "calls": 3789,
+            "evaluatedFrames": 583,
+            "skippedStaticFrames": 3206,
+            "batchBufferUploads": 1088,
+            "batchBufferSkips": 9989,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0216,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.3
+          },
+          "heapUsedMB": 85.4,
+          "heapTotalMB": 128.27,
+          "programs": 29,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 9888,
+            "lastAckedSeq": 137,
+            "pendingInputs": 120,
+            "lastServerTick": 91,
+            "lastPositionError": 0.0002,
+            "maxPositionError": 0.0002,
+            "reconcileCount": 58,
+            "smoothCorrectionCount": 0,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": 92.426,
+              "y": 0.192,
+              "z": 44.995
+            },
+            "predictedPos": {
+              "x": 33.638,
+              "y": 0.2154,
+              "z": -29.1244
+            },
+            "smoothedPos": {
+              "x": 33.638,
+              "y": 0.2154,
+              "z": -29.1244
+            },
+            "divergenceM": 94.6029,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          }
+        },
+        {
+          "repeat": 3,
+          "frames": 4005,
+          "durationMs": 30012.1,
+          "fpsMean": 133.45,
+          "fpsMedian": 196.08,
+          "fpsP10": 105.26,
+          "fps1PctLow": 40,
+          "frameTimeMedianMs": 5.1,
+          "frameTimeP95Ms": 13.3,
+          "frameTimeP99Ms": 25,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.5,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 6.425,
+          "gpuTimeP95Ms": 8.158,
+          "render": {
+            "calls": 122,
+            "sceneCalls": 108,
+            "vmCalls": 14,
+            "triangles": 454677,
+            "sceneTris": 443661,
+            "vmTris": 11016,
+            "geometries": 158,
+            "textures": 13
+          },
+          "culling": {
+            "calls": 4005,
+            "evaluatedFrames": 518,
+            "skippedStaticFrames": 3487,
+            "batchBufferUploads": 835,
+            "batchBufferSkips": 9007,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0178,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.5
+          },
+          "heapUsedMB": 62.15,
+          "heapTotalMB": 67.95,
+          "programs": 35,
+          "prediction": {
+            "spawnId": 1,
+            "currentSeq": 11949,
+            "lastAckedSeq": 137,
+            "pendingInputs": 120,
+            "lastServerTick": 91,
+            "lastPositionError": 0.0002,
+            "maxPositionError": 0.0002,
+            "reconcileCount": 58,
+            "smoothCorrectionCount": 0,
+            "hardSnapCount": 0,
+            "smoothOffsetMag": 0,
+            "authoritativePos": {
+              "x": 92.426,
+              "y": 0.192,
+              "z": 44.995
+            },
+            "predictedPos": {
+              "x": 34.1935,
+              "y": 0.098,
+              "z": -37.0679
+            },
+            "smoothedPos": {
+              "x": 34.1935,
+              "y": 0.098,
+              "z": -37.0679
+            },
+            "divergenceM": 100.6248,
+            "netSim": {
+              "rttMs": 0,
+              "jitterMs": 0,
+              "dropRate": 0
+            }
+          }
+        }
+      ]
+    }
+  },
+  "memoryTest10xReload": {
+    "cycles": [
+      {
+        "cycle": 1,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 88,
+          "textures": 9
+        },
+        "programs": 17,
+        "heapUsedMB": 59.89,
+        "heapTotalMB": 75.45
+      },
+      {
+        "cycle": 2,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 88,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 58.97,
+        "heapTotalMB": 73.95
+      },
+      {
+        "cycle": 3,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 88,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 64.91,
+        "heapTotalMB": 87.45
+      },
+      {
+        "cycle": 4,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 88,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 79.98,
+        "heapTotalMB": 105.34
+      },
+      {
+        "cycle": 5,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 88,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 108.46,
+        "heapTotalMB": 127.72
+      },
+      {
+        "cycle": 6,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 88,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 109.77,
+        "heapTotalMB": 160.04
+      },
+      {
+        "cycle": 7,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 88,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 87.03,
+        "heapTotalMB": 128.12
+      },
+      {
+        "cycle": 8,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 88,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 93.91,
+        "heapTotalMB": 131.99
+      },
+      {
+        "cycle": 9,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 88,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 107.19,
+        "heapTotalMB": 163.26
+      },
+      {
+        "cycle": 10,
+        "render": {
+          "calls": 275,
+          "sceneCalls": 275,
+          "vmCalls": 0,
+          "triangles": 1263542,
+          "sceneTris": 1263542,
+          "vmTris": 0,
+          "geometries": 88,
+          "textures": 9
+        },
+        "programs": 11,
+        "heapUsedMB": 98.66,
+        "heapTotalMB": 149.14
+      }
+    ],
+    "steadyBaselineCycle": 2,
+    "initialGeometries": 88,
+    "finalGeometries": 88,
+    "geometryDelta": 0,
+    "initialTextures": 9,
+    "finalTextures": 9,
+    "textureDelta": 0,
+    "initialPrograms": 11,
+    "finalPrograms": 11,
+    "programDelta": 0,
+    "initialHeapUsedMB": 58.97,
+    "finalHeapUsedMB": 98.66,
+    "heapDeltaMB": 39.69,
+    "leakDetected": false
+  },
+  "roomReloadMemoryTrend": [
+    {
+      "cycle": 1,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 88,
+        "textures": 9
+      },
+      "programs": 17,
+      "heapUsedMB": 59.89,
+      "heapTotalMB": 75.45
+    },
+    {
+      "cycle": 2,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 88,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 58.97,
+      "heapTotalMB": 73.95
+    },
+    {
+      "cycle": 3,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 88,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 64.91,
+      "heapTotalMB": 87.45
+    },
+    {
+      "cycle": 4,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 88,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 79.98,
+      "heapTotalMB": 105.34
+    },
+    {
+      "cycle": 5,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 88,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 108.46,
+      "heapTotalMB": 127.72
+    },
+    {
+      "cycle": 6,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 88,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 109.77,
+      "heapTotalMB": 160.04
+    },
+    {
+      "cycle": 7,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 88,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 87.03,
+      "heapTotalMB": 128.12
+    },
+    {
+      "cycle": 8,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 88,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 93.91,
+      "heapTotalMB": 131.99
+    },
+    {
+      "cycle": 9,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 88,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 107.19,
+      "heapTotalMB": 163.26
+    },
+    {
+      "cycle": 10,
+      "render": {
+        "calls": 275,
+        "sceneCalls": 275,
+        "vmCalls": 0,
+        "triangles": 1263542,
+        "sceneTris": 1263542,
+        "vmTris": 0,
+        "geometries": 88,
+        "textures": 9
+      },
+      "programs": 11,
+      "heapUsedMB": 98.66,
+      "heapTotalMB": 149.14
+    }
+  ],
+  "screenshots": [
+    {
+      "filename": "01_topdown_256x256_authoritative_overview.png",
+      "bytes": 575139,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "02_two_clients_authoritative_sync.png",
+      "bytes": 562940,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "03_authoritative_road_movement_3p.png",
+      "bytes": 472436,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "04_poi1_ranger_house_entry.png",
+      "bytes": 444820,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "05_poi2_cabin_cluster_rotated_houses.png",
+      "bytes": 499030,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "06_poi3_lumber_mill_90deg_warehouse.png",
+      "bytes": 487268,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "07_poi4_service_station_180deg_depot.png",
+      "bytes": 474445,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "08_poi6_cliff_watch_2nd_floor_stairs.png",
+      "bytes": 523518,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "09_forest_combat_1p_rifle.png",
+      "bytes": 501879,
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "filename": "10_reconciliation_latency_test_3p.png",
+      "bytes": 509559,
+      "width": 1280,
+      "height": 720
+    }
+  ]
+}

@@ -1,0 +1,1755 @@
+{
+  "stage": "08-TERRAIN-QA",
+  "testedAt": "2026-10-22T15:47:34.933Z",
+  "seed": 6501,
+  "quality": "medium",
+  "resolution": "1280x720",
+  "pacingMode": "Normal (VSync/Limiter active)",
+  "verificationChecks": {
+    "firstJoinAllGlbActive": true,
+    "firstJoinNoFallbacks": true,
+    "groundCoverNotNull": true,
+    "rejoinGlbConsistency": true,
+    "twoClientsConnected": true
+  },
+  "screenshots": [
+    {
+      "file": "01_first_join_open_forest.png",
+      "desc": "First Join open forest clearing (eye level: 64, 4) with 17/17 true GLB models",
+      "path": "docs/screenshots/stage08terrainqa/01_first_join_open_forest.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 471493,
+      "drawCalls": 171,
+      "triangles": 703887,
+      "groundCover": {
+        "visibleGrass": 777,
+        "visibleFlowers": 97,
+        "visibleFerns": 49,
+        "visibleChunks": 20,
+        "totalInstances": 19123,
+        "drawCalls": 15,
+        "visibleTriangles": 84702,
+        "quality": "medium",
+        "gpuBytes": 1642132,
+        "uploads": 45,
+        "lastUpdateMs": 0.1,
+        "buildMs": 14.2,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "isAllLoaded": true
+      },
+      "grassAssets": {
+        "loadedGLBCount": 17,
+        "failedGLBCount": 0,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "totalVariants": 17,
+        "isAllLoaded": true,
+        "variants": {
+          "grass_short_soft_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.17
+          },
+          "grass_short_dense_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.15
+          },
+          "grass_meadow_wide_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.34
+          },
+          "grass_meadow_thin_01": {
+            "isFallback": false,
+            "triangles": 96,
+            "baseHeight": 0.3
+          },
+          "grass_tall_wild_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.52
+          },
+          "grass_tall_seeded_01": {
+            "isFallback": false,
+            "triangles": 102,
+            "baseHeight": 0.54
+          },
+          "grass_dry_straw_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.36
+          },
+          "grass_olive_tuft_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.26
+          },
+          "grass_shade_dark_01": {
+            "isFallback": false,
+            "triangles": 70,
+            "baseHeight": 0.24
+          },
+          "grass_forest_sparse_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.22
+          },
+          "grass_path_edge_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.22
+          },
+          "grass_wavy_broad_01": {
+            "isFallback": false,
+            "triangles": 100,
+            "baseHeight": 0.3
+          },
+          "flower_white_01": {
+            "isFallback": false,
+            "triangles": 126,
+            "baseHeight": 0.26
+          },
+          "flower_yellow_01": {
+            "isFallback": false,
+            "triangles": 124,
+            "baseHeight": 0.3
+          },
+          "flower_purple_01": {
+            "isFallback": false,
+            "triangles": 132,
+            "baseHeight": 0.42
+          },
+          "fern_small_01": {
+            "isFallback": false,
+            "triangles": 140,
+            "baseHeight": 0.34
+          },
+          "fern_wide_01": {
+            "isFallback": false,
+            "triangles": 210,
+            "baseHeight": 0.6
+          }
+        }
+      }
+    },
+    {
+      "file": "01_rejoin_open_forest.png",
+      "desc": "Rejoin at identical camera pose proving 100% visual consistency",
+      "path": "docs/screenshots/stage08terrainqa/01_rejoin_open_forest.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 471416,
+      "drawCalls": 142,
+      "triangles": 641026,
+      "groundCover": {
+        "visibleGrass": 753,
+        "visibleFlowers": 58,
+        "visibleFerns": 43,
+        "visibleChunks": 21,
+        "totalInstances": 19123,
+        "drawCalls": 15,
+        "visibleTriangles": 76684,
+        "quality": "medium",
+        "gpuBytes": 1642132,
+        "uploads": 60,
+        "lastUpdateMs": 0.3,
+        "buildMs": 14.8,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "isAllLoaded": true
+      },
+      "grassAssets": {
+        "loadedGLBCount": 17,
+        "failedGLBCount": 0,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "totalVariants": 17,
+        "isAllLoaded": true,
+        "variants": {
+          "grass_short_soft_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.17
+          },
+          "grass_short_dense_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.15
+          },
+          "grass_meadow_wide_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.34
+          },
+          "grass_meadow_thin_01": {
+            "isFallback": false,
+            "triangles": 96,
+            "baseHeight": 0.3
+          },
+          "grass_tall_wild_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.52
+          },
+          "grass_tall_seeded_01": {
+            "isFallback": false,
+            "triangles": 102,
+            "baseHeight": 0.54
+          },
+          "grass_dry_straw_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.36
+          },
+          "grass_olive_tuft_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.26
+          },
+          "grass_shade_dark_01": {
+            "isFallback": false,
+            "triangles": 70,
+            "baseHeight": 0.24
+          },
+          "grass_forest_sparse_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.22
+          },
+          "grass_path_edge_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.22
+          },
+          "grass_wavy_broad_01": {
+            "isFallback": false,
+            "triangles": 100,
+            "baseHeight": 0.3
+          },
+          "flower_white_01": {
+            "isFallback": false,
+            "triangles": 126,
+            "baseHeight": 0.26
+          },
+          "flower_yellow_01": {
+            "isFallback": false,
+            "triangles": 124,
+            "baseHeight": 0.3
+          },
+          "flower_purple_01": {
+            "isFallback": false,
+            "triangles": 132,
+            "baseHeight": 0.42
+          },
+          "fern_small_01": {
+            "isFallback": false,
+            "triangles": 140,
+            "baseHeight": 0.34
+          },
+          "fern_wide_01": {
+            "isFallback": false,
+            "triangles": 210,
+            "baseHeight": 0.6
+          }
+        }
+      }
+    },
+    {
+      "file": "02_tree_shadow_ferns.png",
+      "desc": "Tree shadow ferns at tree base (92.1, -31.6) in deep shade with fern_small_01 and fern_wide_01",
+      "path": "docs/screenshots/stage08terrainqa/02_tree_shadow_ferns.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 659839,
+      "drawCalls": 136,
+      "triangles": 671437,
+      "groundCover": {
+        "visibleGrass": 462,
+        "visibleFlowers": 9,
+        "visibleFerns": 79,
+        "visibleChunks": 21,
+        "totalInstances": 19123,
+        "drawCalls": 15,
+        "visibleTriangles": 50138,
+        "quality": "medium",
+        "gpuBytes": 1642132,
+        "uploads": 75,
+        "lastUpdateMs": 0.1,
+        "buildMs": 14.8,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "isAllLoaded": true
+      },
+      "grassAssets": {
+        "loadedGLBCount": 17,
+        "failedGLBCount": 0,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "totalVariants": 17,
+        "isAllLoaded": true,
+        "variants": {
+          "grass_short_soft_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.17
+          },
+          "grass_short_dense_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.15
+          },
+          "grass_meadow_wide_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.34
+          },
+          "grass_meadow_thin_01": {
+            "isFallback": false,
+            "triangles": 96,
+            "baseHeight": 0.3
+          },
+          "grass_tall_wild_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.52
+          },
+          "grass_tall_seeded_01": {
+            "isFallback": false,
+            "triangles": 102,
+            "baseHeight": 0.54
+          },
+          "grass_dry_straw_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.36
+          },
+          "grass_olive_tuft_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.26
+          },
+          "grass_shade_dark_01": {
+            "isFallback": false,
+            "triangles": 70,
+            "baseHeight": 0.24
+          },
+          "grass_forest_sparse_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.22
+          },
+          "grass_path_edge_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.22
+          },
+          "grass_wavy_broad_01": {
+            "isFallback": false,
+            "triangles": 100,
+            "baseHeight": 0.3
+          },
+          "flower_white_01": {
+            "isFallback": false,
+            "triangles": 126,
+            "baseHeight": 0.26
+          },
+          "flower_yellow_01": {
+            "isFallback": false,
+            "triangles": 124,
+            "baseHeight": 0.3
+          },
+          "flower_purple_01": {
+            "isFallback": false,
+            "triangles": 132,
+            "baseHeight": 0.42
+          },
+          "fern_small_01": {
+            "isFallback": false,
+            "triangles": 140,
+            "baseHeight": 0.34
+          },
+          "fern_wide_01": {
+            "isFallback": false,
+            "triangles": 210,
+            "baseHeight": 0.6
+          }
+        }
+      }
+    },
+    {
+      "file": "03_moss_soil_ground_detail.png",
+      "desc": "Close ground shot showing micro-texture soil grain, gravel, velvet moss, and true GLB grass blades",
+      "path": "docs/screenshots/stage08terrainqa/03_moss_soil_ground_detail.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 228464,
+      "drawCalls": 155,
+      "triangles": 652651,
+      "groundCover": {
+        "visibleGrass": 898,
+        "visibleFlowers": 88,
+        "visibleFerns": 32,
+        "visibleChunks": 19,
+        "totalInstances": 19123,
+        "drawCalls": 15,
+        "visibleTriangles": 91352,
+        "quality": "medium",
+        "gpuBytes": 1642132,
+        "uploads": 90,
+        "lastUpdateMs": 0,
+        "buildMs": 14.8,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "isAllLoaded": true
+      },
+      "grassAssets": {
+        "loadedGLBCount": 17,
+        "failedGLBCount": 0,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "totalVariants": 17,
+        "isAllLoaded": true,
+        "variants": {
+          "grass_short_soft_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.17
+          },
+          "grass_short_dense_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.15
+          },
+          "grass_meadow_wide_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.34
+          },
+          "grass_meadow_thin_01": {
+            "isFallback": false,
+            "triangles": 96,
+            "baseHeight": 0.3
+          },
+          "grass_tall_wild_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.52
+          },
+          "grass_tall_seeded_01": {
+            "isFallback": false,
+            "triangles": 102,
+            "baseHeight": 0.54
+          },
+          "grass_dry_straw_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.36
+          },
+          "grass_olive_tuft_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.26
+          },
+          "grass_shade_dark_01": {
+            "isFallback": false,
+            "triangles": 70,
+            "baseHeight": 0.24
+          },
+          "grass_forest_sparse_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.22
+          },
+          "grass_path_edge_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.22
+          },
+          "grass_wavy_broad_01": {
+            "isFallback": false,
+            "triangles": 100,
+            "baseHeight": 0.3
+          },
+          "flower_white_01": {
+            "isFallback": false,
+            "triangles": 126,
+            "baseHeight": 0.26
+          },
+          "flower_yellow_01": {
+            "isFallback": false,
+            "triangles": 124,
+            "baseHeight": 0.3
+          },
+          "flower_purple_01": {
+            "isFallback": false,
+            "triangles": 132,
+            "baseHeight": 0.42
+          },
+          "fern_small_01": {
+            "isFallback": false,
+            "triangles": 140,
+            "baseHeight": 0.34
+          },
+          "fern_wide_01": {
+            "isFallback": false,
+            "triangles": 210,
+            "baseHeight": 0.6
+          }
+        }
+      }
+    },
+    {
+      "file": "04_winding_dirt_road.png",
+      "desc": "Winding dirt road & shoulder transition (3.05, -87.5) showing dark earthy soil and tire rut depression tinting",
+      "path": "docs/screenshots/stage08terrainqa/04_winding_dirt_road.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 570566,
+      "drawCalls": 58,
+      "triangles": 391590,
+      "groundCover": {
+        "visibleGrass": 619,
+        "visibleFlowers": 26,
+        "visibleFerns": 44,
+        "visibleChunks": 15,
+        "totalInstances": 19123,
+        "drawCalls": 15,
+        "visibleTriangles": 60104,
+        "quality": "medium",
+        "gpuBytes": 1642132,
+        "uploads": 105,
+        "lastUpdateMs": 0.1,
+        "buildMs": 14.8,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "isAllLoaded": true
+      },
+      "grassAssets": {
+        "loadedGLBCount": 17,
+        "failedGLBCount": 0,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "totalVariants": 17,
+        "isAllLoaded": true,
+        "variants": {
+          "grass_short_soft_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.17
+          },
+          "grass_short_dense_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.15
+          },
+          "grass_meadow_wide_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.34
+          },
+          "grass_meadow_thin_01": {
+            "isFallback": false,
+            "triangles": 96,
+            "baseHeight": 0.3
+          },
+          "grass_tall_wild_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.52
+          },
+          "grass_tall_seeded_01": {
+            "isFallback": false,
+            "triangles": 102,
+            "baseHeight": 0.54
+          },
+          "grass_dry_straw_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.36
+          },
+          "grass_olive_tuft_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.26
+          },
+          "grass_shade_dark_01": {
+            "isFallback": false,
+            "triangles": 70,
+            "baseHeight": 0.24
+          },
+          "grass_forest_sparse_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.22
+          },
+          "grass_path_edge_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.22
+          },
+          "grass_wavy_broad_01": {
+            "isFallback": false,
+            "triangles": 100,
+            "baseHeight": 0.3
+          },
+          "flower_white_01": {
+            "isFallback": false,
+            "triangles": 126,
+            "baseHeight": 0.26
+          },
+          "flower_yellow_01": {
+            "isFallback": false,
+            "triangles": 124,
+            "baseHeight": 0.3
+          },
+          "flower_purple_01": {
+            "isFallback": false,
+            "triangles": 132,
+            "baseHeight": 0.42
+          },
+          "fern_small_01": {
+            "isFallback": false,
+            "triangles": 140,
+            "baseHeight": 0.34
+          },
+          "fern_wide_01": {
+            "isFallback": false,
+            "triangles": 210,
+            "baseHeight": 0.6
+          }
+        }
+      }
+    },
+    {
+      "file": "05_road_edge_flowers_grass.png",
+      "desc": "Road edge grass & 3 flower colors in south glade (-14, 58) showing oriented path-edge grass and white/yellow/purple clusters",
+      "path": "docs/screenshots/stage08terrainqa/05_road_edge_flowers_grass.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 493362,
+      "drawCalls": 139,
+      "triangles": 677171,
+      "groundCover": {
+        "visibleGrass": 875,
+        "visibleFlowers": 75,
+        "visibleFerns": 59,
+        "visibleChunks": 20,
+        "totalInstances": 19123,
+        "drawCalls": 15,
+        "visibleTriangles": 91358,
+        "quality": "medium",
+        "gpuBytes": 1642132,
+        "uploads": 120,
+        "lastUpdateMs": 0.1,
+        "buildMs": 14.8,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "isAllLoaded": true
+      },
+      "grassAssets": {
+        "loadedGLBCount": 17,
+        "failedGLBCount": 0,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "totalVariants": 17,
+        "isAllLoaded": true,
+        "variants": {
+          "grass_short_soft_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.17
+          },
+          "grass_short_dense_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.15
+          },
+          "grass_meadow_wide_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.34
+          },
+          "grass_meadow_thin_01": {
+            "isFallback": false,
+            "triangles": 96,
+            "baseHeight": 0.3
+          },
+          "grass_tall_wild_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.52
+          },
+          "grass_tall_seeded_01": {
+            "isFallback": false,
+            "triangles": 102,
+            "baseHeight": 0.54
+          },
+          "grass_dry_straw_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.36
+          },
+          "grass_olive_tuft_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.26
+          },
+          "grass_shade_dark_01": {
+            "isFallback": false,
+            "triangles": 70,
+            "baseHeight": 0.24
+          },
+          "grass_forest_sparse_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.22
+          },
+          "grass_path_edge_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.22
+          },
+          "grass_wavy_broad_01": {
+            "isFallback": false,
+            "triangles": 100,
+            "baseHeight": 0.3
+          },
+          "flower_white_01": {
+            "isFallback": false,
+            "triangles": 126,
+            "baseHeight": 0.26
+          },
+          "flower_yellow_01": {
+            "isFallback": false,
+            "triangles": 124,
+            "baseHeight": 0.3
+          },
+          "flower_purple_01": {
+            "isFallback": false,
+            "triangles": 132,
+            "baseHeight": 0.42
+          },
+          "fern_small_01": {
+            "isFallback": false,
+            "triangles": 140,
+            "baseHeight": 0.34
+          },
+          "fern_wide_01": {
+            "isFallback": false,
+            "triangles": 210,
+            "baseHeight": 0.6
+          }
+        }
+      }
+    },
+    {
+      "file": "06_poi_ranger_yard_approach.png",
+      "desc": "POI Ranger House yard & approach (-71, -48) showing compacted woodland soil apron and building integration",
+      "path": "docs/screenshots/stage08terrainqa/06_poi_ranger_yard_approach.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 610378,
+      "drawCalls": 120,
+      "triangles": 650625,
+      "groundCover": {
+        "visibleGrass": 783,
+        "visibleFlowers": 62,
+        "visibleFerns": 72,
+        "visibleChunks": 21,
+        "totalInstances": 19123,
+        "drawCalls": 15,
+        "visibleTriangles": 82774,
+        "quality": "medium",
+        "gpuBytes": 1642132,
+        "uploads": 135,
+        "lastUpdateMs": 0.1,
+        "buildMs": 14.8,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "isAllLoaded": true
+      },
+      "grassAssets": {
+        "loadedGLBCount": 17,
+        "failedGLBCount": 0,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "totalVariants": 17,
+        "isAllLoaded": true,
+        "variants": {
+          "grass_short_soft_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.17
+          },
+          "grass_short_dense_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.15
+          },
+          "grass_meadow_wide_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.34
+          },
+          "grass_meadow_thin_01": {
+            "isFallback": false,
+            "triangles": 96,
+            "baseHeight": 0.3
+          },
+          "grass_tall_wild_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.52
+          },
+          "grass_tall_seeded_01": {
+            "isFallback": false,
+            "triangles": 102,
+            "baseHeight": 0.54
+          },
+          "grass_dry_straw_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.36
+          },
+          "grass_olive_tuft_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.26
+          },
+          "grass_shade_dark_01": {
+            "isFallback": false,
+            "triangles": 70,
+            "baseHeight": 0.24
+          },
+          "grass_forest_sparse_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.22
+          },
+          "grass_path_edge_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.22
+          },
+          "grass_wavy_broad_01": {
+            "isFallback": false,
+            "triangles": 100,
+            "baseHeight": 0.3
+          },
+          "flower_white_01": {
+            "isFallback": false,
+            "triangles": 126,
+            "baseHeight": 0.26
+          },
+          "flower_yellow_01": {
+            "isFallback": false,
+            "triangles": 124,
+            "baseHeight": 0.3
+          },
+          "flower_purple_01": {
+            "isFallback": false,
+            "triangles": 132,
+            "baseHeight": 0.42
+          },
+          "fern_small_01": {
+            "isFallback": false,
+            "triangles": 140,
+            "baseHeight": 0.34
+          },
+          "fern_wide_01": {
+            "isFallback": false,
+            "triangles": 210,
+            "baseHeight": 0.6
+          }
+        }
+      }
+    },
+    {
+      "file": "07a_first_person_near_grass.png",
+      "desc": "1P camera view of near grass standing in lush meadow glade",
+      "path": "docs/screenshots/stage08terrainqa/07a_first_person_near_grass.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 531745,
+      "drawCalls": 108,
+      "triangles": 638933,
+      "groundCover": {
+        "visibleGrass": 962,
+        "visibleFlowers": 74,
+        "visibleFerns": 53,
+        "visibleChunks": 22,
+        "totalInstances": 19123,
+        "drawCalls": 15,
+        "visibleTriangles": 98124,
+        "quality": "medium",
+        "gpuBytes": 1642132,
+        "uploads": 150,
+        "lastUpdateMs": 0.1,
+        "buildMs": 14.8,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "isAllLoaded": true
+      },
+      "grassAssets": {
+        "loadedGLBCount": 17,
+        "failedGLBCount": 0,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "totalVariants": 17,
+        "isAllLoaded": true,
+        "variants": {
+          "grass_short_soft_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.17
+          },
+          "grass_short_dense_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.15
+          },
+          "grass_meadow_wide_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.34
+          },
+          "grass_meadow_thin_01": {
+            "isFallback": false,
+            "triangles": 96,
+            "baseHeight": 0.3
+          },
+          "grass_tall_wild_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.52
+          },
+          "grass_tall_seeded_01": {
+            "isFallback": false,
+            "triangles": 102,
+            "baseHeight": 0.54
+          },
+          "grass_dry_straw_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.36
+          },
+          "grass_olive_tuft_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.26
+          },
+          "grass_shade_dark_01": {
+            "isFallback": false,
+            "triangles": 70,
+            "baseHeight": 0.24
+          },
+          "grass_forest_sparse_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.22
+          },
+          "grass_path_edge_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.22
+          },
+          "grass_wavy_broad_01": {
+            "isFallback": false,
+            "triangles": 100,
+            "baseHeight": 0.3
+          },
+          "flower_white_01": {
+            "isFallback": false,
+            "triangles": 126,
+            "baseHeight": 0.26
+          },
+          "flower_yellow_01": {
+            "isFallback": false,
+            "triangles": 124,
+            "baseHeight": 0.3
+          },
+          "flower_purple_01": {
+            "isFallback": false,
+            "triangles": 132,
+            "baseHeight": 0.42
+          },
+          "fern_small_01": {
+            "isFallback": false,
+            "triangles": 140,
+            "baseHeight": 0.34
+          },
+          "fern_wide_01": {
+            "isFallback": false,
+            "triangles": 210,
+            "baseHeight": 0.6
+          }
+        }
+      }
+    },
+    {
+      "file": "07b_third_person_near_grass.png",
+      "desc": "3P camera view of near grass showing stickman character standing amidst dense stylized grass",
+      "path": "docs/screenshots/stage08terrainqa/07b_third_person_near_grass.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 539955,
+      "drawCalls": 170,
+      "triangles": 687589,
+      "groundCover": {
+        "visibleGrass": 826,
+        "visibleFlowers": 78,
+        "visibleFerns": 59,
+        "visibleChunks": 21,
+        "totalInstances": 19123,
+        "drawCalls": 15,
+        "visibleTriangles": 87708,
+        "quality": "medium",
+        "gpuBytes": 1642132,
+        "uploads": 165,
+        "lastUpdateMs": 0.2,
+        "buildMs": 14.8,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "isAllLoaded": true
+      },
+      "grassAssets": {
+        "loadedGLBCount": 17,
+        "failedGLBCount": 0,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "totalVariants": 17,
+        "isAllLoaded": true,
+        "variants": {
+          "grass_short_soft_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.17
+          },
+          "grass_short_dense_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.15
+          },
+          "grass_meadow_wide_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.34
+          },
+          "grass_meadow_thin_01": {
+            "isFallback": false,
+            "triangles": 96,
+            "baseHeight": 0.3
+          },
+          "grass_tall_wild_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.52
+          },
+          "grass_tall_seeded_01": {
+            "isFallback": false,
+            "triangles": 102,
+            "baseHeight": 0.54
+          },
+          "grass_dry_straw_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.36
+          },
+          "grass_olive_tuft_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.26
+          },
+          "grass_shade_dark_01": {
+            "isFallback": false,
+            "triangles": 70,
+            "baseHeight": 0.24
+          },
+          "grass_forest_sparse_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.22
+          },
+          "grass_path_edge_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.22
+          },
+          "grass_wavy_broad_01": {
+            "isFallback": false,
+            "triangles": 100,
+            "baseHeight": 0.3
+          },
+          "flower_white_01": {
+            "isFallback": false,
+            "triangles": 126,
+            "baseHeight": 0.26
+          },
+          "flower_yellow_01": {
+            "isFallback": false,
+            "triangles": 124,
+            "baseHeight": 0.3
+          },
+          "flower_purple_01": {
+            "isFallback": false,
+            "triangles": 132,
+            "baseHeight": 0.42
+          },
+          "fern_small_01": {
+            "isFallback": false,
+            "triangles": 140,
+            "baseHeight": 0.34
+          },
+          "fern_wide_01": {
+            "isFallback": false,
+            "triangles": 210,
+            "baseHeight": 0.6
+          }
+        }
+      }
+    },
+    {
+      "file": "08_topdown_map_overview.png",
+      "desc": "Top-down map overview (256x256) showing complete winding dirt road network, POI clearings, and biomes",
+      "path": "docs/screenshots/stage08terrainqa/08_topdown_map_overview.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 629844,
+      "drawCalls": 289,
+      "triangles": 1292140,
+      "groundCover": {
+        "visibleGrass": 0,
+        "visibleFlowers": 0,
+        "visibleFerns": 0,
+        "visibleChunks": 0,
+        "totalInstances": 19123,
+        "drawCalls": 0,
+        "visibleTriangles": 0,
+        "quality": "medium",
+        "gpuBytes": 1642132,
+        "uploads": 165,
+        "lastUpdateMs": 0.2,
+        "buildMs": 14.8,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "isAllLoaded": true
+      },
+      "grassAssets": {
+        "loadedGLBCount": 17,
+        "failedGLBCount": 0,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "totalVariants": 17,
+        "isAllLoaded": true,
+        "variants": {
+          "grass_short_soft_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.17
+          },
+          "grass_short_dense_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.15
+          },
+          "grass_meadow_wide_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.34
+          },
+          "grass_meadow_thin_01": {
+            "isFallback": false,
+            "triangles": 96,
+            "baseHeight": 0.3
+          },
+          "grass_tall_wild_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.52
+          },
+          "grass_tall_seeded_01": {
+            "isFallback": false,
+            "triangles": 102,
+            "baseHeight": 0.54
+          },
+          "grass_dry_straw_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.36
+          },
+          "grass_olive_tuft_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.26
+          },
+          "grass_shade_dark_01": {
+            "isFallback": false,
+            "triangles": 70,
+            "baseHeight": 0.24
+          },
+          "grass_forest_sparse_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.22
+          },
+          "grass_path_edge_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.22
+          },
+          "grass_wavy_broad_01": {
+            "isFallback": false,
+            "triangles": 100,
+            "baseHeight": 0.3
+          },
+          "flower_white_01": {
+            "isFallback": false,
+            "triangles": 126,
+            "baseHeight": 0.26
+          },
+          "flower_yellow_01": {
+            "isFallback": false,
+            "triangles": 124,
+            "baseHeight": 0.3
+          },
+          "flower_purple_01": {
+            "isFallback": false,
+            "triangles": 132,
+            "baseHeight": 0.42
+          },
+          "fern_small_01": {
+            "isFallback": false,
+            "triangles": 140,
+            "baseHeight": 0.34
+          },
+          "fern_wide_01": {
+            "isFallback": false,
+            "triangles": 210,
+            "baseHeight": 0.6
+          }
+        }
+      }
+    }
+  ],
+  "benchmarks": [
+    {
+      "id": "open_forest",
+      "desc": "Open forest clearing (eye-level 64, 4) with active camera sweep",
+      "frames": 443,
+      "durationMs": 7383.1,
+      "fpsMean": 60,
+      "fpsMedian": 59.88,
+      "fpsP10": 59.52,
+      "fps1PctLow": 58.82,
+      "frameTimeMedianMs": 16.7,
+      "frameTimeP95Ms": 16.9,
+      "frameTimeP99Ms": 17,
+      "cullCpuMedianMs": 0,
+      "drawCalls": 103,
+      "triangles": 642858,
+      "heapUsedMB": 63.61,
+      "groundCover": {
+        "visibleGrass": 628,
+        "visibleFlowers": 38,
+        "visibleFerns": 49,
+        "visibleChunks": 20,
+        "totalInstances": 19123,
+        "drawCalls": 15,
+        "visibleTriangles": 64488,
+        "quality": "medium",
+        "gpuBytes": 1642132,
+        "uploads": 750,
+        "lastUpdateMs": 0.2,
+        "buildMs": 14.8,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "isAllLoaded": true
+      },
+      "grassAssets": {
+        "loadedGLBCount": 17,
+        "failedGLBCount": 0,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "totalVariants": 17,
+        "isAllLoaded": true,
+        "variants": {
+          "grass_short_soft_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.17
+          },
+          "grass_short_dense_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.15
+          },
+          "grass_meadow_wide_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.34
+          },
+          "grass_meadow_thin_01": {
+            "isFallback": false,
+            "triangles": 96,
+            "baseHeight": 0.3
+          },
+          "grass_tall_wild_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.52
+          },
+          "grass_tall_seeded_01": {
+            "isFallback": false,
+            "triangles": 102,
+            "baseHeight": 0.54
+          },
+          "grass_dry_straw_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.36
+          },
+          "grass_olive_tuft_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.26
+          },
+          "grass_shade_dark_01": {
+            "isFallback": false,
+            "triangles": 70,
+            "baseHeight": 0.24
+          },
+          "grass_forest_sparse_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.22
+          },
+          "grass_path_edge_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.22
+          },
+          "grass_wavy_broad_01": {
+            "isFallback": false,
+            "triangles": 100,
+            "baseHeight": 0.3
+          },
+          "flower_white_01": {
+            "isFallback": false,
+            "triangles": 126,
+            "baseHeight": 0.26
+          },
+          "flower_yellow_01": {
+            "isFallback": false,
+            "triangles": 124,
+            "baseHeight": 0.3
+          },
+          "flower_purple_01": {
+            "isFallback": false,
+            "triangles": 132,
+            "baseHeight": 0.42
+          },
+          "fern_small_01": {
+            "isFallback": false,
+            "triangles": 140,
+            "baseHeight": 0.34
+          },
+          "fern_wide_01": {
+            "isFallback": false,
+            "triangles": 210,
+            "baseHeight": 0.6
+          }
+        }
+      }
+    },
+    {
+      "id": "service_station",
+      "desc": "POI Service Station yard (20.8, -4.4) with yard apron and structure",
+      "frames": 440,
+      "durationMs": 7342.2,
+      "fpsMean": 59.93,
+      "fpsMedian": 59.88,
+      "fpsP10": 59.52,
+      "fps1PctLow": 58.82,
+      "frameTimeMedianMs": 16.7,
+      "frameTimeP95Ms": 16.8,
+      "frameTimeP99Ms": 17,
+      "cullCpuMedianMs": 0,
+      "drawCalls": 191,
+      "triangles": 666250,
+      "heapUsedMB": 64.87,
+      "groundCover": {
+        "visibleGrass": 803,
+        "visibleFlowers": 87,
+        "visibleFerns": 37,
+        "visibleChunks": 20,
+        "totalInstances": 19123,
+        "drawCalls": 15,
+        "visibleTriangles": 83352,
+        "quality": "medium",
+        "gpuBytes": 1642132,
+        "uploads": 1335,
+        "lastUpdateMs": 0,
+        "buildMs": 14.8,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "isAllLoaded": true
+      },
+      "grassAssets": {
+        "loadedGLBCount": 17,
+        "failedGLBCount": 0,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "totalVariants": 17,
+        "isAllLoaded": true,
+        "variants": {
+          "grass_short_soft_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.17
+          },
+          "grass_short_dense_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.15
+          },
+          "grass_meadow_wide_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.34
+          },
+          "grass_meadow_thin_01": {
+            "isFallback": false,
+            "triangles": 96,
+            "baseHeight": 0.3
+          },
+          "grass_tall_wild_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.52
+          },
+          "grass_tall_seeded_01": {
+            "isFallback": false,
+            "triangles": 102,
+            "baseHeight": 0.54
+          },
+          "grass_dry_straw_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.36
+          },
+          "grass_olive_tuft_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.26
+          },
+          "grass_shade_dark_01": {
+            "isFallback": false,
+            "triangles": 70,
+            "baseHeight": 0.24
+          },
+          "grass_forest_sparse_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.22
+          },
+          "grass_path_edge_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.22
+          },
+          "grass_wavy_broad_01": {
+            "isFallback": false,
+            "triangles": 100,
+            "baseHeight": 0.3
+          },
+          "flower_white_01": {
+            "isFallback": false,
+            "triangles": 126,
+            "baseHeight": 0.26
+          },
+          "flower_yellow_01": {
+            "isFallback": false,
+            "triangles": 124,
+            "baseHeight": 0.3
+          },
+          "flower_purple_01": {
+            "isFallback": false,
+            "triangles": 132,
+            "baseHeight": 0.42
+          },
+          "fern_small_01": {
+            "isFallback": false,
+            "triangles": 140,
+            "baseHeight": 0.34
+          },
+          "fern_wide_01": {
+            "isFallback": false,
+            "triangles": 210,
+            "baseHeight": 0.6
+          }
+        }
+      }
+    },
+    {
+      "id": "forest_camp",
+      "desc": "POI Forest Camp tents & clearing (-58.6, 72.2)",
+      "frames": 442,
+      "durationMs": 7366.7,
+      "fpsMean": 60,
+      "fpsMedian": 59.88,
+      "fpsP10": 59.52,
+      "fps1PctLow": 58.48,
+      "frameTimeMedianMs": 16.7,
+      "frameTimeP95Ms": 16.9,
+      "frameTimeP99Ms": 17.1,
+      "cullCpuMedianMs": 0,
+      "drawCalls": 168,
+      "triangles": 675977,
+      "heapUsedMB": 64.53,
+      "groundCover": {
+        "visibleGrass": 1022,
+        "visibleFlowers": 84,
+        "visibleFerns": 46,
+        "visibleChunks": 21,
+        "totalInstances": 19123,
+        "drawCalls": 15,
+        "visibleTriangles": 102414,
+        "quality": "medium",
+        "gpuBytes": 1642132,
+        "uploads": 1920,
+        "lastUpdateMs": 0,
+        "buildMs": 14.8,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "isAllLoaded": true
+      },
+      "grassAssets": {
+        "loadedGLBCount": 17,
+        "failedGLBCount": 0,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "totalVariants": 17,
+        "isAllLoaded": true,
+        "variants": {
+          "grass_short_soft_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.17
+          },
+          "grass_short_dense_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.15
+          },
+          "grass_meadow_wide_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.34
+          },
+          "grass_meadow_thin_01": {
+            "isFallback": false,
+            "triangles": 96,
+            "baseHeight": 0.3
+          },
+          "grass_tall_wild_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.52
+          },
+          "grass_tall_seeded_01": {
+            "isFallback": false,
+            "triangles": 102,
+            "baseHeight": 0.54
+          },
+          "grass_dry_straw_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.36
+          },
+          "grass_olive_tuft_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.26
+          },
+          "grass_shade_dark_01": {
+            "isFallback": false,
+            "triangles": 70,
+            "baseHeight": 0.24
+          },
+          "grass_forest_sparse_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.22
+          },
+          "grass_path_edge_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.22
+          },
+          "grass_wavy_broad_01": {
+            "isFallback": false,
+            "triangles": 100,
+            "baseHeight": 0.3
+          },
+          "flower_white_01": {
+            "isFallback": false,
+            "triangles": 126,
+            "baseHeight": 0.26
+          },
+          "flower_yellow_01": {
+            "isFallback": false,
+            "triangles": 124,
+            "baseHeight": 0.3
+          },
+          "flower_purple_01": {
+            "isFallback": false,
+            "triangles": 132,
+            "baseHeight": 0.42
+          },
+          "fern_small_01": {
+            "isFallback": false,
+            "triangles": 140,
+            "baseHeight": 0.34
+          },
+          "fern_wide_01": {
+            "isFallback": false,
+            "triangles": 210,
+            "baseHeight": 0.6
+          }
+        }
+      }
+    },
+    {
+      "id": "winding_road",
+      "desc": "Winding road corridor & shoulder (3.05, -87.5)",
+      "frames": 439,
+      "durationMs": 7314.7,
+      "fpsMean": 60.02,
+      "fpsMedian": 59.88,
+      "fpsP10": 59.52,
+      "fps1PctLow": 58.48,
+      "frameTimeMedianMs": 16.7,
+      "frameTimeP95Ms": 16.9,
+      "frameTimeP99Ms": 17.1,
+      "cullCpuMedianMs": 0,
+      "drawCalls": 58,
+      "triangles": 398271,
+      "heapUsedMB": 65.01,
+      "groundCover": {
+        "visibleGrass": 719,
+        "visibleFlowers": 31,
+        "visibleFerns": 50,
+        "visibleChunks": 16,
+        "totalInstances": 19123,
+        "drawCalls": 15,
+        "visibleTriangles": 69482,
+        "quality": "medium",
+        "gpuBytes": 1642132,
+        "uploads": 2505,
+        "lastUpdateMs": 0.1,
+        "buildMs": 14.8,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "isAllLoaded": true
+      },
+      "grassAssets": {
+        "loadedGLBCount": 17,
+        "failedGLBCount": 0,
+        "activeGLBVariantCount": 17,
+        "activeFallbackVariantCount": 0,
+        "totalVariants": 17,
+        "isAllLoaded": true,
+        "variants": {
+          "grass_short_soft_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.17
+          },
+          "grass_short_dense_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.15
+          },
+          "grass_meadow_wide_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.34
+          },
+          "grass_meadow_thin_01": {
+            "isFallback": false,
+            "triangles": 96,
+            "baseHeight": 0.3
+          },
+          "grass_tall_wild_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.52
+          },
+          "grass_tall_seeded_01": {
+            "isFallback": false,
+            "triangles": 102,
+            "baseHeight": 0.54
+          },
+          "grass_dry_straw_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.36
+          },
+          "grass_olive_tuft_01": {
+            "isFallback": false,
+            "triangles": 84,
+            "baseHeight": 0.26
+          },
+          "grass_shade_dark_01": {
+            "isFallback": false,
+            "triangles": 70,
+            "baseHeight": 0.24
+          },
+          "grass_forest_sparse_01": {
+            "isFallback": false,
+            "triangles": 60,
+            "baseHeight": 0.22
+          },
+          "grass_path_edge_01": {
+            "isFallback": false,
+            "triangles": 90,
+            "baseHeight": 0.22
+          },
+          "grass_wavy_broad_01": {
+            "isFallback": false,
+            "triangles": 100,
+            "baseHeight": 0.3
+          },
+          "flower_white_01": {
+            "isFallback": false,
+            "triangles": 126,
+            "baseHeight": 0.26
+          },
+          "flower_yellow_01": {
+            "isFallback": false,
+            "triangles": 124,
+            "baseHeight": 0.3
+          },
+          "flower_purple_01": {
+            "isFallback": false,
+            "triangles": 132,
+            "baseHeight": 0.42
+          },
+          "fern_small_01": {
+            "isFallback": false,
+            "triangles": 140,
+            "baseHeight": 0.34
+          },
+          "fern_wide_01": {
+            "isFallback": false,
+            "triangles": 210,
+            "baseHeight": 0.6
+          }
+        }
+      }
+    }
+  ]
+}

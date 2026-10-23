@@ -1,0 +1,1038 @@
+{
+  "stage": "STAGE 08-FIX — Collision, Terrain & Forest Ground Cover (QA, agent F)",
+  "generatedAt": "2026-10-22T11:59:21.521Z",
+  "before": {
+    "meta": {
+      "label": "before",
+      "root": "d:\\Stickman-strike-backup-pre08fix",
+      "phaseRequested": "shots",
+      "ports": {
+        "server": 3100,
+        "vite": 5273,
+        "chromeDebug": 9300
+      },
+      "viewport": "1280x720",
+      "dpr": 1,
+      "quality": "medium",
+      "seed": 6501,
+      "posesFile": "docs\\stage08fix\\qa_camera_poses.json",
+      "posesGeneratedFrom": "d:\\Stickman-strike-backup-pre08fix",
+      "timestamp": "2026-10-22T11:39:00.795Z",
+      "command": "node scripts\\qa-stage08fix.mjs --root=d:\\Stickman-strike-backup-pre08fix --label=before --port=3100 --vitePort=5273 --phase=shots"
+    },
+    "worldMeta": {
+      "mapId": "forest_square",
+      "worldVersion": 1,
+      "publicLayoutSeed": 6501,
+      "gameplayHash": "3b0c6559d00b96f8"
+    },
+    "environment": {
+      "platform": "win32 10.0.26300 (x64)",
+      "cpuModel": "Intel(R) Core(TM) i5-14400",
+      "cpuCores": 16,
+      "totalRamGB": 31.67,
+      "nodeVersion": "v24.11.1",
+      "chromeVersion": "Chrome/155.0.8059.80",
+      "headless": true,
+      "gpu": {
+        "vendor": "Google Inc. (Intel)",
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 730 (0x0000A782) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+      }
+    }
+  },
+  "after": {
+    "meta": {
+      "label": "after",
+      "root": "D:\\Stickman-strike",
+      "phaseRequested": "perf",
+      "ports": {
+        "server": 3100,
+        "vite": 5273,
+        "chromeDebug": 9300
+      },
+      "viewport": "1280x720",
+      "dpr": 1,
+      "quality": "medium",
+      "seed": 6501,
+      "posesFile": "docs\\stage08fix\\qa_camera_poses.json",
+      "posesGeneratedFrom": "d:\\Stickman-strike-backup-pre08fix",
+      "timestamp": "2026-10-22T11:50:27.673Z",
+      "command": "node scripts\\qa-stage08fix.mjs --label=after --phase=perf --warmup=5 --duration=15 --repeats=2"
+    },
+    "worldMeta": {
+      "mapId": "forest_square",
+      "worldVersion": 2,
+      "publicLayoutSeed": 6501,
+      "gameplayHash": "670a9c21f0565c94"
+    },
+    "environment": {
+      "platform": "win32 10.0.26300 (x64)",
+      "cpuModel": "Intel(R) Core(TM) i5-14400",
+      "cpuCores": 16,
+      "totalRamGB": 31.67,
+      "nodeVersion": "v24.11.1",
+      "chromeVersion": "Chrome/155.0.8059.80",
+      "headless": true,
+      "gpu": {
+        "vendor": "Google Inc. (Intel)",
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 730 (0x0000A782) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+      }
+    }
+  },
+  "shots": {
+    "before": [
+      {
+        "file": "docs/screenshots/stage08fix/before/01_forest_ground.png",
+        "stats": null,
+        "render": {
+          "calls": 127,
+          "sceneCalls": 127,
+          "vmCalls": 0,
+          "triangles": 566723,
+          "sceneTris": 566723,
+          "vmTris": 0,
+          "geometries": 122,
+          "textures": 37
+        }
+      },
+      {
+        "file": "docs/screenshots/stage08fix/before/02_road_edge.png",
+        "stats": null,
+        "render": {
+          "calls": 43,
+          "sceneCalls": 43,
+          "vmCalls": 0,
+          "triangles": 331486,
+          "sceneTris": 331486,
+          "vmTris": 0,
+          "geometries": 122,
+          "textures": 37
+        }
+      },
+      {
+        "file": "docs/screenshots/stage08fix/before/03_flower_glade.png",
+        "stats": null,
+        "render": {
+          "calls": 133,
+          "sceneCalls": 133,
+          "vmCalls": 0,
+          "triangles": 584734,
+          "sceneTris": 584734,
+          "vmTris": 0,
+          "geometries": 122,
+          "textures": 43
+        }
+      },
+      {
+        "file": "docs/screenshots/stage08fix/before/04_tree_roots_fern.png",
+        "stats": null,
+        "render": {
+          "calls": 121,
+          "sceneCalls": 121,
+          "vmCalls": 0,
+          "triangles": 621299,
+          "sceneTris": 621299,
+          "vmTris": 0,
+          "geometries": 122,
+          "textures": 43
+        }
+      },
+      {
+        "file": "docs/screenshots/stage08fix/before/05_cabin_yard.png",
+        "stats": null,
+        "render": {
+          "calls": 129,
+          "sceneCalls": 129,
+          "vmCalls": 0,
+          "triangles": 418420,
+          "sceneTris": 418420,
+          "vmTris": 0,
+          "geometries": 122,
+          "textures": 43
+        }
+      },
+      {
+        "file": "docs/screenshots/stage08fix/before/06_topdown.png",
+        "stats": null,
+        "render": {
+          "calls": 289,
+          "sceneCalls": 289,
+          "vmCalls": 0,
+          "triangles": 1292140,
+          "sceneTris": 1292140,
+          "vmTris": 0,
+          "geometries": 122,
+          "textures": 43
+        }
+      },
+      {
+        "file": "docs/screenshots/stage08fix/before/06b_topdown_low_glade.png",
+        "stats": null,
+        "render": {
+          "calls": 195,
+          "sceneCalls": 195,
+          "vmCalls": 0,
+          "triangles": 1258006,
+          "sceneTris": 1258006,
+          "vmTris": 0,
+          "geometries": 122,
+          "textures": 47
+        }
+      }
+    ],
+    "after": [
+      {
+        "file": "docs/screenshots/stage08fix/after/01_forest_ground.png",
+        "stats": {
+          "visibleGrass": 786,
+          "visibleFlowers": 67,
+          "visibleFerns": 51,
+          "visibleChunks": 21
+        },
+        "render": {
+          "calls": 133,
+          "sceneCalls": 133,
+          "vmCalls": 0,
+          "triangles": 573596,
+          "sceneTris": 573596,
+          "vmTris": 0,
+          "geometries": 128,
+          "textures": 37
+        }
+      },
+      {
+        "file": "docs/screenshots/stage08fix/after/02_road_edge.png",
+        "stats": {
+          "visibleGrass": 702,
+          "visibleFlowers": 30,
+          "visibleFerns": 52,
+          "visibleChunks": 15
+        },
+        "render": {
+          "calls": 49,
+          "sceneCalls": 49,
+          "vmCalls": 0,
+          "triangles": 337640,
+          "sceneTris": 337640,
+          "vmTris": 0,
+          "geometries": 128,
+          "textures": 37
+        }
+      },
+      {
+        "file": "docs/screenshots/stage08fix/after/03_flower_glade.png",
+        "stats": {
+          "visibleGrass": 914,
+          "visibleFlowers": 83,
+          "visibleFerns": 65,
+          "visibleChunks": 20
+        },
+        "render": {
+          "calls": 139,
+          "sceneCalls": 139,
+          "vmCalls": 0,
+          "triangles": 593099,
+          "sceneTris": 593099,
+          "vmTris": 0,
+          "geometries": 128,
+          "textures": 43
+        }
+      },
+      {
+        "file": "docs/screenshots/stage08fix/after/04_tree_roots_fern.png",
+        "stats": {
+          "visibleGrass": 460,
+          "visibleFlowers": 10,
+          "visibleFerns": 92,
+          "visibleChunks": 21
+        },
+        "render": {
+          "calls": 127,
+          "sceneCalls": 127,
+          "vmCalls": 0,
+          "triangles": 625697,
+          "sceneTris": 625697,
+          "vmTris": 0,
+          "geometries": 128,
+          "textures": 43
+        }
+      },
+      {
+        "file": "docs/screenshots/stage08fix/after/05_cabin_yard.png",
+        "stats": {
+          "visibleGrass": 940,
+          "visibleFlowers": 89,
+          "visibleFerns": 58,
+          "visibleChunks": 21
+        },
+        "render": {
+          "calls": 135,
+          "sceneCalls": 135,
+          "vmCalls": 0,
+          "triangles": 426681,
+          "sceneTris": 426681,
+          "vmTris": 0,
+          "geometries": 128,
+          "textures": 43
+        }
+      },
+      {
+        "file": "docs/screenshots/stage08fix/after/06_topdown.png",
+        "stats": {
+          "visibleGrass": 0,
+          "visibleFlowers": 0,
+          "visibleFerns": 0,
+          "visibleChunks": 0
+        },
+        "render": {
+          "calls": 289,
+          "sceneCalls": 289,
+          "vmCalls": 0,
+          "triangles": 1292140,
+          "sceneTris": 1292140,
+          "vmTris": 0,
+          "geometries": 128,
+          "textures": 43
+        }
+      },
+      {
+        "file": "docs/screenshots/stage08fix/after/06b_topdown_low_glade.png",
+        "stats": {
+          "visibleGrass": 0,
+          "visibleFlowers": 0,
+          "visibleFerns": 0,
+          "visibleChunks": 0
+        },
+        "render": {
+          "calls": 195,
+          "sceneCalls": 195,
+          "vmCalls": 0,
+          "triangles": 1258006,
+          "sceneTris": 1258006,
+          "vmTris": 0,
+          "geometries": 128,
+          "textures": 47
+        }
+      }
+    ]
+  },
+  "probes": [
+    {
+      "id": "log_cross",
+      "before": "WALK_THROUGH",
+      "beforePass": false,
+      "after": "STEPPED_OVER_rise0.453",
+      "afterPass": true
+    },
+    {
+      "id": "stump_cross",
+      "before": "BLOCKED_2.2m_BEFORE_CENTER",
+      "beforePass": true,
+      "after": "BLOCKED_2.2m_BEFORE_CENTER",
+      "afterPass": true
+    },
+    {
+      "id": "rock_cross",
+      "before": "BLOCKED_1.847m_BEFORE_CENTER",
+      "beforePass": true,
+      "after": "BLOCKED_1.847m_BEFORE_CENTER",
+      "afterPass": true
+    },
+    {
+      "id": "tent_enter",
+      "before": "ENTERED_CENTER",
+      "beforePass": true,
+      "after": "ENTERED_CENTER",
+      "afterPass": true
+    },
+    {
+      "id": "tent_exit",
+      "before": "STUCK_4.499m_FROM_EXIT",
+      "beforePass": false,
+      "after": "EXITED",
+      "afterPass": true
+    },
+    {
+      "id": "tent_side_wall",
+      "before": "BLOCKED_BY_WALL",
+      "beforePass": true,
+      "after": "BLOCKED_BY_WALL",
+      "afterPass": true
+    },
+    {
+      "id": "railing_cross",
+      "before": "BLOCKED_0.49m_BEFORE_CENTER",
+      "beforePass": true,
+      "after": "BLOCKED_0.49m_BEFORE_CENTER",
+      "afterPass": true
+    },
+    {
+      "id": "barrel_cross",
+      "before": "BLOCKED_0.78m_BEFORE_CENTER",
+      "beforePass": true,
+      "after": "BLOCKED_0.69m_BEFORE_CENTER",
+      "afterPass": true
+    },
+    {
+      "id": "cabin_wall",
+      "before": "BLOCKED_0.501m_BEFORE_CENTER",
+      "beforePass": true,
+      "after": "BLOCKED_0.501m_BEFORE_CENTER",
+      "afterPass": true
+    },
+    {
+      "id": "cabin_stairs_loft",
+      "before": "CLIMBED_TO_5.03",
+      "beforePass": true,
+      "after": "CLIMBED_TO_5.03",
+      "afterPass": true
+    }
+  ],
+  "perf": [
+    {
+      "scene": "open_forest",
+      "before": null,
+      "after": {
+        "fpsMedian": 161.29,
+        "fpsP10": 58.14,
+        "fps1PctLow": 25.06,
+        "frameTimeP95Ms": 28.8,
+        "frameTimeP99Ms": 44.6,
+        "calls": 119,
+        "triangles": 568467,
+        "heapUsedMB": 64.05,
+        "groundCover": {
+          "visibleGrass": 767,
+          "visibleFlowers": 63,
+          "visibleFerns": 49,
+          "visibleChunks": 20
+        },
+        "severeSpike": true,
+        "deep": {
+          "fpsMedian": 178.57,
+          "fpsP10": 61.73,
+          "fps1PctLow": 24.63,
+          "frameTimeP95Ms": 26.3,
+          "frameTimeP99Ms": 40.6
+        }
+      }
+    },
+    {
+      "scene": "service_station",
+      "before": null,
+      "after": {
+        "fpsMedian": 119.05,
+        "fpsP10": 104.17,
+        "fps1PctLow": 28.9,
+        "frameTimeP95Ms": 16.6,
+        "frameTimeP99Ms": 34.7,
+        "calls": 157,
+        "triangles": 565359,
+        "heapUsedMB": 72.11,
+        "groundCover": {
+          "visibleGrass": 1117,
+          "visibleFlowers": 136,
+          "visibleFerns": 40,
+          "visibleChunks": 22
+        },
+        "severeSpike": true,
+        "deep": {
+          "fpsMedian": 119.05,
+          "fpsP10": 104.17,
+          "fps1PctLow": 29.15,
+          "frameTimeP95Ms": 16,
+          "frameTimeP99Ms": 34.3
+        }
+      }
+    },
+    {
+      "scene": "forest_camp",
+      "before": null,
+      "after": {
+        "fpsMedian": 131.58,
+        "fpsP10": 112.36,
+        "fps1PctLow": 42.74,
+        "frameTimeP95Ms": 11.1,
+        "frameTimeP99Ms": 23.5,
+        "calls": 164,
+        "triangles": 575440,
+        "heapUsedMB": 88.52,
+        "groundCover": {
+          "visibleGrass": 1068,
+          "visibleFlowers": 91,
+          "visibleFerns": 45,
+          "visibleChunks": 18
+        },
+        "severeSpike": false,
+        "deep": null
+      }
+    },
+    {
+      "scene": "flower_glade",
+      "before": null,
+      "after": {
+        "fpsMedian": 163.93,
+        "fpsP10": 68.49,
+        "fps1PctLow": 34.97,
+        "frameTimeP95Ms": 15.8,
+        "frameTimeP99Ms": 29.4,
+        "calls": 139,
+        "triangles": 593099,
+        "heapUsedMB": 72.57,
+        "groundCover": {
+          "visibleGrass": 914,
+          "visibleFlowers": 83,
+          "visibleFerns": 65,
+          "visibleChunks": 20
+        },
+        "severeSpike": true,
+        "deep": {
+          "fpsMedian": 166.67,
+          "fpsP10": 74.07,
+          "fps1PctLow": 35.34,
+          "frameTimeP95Ms": 15.2,
+          "frameTimeP99Ms": 28.3
+        }
+      }
+    }
+  ],
+  "smoke": {
+    "roomName": "S08FIX_after_08935",
+    "mode": "tdm",
+    "worldMeta": {
+      "c1": {
+        "mapId": "forest_square",
+        "worldVersion": 2,
+        "publicLayoutSeed": 6501,
+        "gameplayHash": "670a9c21f0565c94"
+      },
+      "c2": {
+        "mapId": "forest_square",
+        "worldVersion": 2,
+        "publicLayoutSeed": 6501,
+        "gameplayHash": "670a9c21f0565c94"
+      },
+      "match": true
+    },
+    "ids": {
+      "c1": "JrmS6u2JNEBCtpuZAAAB",
+      "c2": "g73rq14OxVcT3Q_BAAAA"
+    },
+    "sync": {
+      "samples": [
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -0.351,
+          "c2y": 0.024,
+          "c1PredDivergence": 0.1026,
+          "c2PredDivergence": 0.2364
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -0.354,
+          "c2y": 1.274,
+          "c1PredDivergence": 0.1097,
+          "c2PredDivergence": 0.286
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -0.388,
+          "c2y": 0.042,
+          "c1PredDivergence": 0.0006,
+          "c2PredDivergence": 0.2848
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -0.459,
+          "c2y": 0.038,
+          "c1PredDivergence": 0.2081,
+          "c2PredDivergence": 0.2875
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -0.574,
+          "c2y": 0.018,
+          "c1PredDivergence": 0.1893,
+          "c2PredDivergence": 0.286
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 1.326,
+          "c2SelfVsC1View": 0.5,
+          "tickDelta": 5,
+          "c1y": 0.343,
+          "c2y": 0.007,
+          "c1PredDivergence": 0.3349,
+          "c2PredDivergence": 0.2938
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -1.125,
+          "c2y": -0.013,
+          "c1PredDivergence": 0.1012,
+          "c2PredDivergence": 0.0004
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -1.344,
+          "c2y": 1.153,
+          "c1PredDivergence": 0.2129,
+          "c2PredDivergence": 0.2939
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -1.556,
+          "c2y": 0.212,
+          "c1PredDivergence": 0.0985,
+          "c2PredDivergence": 0.3092
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -1.648,
+          "c2y": 0.323,
+          "c1PredDivergence": 0.0622,
+          "c2PredDivergence": 0.2826
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -1.639,
+          "c2y": 0.686,
+          "c1PredDivergence": 0.13,
+          "c2PredDivergence": 0.2936
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -0.41,
+          "c2y": 1.007,
+          "c1PredDivergence": 0.202,
+          "c2PredDivergence": 0.2044
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -1.699,
+          "c2y": 1.214,
+          "c1PredDivergence": 0.2078,
+          "c2PredDivergence": 0.2023
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -1.671,
+          "c2y": 2.499,
+          "c1PredDivergence": 0.104,
+          "c2PredDivergence": 0.2885
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -1.582,
+          "c2y": 1.309,
+          "c1PredDivergence": 0.2036,
+          "c2PredDivergence": 0.0005
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0.219,
+          "c2SelfVsC1View": 0.771,
+          "tickDelta": -4,
+          "c1y": -1.511,
+          "c2y": 1.298,
+          "c1PredDivergence": 0.1986,
+          "c2PredDivergence": 0.2388
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -1.347,
+          "c2y": 1.265,
+          "c1PredDivergence": 0.1048,
+          "c2PredDivergence": 0.0002
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -0.062,
+          "c2y": 1.193,
+          "c1PredDivergence": 0.2063,
+          "c2PredDivergence": 0.285
+        },
+        {
+          "view": "1P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0.432,
+          "tickDelta": 0,
+          "c1y": -1.083,
+          "c2y": 1.088,
+          "c1PredDivergence": 0.0342,
+          "c2PredDivergence": 0.8247
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -1.15,
+          "c2y": 1.614,
+          "c1PredDivergence": 0.207,
+          "c2PredDivergence": 0.0008
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -1.134,
+          "c2y": 2.399,
+          "c1PredDivergence": 0.2067,
+          "c2PredDivergence": 0.0005
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -1.024,
+          "c2y": 2.059,
+          "c1PredDivergence": 0.0364,
+          "c2PredDivergence": 0.0004
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -0.868,
+          "c2y": 2.302,
+          "c1PredDivergence": 0.0462,
+          "c2PredDivergence": 0.2953
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": -0.637,
+          "c2y": 2.407,
+          "c1PredDivergence": 0.1194,
+          "c2PredDivergence": 0.0007
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": 0.679,
+          "c2y": 2.287,
+          "c1PredDivergence": 0.1733,
+          "c2PredDivergence": 0.1563
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": 0.115,
+          "c2y": 2.626,
+          "c1PredDivergence": 0.2096,
+          "c2PredDivergence": 0.0007
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": 0.374,
+          "c2y": 3.333,
+          "c1PredDivergence": 0.3141,
+          "c2PredDivergence": 0.2552
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": 0.479,
+          "c2y": 1.602,
+          "c1PredDivergence": 0.1043,
+          "c2PredDivergence": 0.2831
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": 0.498,
+          "c2y": 1.227,
+          "c1PredDivergence": 0.0997,
+          "c2PredDivergence": 0.0003
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": 0.494,
+          "c2y": 0.885,
+          "c1PredDivergence": 0.2088,
+          "c2PredDivergence": 0.2037
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0.205,
+          "tickDelta": 0,
+          "c1y": 1.754,
+          "c2y": 0.583,
+          "c1PredDivergence": 0.0002,
+          "c2PredDivergence": 0.205
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": 0.473,
+          "c2y": 1.206,
+          "c1PredDivergence": 0.0009,
+          "c2PredDivergence": 0.0007
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": 0.438,
+          "c2y": 1.349,
+          "c1PredDivergence": 0.1031,
+          "c2PredDivergence": 0.0008
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": 0.378,
+          "c2y": 0.073,
+          "c1PredDivergence": 0.1062,
+          "c2PredDivergence": 0.0009
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": 0.877,
+          "c2y": 0,
+          "c1PredDivergence": 0.2128,
+          "c2PredDivergence": 0.0006
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": 0.258,
+          "c2y": -0.008,
+          "c1PredDivergence": 0.2007,
+          "c2PredDivergence": 0.22
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": 1.521,
+          "c2y": 0.031,
+          "c1PredDivergence": 0.0005,
+          "c2PredDivergence": 0.2725
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": 0.238,
+          "c2y": 1.24,
+          "c1PredDivergence": 0.105,
+          "c2PredDivergence": 0.0001
+        },
+        {
+          "view": "3P",
+          "c1SelfVsC2View": 0,
+          "c2SelfVsC1View": 0,
+          "tickDelta": 0,
+          "c1y": 0.265,
+          "c2y": 0.533,
+          "c1PredDivergence": 0.1026,
+          "c2PredDivergence": 0.4088
+        }
+      ],
+      "maxMovingDeltaM": 1.326,
+      "settledDeltaM": {
+        "c1": 0,
+        "c2": 0
+      },
+      "c1JumpYRange": 3.453,
+      "c2JumpYRange": 3.346
+    },
+    "serverProbes": [
+      {
+        "id": "railing_cross",
+        "reachedStart": true,
+        "approach": {
+          "reached": true,
+          "pos": {
+            "x": -76.851,
+            "y": 1.32,
+            "z": -57.606
+          },
+          "ms": 7952,
+          "detours": 0,
+          "divergenceM": 0
+        },
+        "outcome": "BLOCKED_0.488m_BEFORE_CENTER",
+        "pass": true,
+        "finalProgress": 1.706,
+        "centerProgress": 2.194,
+        "maxRise": 0,
+        "distToCenter": 0.506,
+        "distToEnd": 2.493,
+        "final": {
+          "x": -76.672,
+          "y": 1.32,
+          "z": -59.31
+        },
+        "divergenceM": 0,
+        "client": "C2"
+      },
+      {
+        "id": "barrel_cross",
+        "reachedStart": true,
+        "approach": {
+          "reached": true,
+          "pos": {
+            "x": -63.926,
+            "y": 1.32,
+            "z": -66.615
+          },
+          "ms": 3874,
+          "detours": 0,
+          "divergenceM": 0
+        },
+        "outcome": "BLOCKED_0.664m_BEFORE_CENTER",
+        "pass": true,
+        "finalProgress": 1.216,
+        "centerProgress": 1.881,
+        "maxRise": 0,
+        "distToCenter": 0.863,
+        "distToEnd": 2.74,
+        "final": {
+          "x": -65.11,
+          "y": 1.32,
+          "z": -67.319
+        },
+        "divergenceM": 0,
+        "client": "C2"
+      },
+      {
+        "id": "tent_enter",
+        "reachedStart": true,
+        "approach": {
+          "reached": true,
+          "pos": {
+            "x": -52.629,
+            "y": 0.5,
+            "z": 68.1
+          },
+          "ms": 45336,
+          "detours": 1,
+          "divergenceM": 0.0001
+        },
+        "outcome": "ENTERED_CENTER",
+        "pass": true,
+        "finalProgress": 2.741,
+        "centerProgress": 2.52,
+        "maxRise": 0,
+        "distToCenter": 0.222,
+        "distToEnd": 0.222,
+        "final": {
+          "x": -51.509,
+          "y": 0.5,
+          "z": 65.598
+        },
+        "divergenceM": 0.0007,
+        "client": "C1"
+      },
+      {
+        "id": "rock_cross",
+        "reachedStart": false,
+        "approach": {
+          "reached": false,
+          "pos": {
+            "x": -51.305,
+            "y": 0.5,
+            "z": 65.829
+          },
+          "ms": 45405,
+          "detours": 115,
+          "divergenceM": 0.0001
+        },
+        "client": "C1"
+      }
+    ],
+    "los": null,
+    "errors": {
+      "consoleErrors": [],
+      "pageExceptions": [],
+      "networkErrors": []
+    },
+    "passed": true
+  },
+  "smokeBefore": null
+}

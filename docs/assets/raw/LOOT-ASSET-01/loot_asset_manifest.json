@@ -1,0 +1,401 @@
+{
+  "assetPack": "LOOT-ASSET-01",
+  "units": "meters",
+  "upAxis": "+Y",
+  "origin": "bottom-center",
+  "front": "+Z",
+  "materials": [
+    "wood",
+    "iron",
+    "painted_metal"
+  ],
+  "models": [
+    {
+      "name": "wooden_loot_crate_01",
+      "file": "glb/wooden_loot_crate_01.glb",
+      "units": "meters",
+      "origin": "bottom-center",
+      "dimensions": {
+        "x": 1.005,
+        "y": 0.606,
+        "z": 0.646
+      },
+      "boundsMin": [
+        -0.502,
+        0,
+        -0.317
+      ],
+      "boundsMax": [
+        0.502,
+        0.606,
+        0.328
+      ],
+      "triangles": 1140,
+      "materials": [
+        "wood",
+        "iron"
+      ],
+      "staticMeshes": [
+        "crate_body",
+        "crate_body_metal"
+      ],
+      "movingNode": {
+        "name": "lid_pivot",
+        "parent": "wooden_loot_crate_01",
+        "position": [
+          0,
+          0.46,
+          -0.3
+        ],
+        "axis": "x",
+        "closedAngleRad": 0,
+        "openAngleRad": -1.92,
+        "openAngleDeg": -110,
+        "description": "Qopqoq orqa ilgak chizig'i atrofida yuqoriga va orqaga ochiladi"
+      },
+      "movingMeshes": [
+        "crate_lid",
+        "crate_lid_metal"
+      ],
+      "colliders": {
+        "staticBody": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.23,
+            0
+          ],
+          "size": [
+            0.9,
+            0.46,
+            0.6
+          ]
+        },
+        "movingPart": {
+          "space": "lid_pivot-local",
+          "center": [
+            0,
+            0.07,
+            0.3
+          ],
+          "size": [
+            0.9,
+            0.14,
+            0.6
+          ],
+          "note": "Pivot bilan birga aylanadi"
+        },
+        "simpleClosed": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.3,
+            0
+          ],
+          "size": [
+            0.9,
+            0.6,
+            0.6
+          ],
+          "note": "Yopiq holat uchun bitta oddiy box"
+        }
+      },
+      "interaction": {
+        "sphereCenter": [
+          0,
+          0.303,
+          0.005
+        ],
+        "sphereRadius": 1.87,
+        "recommendedMaxDistanceFromBounds": 1.5
+      },
+      "interiorVolume": {
+        "space": "model-local",
+        "center": [
+          0,
+          0.265,
+          0
+        ],
+        "size": [
+          0.82,
+          0.39,
+          0.52
+        ],
+        "note": "Pol yuzasi y = 0.07"
+      },
+      "verification": {
+        "glbBytes": 127128,
+        "pivotFound": true,
+        "noCamerasOrLights": true,
+        "vertexColors": true,
+        "triangles": 1140,
+        "trianglesMatch": true,
+        "movingMeshes": 2,
+        "staticMeshes": 2,
+        "pivotPositionOK": true,
+        "movingDisplacement": 0.493,
+        "staticUnchanged": true,
+        "opens": true,
+        "ok": true
+      }
+    },
+    {
+      "name": "metal_locker_01",
+      "file": "glb/metal_locker_01.glb",
+      "units": "meters",
+      "origin": "bottom-center",
+      "dimensions": {
+        "x": 0.91,
+        "y": 1.8,
+        "z": 0.56
+      },
+      "boundsMin": [
+        -0.455,
+        0,
+        -0.255
+      ],
+      "boundsMax": [
+        0.455,
+        1.8,
+        0.305
+      ],
+      "triangles": 1406,
+      "materials": [
+        "painted_metal",
+        "iron"
+      ],
+      "staticMeshes": [
+        "locker_body",
+        "locker_body_metal"
+      ],
+      "movingNode": {
+        "name": "door_pivot",
+        "parent": "metal_locker_01",
+        "position": [
+          -0.43,
+          0,
+          0.25
+        ],
+        "axis": "y",
+        "closedAngleRad": 0,
+        "openAngleRad": -1.75,
+        "openAngleDeg": -100,
+        "description": "Eshik chap ilgak chizig'i atrofida tashqariga (+Z) va chapga ochiladi"
+      },
+      "movingMeshes": [
+        "locker_door",
+        "locker_door_hardware"
+      ],
+      "colliders": {
+        "staticBody": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.9,
+            0
+          ],
+          "size": [
+            0.9,
+            1.8,
+            0.5
+          ]
+        },
+        "movingPart": {
+          "space": "door_pivot-local",
+          "center": [
+            0.43,
+            0.925,
+            0.0145
+          ],
+          "size": [
+            0.85,
+            1.69,
+            0.03
+          ],
+          "note": "Pivot bilan birga aylanadi"
+        },
+        "simpleClosed": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.9,
+            0
+          ],
+          "size": [
+            0.9,
+            1.8,
+            0.5
+          ],
+          "note": "Yopiq holat uchun bitta oddiy box"
+        }
+      },
+      "interaction": {
+        "sphereCenter": [
+          0,
+          0.9,
+          0.025
+        ],
+        "sphereRadius": 2.247,
+        "recommendedMaxDistanceFromBounds": 1.5
+      },
+      "interiorVolume": {
+        "space": "model-local",
+        "center": [
+          0,
+          0.925,
+          -0.01
+        ],
+        "size": [
+          0.84,
+          1.57,
+          0.44
+        ],
+        "note": "Javon yuzalari y = 0.09 (pol), 0.5575, 1.0075, 1.4575"
+      },
+      "verification": {
+        "glbBytes": 155848,
+        "pivotFound": true,
+        "noCamerasOrLights": true,
+        "vertexColors": true,
+        "triangles": 1406,
+        "trianglesMatch": true,
+        "movingMeshes": 2,
+        "staticMeshes": 2,
+        "pivotPositionOK": true,
+        "movingDisplacement": 0.646,
+        "staticUnchanged": true,
+        "opens": true,
+        "ok": true
+      }
+    },
+    {
+      "name": "old_toolbox_01",
+      "file": "glb/old_toolbox_01.glb",
+      "units": "meters",
+      "origin": "bottom-center",
+      "dimensions": {
+        "x": 0.607,
+        "y": 0.3,
+        "z": 0.319
+      },
+      "boundsMin": [
+        -0.303,
+        0,
+        -0.157
+      ],
+      "boundsMax": [
+        0.303,
+        0.3,
+        0.162
+      ],
+      "triangles": 926,
+      "materials": [
+        "painted_metal",
+        "iron"
+      ],
+      "staticMeshes": [
+        "toolbox_body",
+        "toolbox_body_metal"
+      ],
+      "movingNode": {
+        "name": "lid_pivot",
+        "parent": "old_toolbox_01",
+        "position": [
+          0,
+          0.2,
+          -0.15
+        ],
+        "axis": "x",
+        "closedAngleRad": 0,
+        "openAngleRad": -1.92,
+        "openAngleDeg": -110,
+        "description": "Qopqoq orqa ilgak chizig'i atrofida yuqoriga va orqaga ochiladi"
+      },
+      "movingMeshes": [
+        "toolbox_lid",
+        "toolbox_lid_metal"
+      ],
+      "colliders": {
+        "staticBody": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.1,
+            0
+          ],
+          "size": [
+            0.6,
+            0.2,
+            0.3
+          ]
+        },
+        "movingPart": {
+          "space": "lid_pivot-local",
+          "center": [
+            0,
+            0.05,
+            0.15
+          ],
+          "size": [
+            0.6,
+            0.1,
+            0.3
+          ],
+          "note": "Pivot bilan birga aylanadi"
+        },
+        "simpleClosed": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.15,
+            0
+          ],
+          "size": [
+            0.6,
+            0.3,
+            0.3
+          ],
+          "note": "Yopiq holat uchun bitta oddiy box"
+        }
+      },
+      "interaction": {
+        "sphereCenter": [
+          0,
+          0.15,
+          0.002
+        ],
+        "sphereRadius": 1.574,
+        "recommendedMaxDistanceFromBounds": 1.5
+      },
+      "interiorVolume": {
+        "space": "model-local",
+        "center": [
+          0,
+          0.11,
+          0.065
+        ],
+        "size": [
+          0.56,
+          0.17,
+          0.14
+        ],
+        "note": "Old bo'lim; orqada ichki tokcha: center (0, 0.172, -0.07), size (0.56, 0.035, 0.12)"
+      },
+      "verification": {
+        "glbBytes": 104024,
+        "pivotFound": true,
+        "noCamerasOrLights": true,
+        "vertexColors": true,
+        "triangles": 926,
+        "trianglesMatch": true,
+        "movingMeshes": 2,
+        "staticMeshes": 2,
+        "pivotPositionOK": true,
+        "movingDisplacement": 0.261,
+        "staticUnchanged": true,
+        "opens": true,
+        "ok": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+export {
+  areInteriorAssetsReady,
+  buildProceduralInteriorFallback,
+  type CachedInteriorAssetTemplate,
+  getCachedInteriorAsset,
+  getInteriorAssetDiagnostics,
+  hasInteriorAssetFailed,
+  INTERIOR_ASSET_IDS,
+  INTERIOR_ASSET_MANIFEST,
+  INTERIOR_GLB_URLS,
+  type InteriorAssetId,
+  type InteriorAssetManifestSpec,
+  type InteriorPivotDiagnostics,
+  instantiateInteriorAsset,
+  KITCHEN_CABINET_LEFT_OPEN_ANGLE_RAD,
+  KITCHEN_CABINET_LEFT_PIVOT_NAME,
+  KITCHEN_CABINET_LEFT_PIVOT_POS,
+  KITCHEN_CABINET_RIGHT_OPEN_ANGLE_RAD,
+  KITCHEN_CABINET_RIGHT_PIVOT_NAME,
+  KITCHEN_CABINET_RIGHT_PIVOT_POS,
+  onInteriorAssetsReady,
+  preloadInteriorAssets,
+  registerInteriorAssetFromObject,
+} from './InteriorAssetRegistry';
+
+export {
+  buildInteriorFurnitureScene,
+  computeInteriorWorldAnchors,
+  type InteriorFurnitureSceneHandles,
+  type KitchenCabinetController,
+} from './InteriorRenderer';

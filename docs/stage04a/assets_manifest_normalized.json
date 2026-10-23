@@ -1,0 +1,6082 @@
+{
+  "schemaVersion": "1.0.0",
+  "stage": "STAGE-04A",
+  "title": "Normalized Building, Loot & Interior Assets Manifest",
+  "units": "meters",
+  "upAxis": "+Y",
+  "conventions": {
+    "gridStepM": 4,
+    "wallHeightM": 3,
+    "wallThicknessM": 0.2,
+    "floorSurfaceY": 0,
+    "defaultFrontAxis": "+Z",
+    "sharedMaterials": {
+      "wood": {
+        "metallicFactor": 0,
+        "roughnessFactor": 0.88,
+        "doubleSided": false
+      },
+      "roof": {
+        "metallicFactor": 0,
+        "roughnessFactor": 0.92,
+        "doubleSided": false
+      },
+      "iron": {
+        "metallicFactor": 0.45,
+        "roughnessFactor": 0.6,
+        "doubleSided": false
+      },
+      "painted_metal": {
+        "metallicFactor": 0.25,
+        "roughnessFactor": 0.72,
+        "doubleSided": false
+      },
+      "fabric": {
+        "metallicFactor": 0,
+        "roughnessFactor": 0.97,
+        "doubleSided": false
+      }
+    }
+  },
+  "summary": {
+    "totalAssets": 17,
+    "totalBytes": 1650384,
+    "totalTriangles": 14908,
+    "totalVertices": 44724,
+    "totalPivots": 6,
+    "totalItemAnchors": 30,
+    "totalPlaceableSurfaces": 13,
+    "allValidationPassed": true,
+    "byPack": {
+      "BUILDING-ASSET-01": {
+        "count": 8,
+        "totalBytes": 860192,
+        "totalTriangles": 7824,
+        "totalVertices": 23472,
+        "assetIds": [
+          "wood_wall_01",
+          "wood_wall_window_01",
+          "wood_wall_door_01",
+          "wood_floor_01",
+          "wood_roof_slope_01",
+          "wood_roof_gable_01",
+          "wood_door_01",
+          "wood_stairs_01"
+        ]
+      },
+      "LOOT-ASSET-01": {
+        "count": 3,
+        "totalBytes": 387000,
+        "totalTriangles": 3472,
+        "totalVertices": 10416,
+        "assetIds": [
+          "wooden_loot_crate_01",
+          "metal_locker_01",
+          "old_toolbox_01"
+        ]
+      },
+      "INTERIOR-ASSET-01": {
+        "count": 6,
+        "totalBytes": 403192,
+        "totalTriangles": 3612,
+        "totalVertices": 10836,
+        "assetIds": [
+          "wooden_table_01",
+          "wooden_chair_01",
+          "wooden_shelf_01",
+          "old_bed_01",
+          "old_sofa_01",
+          "kitchen_cabinet_01"
+        ]
+      }
+    }
+  },
+  "sampleLayouts": {
+    "cabin8x4": {
+      "source": "docs/assets/raw/BUILDING-ASSET-01/examples/sample_cabin_layout.json",
+      "name": "sample_cabin_8x4",
+      "moduleCount": 17
+    },
+    "room4x4": {
+      "source": "docs/assets/raw/INTERIOR-ASSET-01/examples/sample_room_layout.json",
+      "room": "sample_room_4x4",
+      "cell": {
+        "x": [
+          0,
+          4
+        ],
+        "z": [
+          0,
+          4
+        ]
+      },
+      "walkway": {
+        "x": [
+          0.95,
+          2.45
+        ],
+        "z": [
+          1.1,
+          3.87
+        ]
+      },
+      "objectCount": 13
+    }
+  },
+  "assets": [
+    {
+      "assetId": "wood_wall_01",
+      "pack": "BUILDING-ASSET-01",
+      "category": "building",
+      "publicUrl": "/models/buildings/wood_wall_01.glb",
+      "originalManifestSource": "docs/assets/raw/BUILDING-ASSET-01/README.md",
+      "fileSizeBytes": 93624,
+      "sha256": "6021886a4657f1fd73fa09e4493225ffa8add1f75e627741491a67ef665d7ba0",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center-axis (y=0 floor surface, x in [-2, 2], corner_post at x=-2)",
+      "front": "+Z (exterior +Z, interior -Z)",
+      "dimensions": {
+        "x": 4.12,
+        "y": 3.2,
+        "z": 0.24
+      },
+      "boundsMin": [
+        -2.12,
+        -0.2,
+        -0.12
+      ],
+      "boundsMax": [
+        2,
+        3,
+        0.12
+      ],
+      "triangles": 848,
+      "vertices": 2544,
+      "materials": [
+        "wood"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wood_wall_01",
+      "staticMeshes": [
+        "wood_wall_01_body",
+        "corner_post"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "wall_body",
+            "center": [
+              0,
+              1.5,
+              0
+            ],
+            "size": [
+              4,
+              3,
+              0.2
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            1.5,
+            0
+          ],
+          "size": [
+            4,
+            3,
+            0.2
+          ]
+        }
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    {
+      "assetId": "wood_wall_window_01",
+      "pack": "BUILDING-ASSET-01",
+      "category": "building",
+      "publicUrl": "/models/buildings/wood_wall_window_01.glb",
+      "originalManifestSource": "docs/assets/raw/BUILDING-ASSET-01/README.md",
+      "fileSizeBytes": 159408,
+      "sha256": "48ae1171796ea941ec7a0ce345891ba888e37a06b951dbb7936f05af960453de",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center-axis (y=0 floor surface, x in [-2, 2], corner_post at x=-2)",
+      "front": "+Z (exterior +Z, interior -Z)",
+      "dimensions": {
+        "x": 4.12,
+        "y": 3.2,
+        "z": 0.36
+      },
+      "boundsMin": [
+        -2.12,
+        -0.2,
+        -0.13
+      ],
+      "boundsMax": [
+        2,
+        3,
+        0.23
+      ],
+      "triangles": 1448,
+      "vertices": 4344,
+      "materials": [
+        "wood",
+        "iron"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        },
+        {
+          "name": "iron",
+          "doubleSided": false,
+          "roughnessFactor": 0.6,
+          "metallicFactor": 0.45
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wood_wall_window_01",
+      "staticMeshes": [
+        "wood_wall_window_01_body",
+        "corner_post",
+        "wood_wall_window_01_iron"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "wall_left",
+            "center": [
+              -1.3,
+              1.5,
+              0
+            ],
+            "size": [
+              1.4,
+              3,
+              0.2
+            ]
+          },
+          {
+            "name": "wall_right",
+            "center": [
+              1.3,
+              1.5,
+              0
+            ],
+            "size": [
+              1.4,
+              3,
+              0.2
+            ]
+          },
+          {
+            "name": "wall_bottom",
+            "center": [
+              0,
+              0.5,
+              0
+            ],
+            "size": [
+              1.2,
+              1,
+              0.2
+            ]
+          },
+          {
+            "name": "wall_top",
+            "center": [
+              0,
+              2.5,
+              0
+            ],
+            "size": [
+              1.2,
+              1,
+              0.2
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            1.5,
+            0
+          ],
+          "size": [
+            4,
+            3,
+            0.2
+          ]
+        },
+        "opening": {
+          "type": "window",
+          "xRange": [
+            -0.6,
+            0.6
+          ],
+          "yRange": [
+            1,
+            2
+          ],
+          "size": [
+            1.2,
+            1
+          ],
+          "sillHeightM": 1
+        }
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    {
+      "assetId": "wood_wall_door_01",
+      "pack": "BUILDING-ASSET-01",
+      "category": "building",
+      "publicUrl": "/models/buildings/wood_wall_door_01.glb",
+      "originalManifestSource": "docs/assets/raw/BUILDING-ASSET-01/README.md",
+      "fileSizeBytes": 130360,
+      "sha256": "c9a25c8a9c2464ffac597ec1b5a756d6603a51d4db48c5ff48fbd5fbffc06f41",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center-axis (y=0 floor surface, x in [-2, 2], corner_post at x=-2)",
+      "front": "+Z (exterior +Z, interior -Z)",
+      "dimensions": {
+        "x": 4.12,
+        "y": 3.2,
+        "z": 0.272
+      },
+      "boundsMin": [
+        -2.12,
+        -0.2,
+        -0.13
+      ],
+      "boundsMax": [
+        2,
+        3,
+        0.142
+      ],
+      "triangles": 1188,
+      "vertices": 3564,
+      "materials": [
+        "wood"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wood_wall_door_01",
+      "staticMeshes": [
+        "wood_wall_door_01_body",
+        "corner_post"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "wall_left",
+            "center": [
+              -1.45,
+              1.5,
+              0
+            ],
+            "size": [
+              1.1,
+              3,
+              0.2
+            ]
+          },
+          {
+            "name": "wall_right",
+            "center": [
+              1.45,
+              1.5,
+              0
+            ],
+            "size": [
+              1.1,
+              3,
+              0.2
+            ]
+          },
+          {
+            "name": "wall_top",
+            "center": [
+              0,
+              2.7,
+              0
+            ],
+            "size": [
+              1.8,
+              0.6,
+              0.2
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            1.5,
+            0
+          ],
+          "size": [
+            4,
+            3,
+            0.2
+          ]
+        },
+        "opening": {
+          "type": "doorway",
+          "xRange": [
+            -0.9,
+            0.9
+          ],
+          "yRange": [
+            0,
+            2.4
+          ],
+          "size": [
+            1.8,
+            2.4
+          ],
+          "thresholdY": 0.03
+        }
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    {
+      "assetId": "wood_floor_01",
+      "pack": "BUILDING-ASSET-01",
+      "category": "building",
+      "publicUrl": "/models/buildings/wood_floor_01.glb",
+      "originalManifestSource": "docs/assets/raw/BUILDING-ASSET-01/README.md",
+      "fileSizeBytes": 72448,
+      "sha256": "cf65799d33db3e9d95870955b18707aef783487b9be3a8d3e17c040b17a839ce",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "cell-center top-surface (y=0 top surface, x/z in [-2, 2], slab y in [-0.2, 0])",
+      "front": "+Z",
+      "dimensions": {
+        "x": 4,
+        "y": 0.202,
+        "z": 4
+      },
+      "boundsMin": [
+        -2,
+        -0.2,
+        -2
+      ],
+      "boundsMax": [
+        2,
+        0.002,
+        2
+      ],
+      "triangles": 660,
+      "vertices": 1980,
+      "materials": [
+        "wood"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wood_floor_01",
+      "staticMeshes": [
+        "wood_floor_01_body"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "floor_slab",
+            "center": [
+              0,
+              -0.1,
+              0
+            ],
+            "size": [
+              4,
+              0.2,
+              4
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            -0.1,
+            0
+          ],
+          "size": [
+            4,
+            0.2,
+            4
+          ]
+        }
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [
+        {
+          "name": "floor_top",
+          "y": 0,
+          "center": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            4,
+            4
+          ]
+        }
+      ],
+      "validationPassed": true
+    },
+    {
+      "assetId": "wood_roof_slope_01",
+      "pack": "BUILDING-ASSET-01",
+      "category": "building",
+      "publicUrl": "/models/buildings/wood_roof_slope_01.glb",
+      "originalManifestSource": "docs/assets/raw/BUILDING-ASSET-01/README.md",
+      "fileSizeBytes": 170672,
+      "sha256": "49e88113d18ddf5c415a205a5bc18e368bf2e3a015a6d8d4ec129152d2dbf658",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "under-ridge wall-top level (ridge at y=1.5, z=0; slopes toward +Z with 36.87 deg pitch)",
+      "front": "+Z",
+      "dimensions": {
+        "x": 4,
+        "y": 2.089,
+        "z": 2.53
+      },
+      "boundsMin": [
+        -2,
+        -0.45,
+        -0.084
+      ],
+      "boundsMax": [
+        2,
+        1.639,
+        2.446
+      ],
+      "triangles": 1560,
+      "vertices": 4680,
+      "materials": [
+        "wood",
+        "roof"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        },
+        {
+          "name": "roof",
+          "doubleSided": false,
+          "roughnessFactor": 0.92,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wood_roof_slope_01",
+      "staticMeshes": [
+        "wood_roof_slope_01_frame",
+        "wood_roof_slope_01_shingles"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "roof_slope",
+            "center": [
+              0,
+              0.75,
+              1
+            ],
+            "size": [
+              4,
+              0.1,
+              2.5
+            ],
+            "rotationX": 0.6435
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            0.595,
+            1.181
+          ],
+          "size": [
+            4,
+            2.089,
+            2.53
+          ]
+        }
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    {
+      "assetId": "wood_roof_gable_01",
+      "pack": "BUILDING-ASSET-01",
+      "category": "building",
+      "publicUrl": "/models/buildings/wood_roof_gable_01.glb",
+      "originalManifestSource": "docs/assets/raw/BUILDING-ASSET-01/README.md",
+      "fileSizeBytes": 97580,
+      "sha256": "d8f8f398a7b7b075bac3986b8b0f9ad0e59a529f0f1cbe187dbe587b829aaff0",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center wall-top level (placed at y=3.0, apex at y=1.5 local)",
+      "front": "+Z",
+      "dimensions": {
+        "x": 4.82,
+        "y": 2.145,
+        "z": 0.24
+      },
+      "boundsMin": [
+        -2.41,
+        -0.463,
+        -0.08
+      ],
+      "boundsMax": [
+        2.41,
+        1.683,
+        0.16
+      ],
+      "triangles": 892,
+      "vertices": 2676,
+      "materials": [
+        "wood"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wood_roof_gable_01",
+      "staticMeshes": [
+        "wood_roof_gable_01_body"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "gable_bounding_wall",
+            "center": [
+              0,
+              0.75,
+              0
+            ],
+            "size": [
+              4,
+              1.5,
+              0.2
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            0.75,
+            0
+          ],
+          "size": [
+            4,
+            1.5,
+            0.2
+          ]
+        },
+        "prism": {
+          "vertices2D": [
+            [
+              -2,
+              0
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              0,
+              1.5
+            ]
+          ],
+          "thicknessZ": 0.2
+        }
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    {
+      "assetId": "wood_door_01",
+      "pack": "BUILDING-ASSET-01",
+      "category": "building",
+      "publicUrl": "/models/buildings/wood_door_01.glb",
+      "originalManifestSource": "docs/assets/raw/BUILDING-ASSET-01/README.md",
+      "fileSizeBytes": 45456,
+      "sha256": "873de6050106686a1817a605060571e3b01ac981c1b300632dde0dd6288f4260",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "same root origin as wood_wall_door_01 (y=0 floor surface)",
+      "front": "+Z (opens inward toward -Z with positive rotation.y = +1.45 rad)",
+      "dimensions": {
+        "x": 1.787,
+        "y": 2.35,
+        "z": 0.14
+      },
+      "boundsMin": [
+        -0.91,
+        0.035,
+        -0.07
+      ],
+      "boundsMax": [
+        0.877,
+        2.385,
+        0.07
+      ],
+      "triangles": 400,
+      "vertices": 1200,
+      "materials": [
+        "wood",
+        "iron"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        },
+        {
+          "name": "iron",
+          "doubleSided": false,
+          "roughnessFactor": 0.6,
+          "metallicFactor": 0.45
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wood_door_01",
+      "staticMeshes": [],
+      "movingMeshes": [
+        "door_leaf",
+        "door_hardware"
+      ],
+      "pivots": [
+        {
+          "name": "door_pivot",
+          "parent": "wood_door_01",
+          "axis": "y",
+          "closedAngleRad": 0,
+          "openAngleRad": 1.45,
+          "openAngleDeg": 83.079,
+          "direction": "Eshik chap ilgak chizig'i (-0.88, 0, 0) atrofida ichkariga (-Z tomonga) musbat (+1.45 rad / +83.08°) burchakda ochiladi",
+          "collider": {
+            "space": "door_pivot-local",
+            "center": [
+              0.88,
+              1.21,
+              0
+            ],
+            "size": [
+              1.76,
+              2.35,
+              0.06
+            ]
+          },
+          "position": [
+            -0.88,
+            0,
+            0
+          ],
+          "movingMeshes": [
+            "door_leaf",
+            "door_hardware"
+          ],
+          "measuredDisplacementM": 1.149,
+          "closedCenter": [
+            -0.017,
+            1.21,
+            0
+          ],
+          "openCenter": [
+            -0.782,
+            1.21,
+            -0.856
+          ]
+        }
+      ],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [],
+        "movingPart": {
+          "space": "door_pivot-local",
+          "center": [
+            0.88,
+            1.21,
+            0
+          ],
+          "size": [
+            1.76,
+            2.35,
+            0.06
+          ],
+          "note": "Pivot bilan birga aylanadi"
+        },
+        "simple": {
+          "center": [
+            -0.017,
+            1.21,
+            0
+          ],
+          "size": [
+            1.787,
+            2.35,
+            0.14
+          ]
+        }
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    {
+      "assetId": "wood_stairs_01",
+      "pack": "BUILDING-ASSET-01",
+      "category": "building",
+      "publicUrl": "/models/buildings/wood_stairs_01.glb",
+      "originalManifestSource": "docs/assets/raw/BUILDING-ASSET-01/README.md",
+      "fileSizeBytes": 90644,
+      "sha256": "26199cbd1c55c1fdfcb099ec58b4ed7e1be7e40a270eaa7fcb91032fe29ab11e",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-front-center of first step (y=0, rises 3.0m toward -Z over 4.0m run; +X handrail reaches y=4.0m)",
+      "front": "+Z (climbs toward -Z)",
+      "dimensions": {
+        "x": 1.33,
+        "y": 4.006,
+        "z": 4.036
+      },
+      "boundsMin": [
+        -0.66,
+        -0.006,
+        -4.006
+      ],
+      "boundsMax": [
+        0.67,
+        4,
+        0.03
+      ],
+      "triangles": 828,
+      "vertices": 2484,
+      "materials": [
+        "wood"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wood_stairs_01",
+      "staticMeshes": [
+        "wood_stairs_01_body"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "stairs_ramp",
+            "center": [
+              0,
+              1.5,
+              -2
+            ],
+            "size": [
+              1.2,
+              0.1,
+              5
+            ],
+            "rotationX": 0.6435,
+            "note": "15 pog'ona × 0.20 m = 3.0 m ko'tarilish, 4.0 m gorizontal masofa (qiyalik 36.87°)"
+          },
+          {
+            "name": "handrail_guard_plus_x",
+            "center": [
+              0.63,
+              2,
+              -2
+            ],
+            "size": [
+              0.08,
+              1,
+              5
+            ],
+            "rotationX": 0.6435,
+            "note": "+X tomondagi panjara (perila) y=4.0 m gacha chiqadi"
+          }
+        ],
+        "simple": {
+          "center": [
+            0.005,
+            1.997,
+            -1.988
+          ],
+          "size": [
+            1.33,
+            4.006,
+            4.036
+          ]
+        },
+        "walkableRiseM": 3,
+        "handrailTopY": 4,
+        "horizontalRunM": 4,
+        "stepCount": 15,
+        "stepHeightM": 0.2,
+        "stepDepthM": 0.267,
+        "clearWalkWidthM": 1.2
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "qaAnalysis": {
+        "walkableStepMaxY": 3.006,
+        "handrailMaxY": 4,
+        "verticesAbove3mCount": 99,
+        "handrailXRangeAbove3m": [
+          0.59,
+          0.67
+        ],
+        "note": "Zinapoya pog'onalari y=3.0m (2-qavat poli) gacha ko'tariladi; y∈(3.0, 4.0] oralig'idagi 99 ta vertex faqat +X tomondagi x∈[0.59, 0.67] panjara (perila) ustun va tutqichiga tegishli."
+      },
+      "validationPassed": true
+    },
+    {
+      "assetId": "wooden_loot_crate_01",
+      "pack": "LOOT-ASSET-01",
+      "category": "loot",
+      "publicUrl": "/models/loot/wooden_loot_crate_01.glb",
+      "originalManifestSource": "docs/assets/raw/LOOT-ASSET-01/loot_asset_manifest.json",
+      "fileSizeBytes": 127128,
+      "sha256": "e396a9f1d32a115db152bb6fa6214a320377dfef5bee19f69ec8e80b9f287474",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 1.005,
+        "y": 0.606,
+        "z": 0.646
+      },
+      "boundsMin": [
+        -0.502,
+        0,
+        -0.317
+      ],
+      "boundsMax": [
+        0.502,
+        0.606,
+        0.328
+      ],
+      "triangles": 1140,
+      "vertices": 3420,
+      "materials": [
+        "wood",
+        "iron"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        },
+        {
+          "name": "iron",
+          "doubleSided": false,
+          "roughnessFactor": 0.6,
+          "metallicFactor": 0.45
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wooden_loot_crate_01",
+      "staticMeshes": [
+        "crate_body",
+        "crate_body_metal"
+      ],
+      "movingMeshes": [
+        "crate_lid",
+        "crate_lid_metal"
+      ],
+      "pivots": [
+        {
+          "name": "lid_pivot",
+          "parent": "wooden_loot_crate_01",
+          "axis": "x",
+          "closedAngleRad": 0,
+          "openAngleRad": -1.92,
+          "openAngleDeg": -110,
+          "direction": "Qopqoq orqa ilgak chizig'i atrofida yuqoriga va orqaga ochiladi",
+          "collider": {
+            "space": "lid_pivot-local",
+            "center": [
+              0,
+              0.07,
+              0.3
+            ],
+            "size": [
+              0.9,
+              0.14,
+              0.6
+            ],
+            "note": "Pivot bilan birga aylanadi"
+          },
+          "position": [
+            0,
+            0.46,
+            -0.3
+          ],
+          "movingMeshes": [
+            "crate_lid",
+            "crate_lid_metal"
+          ],
+          "measuredDisplacementM": 0.493,
+          "closedCenter": [
+            0,
+            0.506,
+            -0.002
+          ],
+          "openCenter": [
+            0,
+            0.724,
+            -0.445
+          ]
+        }
+      ],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "staticBody",
+            "center": [
+              0,
+              0.23,
+              0
+            ],
+            "size": [
+              0.9,
+              0.46,
+              0.6
+            ]
+          }
+        ],
+        "staticBody": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.23,
+            0
+          ],
+          "size": [
+            0.9,
+            0.46,
+            0.6
+          ]
+        },
+        "movingPart": {
+          "space": "lid_pivot-local",
+          "center": [
+            0,
+            0.07,
+            0.3
+          ],
+          "size": [
+            0.9,
+            0.14,
+            0.6
+          ],
+          "note": "Pivot bilan birga aylanadi"
+        },
+        "simple": {
+          "center": [
+            0,
+            0.3,
+            0
+          ],
+          "size": [
+            0.9,
+            0.6,
+            0.6
+          ],
+          "note": "Yopiq holat uchun bitta oddiy box"
+        },
+        "simpleClosed": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.3,
+            0
+          ],
+          "size": [
+            0.9,
+            0.6,
+            0.6
+          ],
+          "note": "Yopiq holat uchun bitta oddiy box"
+        }
+      },
+      "interaction": {
+        "sphereCenter": [
+          0,
+          0.303,
+          0.005
+        ],
+        "sphereRadius": 1.87,
+        "recommendedMaxDistanceFromBounds": 1.5
+      },
+      "interiorVolume": {
+        "space": "model-local",
+        "center": [
+          0,
+          0.265,
+          0
+        ],
+        "size": [
+          0.82,
+          0.39,
+          0.52
+        ],
+        "note": "Pol yuzasi y = 0.07"
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    {
+      "assetId": "metal_locker_01",
+      "pack": "LOOT-ASSET-01",
+      "category": "loot",
+      "publicUrl": "/models/loot/metal_locker_01.glb",
+      "originalManifestSource": "docs/assets/raw/LOOT-ASSET-01/loot_asset_manifest.json",
+      "fileSizeBytes": 155848,
+      "sha256": "b363240c290a9dce6e12294445bd01c668a5a9bb7310ea29c427ec57d371b1ec",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 0.91,
+        "y": 1.8,
+        "z": 0.56
+      },
+      "boundsMin": [
+        -0.455,
+        0,
+        -0.255
+      ],
+      "boundsMax": [
+        0.455,
+        1.8,
+        0.305
+      ],
+      "triangles": 1406,
+      "vertices": 4218,
+      "materials": [
+        "painted_metal",
+        "iron"
+      ],
+      "materialDetails": [
+        {
+          "name": "painted_metal",
+          "doubleSided": false,
+          "roughnessFactor": 0.72,
+          "metallicFactor": 0.25
+        },
+        {
+          "name": "iron",
+          "doubleSided": false,
+          "roughnessFactor": 0.6,
+          "metallicFactor": 0.45
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "metal_locker_01",
+      "staticMeshes": [
+        "locker_body",
+        "locker_body_metal"
+      ],
+      "movingMeshes": [
+        "locker_door",
+        "locker_door_hardware"
+      ],
+      "pivots": [
+        {
+          "name": "door_pivot",
+          "parent": "metal_locker_01",
+          "axis": "y",
+          "closedAngleRad": 0,
+          "openAngleRad": -1.75,
+          "openAngleDeg": -100,
+          "direction": "Eshik chap ilgak chizig'i atrofida tashqariga (+Z) va chapga ochiladi",
+          "collider": {
+            "space": "door_pivot-local",
+            "center": [
+              0.43,
+              0.925,
+              0.0145
+            ],
+            "size": [
+              0.85,
+              1.69,
+              0.03
+            ],
+            "note": "Pivot bilan birga aylanadi"
+          },
+          "position": [
+            -0.43,
+            0,
+            0.25
+          ],
+          "movingMeshes": [
+            "locker_door",
+            "locker_door_hardware"
+          ],
+          "measuredDisplacementM": 0.646,
+          "closedCenter": [
+            -0.007,
+            0.925,
+            0.269
+          ],
+          "openCenter": [
+            -0.519,
+            0.925,
+            0.662
+          ]
+        }
+      ],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "staticBody",
+            "center": [
+              0,
+              0.9,
+              0
+            ],
+            "size": [
+              0.9,
+              1.8,
+              0.5
+            ]
+          }
+        ],
+        "staticBody": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.9,
+            0
+          ],
+          "size": [
+            0.9,
+            1.8,
+            0.5
+          ]
+        },
+        "movingPart": {
+          "space": "door_pivot-local",
+          "center": [
+            0.43,
+            0.925,
+            0.0145
+          ],
+          "size": [
+            0.85,
+            1.69,
+            0.03
+          ],
+          "note": "Pivot bilan birga aylanadi"
+        },
+        "simple": {
+          "center": [
+            0,
+            0.9,
+            0
+          ],
+          "size": [
+            0.9,
+            1.8,
+            0.5
+          ],
+          "note": "Yopiq holat uchun bitta oddiy box"
+        },
+        "simpleClosed": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.9,
+            0
+          ],
+          "size": [
+            0.9,
+            1.8,
+            0.5
+          ],
+          "note": "Yopiq holat uchun bitta oddiy box"
+        }
+      },
+      "interaction": {
+        "sphereCenter": [
+          0,
+          0.9,
+          0.025
+        ],
+        "sphereRadius": 2.247,
+        "recommendedMaxDistanceFromBounds": 1.5
+      },
+      "interiorVolume": {
+        "space": "model-local",
+        "center": [
+          0,
+          0.925,
+          -0.01
+        ],
+        "size": [
+          0.84,
+          1.57,
+          0.44
+        ],
+        "note": "Javon yuzalari y = 0.09 (pol), 0.5575, 1.0075, 1.4575"
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    {
+      "assetId": "old_toolbox_01",
+      "pack": "LOOT-ASSET-01",
+      "category": "loot",
+      "publicUrl": "/models/loot/old_toolbox_01.glb",
+      "originalManifestSource": "docs/assets/raw/LOOT-ASSET-01/loot_asset_manifest.json",
+      "fileSizeBytes": 104024,
+      "sha256": "f7e1074d1a440de62a0dd3cf45efcd1523e3aa2bd088ed2dfd09890408292d81",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 0.607,
+        "y": 0.3,
+        "z": 0.319
+      },
+      "boundsMin": [
+        -0.303,
+        0,
+        -0.157
+      ],
+      "boundsMax": [
+        0.303,
+        0.3,
+        0.162
+      ],
+      "triangles": 926,
+      "vertices": 2778,
+      "materials": [
+        "painted_metal",
+        "iron"
+      ],
+      "materialDetails": [
+        {
+          "name": "painted_metal",
+          "doubleSided": false,
+          "roughnessFactor": 0.72,
+          "metallicFactor": 0.25
+        },
+        {
+          "name": "iron",
+          "doubleSided": false,
+          "roughnessFactor": 0.6,
+          "metallicFactor": 0.45
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "old_toolbox_01",
+      "staticMeshes": [
+        "toolbox_body",
+        "toolbox_body_metal"
+      ],
+      "movingMeshes": [
+        "toolbox_lid",
+        "toolbox_lid_metal"
+      ],
+      "pivots": [
+        {
+          "name": "lid_pivot",
+          "parent": "old_toolbox_01",
+          "axis": "x",
+          "closedAngleRad": 0,
+          "openAngleRad": -1.92,
+          "openAngleDeg": -110,
+          "direction": "Qopqoq orqa ilgak chizig'i atrofida yuqoriga va orqaga ochiladi",
+          "collider": {
+            "space": "lid_pivot-local",
+            "center": [
+              0,
+              0.05,
+              0.15
+            ],
+            "size": [
+              0.6,
+              0.1,
+              0.3
+            ],
+            "note": "Pivot bilan birga aylanadi"
+          },
+          "position": [
+            0,
+            0.2,
+            -0.15
+          ],
+          "movingMeshes": [
+            "toolbox_lid",
+            "toolbox_lid_metal"
+          ],
+          "measuredDisplacementM": 0.261,
+          "closedCenter": [
+            0,
+            0.247,
+            0.002
+          ],
+          "openCenter": [
+            0,
+            0.327,
+            -0.246
+          ]
+        }
+      ],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "staticBody",
+            "center": [
+              0,
+              0.1,
+              0
+            ],
+            "size": [
+              0.6,
+              0.2,
+              0.3
+            ]
+          }
+        ],
+        "staticBody": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.1,
+            0
+          ],
+          "size": [
+            0.6,
+            0.2,
+            0.3
+          ]
+        },
+        "movingPart": {
+          "space": "lid_pivot-local",
+          "center": [
+            0,
+            0.05,
+            0.15
+          ],
+          "size": [
+            0.6,
+            0.1,
+            0.3
+          ],
+          "note": "Pivot bilan birga aylanadi"
+        },
+        "simple": {
+          "center": [
+            0,
+            0.15,
+            0
+          ],
+          "size": [
+            0.6,
+            0.3,
+            0.3
+          ],
+          "note": "Yopiq holat uchun bitta oddiy box"
+        },
+        "simpleClosed": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.15,
+            0
+          ],
+          "size": [
+            0.6,
+            0.3,
+            0.3
+          ],
+          "note": "Yopiq holat uchun bitta oddiy box"
+        }
+      },
+      "interaction": {
+        "sphereCenter": [
+          0,
+          0.15,
+          0.002
+        ],
+        "sphereRadius": 1.574,
+        "recommendedMaxDistanceFromBounds": 1.5
+      },
+      "interiorVolume": {
+        "space": "model-local",
+        "center": [
+          0,
+          0.11,
+          0.065
+        ],
+        "size": [
+          0.56,
+          0.17,
+          0.14
+        ],
+        "note": "Old bo'lim; orqada ichki tokcha: center (0, 0.172, -0.07), size (0.56, 0.035, 0.12)"
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    {
+      "assetId": "wooden_table_01",
+      "pack": "INTERIOR-ASSET-01",
+      "category": "interior",
+      "publicUrl": "/models/interior/wooden_table_01.glb",
+      "originalManifestSource": "docs/assets/raw/INTERIOR-ASSET-01/interior_asset_manifest.json",
+      "fileSizeBytes": 32320,
+      "sha256": "4ba8e5fea8c49dda8dbb0dc7a2f1f96d47ace99f7d8ac6d67582e4ab068f7d54",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 1.408,
+        "y": 0.75,
+        "z": 0.796
+      },
+      "boundsMin": [
+        -0.704,
+        0,
+        -0.398
+      ],
+      "boundsMax": [
+        0.705,
+        0.75,
+        0.398
+      ],
+      "triangles": 288,
+      "vertices": 864,
+      "materials": [
+        "wood"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wooden_table_01",
+      "staticMeshes": [
+        "wooden_table_01_body"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "tabletop",
+            "center": [
+              0,
+              0.73,
+              0
+            ],
+            "size": [
+              1.4,
+              0.04,
+              0.8
+            ]
+          },
+          {
+            "name": "legs_block",
+            "center": [
+              0,
+              0.355,
+              0
+            ],
+            "size": [
+              1.31,
+              0.71,
+              0.71
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            0.375,
+            0
+          ],
+          "size": [
+            1.4,
+            0.75,
+            0.8
+          ]
+        }
+      },
+      "itemAnchors": [
+        {
+          "name": "anchor_0",
+          "position": [
+            -0.45,
+            0.75,
+            -0.2
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "anchor_1",
+          "position": [
+            0,
+            0.75,
+            -0.2
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "anchor_2",
+          "position": [
+            0.45,
+            0.75,
+            -0.2
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "anchor_3",
+          "position": [
+            -0.45,
+            0.75,
+            0.2
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "anchor_4",
+          "position": [
+            0,
+            0.75,
+            0.2
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "anchor_5",
+          "position": [
+            0.45,
+            0.75,
+            0.2
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "placeableSurfaces": [
+        {
+          "name": "tabletop",
+          "y": 0.75,
+          "center": [
+            0,
+            0.75,
+            0
+          ],
+          "size": [
+            1.36,
+            0.76
+          ]
+        }
+      ],
+      "validationPassed": true
+    },
+    {
+      "assetId": "wooden_chair_01",
+      "pack": "INTERIOR-ASSET-01",
+      "category": "interior",
+      "publicUrl": "/models/interior/wooden_chair_01.glb",
+      "originalManifestSource": "docs/assets/raw/INTERIOR-ASSET-01/interior_asset_manifest.json",
+      "fileSizeBytes": 44872,
+      "sha256": "280f2aec85d5c0272984fe90b351389c0b70d0ae8eab850e4ca89b521abb1988",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 0.46,
+        "y": 0.899,
+        "z": 0.524
+      },
+      "boundsMin": [
+        -0.23,
+        -0.002,
+        -0.297
+      ],
+      "boundsMax": [
+        0.23,
+        0.897,
+        0.227
+      ],
+      "triangles": 404,
+      "vertices": 1212,
+      "materials": [
+        "wood"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wooden_chair_01",
+      "staticMeshes": [
+        "wooden_chair_01_body"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "seat",
+            "center": [
+              0,
+              0.235,
+              0
+            ],
+            "size": [
+              0.46,
+              0.47,
+              0.46
+            ]
+          },
+          {
+            "name": "backrest",
+            "center": [
+              0,
+              0.68,
+              -0.25
+            ],
+            "size": [
+              0.46,
+              0.44,
+              0.06
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            0.45,
+            -0.03
+          ],
+          "size": [
+            0.47,
+            0.9,
+            0.53
+          ]
+        }
+      },
+      "itemAnchors": [
+        {
+          "name": "seat",
+          "position": [
+            0,
+            0.47,
+            0.02
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "placeableSurfaces": [
+        {
+          "name": "seat",
+          "y": 0.47,
+          "center": [
+            0,
+            0.47,
+            0
+          ],
+          "size": [
+            0.42,
+            0.42
+          ]
+        }
+      ],
+      "validationPassed": true
+    },
+    {
+      "assetId": "wooden_shelf_01",
+      "pack": "INTERIOR-ASSET-01",
+      "category": "interior",
+      "publicUrl": "/models/interior/wooden_shelf_01.glb",
+      "originalManifestSource": "docs/assets/raw/INTERIOR-ASSET-01/interior_asset_manifest.json",
+      "fileSizeBytes": 48328,
+      "sha256": "ad1295e6923327b057d565751a1817b6fef23bb79cf99287532040a8d2a62ca7",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 1.04,
+        "y": 1.803,
+        "z": 0.42
+      },
+      "boundsMin": [
+        -0.52,
+        -0.003,
+        -0.21
+      ],
+      "boundsMax": [
+        0.52,
+        1.8,
+        0.21
+      ],
+      "triangles": 436,
+      "vertices": 1308,
+      "materials": [
+        "wood"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wooden_shelf_01",
+      "staticMeshes": [
+        "wooden_shelf_01_body"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "body",
+            "center": [
+              0,
+              0.9,
+              0
+            ],
+            "size": [
+              1,
+              1.8,
+              0.4
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            0.9,
+            0
+          ],
+          "size": [
+            1,
+            1.8,
+            0.4
+          ]
+        }
+      },
+      "itemAnchors": [
+        {
+          "name": "shelf_1_1",
+          "position": [
+            -0.3,
+            0.12,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_1_2",
+          "position": [
+            0,
+            0.12,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_1_3",
+          "position": [
+            0.3,
+            0.12,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_2_1",
+          "position": [
+            -0.3,
+            0.56,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_2_2",
+          "position": [
+            0,
+            0.56,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_2_3",
+          "position": [
+            0.3,
+            0.56,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_3_1",
+          "position": [
+            -0.3,
+            1,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_3_2",
+          "position": [
+            0,
+            1,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_3_3",
+          "position": [
+            0.3,
+            1,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_4_1",
+          "position": [
+            -0.3,
+            1.44,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_4_2",
+          "position": [
+            0,
+            1.44,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_4_3",
+          "position": [
+            0.3,
+            1.44,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "placeableSurfaces": [
+        {
+          "name": "shelf_1",
+          "y": 0.12,
+          "center": [
+            0,
+            0.12,
+            0.01
+          ],
+          "size": [
+            0.92,
+            0.34
+          ],
+          "clearHeight": 0.415
+        },
+        {
+          "name": "shelf_2",
+          "y": 0.56,
+          "center": [
+            0,
+            0.56,
+            0.01
+          ],
+          "size": [
+            0.92,
+            0.34
+          ],
+          "clearHeight": 0.415
+        },
+        {
+          "name": "shelf_3",
+          "y": 1,
+          "center": [
+            0,
+            1,
+            0.01
+          ],
+          "size": [
+            0.92,
+            0.34
+          ],
+          "clearHeight": 0.415
+        },
+        {
+          "name": "shelf_4",
+          "y": 1.44,
+          "center": [
+            0,
+            1.44,
+            0.01
+          ],
+          "size": [
+            0.92,
+            0.34
+          ],
+          "clearHeight": 0.33
+        },
+        {
+          "name": "top",
+          "y": 1.8,
+          "center": [
+            0,
+            1.8,
+            0
+          ],
+          "size": [
+            1,
+            0.4
+          ]
+        }
+      ],
+      "validationPassed": true
+    },
+    {
+      "assetId": "old_bed_01",
+      "pack": "INTERIOR-ASSET-01",
+      "category": "interior",
+      "publicUrl": "/models/interior/old_bed_01.glb",
+      "originalManifestSource": "docs/assets/raw/INTERIOR-ASSET-01/interior_asset_manifest.json",
+      "fileSizeBytes": 92664,
+      "sha256": "72c76de88f438e27d21bd996e4c5f8728a3d3e14477ef11e1c6ba2b75d8d355b",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 2.02,
+        "y": 0.65,
+        "z": 0.97
+      },
+      "boundsMin": [
+        -1.01,
+        0,
+        -0.485
+      ],
+      "boundsMax": [
+        1.01,
+        0.65,
+        0.485
+      ],
+      "triangles": 838,
+      "vertices": 2514,
+      "materials": [
+        "wood",
+        "fabric"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        },
+        {
+          "name": "fabric",
+          "doubleSided": false,
+          "roughnessFactor": 0.97,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "old_bed_01",
+      "staticMeshes": [
+        "old_bed_01_frame",
+        "old_bed_01_fabric"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "frame_mattress",
+            "center": [
+              0,
+              0.23,
+              0
+            ],
+            "size": [
+              2,
+              0.46,
+              0.95
+            ]
+          },
+          {
+            "name": "headboard",
+            "center": [
+              0.965,
+              0.555,
+              0
+            ],
+            "size": [
+              0.09,
+              0.19,
+              0.95
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            0.325,
+            0
+          ],
+          "size": [
+            2,
+            0.65,
+            0.95
+          ]
+        },
+        "underBedClearanceAdjustedBoxes": [
+          {
+            "name": "frame_mattress_raised",
+            "center": [
+              0,
+              0.33,
+              0
+            ],
+            "size": [
+              2,
+              0.26,
+              0.95
+            ],
+            "note": "Karavot ostidagi y∈[0, 0.20] bo'shliqni va under_bed (0,0,0) anchorini LOS/raycast uchun ochiq qoldiruvchi alternativ collider"
+          },
+          {
+            "name": "headboard",
+            "center": [
+              0.965,
+              0.555,
+              0
+            ],
+            "size": [
+              0.09,
+              0.19,
+              0.95
+            ]
+          }
+        ],
+        "qaNote": "Standart frame_mattress collideri (center [0, 0.23, 0], size [2, 0.46, 0.95]) y∈[0.00, 0.46] oraliqni to'liq yopadi va under_bed ([0, 0, 0]) anchorini AABB ichida ko'mib qo'yadi. Yashirin loot LOS/pickup ishlashi uchun frame_mattress_raised (y∈[0.20, 0.46]) ishlatilishi yoki LOS tekshiruvida pastki 0.20 m qatlam istisno qilinishi zarur."
+      },
+      "itemAnchors": [
+        {
+          "name": "mattress",
+          "position": [
+            -0.2,
+            0.46,
+            0
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "under_bed",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "note": "Karavot ostida 0.20 m bo'shliq, yashirin loot uchun",
+          "occludedByDefaultCollider": true,
+          "clearanceHeightM": 0.2
+        }
+      ],
+      "placeableSurfaces": [
+        {
+          "name": "mattress",
+          "y": 0.46,
+          "center": [
+            -0.1,
+            0.46,
+            0
+          ],
+          "size": [
+            1.6,
+            0.8
+          ],
+          "note": "Yumshoq yuza"
+        }
+      ],
+      "qaAnalysis": {
+        "visualUnderBedClearanceM": 0.2,
+        "cornerLegMinAbsX": 0.93,
+        "cornerLegMinAbsZ": 0.405,
+        "defaultFrameColliderYRange": [
+          0,
+          0.46
+        ],
+        "adjustedFrameColliderYRange": [
+          0.2,
+          0.46
+        ],
+        "underBedAnchorPosition": [
+          0,
+          0,
+          0
+        ],
+        "occludedByDefaultFrameCollider": true
+      },
+      "validationPassed": true
+    },
+    {
+      "assetId": "old_sofa_01",
+      "pack": "INTERIOR-ASSET-01",
+      "category": "interior",
+      "publicUrl": "/models/interior/old_sofa_01.glb",
+      "originalManifestSource": "docs/assets/raw/INTERIOR-ASSET-01/interior_asset_manifest.json",
+      "fileSizeBytes": 105692,
+      "sha256": "3cd6f915f91a251ea22f13a48d7ef9bfb7e2edddfff31ec05c79cfa898cad50d",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 1.7,
+        "y": 0.902,
+        "z": 0.8
+      },
+      "boundsMin": [
+        -0.85,
+        0,
+        -0.4
+      ],
+      "boundsMax": [
+        0.85,
+        0.902,
+        0.4
+      ],
+      "triangles": 958,
+      "vertices": 2874,
+      "materials": [
+        "wood",
+        "fabric"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        },
+        {
+          "name": "fabric",
+          "doubleSided": false,
+          "roughnessFactor": 0.97,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "old_sofa_01",
+      "staticMeshes": [
+        "old_sofa_01_legs",
+        "old_sofa_01_fabric"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "seat",
+            "center": [
+              0,
+              0.25,
+              0.01
+            ],
+            "size": [
+              1.7,
+              0.5,
+              0.78
+            ]
+          },
+          {
+            "name": "back",
+            "center": [
+              0,
+              0.62,
+              -0.31
+            ],
+            "size": [
+              1.7,
+              0.52,
+              0.18
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            0.45,
+            0
+          ],
+          "size": [
+            1.7,
+            0.9,
+            0.8
+          ]
+        }
+      },
+      "itemAnchors": [
+        {
+          "name": "seat_left",
+          "position": [
+            -0.33,
+            0.5,
+            0.1
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "seat_right",
+          "position": [
+            0.33,
+            0.5,
+            0.1
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "placeableSurfaces": [
+        {
+          "name": "seat",
+          "y": 0.5,
+          "center": [
+            0,
+            0.5,
+            0.08
+          ],
+          "size": [
+            1.3,
+            0.5
+          ],
+          "note": "Yumshoq yuza"
+        }
+      ],
+      "cover": {
+        "height": 0.88,
+        "hideSide": "-Z",
+        "hideSpot": [
+          0,
+          0,
+          -0.7
+        ],
+        "note": "Orqa tomonda engashgan o'yinchini to'sadi"
+      },
+      "validationPassed": true
+    },
+    {
+      "assetId": "kitchen_cabinet_01",
+      "pack": "INTERIOR-ASSET-01",
+      "category": "interior",
+      "publicUrl": "/models/interior/kitchen_cabinet_01.glb",
+      "originalManifestSource": "docs/assets/raw/INTERIOR-ASSET-01/interior_asset_manifest.json",
+      "fileSizeBytes": 79316,
+      "sha256": "3d4fc832373b1f1aaaabc8313d65324a42eba28e078a272001bafd3f8ec53dfb",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 1.24,
+        "y": 0.903,
+        "z": 0.575
+      },
+      "boundsMin": [
+        -0.62,
+        -0.003,
+        -0.278
+      ],
+      "boundsMax": [
+        0.62,
+        0.9,
+        0.297
+      ],
+      "triangles": 688,
+      "vertices": 2064,
+      "materials": [
+        "wood",
+        "iron"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        },
+        {
+          "name": "iron",
+          "doubleSided": false,
+          "roughnessFactor": 0.6,
+          "metallicFactor": 0.45
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "kitchen_cabinet_01",
+      "staticMeshes": [
+        "kitchen_cabinet_01_body"
+      ],
+      "movingMeshes": [
+        "door_left",
+        "door_left_hardware",
+        "door_right",
+        "door_right_hardware"
+      ],
+      "pivots": [
+        {
+          "name": "door_left_pivot",
+          "parent": "kitchen_cabinet_01",
+          "axis": "y",
+          "closedAngleRad": 0,
+          "openAngleRad": -1.75,
+          "openAngleDeg": -100,
+          "direction": "Chap eshik chap ilgak chizig'i atrofida tashqariga (+Z) ochiladi",
+          "collider": {
+            "space": "door_left_pivot-local",
+            "center": [
+              0.285,
+              0.47,
+              0
+            ],
+            "size": [
+              0.57,
+              0.72,
+              0.02
+            ]
+          },
+          "position": [
+            -0.585,
+            0,
+            0.255
+          ],
+          "movingMeshes": [
+            "door_left",
+            "door_left_hardware"
+          ],
+          "measuredDisplacementM": 0.429,
+          "closedCenter": [
+            -0.304,
+            0.47,
+            0.271
+          ],
+          "openCenter": [
+            -0.647,
+            0.47,
+            0.529
+          ]
+        },
+        {
+          "name": "door_right_pivot",
+          "parent": "kitchen_cabinet_01",
+          "axis": "y",
+          "closedAngleRad": 0,
+          "openAngleRad": 1.75,
+          "openAngleDeg": 100,
+          "direction": "O'ng eshik o'ng ilgak chizig'i atrofida tashqariga (+Z) ochiladi",
+          "collider": {
+            "space": "door_right_pivot-local",
+            "center": [
+              -0.285,
+              0.47,
+              0
+            ],
+            "size": [
+              0.57,
+              0.72,
+              0.02
+            ]
+          },
+          "position": [
+            0.585,
+            0,
+            0.255
+          ],
+          "movingMeshes": [
+            "door_right",
+            "door_right_hardware"
+          ],
+          "measuredDisplacementM": 0.429,
+          "closedCenter": [
+            0.304,
+            0.47,
+            0.271
+          ],
+          "openCenter": [
+            0.647,
+            0.47,
+            0.529
+          ]
+        }
+      ],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "body",
+            "center": [
+              0,
+              0.45,
+              0
+            ],
+            "size": [
+              1.2,
+              0.9,
+              0.55
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            0.45,
+            0
+          ],
+          "size": [
+            1.2,
+            0.9,
+            0.55
+          ]
+        },
+        "qaNote": "kitchen_cabinet_01 body collideri (center [0, 0.45, 0], size [1.2, 0.9, 0.55]) ichki 4 ta anchorni (inside_bottom_1..2, inside_shelf_1..2) qamrab oladi. Eshiklar ochilganda (door_left_pivot=-1.75 rad, door_right_pivot=+1.75 rad) ichki anchorlardan buyum olish uchun LOS raycast body AABB'ni ichki anchorlar uchun o'tkazib yuborishi kerak."
+      },
+      "itemAnchors": [
+        {
+          "name": "countertop_1",
+          "position": [
+            -0.4,
+            0.9,
+            0
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "requiresOpenDoors": false,
+          "enclosedByBodyCollider": false
+        },
+        {
+          "name": "countertop_2",
+          "position": [
+            0,
+            0.9,
+            0
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "requiresOpenDoors": false,
+          "enclosedByBodyCollider": false
+        },
+        {
+          "name": "countertop_3",
+          "position": [
+            0.4,
+            0.9,
+            0
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "requiresOpenDoors": false,
+          "enclosedByBodyCollider": false
+        },
+        {
+          "name": "inside_bottom_1",
+          "position": [
+            -0.29,
+            0.1,
+            -0.03
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "requiresOpenDoors": true,
+          "enclosedByBodyCollider": true
+        },
+        {
+          "name": "inside_bottom_2",
+          "position": [
+            0.29,
+            0.1,
+            -0.03
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "requiresOpenDoors": true,
+          "enclosedByBodyCollider": true
+        },
+        {
+          "name": "inside_shelf_1",
+          "position": [
+            -0.29,
+            0.479,
+            -0.03
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "requiresOpenDoors": true,
+          "enclosedByBodyCollider": true
+        },
+        {
+          "name": "inside_shelf_2",
+          "position": [
+            0.29,
+            0.479,
+            -0.03
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "requiresOpenDoors": true,
+          "enclosedByBodyCollider": true
+        }
+      ],
+      "placeableSurfaces": [
+        {
+          "name": "countertop",
+          "y": 0.9,
+          "center": [
+            0,
+            0.9,
+            0
+          ],
+          "size": [
+            1.2,
+            0.52
+          ],
+          "requiresOpenDoors": false
+        },
+        {
+          "name": "inside_bottom",
+          "y": 0.1,
+          "center": [
+            0,
+            0.1,
+            -0.02
+          ],
+          "size": [
+            1.14,
+            0.46
+          ],
+          "note": "Eshiklar ochiq bo'lganda",
+          "requiresOpenDoors": true
+        },
+        {
+          "name": "inside_shelf",
+          "y": 0.479,
+          "center": [
+            0,
+            0.479,
+            -0.04
+          ],
+          "size": [
+            1.14,
+            0.42
+          ],
+          "note": "Eshiklar ochiq bo'lganda",
+          "requiresOpenDoors": true
+        }
+      ],
+      "qaAnalysis": {
+        "dualPivots": true,
+        "leftPivotPosition": [
+          -0.585,
+          0,
+          0.255
+        ],
+        "rightPivotPosition": [
+          0.585,
+          0,
+          0.255
+        ],
+        "readmeRoundedPositionNote": "README 4-bo'limida (-0.58, 0.00, 0.26) / (0.58, 0.00, 0.26) deb yaxlitlangan; GLB binary node.matrix va manifestda aniq (-0.585, 0, 0.255) / (0.585, 0, 0.255).",
+        "exteriorAnchors": [
+          "countertop_1",
+          "countertop_2",
+          "countertop_3"
+        ],
+        "interiorAnchors": [
+          "inside_bottom_1",
+          "inside_bottom_2",
+          "inside_shelf_1",
+          "inside_shelf_2"
+        ]
+      },
+      "validationPassed": true
+    }
+  ],
+  "assetsById": {
+    "wood_wall_01": {
+      "assetId": "wood_wall_01",
+      "pack": "BUILDING-ASSET-01",
+      "category": "building",
+      "publicUrl": "/models/buildings/wood_wall_01.glb",
+      "originalManifestSource": "docs/assets/raw/BUILDING-ASSET-01/README.md",
+      "fileSizeBytes": 93624,
+      "sha256": "6021886a4657f1fd73fa09e4493225ffa8add1f75e627741491a67ef665d7ba0",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center-axis (y=0 floor surface, x in [-2, 2], corner_post at x=-2)",
+      "front": "+Z (exterior +Z, interior -Z)",
+      "dimensions": {
+        "x": 4.12,
+        "y": 3.2,
+        "z": 0.24
+      },
+      "boundsMin": [
+        -2.12,
+        -0.2,
+        -0.12
+      ],
+      "boundsMax": [
+        2,
+        3,
+        0.12
+      ],
+      "triangles": 848,
+      "vertices": 2544,
+      "materials": [
+        "wood"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wood_wall_01",
+      "staticMeshes": [
+        "wood_wall_01_body",
+        "corner_post"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "wall_body",
+            "center": [
+              0,
+              1.5,
+              0
+            ],
+            "size": [
+              4,
+              3,
+              0.2
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            1.5,
+            0
+          ],
+          "size": [
+            4,
+            3,
+            0.2
+          ]
+        }
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    "wood_wall_window_01": {
+      "assetId": "wood_wall_window_01",
+      "pack": "BUILDING-ASSET-01",
+      "category": "building",
+      "publicUrl": "/models/buildings/wood_wall_window_01.glb",
+      "originalManifestSource": "docs/assets/raw/BUILDING-ASSET-01/README.md",
+      "fileSizeBytes": 159408,
+      "sha256": "48ae1171796ea941ec7a0ce345891ba888e37a06b951dbb7936f05af960453de",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center-axis (y=0 floor surface, x in [-2, 2], corner_post at x=-2)",
+      "front": "+Z (exterior +Z, interior -Z)",
+      "dimensions": {
+        "x": 4.12,
+        "y": 3.2,
+        "z": 0.36
+      },
+      "boundsMin": [
+        -2.12,
+        -0.2,
+        -0.13
+      ],
+      "boundsMax": [
+        2,
+        3,
+        0.23
+      ],
+      "triangles": 1448,
+      "vertices": 4344,
+      "materials": [
+        "wood",
+        "iron"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        },
+        {
+          "name": "iron",
+          "doubleSided": false,
+          "roughnessFactor": 0.6,
+          "metallicFactor": 0.45
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wood_wall_window_01",
+      "staticMeshes": [
+        "wood_wall_window_01_body",
+        "corner_post",
+        "wood_wall_window_01_iron"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "wall_left",
+            "center": [
+              -1.3,
+              1.5,
+              0
+            ],
+            "size": [
+              1.4,
+              3,
+              0.2
+            ]
+          },
+          {
+            "name": "wall_right",
+            "center": [
+              1.3,
+              1.5,
+              0
+            ],
+            "size": [
+              1.4,
+              3,
+              0.2
+            ]
+          },
+          {
+            "name": "wall_bottom",
+            "center": [
+              0,
+              0.5,
+              0
+            ],
+            "size": [
+              1.2,
+              1,
+              0.2
+            ]
+          },
+          {
+            "name": "wall_top",
+            "center": [
+              0,
+              2.5,
+              0
+            ],
+            "size": [
+              1.2,
+              1,
+              0.2
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            1.5,
+            0
+          ],
+          "size": [
+            4,
+            3,
+            0.2
+          ]
+        },
+        "opening": {
+          "type": "window",
+          "xRange": [
+            -0.6,
+            0.6
+          ],
+          "yRange": [
+            1,
+            2
+          ],
+          "size": [
+            1.2,
+            1
+          ],
+          "sillHeightM": 1
+        }
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    "wood_wall_door_01": {
+      "assetId": "wood_wall_door_01",
+      "pack": "BUILDING-ASSET-01",
+      "category": "building",
+      "publicUrl": "/models/buildings/wood_wall_door_01.glb",
+      "originalManifestSource": "docs/assets/raw/BUILDING-ASSET-01/README.md",
+      "fileSizeBytes": 130360,
+      "sha256": "c9a25c8a9c2464ffac597ec1b5a756d6603a51d4db48c5ff48fbd5fbffc06f41",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center-axis (y=0 floor surface, x in [-2, 2], corner_post at x=-2)",
+      "front": "+Z (exterior +Z, interior -Z)",
+      "dimensions": {
+        "x": 4.12,
+        "y": 3.2,
+        "z": 0.272
+      },
+      "boundsMin": [
+        -2.12,
+        -0.2,
+        -0.13
+      ],
+      "boundsMax": [
+        2,
+        3,
+        0.142
+      ],
+      "triangles": 1188,
+      "vertices": 3564,
+      "materials": [
+        "wood"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wood_wall_door_01",
+      "staticMeshes": [
+        "wood_wall_door_01_body",
+        "corner_post"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "wall_left",
+            "center": [
+              -1.45,
+              1.5,
+              0
+            ],
+            "size": [
+              1.1,
+              3,
+              0.2
+            ]
+          },
+          {
+            "name": "wall_right",
+            "center": [
+              1.45,
+              1.5,
+              0
+            ],
+            "size": [
+              1.1,
+              3,
+              0.2
+            ]
+          },
+          {
+            "name": "wall_top",
+            "center": [
+              0,
+              2.7,
+              0
+            ],
+            "size": [
+              1.8,
+              0.6,
+              0.2
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            1.5,
+            0
+          ],
+          "size": [
+            4,
+            3,
+            0.2
+          ]
+        },
+        "opening": {
+          "type": "doorway",
+          "xRange": [
+            -0.9,
+            0.9
+          ],
+          "yRange": [
+            0,
+            2.4
+          ],
+          "size": [
+            1.8,
+            2.4
+          ],
+          "thresholdY": 0.03
+        }
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    "wood_floor_01": {
+      "assetId": "wood_floor_01",
+      "pack": "BUILDING-ASSET-01",
+      "category": "building",
+      "publicUrl": "/models/buildings/wood_floor_01.glb",
+      "originalManifestSource": "docs/assets/raw/BUILDING-ASSET-01/README.md",
+      "fileSizeBytes": 72448,
+      "sha256": "cf65799d33db3e9d95870955b18707aef783487b9be3a8d3e17c040b17a839ce",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "cell-center top-surface (y=0 top surface, x/z in [-2, 2], slab y in [-0.2, 0])",
+      "front": "+Z",
+      "dimensions": {
+        "x": 4,
+        "y": 0.202,
+        "z": 4
+      },
+      "boundsMin": [
+        -2,
+        -0.2,
+        -2
+      ],
+      "boundsMax": [
+        2,
+        0.002,
+        2
+      ],
+      "triangles": 660,
+      "vertices": 1980,
+      "materials": [
+        "wood"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wood_floor_01",
+      "staticMeshes": [
+        "wood_floor_01_body"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "floor_slab",
+            "center": [
+              0,
+              -0.1,
+              0
+            ],
+            "size": [
+              4,
+              0.2,
+              4
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            -0.1,
+            0
+          ],
+          "size": [
+            4,
+            0.2,
+            4
+          ]
+        }
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [
+        {
+          "name": "floor_top",
+          "y": 0,
+          "center": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            4,
+            4
+          ]
+        }
+      ],
+      "validationPassed": true
+    },
+    "wood_roof_slope_01": {
+      "assetId": "wood_roof_slope_01",
+      "pack": "BUILDING-ASSET-01",
+      "category": "building",
+      "publicUrl": "/models/buildings/wood_roof_slope_01.glb",
+      "originalManifestSource": "docs/assets/raw/BUILDING-ASSET-01/README.md",
+      "fileSizeBytes": 170672,
+      "sha256": "49e88113d18ddf5c415a205a5bc18e368bf2e3a015a6d8d4ec129152d2dbf658",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "under-ridge wall-top level (ridge at y=1.5, z=0; slopes toward +Z with 36.87 deg pitch)",
+      "front": "+Z",
+      "dimensions": {
+        "x": 4,
+        "y": 2.089,
+        "z": 2.53
+      },
+      "boundsMin": [
+        -2,
+        -0.45,
+        -0.084
+      ],
+      "boundsMax": [
+        2,
+        1.639,
+        2.446
+      ],
+      "triangles": 1560,
+      "vertices": 4680,
+      "materials": [
+        "wood",
+        "roof"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        },
+        {
+          "name": "roof",
+          "doubleSided": false,
+          "roughnessFactor": 0.92,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wood_roof_slope_01",
+      "staticMeshes": [
+        "wood_roof_slope_01_frame",
+        "wood_roof_slope_01_shingles"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "roof_slope",
+            "center": [
+              0,
+              0.75,
+              1
+            ],
+            "size": [
+              4,
+              0.1,
+              2.5
+            ],
+            "rotationX": 0.6435
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            0.595,
+            1.181
+          ],
+          "size": [
+            4,
+            2.089,
+            2.53
+          ]
+        }
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    "wood_roof_gable_01": {
+      "assetId": "wood_roof_gable_01",
+      "pack": "BUILDING-ASSET-01",
+      "category": "building",
+      "publicUrl": "/models/buildings/wood_roof_gable_01.glb",
+      "originalManifestSource": "docs/assets/raw/BUILDING-ASSET-01/README.md",
+      "fileSizeBytes": 97580,
+      "sha256": "d8f8f398a7b7b075bac3986b8b0f9ad0e59a529f0f1cbe187dbe587b829aaff0",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center wall-top level (placed at y=3.0, apex at y=1.5 local)",
+      "front": "+Z",
+      "dimensions": {
+        "x": 4.82,
+        "y": 2.145,
+        "z": 0.24
+      },
+      "boundsMin": [
+        -2.41,
+        -0.463,
+        -0.08
+      ],
+      "boundsMax": [
+        2.41,
+        1.683,
+        0.16
+      ],
+      "triangles": 892,
+      "vertices": 2676,
+      "materials": [
+        "wood"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wood_roof_gable_01",
+      "staticMeshes": [
+        "wood_roof_gable_01_body"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "gable_bounding_wall",
+            "center": [
+              0,
+              0.75,
+              0
+            ],
+            "size": [
+              4,
+              1.5,
+              0.2
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            0.75,
+            0
+          ],
+          "size": [
+            4,
+            1.5,
+            0.2
+          ]
+        },
+        "prism": {
+          "vertices2D": [
+            [
+              -2,
+              0
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              0,
+              1.5
+            ]
+          ],
+          "thicknessZ": 0.2
+        }
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    "wood_door_01": {
+      "assetId": "wood_door_01",
+      "pack": "BUILDING-ASSET-01",
+      "category": "building",
+      "publicUrl": "/models/buildings/wood_door_01.glb",
+      "originalManifestSource": "docs/assets/raw/BUILDING-ASSET-01/README.md",
+      "fileSizeBytes": 45456,
+      "sha256": "873de6050106686a1817a605060571e3b01ac981c1b300632dde0dd6288f4260",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "same root origin as wood_wall_door_01 (y=0 floor surface)",
+      "front": "+Z (opens inward toward -Z with positive rotation.y = +1.45 rad)",
+      "dimensions": {
+        "x": 1.787,
+        "y": 2.35,
+        "z": 0.14
+      },
+      "boundsMin": [
+        -0.91,
+        0.035,
+        -0.07
+      ],
+      "boundsMax": [
+        0.877,
+        2.385,
+        0.07
+      ],
+      "triangles": 400,
+      "vertices": 1200,
+      "materials": [
+        "wood",
+        "iron"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        },
+        {
+          "name": "iron",
+          "doubleSided": false,
+          "roughnessFactor": 0.6,
+          "metallicFactor": 0.45
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wood_door_01",
+      "staticMeshes": [],
+      "movingMeshes": [
+        "door_leaf",
+        "door_hardware"
+      ],
+      "pivots": [
+        {
+          "name": "door_pivot",
+          "parent": "wood_door_01",
+          "axis": "y",
+          "closedAngleRad": 0,
+          "openAngleRad": 1.45,
+          "openAngleDeg": 83.079,
+          "direction": "Eshik chap ilgak chizig'i (-0.88, 0, 0) atrofida ichkariga (-Z tomonga) musbat (+1.45 rad / +83.08°) burchakda ochiladi",
+          "collider": {
+            "space": "door_pivot-local",
+            "center": [
+              0.88,
+              1.21,
+              0
+            ],
+            "size": [
+              1.76,
+              2.35,
+              0.06
+            ]
+          },
+          "position": [
+            -0.88,
+            0,
+            0
+          ],
+          "movingMeshes": [
+            "door_leaf",
+            "door_hardware"
+          ],
+          "measuredDisplacementM": 1.149,
+          "closedCenter": [
+            -0.017,
+            1.21,
+            0
+          ],
+          "openCenter": [
+            -0.782,
+            1.21,
+            -0.856
+          ]
+        }
+      ],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [],
+        "movingPart": {
+          "space": "door_pivot-local",
+          "center": [
+            0.88,
+            1.21,
+            0
+          ],
+          "size": [
+            1.76,
+            2.35,
+            0.06
+          ],
+          "note": "Pivot bilan birga aylanadi"
+        },
+        "simple": {
+          "center": [
+            -0.017,
+            1.21,
+            0
+          ],
+          "size": [
+            1.787,
+            2.35,
+            0.14
+          ]
+        }
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    "wood_stairs_01": {
+      "assetId": "wood_stairs_01",
+      "pack": "BUILDING-ASSET-01",
+      "category": "building",
+      "publicUrl": "/models/buildings/wood_stairs_01.glb",
+      "originalManifestSource": "docs/assets/raw/BUILDING-ASSET-01/README.md",
+      "fileSizeBytes": 90644,
+      "sha256": "26199cbd1c55c1fdfcb099ec58b4ed7e1be7e40a270eaa7fcb91032fe29ab11e",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-front-center of first step (y=0, rises 3.0m toward -Z over 4.0m run; +X handrail reaches y=4.0m)",
+      "front": "+Z (climbs toward -Z)",
+      "dimensions": {
+        "x": 1.33,
+        "y": 4.006,
+        "z": 4.036
+      },
+      "boundsMin": [
+        -0.66,
+        -0.006,
+        -4.006
+      ],
+      "boundsMax": [
+        0.67,
+        4,
+        0.03
+      ],
+      "triangles": 828,
+      "vertices": 2484,
+      "materials": [
+        "wood"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wood_stairs_01",
+      "staticMeshes": [
+        "wood_stairs_01_body"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "stairs_ramp",
+            "center": [
+              0,
+              1.5,
+              -2
+            ],
+            "size": [
+              1.2,
+              0.1,
+              5
+            ],
+            "rotationX": 0.6435,
+            "note": "15 pog'ona × 0.20 m = 3.0 m ko'tarilish, 4.0 m gorizontal masofa (qiyalik 36.87°)"
+          },
+          {
+            "name": "handrail_guard_plus_x",
+            "center": [
+              0.63,
+              2,
+              -2
+            ],
+            "size": [
+              0.08,
+              1,
+              5
+            ],
+            "rotationX": 0.6435,
+            "note": "+X tomondagi panjara (perila) y=4.0 m gacha chiqadi"
+          }
+        ],
+        "simple": {
+          "center": [
+            0.005,
+            1.997,
+            -1.988
+          ],
+          "size": [
+            1.33,
+            4.006,
+            4.036
+          ]
+        },
+        "walkableRiseM": 3,
+        "handrailTopY": 4,
+        "horizontalRunM": 4,
+        "stepCount": 15,
+        "stepHeightM": 0.2,
+        "stepDepthM": 0.267,
+        "clearWalkWidthM": 1.2
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "qaAnalysis": {
+        "walkableStepMaxY": 3.006,
+        "handrailMaxY": 4,
+        "verticesAbove3mCount": 99,
+        "handrailXRangeAbove3m": [
+          0.59,
+          0.67
+        ],
+        "note": "Zinapoya pog'onalari y=3.0m (2-qavat poli) gacha ko'tariladi; y∈(3.0, 4.0] oralig'idagi 99 ta vertex faqat +X tomondagi x∈[0.59, 0.67] panjara (perila) ustun va tutqichiga tegishli."
+      },
+      "validationPassed": true
+    },
+    "wooden_loot_crate_01": {
+      "assetId": "wooden_loot_crate_01",
+      "pack": "LOOT-ASSET-01",
+      "category": "loot",
+      "publicUrl": "/models/loot/wooden_loot_crate_01.glb",
+      "originalManifestSource": "docs/assets/raw/LOOT-ASSET-01/loot_asset_manifest.json",
+      "fileSizeBytes": 127128,
+      "sha256": "e396a9f1d32a115db152bb6fa6214a320377dfef5bee19f69ec8e80b9f287474",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 1.005,
+        "y": 0.606,
+        "z": 0.646
+      },
+      "boundsMin": [
+        -0.502,
+        0,
+        -0.317
+      ],
+      "boundsMax": [
+        0.502,
+        0.606,
+        0.328
+      ],
+      "triangles": 1140,
+      "vertices": 3420,
+      "materials": [
+        "wood",
+        "iron"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        },
+        {
+          "name": "iron",
+          "doubleSided": false,
+          "roughnessFactor": 0.6,
+          "metallicFactor": 0.45
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wooden_loot_crate_01",
+      "staticMeshes": [
+        "crate_body",
+        "crate_body_metal"
+      ],
+      "movingMeshes": [
+        "crate_lid",
+        "crate_lid_metal"
+      ],
+      "pivots": [
+        {
+          "name": "lid_pivot",
+          "parent": "wooden_loot_crate_01",
+          "axis": "x",
+          "closedAngleRad": 0,
+          "openAngleRad": -1.92,
+          "openAngleDeg": -110,
+          "direction": "Qopqoq orqa ilgak chizig'i atrofida yuqoriga va orqaga ochiladi",
+          "collider": {
+            "space": "lid_pivot-local",
+            "center": [
+              0,
+              0.07,
+              0.3
+            ],
+            "size": [
+              0.9,
+              0.14,
+              0.6
+            ],
+            "note": "Pivot bilan birga aylanadi"
+          },
+          "position": [
+            0,
+            0.46,
+            -0.3
+          ],
+          "movingMeshes": [
+            "crate_lid",
+            "crate_lid_metal"
+          ],
+          "measuredDisplacementM": 0.493,
+          "closedCenter": [
+            0,
+            0.506,
+            -0.002
+          ],
+          "openCenter": [
+            0,
+            0.724,
+            -0.445
+          ]
+        }
+      ],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "staticBody",
+            "center": [
+              0,
+              0.23,
+              0
+            ],
+            "size": [
+              0.9,
+              0.46,
+              0.6
+            ]
+          }
+        ],
+        "staticBody": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.23,
+            0
+          ],
+          "size": [
+            0.9,
+            0.46,
+            0.6
+          ]
+        },
+        "movingPart": {
+          "space": "lid_pivot-local",
+          "center": [
+            0,
+            0.07,
+            0.3
+          ],
+          "size": [
+            0.9,
+            0.14,
+            0.6
+          ],
+          "note": "Pivot bilan birga aylanadi"
+        },
+        "simple": {
+          "center": [
+            0,
+            0.3,
+            0
+          ],
+          "size": [
+            0.9,
+            0.6,
+            0.6
+          ],
+          "note": "Yopiq holat uchun bitta oddiy box"
+        },
+        "simpleClosed": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.3,
+            0
+          ],
+          "size": [
+            0.9,
+            0.6,
+            0.6
+          ],
+          "note": "Yopiq holat uchun bitta oddiy box"
+        }
+      },
+      "interaction": {
+        "sphereCenter": [
+          0,
+          0.303,
+          0.005
+        ],
+        "sphereRadius": 1.87,
+        "recommendedMaxDistanceFromBounds": 1.5
+      },
+      "interiorVolume": {
+        "space": "model-local",
+        "center": [
+          0,
+          0.265,
+          0
+        ],
+        "size": [
+          0.82,
+          0.39,
+          0.52
+        ],
+        "note": "Pol yuzasi y = 0.07"
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    "metal_locker_01": {
+      "assetId": "metal_locker_01",
+      "pack": "LOOT-ASSET-01",
+      "category": "loot",
+      "publicUrl": "/models/loot/metal_locker_01.glb",
+      "originalManifestSource": "docs/assets/raw/LOOT-ASSET-01/loot_asset_manifest.json",
+      "fileSizeBytes": 155848,
+      "sha256": "b363240c290a9dce6e12294445bd01c668a5a9bb7310ea29c427ec57d371b1ec",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 0.91,
+        "y": 1.8,
+        "z": 0.56
+      },
+      "boundsMin": [
+        -0.455,
+        0,
+        -0.255
+      ],
+      "boundsMax": [
+        0.455,
+        1.8,
+        0.305
+      ],
+      "triangles": 1406,
+      "vertices": 4218,
+      "materials": [
+        "painted_metal",
+        "iron"
+      ],
+      "materialDetails": [
+        {
+          "name": "painted_metal",
+          "doubleSided": false,
+          "roughnessFactor": 0.72,
+          "metallicFactor": 0.25
+        },
+        {
+          "name": "iron",
+          "doubleSided": false,
+          "roughnessFactor": 0.6,
+          "metallicFactor": 0.45
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "metal_locker_01",
+      "staticMeshes": [
+        "locker_body",
+        "locker_body_metal"
+      ],
+      "movingMeshes": [
+        "locker_door",
+        "locker_door_hardware"
+      ],
+      "pivots": [
+        {
+          "name": "door_pivot",
+          "parent": "metal_locker_01",
+          "axis": "y",
+          "closedAngleRad": 0,
+          "openAngleRad": -1.75,
+          "openAngleDeg": -100,
+          "direction": "Eshik chap ilgak chizig'i atrofida tashqariga (+Z) va chapga ochiladi",
+          "collider": {
+            "space": "door_pivot-local",
+            "center": [
+              0.43,
+              0.925,
+              0.0145
+            ],
+            "size": [
+              0.85,
+              1.69,
+              0.03
+            ],
+            "note": "Pivot bilan birga aylanadi"
+          },
+          "position": [
+            -0.43,
+            0,
+            0.25
+          ],
+          "movingMeshes": [
+            "locker_door",
+            "locker_door_hardware"
+          ],
+          "measuredDisplacementM": 0.646,
+          "closedCenter": [
+            -0.007,
+            0.925,
+            0.269
+          ],
+          "openCenter": [
+            -0.519,
+            0.925,
+            0.662
+          ]
+        }
+      ],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "staticBody",
+            "center": [
+              0,
+              0.9,
+              0
+            ],
+            "size": [
+              0.9,
+              1.8,
+              0.5
+            ]
+          }
+        ],
+        "staticBody": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.9,
+            0
+          ],
+          "size": [
+            0.9,
+            1.8,
+            0.5
+          ]
+        },
+        "movingPart": {
+          "space": "door_pivot-local",
+          "center": [
+            0.43,
+            0.925,
+            0.0145
+          ],
+          "size": [
+            0.85,
+            1.69,
+            0.03
+          ],
+          "note": "Pivot bilan birga aylanadi"
+        },
+        "simple": {
+          "center": [
+            0,
+            0.9,
+            0
+          ],
+          "size": [
+            0.9,
+            1.8,
+            0.5
+          ],
+          "note": "Yopiq holat uchun bitta oddiy box"
+        },
+        "simpleClosed": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.9,
+            0
+          ],
+          "size": [
+            0.9,
+            1.8,
+            0.5
+          ],
+          "note": "Yopiq holat uchun bitta oddiy box"
+        }
+      },
+      "interaction": {
+        "sphereCenter": [
+          0,
+          0.9,
+          0.025
+        ],
+        "sphereRadius": 2.247,
+        "recommendedMaxDistanceFromBounds": 1.5
+      },
+      "interiorVolume": {
+        "space": "model-local",
+        "center": [
+          0,
+          0.925,
+          -0.01
+        ],
+        "size": [
+          0.84,
+          1.57,
+          0.44
+        ],
+        "note": "Javon yuzalari y = 0.09 (pol), 0.5575, 1.0075, 1.4575"
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    "old_toolbox_01": {
+      "assetId": "old_toolbox_01",
+      "pack": "LOOT-ASSET-01",
+      "category": "loot",
+      "publicUrl": "/models/loot/old_toolbox_01.glb",
+      "originalManifestSource": "docs/assets/raw/LOOT-ASSET-01/loot_asset_manifest.json",
+      "fileSizeBytes": 104024,
+      "sha256": "f7e1074d1a440de62a0dd3cf45efcd1523e3aa2bd088ed2dfd09890408292d81",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 0.607,
+        "y": 0.3,
+        "z": 0.319
+      },
+      "boundsMin": [
+        -0.303,
+        0,
+        -0.157
+      ],
+      "boundsMax": [
+        0.303,
+        0.3,
+        0.162
+      ],
+      "triangles": 926,
+      "vertices": 2778,
+      "materials": [
+        "painted_metal",
+        "iron"
+      ],
+      "materialDetails": [
+        {
+          "name": "painted_metal",
+          "doubleSided": false,
+          "roughnessFactor": 0.72,
+          "metallicFactor": 0.25
+        },
+        {
+          "name": "iron",
+          "doubleSided": false,
+          "roughnessFactor": 0.6,
+          "metallicFactor": 0.45
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "old_toolbox_01",
+      "staticMeshes": [
+        "toolbox_body",
+        "toolbox_body_metal"
+      ],
+      "movingMeshes": [
+        "toolbox_lid",
+        "toolbox_lid_metal"
+      ],
+      "pivots": [
+        {
+          "name": "lid_pivot",
+          "parent": "old_toolbox_01",
+          "axis": "x",
+          "closedAngleRad": 0,
+          "openAngleRad": -1.92,
+          "openAngleDeg": -110,
+          "direction": "Qopqoq orqa ilgak chizig'i atrofida yuqoriga va orqaga ochiladi",
+          "collider": {
+            "space": "lid_pivot-local",
+            "center": [
+              0,
+              0.05,
+              0.15
+            ],
+            "size": [
+              0.6,
+              0.1,
+              0.3
+            ],
+            "note": "Pivot bilan birga aylanadi"
+          },
+          "position": [
+            0,
+            0.2,
+            -0.15
+          ],
+          "movingMeshes": [
+            "toolbox_lid",
+            "toolbox_lid_metal"
+          ],
+          "measuredDisplacementM": 0.261,
+          "closedCenter": [
+            0,
+            0.247,
+            0.002
+          ],
+          "openCenter": [
+            0,
+            0.327,
+            -0.246
+          ]
+        }
+      ],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "staticBody",
+            "center": [
+              0,
+              0.1,
+              0
+            ],
+            "size": [
+              0.6,
+              0.2,
+              0.3
+            ]
+          }
+        ],
+        "staticBody": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.1,
+            0
+          ],
+          "size": [
+            0.6,
+            0.2,
+            0.3
+          ]
+        },
+        "movingPart": {
+          "space": "lid_pivot-local",
+          "center": [
+            0,
+            0.05,
+            0.15
+          ],
+          "size": [
+            0.6,
+            0.1,
+            0.3
+          ],
+          "note": "Pivot bilan birga aylanadi"
+        },
+        "simple": {
+          "center": [
+            0,
+            0.15,
+            0
+          ],
+          "size": [
+            0.6,
+            0.3,
+            0.3
+          ],
+          "note": "Yopiq holat uchun bitta oddiy box"
+        },
+        "simpleClosed": {
+          "space": "model-local",
+          "center": [
+            0,
+            0.15,
+            0
+          ],
+          "size": [
+            0.6,
+            0.3,
+            0.3
+          ],
+          "note": "Yopiq holat uchun bitta oddiy box"
+        }
+      },
+      "interaction": {
+        "sphereCenter": [
+          0,
+          0.15,
+          0.002
+        ],
+        "sphereRadius": 1.574,
+        "recommendedMaxDistanceFromBounds": 1.5
+      },
+      "interiorVolume": {
+        "space": "model-local",
+        "center": [
+          0,
+          0.11,
+          0.065
+        ],
+        "size": [
+          0.56,
+          0.17,
+          0.14
+        ],
+        "note": "Old bo'lim; orqada ichki tokcha: center (0, 0.172, -0.07), size (0.56, 0.035, 0.12)"
+      },
+      "itemAnchors": [],
+      "placeableSurfaces": [],
+      "validationPassed": true
+    },
+    "wooden_table_01": {
+      "assetId": "wooden_table_01",
+      "pack": "INTERIOR-ASSET-01",
+      "category": "interior",
+      "publicUrl": "/models/interior/wooden_table_01.glb",
+      "originalManifestSource": "docs/assets/raw/INTERIOR-ASSET-01/interior_asset_manifest.json",
+      "fileSizeBytes": 32320,
+      "sha256": "4ba8e5fea8c49dda8dbb0dc7a2f1f96d47ace99f7d8ac6d67582e4ab068f7d54",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 1.408,
+        "y": 0.75,
+        "z": 0.796
+      },
+      "boundsMin": [
+        -0.704,
+        0,
+        -0.398
+      ],
+      "boundsMax": [
+        0.705,
+        0.75,
+        0.398
+      ],
+      "triangles": 288,
+      "vertices": 864,
+      "materials": [
+        "wood"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wooden_table_01",
+      "staticMeshes": [
+        "wooden_table_01_body"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "tabletop",
+            "center": [
+              0,
+              0.73,
+              0
+            ],
+            "size": [
+              1.4,
+              0.04,
+              0.8
+            ]
+          },
+          {
+            "name": "legs_block",
+            "center": [
+              0,
+              0.355,
+              0
+            ],
+            "size": [
+              1.31,
+              0.71,
+              0.71
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            0.375,
+            0
+          ],
+          "size": [
+            1.4,
+            0.75,
+            0.8
+          ]
+        }
+      },
+      "itemAnchors": [
+        {
+          "name": "anchor_0",
+          "position": [
+            -0.45,
+            0.75,
+            -0.2
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "anchor_1",
+          "position": [
+            0,
+            0.75,
+            -0.2
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "anchor_2",
+          "position": [
+            0.45,
+            0.75,
+            -0.2
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "anchor_3",
+          "position": [
+            -0.45,
+            0.75,
+            0.2
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "anchor_4",
+          "position": [
+            0,
+            0.75,
+            0.2
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "anchor_5",
+          "position": [
+            0.45,
+            0.75,
+            0.2
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "placeableSurfaces": [
+        {
+          "name": "tabletop",
+          "y": 0.75,
+          "center": [
+            0,
+            0.75,
+            0
+          ],
+          "size": [
+            1.36,
+            0.76
+          ]
+        }
+      ],
+      "validationPassed": true
+    },
+    "wooden_chair_01": {
+      "assetId": "wooden_chair_01",
+      "pack": "INTERIOR-ASSET-01",
+      "category": "interior",
+      "publicUrl": "/models/interior/wooden_chair_01.glb",
+      "originalManifestSource": "docs/assets/raw/INTERIOR-ASSET-01/interior_asset_manifest.json",
+      "fileSizeBytes": 44872,
+      "sha256": "280f2aec85d5c0272984fe90b351389c0b70d0ae8eab850e4ca89b521abb1988",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 0.46,
+        "y": 0.899,
+        "z": 0.524
+      },
+      "boundsMin": [
+        -0.23,
+        -0.002,
+        -0.297
+      ],
+      "boundsMax": [
+        0.23,
+        0.897,
+        0.227
+      ],
+      "triangles": 404,
+      "vertices": 1212,
+      "materials": [
+        "wood"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wooden_chair_01",
+      "staticMeshes": [
+        "wooden_chair_01_body"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "seat",
+            "center": [
+              0,
+              0.235,
+              0
+            ],
+            "size": [
+              0.46,
+              0.47,
+              0.46
+            ]
+          },
+          {
+            "name": "backrest",
+            "center": [
+              0,
+              0.68,
+              -0.25
+            ],
+            "size": [
+              0.46,
+              0.44,
+              0.06
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            0.45,
+            -0.03
+          ],
+          "size": [
+            0.47,
+            0.9,
+            0.53
+          ]
+        }
+      },
+      "itemAnchors": [
+        {
+          "name": "seat",
+          "position": [
+            0,
+            0.47,
+            0.02
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "placeableSurfaces": [
+        {
+          "name": "seat",
+          "y": 0.47,
+          "center": [
+            0,
+            0.47,
+            0
+          ],
+          "size": [
+            0.42,
+            0.42
+          ]
+        }
+      ],
+      "validationPassed": true
+    },
+    "wooden_shelf_01": {
+      "assetId": "wooden_shelf_01",
+      "pack": "INTERIOR-ASSET-01",
+      "category": "interior",
+      "publicUrl": "/models/interior/wooden_shelf_01.glb",
+      "originalManifestSource": "docs/assets/raw/INTERIOR-ASSET-01/interior_asset_manifest.json",
+      "fileSizeBytes": 48328,
+      "sha256": "ad1295e6923327b057d565751a1817b6fef23bb79cf99287532040a8d2a62ca7",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 1.04,
+        "y": 1.803,
+        "z": 0.42
+      },
+      "boundsMin": [
+        -0.52,
+        -0.003,
+        -0.21
+      ],
+      "boundsMax": [
+        0.52,
+        1.8,
+        0.21
+      ],
+      "triangles": 436,
+      "vertices": 1308,
+      "materials": [
+        "wood"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "wooden_shelf_01",
+      "staticMeshes": [
+        "wooden_shelf_01_body"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "body",
+            "center": [
+              0,
+              0.9,
+              0
+            ],
+            "size": [
+              1,
+              1.8,
+              0.4
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            0.9,
+            0
+          ],
+          "size": [
+            1,
+            1.8,
+            0.4
+          ]
+        }
+      },
+      "itemAnchors": [
+        {
+          "name": "shelf_1_1",
+          "position": [
+            -0.3,
+            0.12,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_1_2",
+          "position": [
+            0,
+            0.12,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_1_3",
+          "position": [
+            0.3,
+            0.12,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_2_1",
+          "position": [
+            -0.3,
+            0.56,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_2_2",
+          "position": [
+            0,
+            0.56,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_2_3",
+          "position": [
+            0.3,
+            0.56,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_3_1",
+          "position": [
+            -0.3,
+            1,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_3_2",
+          "position": [
+            0,
+            1,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_3_3",
+          "position": [
+            0.3,
+            1,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_4_1",
+          "position": [
+            -0.3,
+            1.44,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_4_2",
+          "position": [
+            0,
+            1.44,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "shelf_4_3",
+          "position": [
+            0.3,
+            1.44,
+            0.01
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "placeableSurfaces": [
+        {
+          "name": "shelf_1",
+          "y": 0.12,
+          "center": [
+            0,
+            0.12,
+            0.01
+          ],
+          "size": [
+            0.92,
+            0.34
+          ],
+          "clearHeight": 0.415
+        },
+        {
+          "name": "shelf_2",
+          "y": 0.56,
+          "center": [
+            0,
+            0.56,
+            0.01
+          ],
+          "size": [
+            0.92,
+            0.34
+          ],
+          "clearHeight": 0.415
+        },
+        {
+          "name": "shelf_3",
+          "y": 1,
+          "center": [
+            0,
+            1,
+            0.01
+          ],
+          "size": [
+            0.92,
+            0.34
+          ],
+          "clearHeight": 0.415
+        },
+        {
+          "name": "shelf_4",
+          "y": 1.44,
+          "center": [
+            0,
+            1.44,
+            0.01
+          ],
+          "size": [
+            0.92,
+            0.34
+          ],
+          "clearHeight": 0.33
+        },
+        {
+          "name": "top",
+          "y": 1.8,
+          "center": [
+            0,
+            1.8,
+            0
+          ],
+          "size": [
+            1,
+            0.4
+          ]
+        }
+      ],
+      "validationPassed": true
+    },
+    "old_bed_01": {
+      "assetId": "old_bed_01",
+      "pack": "INTERIOR-ASSET-01",
+      "category": "interior",
+      "publicUrl": "/models/interior/old_bed_01.glb",
+      "originalManifestSource": "docs/assets/raw/INTERIOR-ASSET-01/interior_asset_manifest.json",
+      "fileSizeBytes": 92664,
+      "sha256": "72c76de88f438e27d21bd996e4c5f8728a3d3e14477ef11e1c6ba2b75d8d355b",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 2.02,
+        "y": 0.65,
+        "z": 0.97
+      },
+      "boundsMin": [
+        -1.01,
+        0,
+        -0.485
+      ],
+      "boundsMax": [
+        1.01,
+        0.65,
+        0.485
+      ],
+      "triangles": 838,
+      "vertices": 2514,
+      "materials": [
+        "wood",
+        "fabric"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        },
+        {
+          "name": "fabric",
+          "doubleSided": false,
+          "roughnessFactor": 0.97,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "old_bed_01",
+      "staticMeshes": [
+        "old_bed_01_frame",
+        "old_bed_01_fabric"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "frame_mattress",
+            "center": [
+              0,
+              0.23,
+              0
+            ],
+            "size": [
+              2,
+              0.46,
+              0.95
+            ]
+          },
+          {
+            "name": "headboard",
+            "center": [
+              0.965,
+              0.555,
+              0
+            ],
+            "size": [
+              0.09,
+              0.19,
+              0.95
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            0.325,
+            0
+          ],
+          "size": [
+            2,
+            0.65,
+            0.95
+          ]
+        },
+        "underBedClearanceAdjustedBoxes": [
+          {
+            "name": "frame_mattress_raised",
+            "center": [
+              0,
+              0.33,
+              0
+            ],
+            "size": [
+              2,
+              0.26,
+              0.95
+            ],
+            "note": "Karavot ostidagi y∈[0, 0.20] bo'shliqni va under_bed (0,0,0) anchorini LOS/raycast uchun ochiq qoldiruvchi alternativ collider"
+          },
+          {
+            "name": "headboard",
+            "center": [
+              0.965,
+              0.555,
+              0
+            ],
+            "size": [
+              0.09,
+              0.19,
+              0.95
+            ]
+          }
+        ],
+        "qaNote": "Standart frame_mattress collideri (center [0, 0.23, 0], size [2, 0.46, 0.95]) y∈[0.00, 0.46] oraliqni to'liq yopadi va under_bed ([0, 0, 0]) anchorini AABB ichida ko'mib qo'yadi. Yashirin loot LOS/pickup ishlashi uchun frame_mattress_raised (y∈[0.20, 0.46]) ishlatilishi yoki LOS tekshiruvida pastki 0.20 m qatlam istisno qilinishi zarur."
+      },
+      "itemAnchors": [
+        {
+          "name": "mattress",
+          "position": [
+            -0.2,
+            0.46,
+            0
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "under_bed",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "note": "Karavot ostida 0.20 m bo'shliq, yashirin loot uchun",
+          "occludedByDefaultCollider": true,
+          "clearanceHeightM": 0.2
+        }
+      ],
+      "placeableSurfaces": [
+        {
+          "name": "mattress",
+          "y": 0.46,
+          "center": [
+            -0.1,
+            0.46,
+            0
+          ],
+          "size": [
+            1.6,
+            0.8
+          ],
+          "note": "Yumshoq yuza"
+        }
+      ],
+      "qaAnalysis": {
+        "visualUnderBedClearanceM": 0.2,
+        "cornerLegMinAbsX": 0.93,
+        "cornerLegMinAbsZ": 0.405,
+        "defaultFrameColliderYRange": [
+          0,
+          0.46
+        ],
+        "adjustedFrameColliderYRange": [
+          0.2,
+          0.46
+        ],
+        "underBedAnchorPosition": [
+          0,
+          0,
+          0
+        ],
+        "occludedByDefaultFrameCollider": true
+      },
+      "validationPassed": true
+    },
+    "old_sofa_01": {
+      "assetId": "old_sofa_01",
+      "pack": "INTERIOR-ASSET-01",
+      "category": "interior",
+      "publicUrl": "/models/interior/old_sofa_01.glb",
+      "originalManifestSource": "docs/assets/raw/INTERIOR-ASSET-01/interior_asset_manifest.json",
+      "fileSizeBytes": 105692,
+      "sha256": "3cd6f915f91a251ea22f13a48d7ef9bfb7e2edddfff31ec05c79cfa898cad50d",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 1.7,
+        "y": 0.902,
+        "z": 0.8
+      },
+      "boundsMin": [
+        -0.85,
+        0,
+        -0.4
+      ],
+      "boundsMax": [
+        0.85,
+        0.902,
+        0.4
+      ],
+      "triangles": 958,
+      "vertices": 2874,
+      "materials": [
+        "wood",
+        "fabric"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        },
+        {
+          "name": "fabric",
+          "doubleSided": false,
+          "roughnessFactor": 0.97,
+          "metallicFactor": 0
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "old_sofa_01",
+      "staticMeshes": [
+        "old_sofa_01_legs",
+        "old_sofa_01_fabric"
+      ],
+      "movingMeshes": [],
+      "pivots": [],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "seat",
+            "center": [
+              0,
+              0.25,
+              0.01
+            ],
+            "size": [
+              1.7,
+              0.5,
+              0.78
+            ]
+          },
+          {
+            "name": "back",
+            "center": [
+              0,
+              0.62,
+              -0.31
+            ],
+            "size": [
+              1.7,
+              0.52,
+              0.18
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            0.45,
+            0
+          ],
+          "size": [
+            1.7,
+            0.9,
+            0.8
+          ]
+        }
+      },
+      "itemAnchors": [
+        {
+          "name": "seat_left",
+          "position": [
+            -0.33,
+            0.5,
+            0.1
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "seat_right",
+          "position": [
+            0.33,
+            0.5,
+            0.1
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "placeableSurfaces": [
+        {
+          "name": "seat",
+          "y": 0.5,
+          "center": [
+            0,
+            0.5,
+            0.08
+          ],
+          "size": [
+            1.3,
+            0.5
+          ],
+          "note": "Yumshoq yuza"
+        }
+      ],
+      "cover": {
+        "height": 0.88,
+        "hideSide": "-Z",
+        "hideSpot": [
+          0,
+          0,
+          -0.7
+        ],
+        "note": "Orqa tomonda engashgan o'yinchini to'sadi"
+      },
+      "validationPassed": true
+    },
+    "kitchen_cabinet_01": {
+      "assetId": "kitchen_cabinet_01",
+      "pack": "INTERIOR-ASSET-01",
+      "category": "interior",
+      "publicUrl": "/models/interior/kitchen_cabinet_01.glb",
+      "originalManifestSource": "docs/assets/raw/INTERIOR-ASSET-01/interior_asset_manifest.json",
+      "fileSizeBytes": 79316,
+      "sha256": "3d4fc832373b1f1aaaabc8313d65324a42eba28e078a272001bafd3f8ec53dfb",
+      "rawGlbIdentical": true,
+      "units": "meters",
+      "upAxis": "+Y",
+      "origin": "bottom-center",
+      "front": "+Z",
+      "dimensions": {
+        "x": 1.24,
+        "y": 0.903,
+        "z": 0.575
+      },
+      "boundsMin": [
+        -0.62,
+        -0.003,
+        -0.278
+      ],
+      "boundsMax": [
+        0.62,
+        0.9,
+        0.297
+      ],
+      "triangles": 688,
+      "vertices": 2064,
+      "materials": [
+        "wood",
+        "iron"
+      ],
+      "materialDetails": [
+        {
+          "name": "wood",
+          "doubleSided": false,
+          "roughnessFactor": 0.88,
+          "metallicFactor": 0
+        },
+        {
+          "name": "iron",
+          "doubleSided": false,
+          "roughnessFactor": 0.6,
+          "metallicFactor": 0.45
+        }
+      ],
+      "hasVertexColors": true,
+      "vertexAttributes": {
+        "POSITION": true,
+        "NORMAL": true,
+        "COLOR_0": true,
+        "colorFormat": "VEC3:FLOAT",
+        "accessorMinMaxMatch": true
+      },
+      "noCamerasOrLights": true,
+      "noExternalTextures": true,
+      "rootNode": "kitchen_cabinet_01",
+      "staticMeshes": [
+        "kitchen_cabinet_01_body"
+      ],
+      "movingMeshes": [
+        "door_left",
+        "door_left_hardware",
+        "door_right",
+        "door_right_hardware"
+      ],
+      "pivots": [
+        {
+          "name": "door_left_pivot",
+          "parent": "kitchen_cabinet_01",
+          "axis": "y",
+          "closedAngleRad": 0,
+          "openAngleRad": -1.75,
+          "openAngleDeg": -100,
+          "direction": "Chap eshik chap ilgak chizig'i atrofida tashqariga (+Z) ochiladi",
+          "collider": {
+            "space": "door_left_pivot-local",
+            "center": [
+              0.285,
+              0.47,
+              0
+            ],
+            "size": [
+              0.57,
+              0.72,
+              0.02
+            ]
+          },
+          "position": [
+            -0.585,
+            0,
+            0.255
+          ],
+          "movingMeshes": [
+            "door_left",
+            "door_left_hardware"
+          ],
+          "measuredDisplacementM": 0.429,
+          "closedCenter": [
+            -0.304,
+            0.47,
+            0.271
+          ],
+          "openCenter": [
+            -0.647,
+            0.47,
+            0.529
+          ]
+        },
+        {
+          "name": "door_right_pivot",
+          "parent": "kitchen_cabinet_01",
+          "axis": "y",
+          "closedAngleRad": 0,
+          "openAngleRad": 1.75,
+          "openAngleDeg": 100,
+          "direction": "O'ng eshik o'ng ilgak chizig'i atrofida tashqariga (+Z) ochiladi",
+          "collider": {
+            "space": "door_right_pivot-local",
+            "center": [
+              -0.285,
+              0.47,
+              0
+            ],
+            "size": [
+              0.57,
+              0.72,
+              0.02
+            ]
+          },
+          "position": [
+            0.585,
+            0,
+            0.255
+          ],
+          "movingMeshes": [
+            "door_right",
+            "door_right_hardware"
+          ],
+          "measuredDisplacementM": 0.429,
+          "closedCenter": [
+            0.304,
+            0.47,
+            0.271
+          ],
+          "openCenter": [
+            0.647,
+            0.47,
+            0.529
+          ]
+        }
+      ],
+      "colliders": {
+        "space": "model-local",
+        "boxes": [
+          {
+            "name": "body",
+            "center": [
+              0,
+              0.45,
+              0
+            ],
+            "size": [
+              1.2,
+              0.9,
+              0.55
+            ]
+          }
+        ],
+        "simple": {
+          "center": [
+            0,
+            0.45,
+            0
+          ],
+          "size": [
+            1.2,
+            0.9,
+            0.55
+          ]
+        },
+        "qaNote": "kitchen_cabinet_01 body collideri (center [0, 0.45, 0], size [1.2, 0.9, 0.55]) ichki 4 ta anchorni (inside_bottom_1..2, inside_shelf_1..2) qamrab oladi. Eshiklar ochilganda (door_left_pivot=-1.75 rad, door_right_pivot=+1.75 rad) ichki anchorlardan buyum olish uchun LOS raycast body AABB'ni ichki anchorlar uchun o'tkazib yuborishi kerak."
+      },
+      "itemAnchors": [
+        {
+          "name": "countertop_1",
+          "position": [
+            -0.4,
+            0.9,
+            0
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "requiresOpenDoors": false,
+          "enclosedByBodyCollider": false
+        },
+        {
+          "name": "countertop_2",
+          "position": [
+            0,
+            0.9,
+            0
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "requiresOpenDoors": false,
+          "enclosedByBodyCollider": false
+        },
+        {
+          "name": "countertop_3",
+          "position": [
+            0.4,
+            0.9,
+            0
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "requiresOpenDoors": false,
+          "enclosedByBodyCollider": false
+        },
+        {
+          "name": "inside_bottom_1",
+          "position": [
+            -0.29,
+            0.1,
+            -0.03
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "requiresOpenDoors": true,
+          "enclosedByBodyCollider": true
+        },
+        {
+          "name": "inside_bottom_2",
+          "position": [
+            0.29,
+            0.1,
+            -0.03
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "requiresOpenDoors": true,
+          "enclosedByBodyCollider": true
+        },
+        {
+          "name": "inside_shelf_1",
+          "position": [
+            -0.29,
+            0.479,
+            -0.03
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "requiresOpenDoors": true,
+          "enclosedByBodyCollider": true
+        },
+        {
+          "name": "inside_shelf_2",
+          "position": [
+            0.29,
+            0.479,
+            -0.03
+          ],
+          "up": [
+            0,
+            1,
+            0
+          ],
+          "requiresOpenDoors": true,
+          "enclosedByBodyCollider": true
+        }
+      ],
+      "placeableSurfaces": [
+        {
+          "name": "countertop",
+          "y": 0.9,
+          "center": [
+            0,
+            0.9,
+            0
+          ],
+          "size": [
+            1.2,
+            0.52
+          ],
+          "requiresOpenDoors": false
+        },
+        {
+          "name": "inside_bottom",
+          "y": 0.1,
+          "center": [
+            0,
+            0.1,
+            -0.02
+          ],
+          "size": [
+            1.14,
+            0.46
+          ],
+          "note": "Eshiklar ochiq bo'lganda",
+          "requiresOpenDoors": true
+        },
+        {
+          "name": "inside_shelf",
+          "y": 0.479,
+          "center": [
+            0,
+            0.479,
+            -0.04
+          ],
+          "size": [
+            1.14,
+            0.42
+          ],
+          "note": "Eshiklar ochiq bo'lganda",
+          "requiresOpenDoors": true
+        }
+      ],
+      "qaAnalysis": {
+        "dualPivots": true,
+        "leftPivotPosition": [
+          -0.585,
+          0,
+          0.255
+        ],
+        "rightPivotPosition": [
+          0.585,
+          0,
+          0.255
+        ],
+        "readmeRoundedPositionNote": "README 4-bo'limida (-0.58, 0.00, 0.26) / (0.58, 0.00, 0.26) deb yaxlitlangan; GLB binary node.matrix va manifestda aniq (-0.585, 0, 0.255) / (0.585, 0, 0.255).",
+        "exteriorAnchors": [
+          "countertop_1",
+          "countertop_2",
+          "countertop_3"
+        ],
+        "interiorAnchors": [
+          "inside_bottom_1",
+          "inside_bottom_2",
+          "inside_shelf_1",
+          "inside_shelf_2"
+        ]
+      },
+      "validationPassed": true
+    }
+  }
+}

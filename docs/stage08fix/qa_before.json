@@ -1,0 +1,1495 @@
+{
+  "meta": {
+    "label": "before",
+    "root": "d:\\Stickman-strike-backup-pre08fix",
+    "phaseRequested": "shots",
+    "ports": {
+      "server": 3100,
+      "vite": 5273,
+      "chromeDebug": 9300
+    },
+    "viewport": "1280x720",
+    "dpr": 1,
+    "quality": "medium",
+    "seed": 6501,
+    "posesFile": "docs\\stage08fix\\qa_camera_poses.json",
+    "posesGeneratedFrom": "d:\\Stickman-strike-backup-pre08fix",
+    "timestamp": "2026-10-22T11:39:00.795Z",
+    "command": "node scripts\\qa-stage08fix.mjs --root=d:\\Stickman-strike-backup-pre08fix --label=before --port=3100 --vitePort=5273 --phase=shots"
+  },
+  "environment": {
+    "platform": "win32 10.0.26300 (x64)",
+    "cpuModel": "Intel(R) Core(TM) i5-14400",
+    "cpuCores": 16,
+    "totalRamGB": 31.67,
+    "nodeVersion": "v24.11.1",
+    "chromeVersion": "Chrome/155.0.8059.80",
+    "headless": true,
+    "gpu": {
+      "vendor": "Google Inc. (Intel)",
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 730 (0x0000A782) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    }
+  },
+  "worldMeta": {
+    "mapId": "forest_square",
+    "worldVersion": 1,
+    "publicLayoutSeed": 6501,
+    "gameplayHash": "3b0c6559d00b96f8"
+  },
+  "shots": [
+    {
+      "filename": "01_forest_ground.png",
+      "path": "docs/screenshots/stage08fix/before/01_forest_ground.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 472568,
+      "desc": "open forest ground eye-level (64,4), 11 trees within 12 m",
+      "cam": {
+        "x": 64,
+        "y": 1.296,
+        "z": 4,
+        "yaw": 2.3765,
+        "pitch": -0.1095
+      },
+      "stats": {
+        "gc": null,
+        "gcFn": null,
+        "devStatsText": "DEV | 59 FPS (16.9 ms) | OVERVIEW\nDraw: 127 (scene 127 + vm 0) | Tris: 566723\nMem: geo 122 | tex 37\nCam: (64.0, 1.3, 4.0) yaw=2.38 pitch=-0.11",
+        "render": {
+          "calls": 127,
+          "sceneCalls": 127,
+          "vmCalls": 0,
+          "triangles": 566723,
+          "sceneTris": 566723,
+          "vmTris": 0,
+          "geometries": 122,
+          "textures": 37
+        },
+        "programs": 14,
+        "heapUsedMB": 73.83,
+        "toolKeys": [
+          "setWeapon",
+          "setThirdPerson",
+          "triggerFireAnim",
+          "triggerReloadAnim",
+          "getPlayerTransform",
+          "getDiagnostics",
+          "getForestDiagnostics",
+          "getWorldMeta",
+          "loadTechnicalTerrainFixture",
+          "setQuality",
+          "getRenderStats",
+          "getCullingProfile",
+          "resetCullingProfile",
+          "startBenchmarkCapture",
+          "stopBenchmarkCapture",
+          "setPlayerPos",
+          "getCameraState",
+          "getCoverTestFixtures",
+          "setBushCoverVisibleForQaDemo",
+          "getStage04ADiagnostics",
+          "setDevDoorAngle",
+          "setDevCabinetOpen",
+          "setDevContainersOpen",
+          "setDevAnchorHelpers",
+          "stepInput",
+          "getPredictionDiagnostics",
+          "setNetSim",
+          "sendRawStatePacketForAdversarialTest",
+          "setSyntheticInput",
+          "clearPlayerPoseLock",
+          "triggerFire",
+          "getLootDiagnostics",
+          "openContainerById",
+          "pickupLootItem",
+          "equipInventoryWeapon",
+          "useMedkitItem",
+          "requestLootSync",
+          "sendRawShootPacketForAdversarialTest",
+          "getSurvivalDiagnostics",
+          "cycleSpectatorTarget",
+          "setSpectatorTarget",
+          "getOutdoorDiagnostics"
+        ],
+        "gcParsed": null
+      }
+    },
+    {
+      "filename": "02_road_edge.png",
+      "path": "docs/screenshots/stage08fix/before/02_road_edge.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 479176,
+      "desc": "main_road shoulder (3.046,-87.499), looking along road",
+      "cam": {
+        "x": 3.046,
+        "y": 4.578,
+        "z": -87.499,
+        "yaw": -0.1574,
+        "pitch": -0.12
+      },
+      "stats": {
+        "gc": null,
+        "gcFn": null,
+        "devStatsText": "DEV | 59 FPS (16.9 ms) | OVERVIEW\nDraw: 43 (scene 43 + vm 0) | Tris: 331486\nMem: geo 122 | tex 37\nCam: (3.0, 4.6, -87.5) yaw=-0.16 pitch=-0.12",
+        "render": {
+          "calls": 43,
+          "sceneCalls": 43,
+          "vmCalls": 0,
+          "triangles": 331486,
+          "sceneTris": 331486,
+          "vmTris": 0,
+          "geometries": 122,
+          "textures": 37
+        },
+        "programs": 14,
+        "heapUsedMB": 78.17,
+        "toolKeys": [
+          "setWeapon",
+          "setThirdPerson",
+          "triggerFireAnim",
+          "triggerReloadAnim",
+          "getPlayerTransform",
+          "getDiagnostics",
+          "getForestDiagnostics",
+          "getWorldMeta",
+          "loadTechnicalTerrainFixture",
+          "setQuality",
+          "getRenderStats",
+          "getCullingProfile",
+          "resetCullingProfile",
+          "startBenchmarkCapture",
+          "stopBenchmarkCapture",
+          "setPlayerPos",
+          "getCameraState",
+          "getCoverTestFixtures",
+          "setBushCoverVisibleForQaDemo",
+          "getStage04ADiagnostics",
+          "setDevDoorAngle",
+          "setDevCabinetOpen",
+          "setDevContainersOpen",
+          "setDevAnchorHelpers",
+          "stepInput",
+          "getPredictionDiagnostics",
+          "setNetSim",
+          "sendRawStatePacketForAdversarialTest",
+          "setSyntheticInput",
+          "clearPlayerPoseLock",
+          "triggerFire",
+          "getLootDiagnostics",
+          "openContainerById",
+          "pickupLootItem",
+          "equipInventoryWeapon",
+          "useMedkitItem",
+          "requestLootSync",
+          "sendRawShootPacketForAdversarialTest",
+          "getSurvivalDiagnostics",
+          "cycleSpectatorTarget",
+          "setSpectatorTarget",
+          "getOutdoorDiagnostics"
+        ],
+        "gcParsed": null
+      }
+    },
+    {
+      "filename": "03_flower_glade.png",
+      "path": "docs/screenshots/stage08fix/before/03_flower_glade.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 509237,
+      "desc": "loc_sq_south_glade (-14,52) from 9 m south, looking north",
+      "cam": {
+        "x": -14,
+        "y": 1.557,
+        "z": 61,
+        "yaw": 0,
+        "pitch": -0.1065
+      },
+      "stats": {
+        "gc": null,
+        "gcFn": null,
+        "devStatsText": "DEV | 59 FPS (16.8 ms) | OVERVIEW\nDraw: 133 (scene 133 + vm 0) | Tris: 584734\nMem: geo 122 | tex 43\nCam: (-14.0, 1.6, 61.0) yaw=0.00 pitch=-0.11",
+        "render": {
+          "calls": 133,
+          "sceneCalls": 133,
+          "vmCalls": 0,
+          "triangles": 584734,
+          "sceneTris": 584734,
+          "vmTris": 0,
+          "geometries": 122,
+          "textures": 43
+        },
+        "programs": 14,
+        "heapUsedMB": 60.4,
+        "toolKeys": [
+          "setWeapon",
+          "setThirdPerson",
+          "triggerFireAnim",
+          "triggerReloadAnim",
+          "getPlayerTransform",
+          "getDiagnostics",
+          "getForestDiagnostics",
+          "getWorldMeta",
+          "loadTechnicalTerrainFixture",
+          "setQuality",
+          "getRenderStats",
+          "getCullingProfile",
+          "resetCullingProfile",
+          "startBenchmarkCapture",
+          "stopBenchmarkCapture",
+          "setPlayerPos",
+          "getCameraState",
+          "getCoverTestFixtures",
+          "setBushCoverVisibleForQaDemo",
+          "getStage04ADiagnostics",
+          "setDevDoorAngle",
+          "setDevCabinetOpen",
+          "setDevContainersOpen",
+          "setDevAnchorHelpers",
+          "stepInput",
+          "getPredictionDiagnostics",
+          "setNetSim",
+          "sendRawStatePacketForAdversarialTest",
+          "setSyntheticInput",
+          "clearPlayerPoseLock",
+          "triggerFire",
+          "getLootDiagnostics",
+          "openContainerById",
+          "pickupLootItem",
+          "equipInventoryWeapon",
+          "useMedkitItem",
+          "requestLootSync",
+          "sendRawShootPacketForAdversarialTest",
+          "getSurvivalDiagnostics",
+          "cycleSpectatorTarget",
+          "setSpectatorTarget",
+          "getOutdoorDiagnostics"
+        ],
+        "gcParsed": null
+      }
+    },
+    {
+      "filename": "04_tree_roots_fern.png",
+      "path": "docs/screenshots/stage08fix/before/04_tree_roots_fern.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 552592,
+      "desc": "tree sq_tree_1:vis base with 3 ferns within 3.5 m",
+      "cam": {
+        "x": 92.106,
+        "y": 4.614,
+        "z": -31.573,
+        "yaw": 2.2375,
+        "pitch": -0.3529
+      },
+      "stats": {
+        "gc": null,
+        "gcFn": null,
+        "devStatsText": "DEV | 59 FPS (17.1 ms) | OVERVIEW\nDraw: 121 (scene 121 + vm 0) | Tris: 621299\nMem: geo 122 | tex 43\nCam: (92.1, 4.6, -31.6) yaw=2.24 pitch=-0.35",
+        "render": {
+          "calls": 121,
+          "sceneCalls": 121,
+          "vmCalls": 0,
+          "triangles": 621299,
+          "sceneTris": 621299,
+          "vmTris": 0,
+          "geometries": 122,
+          "textures": 43
+        },
+        "programs": 21,
+        "heapUsedMB": 61.64,
+        "toolKeys": [
+          "setWeapon",
+          "setThirdPerson",
+          "triggerFireAnim",
+          "triggerReloadAnim",
+          "getPlayerTransform",
+          "getDiagnostics",
+          "getForestDiagnostics",
+          "getWorldMeta",
+          "loadTechnicalTerrainFixture",
+          "setQuality",
+          "getRenderStats",
+          "getCullingProfile",
+          "resetCullingProfile",
+          "startBenchmarkCapture",
+          "stopBenchmarkCapture",
+          "setPlayerPos",
+          "getCameraState",
+          "getCoverTestFixtures",
+          "setBushCoverVisibleForQaDemo",
+          "getStage04ADiagnostics",
+          "setDevDoorAngle",
+          "setDevCabinetOpen",
+          "setDevContainersOpen",
+          "setDevAnchorHelpers",
+          "stepInput",
+          "getPredictionDiagnostics",
+          "setNetSim",
+          "sendRawStatePacketForAdversarialTest",
+          "setSyntheticInput",
+          "clearPlayerPoseLock",
+          "triggerFire",
+          "getLootDiagnostics",
+          "openContainerById",
+          "pickupLootItem",
+          "equipInventoryWeapon",
+          "useMedkitItem",
+          "requestLootSync",
+          "sendRawShootPacketForAdversarialTest",
+          "getSurvivalDiagnostics",
+          "cycleSpectatorTarget",
+          "setSpectatorTarget",
+          "getOutdoorDiagnostics"
+        ],
+        "gcParsed": null
+      }
+    },
+    {
+      "filename": "05_cabin_yard.png",
+      "path": "docs/screenshots/stage08fix/before/05_cabin_yard.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 431220,
+      "desc": "poi_cabin_cluster yard (same framing as 08A shot 04)",
+      "cam": {
+        "x": 67.4,
+        "y": 4.32,
+        "z": -55.4,
+        "yaw": 0.0941,
+        "pitch": -0.14
+      },
+      "stats": {
+        "gc": null,
+        "gcFn": null,
+        "devStatsText": "DEV | 59 FPS (17.0 ms) | OVERVIEW\nDraw: 129 (scene 129 + vm 0) | Tris: 418420\nMem: geo 122 | tex 43\nCam: (67.4, 4.3, -55.4) yaw=0.09 pitch=-0.14",
+        "render": {
+          "calls": 129,
+          "sceneCalls": 129,
+          "vmCalls": 0,
+          "triangles": 418420,
+          "sceneTris": 418420,
+          "vmTris": 0,
+          "geometries": 122,
+          "textures": 43
+        },
+        "programs": 32,
+        "heapUsedMB": 61.83,
+        "toolKeys": [
+          "setWeapon",
+          "setThirdPerson",
+          "triggerFireAnim",
+          "triggerReloadAnim",
+          "getPlayerTransform",
+          "getDiagnostics",
+          "getForestDiagnostics",
+          "getWorldMeta",
+          "loadTechnicalTerrainFixture",
+          "setQuality",
+          "getRenderStats",
+          "getCullingProfile",
+          "resetCullingProfile",
+          "startBenchmarkCapture",
+          "stopBenchmarkCapture",
+          "setPlayerPos",
+          "getCameraState",
+          "getCoverTestFixtures",
+          "setBushCoverVisibleForQaDemo",
+          "getStage04ADiagnostics",
+          "setDevDoorAngle",
+          "setDevCabinetOpen",
+          "setDevContainersOpen",
+          "setDevAnchorHelpers",
+          "stepInput",
+          "getPredictionDiagnostics",
+          "setNetSim",
+          "sendRawStatePacketForAdversarialTest",
+          "setSyntheticInput",
+          "clearPlayerPoseLock",
+          "triggerFire",
+          "getLootDiagnostics",
+          "openContainerById",
+          "pickupLootItem",
+          "equipInventoryWeapon",
+          "useMedkitItem",
+          "requestLootSync",
+          "sendRawShootPacketForAdversarialTest",
+          "getSurvivalDiagnostics",
+          "cycleSpectatorTarget",
+          "setSpectatorTarget",
+          "getOutdoorDiagnostics"
+        ],
+        "gcParsed": null
+      }
+    },
+    {
+      "filename": "06_topdown.png",
+      "path": "docs/screenshots/stage08fix/before/06_topdown.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 575820,
+      "desc": "top-down overview 256x256 (same framing as 08A shot 01)",
+      "cam": {
+        "x": 0,
+        "y": 175,
+        "z": 95,
+        "yaw": 0,
+        "pitch": -1.0304
+      },
+      "stats": {
+        "gc": null,
+        "gcFn": null,
+        "devStatsText": "DEV | 59 FPS (16.9 ms) | OVERVIEW\nDraw: 289 (scene 289 + vm 0) | Tris: 1292140\nMem: geo 122 | tex 43\nCam: (0.0, 175.0, 95.0) yaw=0.00 pitch=-1.03",
+        "render": {
+          "calls": 289,
+          "sceneCalls": 289,
+          "vmCalls": 0,
+          "triangles": 1292140,
+          "sceneTris": 1292140,
+          "vmTris": 0,
+          "geometries": 122,
+          "textures": 43
+        },
+        "programs": 32,
+        "heapUsedMB": 60.91,
+        "toolKeys": [
+          "setWeapon",
+          "setThirdPerson",
+          "triggerFireAnim",
+          "triggerReloadAnim",
+          "getPlayerTransform",
+          "getDiagnostics",
+          "getForestDiagnostics",
+          "getWorldMeta",
+          "loadTechnicalTerrainFixture",
+          "setQuality",
+          "getRenderStats",
+          "getCullingProfile",
+          "resetCullingProfile",
+          "startBenchmarkCapture",
+          "stopBenchmarkCapture",
+          "setPlayerPos",
+          "getCameraState",
+          "getCoverTestFixtures",
+          "setBushCoverVisibleForQaDemo",
+          "getStage04ADiagnostics",
+          "setDevDoorAngle",
+          "setDevCabinetOpen",
+          "setDevContainersOpen",
+          "setDevAnchorHelpers",
+          "stepInput",
+          "getPredictionDiagnostics",
+          "setNetSim",
+          "sendRawStatePacketForAdversarialTest",
+          "setSyntheticInput",
+          "clearPlayerPoseLock",
+          "triggerFire",
+          "getLootDiagnostics",
+          "openContainerById",
+          "pickupLootItem",
+          "equipInventoryWeapon",
+          "useMedkitItem",
+          "requestLootSync",
+          "sendRawShootPacketForAdversarialTest",
+          "getSurvivalDiagnostics",
+          "cycleSpectatorTarget",
+          "setSpectatorTarget",
+          "getOutdoorDiagnostics"
+        ],
+        "gcParsed": null
+      }
+    },
+    {
+      "filename": "06b_topdown_low_glade.png",
+      "path": "docs/screenshots/stage08fix/before/06b_topdown_low_glade.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 749567,
+      "desc": "low top-down (38 m) over south glade — ground-cover distribution",
+      "cam": {
+        "x": -14,
+        "y": 37.87,
+        "z": 70,
+        "yaw": 0,
+        "pitch": -1.0862
+      },
+      "stats": {
+        "gc": null,
+        "gcFn": null,
+        "devStatsText": "DEV | 60 FPS (16.7 ms) | OVERVIEW\nDraw: 195 (scene 195 + vm 0) | Tris: 1258006\nMem: geo 122 | tex 47\nCam: (-14.0, 37.9, 70.0) yaw=0.00 pitch=-1.09",
+        "render": {
+          "calls": 195,
+          "sceneCalls": 195,
+          "vmCalls": 0,
+          "triangles": 1258006,
+          "sceneTris": 1258006,
+          "vmTris": 0,
+          "geometries": 122,
+          "textures": 47
+        },
+        "programs": 32,
+        "heapUsedMB": 69.93,
+        "toolKeys": [
+          "setWeapon",
+          "setThirdPerson",
+          "triggerFireAnim",
+          "triggerReloadAnim",
+          "getPlayerTransform",
+          "getDiagnostics",
+          "getForestDiagnostics",
+          "getWorldMeta",
+          "loadTechnicalTerrainFixture",
+          "setQuality",
+          "getRenderStats",
+          "getCullingProfile",
+          "resetCullingProfile",
+          "startBenchmarkCapture",
+          "stopBenchmarkCapture",
+          "setPlayerPos",
+          "getCameraState",
+          "getCoverTestFixtures",
+          "setBushCoverVisibleForQaDemo",
+          "getStage04ADiagnostics",
+          "setDevDoorAngle",
+          "setDevCabinetOpen",
+          "setDevContainersOpen",
+          "setDevAnchorHelpers",
+          "stepInput",
+          "getPredictionDiagnostics",
+          "setNetSim",
+          "sendRawStatePacketForAdversarialTest",
+          "setSyntheticInput",
+          "clearPlayerPoseLock",
+          "triggerFire",
+          "getLootDiagnostics",
+          "openContainerById",
+          "pickupLootItem",
+          "equipInventoryWeapon",
+          "useMedkitItem",
+          "requestLootSync",
+          "sendRawShootPacketForAdversarialTest",
+          "getSurvivalDiagnostics",
+          "cycleSpectatorTarget",
+          "setSpectatorTarget",
+          "getOutdoorDiagnostics"
+        ],
+        "gcParsed": null
+      }
+    }
+  ],
+  "probes": [
+    {
+      "id": "log_cross",
+      "kind": "fallen_log",
+      "objectId": "sq_log_20",
+      "expect": "blocked_or_step_over (no walk-through at log height)",
+      "outcome": "WALK_THROUGH",
+      "pass": false,
+      "finalProgress": 4.601,
+      "centerProgress": 2.4,
+      "maxRise": 0,
+      "distToCenter": 2.201,
+      "distToEnd": 0.199,
+      "start": {
+        "x": 109.44,
+        "y": 0.24134300000000006,
+        "z": -2.674
+      },
+      "final": {
+        "x": 106.80197663812166,
+        "y": 0.5802580274065116,
+        "z": 1.0951127116792423,
+        "onGround": true
+      },
+      "steps": 48,
+      "pathSample": [
+        [
+          109.44,
+          0.241,
+          -2.674
+        ],
+        [
+          109.229,
+          0.245,
+          -2.372
+        ],
+        [
+          108.882,
+          0.257,
+          -1.877
+        ],
+        [
+          108.535,
+          0.29,
+          -1.382
+        ],
+        [
+          108.189,
+          0.323,
+          -0.886
+        ],
+        [
+          107.842,
+          0.367,
+          -0.391
+        ],
+        [
+          107.495,
+          0.427,
+          0.104
+        ],
+        [
+          107.149,
+          0.503,
+          0.6
+        ],
+        [
+          106.802,
+          0.58,
+          1.095
+        ]
+      ],
+      "shots": [
+        {
+          "filename": "07_log_1p.png",
+          "path": "docs/screenshots/stage08fix/before/07_log_1p.png",
+          "width": 1280,
+          "height": 720,
+          "bytes": 406356
+        },
+        {
+          "filename": "07_log_3p.png",
+          "path": "docs/screenshots/stage08fix/before/07_log_3p.png",
+          "width": 1280,
+          "height": 720,
+          "bytes": 435333
+        },
+        {
+          "filename": "07_log_fixedcam.png",
+          "path": "docs/screenshots/stage08fix/before/07_log_fixedcam.png",
+          "width": 1280,
+          "height": 720,
+          "bytes": 505045
+        }
+      ]
+    },
+    {
+      "id": "stump_cross",
+      "kind": "tree_stump",
+      "objectId": "sq_stump_29",
+      "expect": "blocked_or_step_over",
+      "outcome": "BLOCKED_2.2m_BEFORE_CENTER",
+      "pass": true,
+      "finalProgress": 0,
+      "centerProgress": 2.2,
+      "maxRise": 0,
+      "distToCenter": 2.2,
+      "distToEnd": 4.4,
+      "start": {
+        "x": -113.507,
+        "y": 2.4706639999999904,
+        "z": -103.332
+      },
+      "final": {
+        "x": -113.507,
+        "y": 2.4706639999999904,
+        "z": -103.332,
+        "onGround": false
+      },
+      "steps": 21,
+      "pathSample": [
+        [
+          -113.507,
+          2.471,
+          -103.332
+        ],
+        [
+          -113.507,
+          2.471,
+          -103.332
+        ],
+        [
+          -113.507,
+          2.471,
+          -103.332
+        ],
+        [
+          -113.507,
+          2.471,
+          -103.332
+        ],
+        [
+          -113.507,
+          2.471,
+          -103.332
+        ]
+      ],
+      "shots": [
+        {
+          "filename": "08_stump_1p.png",
+          "path": "docs/screenshots/stage08fix/before/08_stump_1p.png",
+          "width": 1280,
+          "height": 720,
+          "bytes": 312017
+        },
+        {
+          "filename": "08_stump_3p.png",
+          "path": "docs/screenshots/stage08fix/before/08_stump_3p.png",
+          "width": 1280,
+          "height": 720,
+          "bytes": 310292
+        },
+        {
+          "filename": "08_stump_fixedcam.png",
+          "path": "docs/screenshots/stage08fix/before/08_stump_fixedcam.png",
+          "width": 1280,
+          "height": 720,
+          "bytes": 363420
+        }
+      ]
+    },
+    {
+      "id": "rock_cross",
+      "kind": "boulder",
+      "objectId": "sq_rock_80",
+      "expect": "blocked",
+      "outcome": "BLOCKED_1.847m_BEFORE_CENTER",
+      "pass": true,
+      "finalProgress": 1.353,
+      "centerProgress": 3.2,
+      "maxRise": 0,
+      "distToCenter": 1.847,
+      "distToEnd": 5.047,
+      "start": {
+        "x": -32.897,
+        "y": -1.2492905000000012,
+        "z": 86.138
+      },
+      "final": {
+        "x": -34.2499,
+        "y": -1.067508974870742,
+        "z": 86.13801282724661,
+        "onGround": true
+      },
+      "steps": 37,
+      "pathSample": [
+        [
+          -32.897,
+          -1.249,
+          86.138
+        ],
+        [
+          -33.265,
+          -1.203,
+          86.138
+        ],
+        [
+          -33.87,
+          -1.127,
+          86.138
+        ],
+        [
+          -34.25,
+          -1.068,
+          86.138
+        ],
+        [
+          -34.25,
+          -1.068,
+          86.138
+        ],
+        [
+          -34.25,
+          -1.068,
+          86.138
+        ],
+        [
+          -34.25,
+          -1.068,
+          86.138
+        ],
+        [
+          -34.25,
+          -1.068,
+          86.138
+        ]
+      ]
+    },
+    {
+      "id": "tent_enter",
+      "kind": "forest_tent_01",
+      "objectId": "poi:poi_forest_camp:out_1:forest_tent_01",
+      "expect": "reach center (dist<0.5)",
+      "outcome": "ENTERED_CENTER",
+      "pass": true,
+      "finalProgress": 2.838,
+      "centerProgress": 3,
+      "maxRise": 0,
+      "distToCenter": 0.166,
+      "distToEnd": 0.166,
+      "start": {
+        "x": -52.629,
+        "y": 0.5,
+        "z": 68.618
+      },
+      "final": {
+        "x": -51.6211,
+        "y": 0.5,
+        "z": 65.96435014211335,
+        "onGround": true
+      },
+      "steps": 52,
+      "pathSample": [
+        [
+          -52.629,
+          0.5,
+          68.618
+        ],
+        [
+          -53.03,
+          0.5,
+          68.303
+        ],
+        [
+          -52.932,
+          0.5,
+          67.746
+        ],
+        [
+          -52.724,
+          0.5,
+          67.178
+        ],
+        [
+          -52.517,
+          0.5,
+          67.035
+        ],
+        [
+          -52.31,
+          0.5,
+          67.035
+        ],
+        [
+          -52.102,
+          0.5,
+          67.035
+        ],
+        [
+          -51.895,
+          0.5,
+          66.899
+        ],
+        [
+          -51.688,
+          0.5,
+          66.343
+        ],
+        [
+          -51.621,
+          0.5,
+          65.964
+        ]
+      ],
+      "shots": [
+        {
+          "filename": "09_tent_1p.png",
+          "path": "docs/screenshots/stage08fix/before/09_tent_1p.png",
+          "width": 1280,
+          "height": 720,
+          "bytes": 558473
+        },
+        {
+          "filename": "09_tent_3p.png",
+          "path": "docs/screenshots/stage08fix/before/09_tent_3p.png",
+          "width": 1280,
+          "height": 720,
+          "bytes": 523398
+        },
+        {
+          "filename": "09_tent_fixedcam.png",
+          "path": "docs/screenshots/stage08fix/before/09_tent_fixedcam.png",
+          "width": 1280,
+          "height": 720,
+          "bytes": 534026
+        },
+        {
+          "filename": "09_tent_3p_f9_debug.png",
+          "path": "docs/screenshots/stage08fix/before/09_tent_3p_f9_debug.png",
+          "width": 1280,
+          "height": 720,
+          "bytes": 523217
+        }
+      ]
+    },
+    {
+      "id": "tent_exit",
+      "kind": "forest_tent_01",
+      "objectId": "poi:poi_forest_camp:out_1:forest_tent_01",
+      "expect": "exit through entrance (reach start point, dist<0.6)",
+      "outcome": "STUCK_4.499m_FROM_EXIT",
+      "pass": false,
+      "finalProgress": 7.454,
+      "centerProgress": 0,
+      "maxRise": 0,
+      "distToCenter": 7.481,
+      "distToEnd": 4.499,
+      "start": {
+        "x": -51.6,
+        "y": 0.5,
+        "z": 65.8
+      },
+      "final": {
+        "x": -53.55704441693999,
+        "y": 0.5,
+        "z": 73.02064903240911,
+        "onGround": true
+      },
+      "steps": 120,
+      "pathSample": [
+        [
+          -51.6,
+          0.5,
+          65.8
+        ],
+        [
+          -49.795,
+          0.5,
+          66.115
+        ],
+        [
+          -49.824,
+          0.5,
+          66.672
+        ],
+        [
+          -50.031,
+          0.5,
+          67.24
+        ],
+        [
+          -50.239,
+          0.5,
+          67.807
+        ],
+        [
+          -50.446,
+          0.5,
+          68.375
+        ],
+        [
+          -50.654,
+          0.5,
+          68.943
+        ],
+        [
+          -50.861,
+          0.5,
+          69.511
+        ],
+        [
+          -51.068,
+          0.5,
+          70.079
+        ],
+        [
+          -51.276,
+          0.5,
+          70.647
+        ],
+        [
+          -51.483,
+          0.5,
+          71.215
+        ],
+        [
+          -51.691,
+          0.5,
+          71.783
+        ],
+        [
+          -51.898,
+          0.5,
+          71.95
+        ],
+        [
+          -52.105,
+          0.5,
+          71.95
+        ],
+        [
+          -52.313,
+          0.5,
+          71.95
+        ],
+        [
+          -52.52,
+          0.5,
+          71.95
+        ],
+        [
+          -52.727,
+          0.5,
+          71.95
+        ],
+        [
+          -52.935,
+          0.5,
+          71.95
+        ],
+        [
+          -53.142,
+          0.5,
+          71.979
+        ],
+        [
+          -53.35,
+          0.5,
+          72.453
+        ],
+        [
+          -53.557,
+          0.5,
+          73.021
+        ]
+      ]
+    },
+    {
+      "id": "tent_side_wall",
+      "kind": "forest_tent_01",
+      "objectId": "poi:poi_forest_camp:out_1:forest_tent_01",
+      "expect": "blocked by side wall (never reaches center)",
+      "outcome": "BLOCKED_BY_WALL",
+      "pass": true,
+      "finalProgress": 4.159,
+      "centerProgress": 2.6,
+      "maxRise": 0,
+      "distToCenter": 2.898,
+      "distToEnd": 2.656,
+      "start": {
+        "x": -49.158,
+        "y": 0.5,
+        "z": 66.692
+      },
+      "final": {
+        "x": -52.22578242756976,
+        "y": 0.5,
+        "z": 62.96992570086046,
+        "onGround": true
+      },
+      "steps": 110,
+      "pathSample": [
+        [
+          -49.158,
+          0.5,
+          66.692
+        ],
+        [
+          -49.504,
+          0.5,
+          66.566
+        ],
+        [
+          -49.795,
+          0.5,
+          66.358
+        ],
+        [
+          -49.795,
+          0.5,
+          66.151
+        ],
+        [
+          -49.795,
+          0.5,
+          65.943
+        ],
+        [
+          -49.795,
+          0.5,
+          65.736
+        ],
+        [
+          -49.795,
+          0.5,
+          65.528
+        ],
+        [
+          -49.795,
+          0.5,
+          65.321
+        ],
+        [
+          -49.795,
+          0.5,
+          65.114
+        ],
+        [
+          -49.795,
+          0.5,
+          64.906
+        ],
+        [
+          -49.795,
+          0.5,
+          64.699
+        ],
+        [
+          -49.844,
+          0.5,
+          64.491
+        ],
+        [
+          -49.972,
+          0.5,
+          64.284
+        ],
+        [
+          -49.972,
+          0.5,
+          64.076
+        ],
+        [
+          -49.972,
+          0.5,
+          63.869
+        ],
+        [
+          -50.333,
+          0.5,
+          63.661
+        ],
+        [
+          -50.901,
+          0.5,
+          63.454
+        ],
+        [
+          -51.469,
+          0.5,
+          63.247
+        ],
+        [
+          -52.036,
+          0.5,
+          63.039
+        ],
+        [
+          -52.226,
+          0.5,
+          62.97
+        ]
+      ]
+    },
+    {
+      "id": "railing_cross",
+      "kind": "wooden_railing_01",
+      "objectId": "poi:poi_ranger_house:out_1:wooden_railing_01",
+      "expect": "blocked",
+      "outcome": "BLOCKED_0.49m_BEFORE_CENTER",
+      "pass": true,
+      "finalProgress": 1.51,
+      "centerProgress": 2,
+      "maxRise": 0,
+      "distToCenter": 0.49,
+      "distToEnd": 2.49,
+      "start": {
+        "x": -76.8,
+        "y": 1.32,
+        "z": -57.8
+      },
+      "final": {
+        "x": -76.8,
+        "y": 1.32,
+        "z": -59.3099,
+        "onGround": true
+      },
+      "steps": 39,
+      "pathSample": [
+        [
+          -76.8,
+          1.32,
+          -57.8
+        ],
+        [
+          -76.8,
+          1.32,
+          -58.168
+        ],
+        [
+          -76.8,
+          1.32,
+          -58.773
+        ],
+        [
+          -76.8,
+          1.32,
+          -59.31
+        ],
+        [
+          -76.8,
+          1.32,
+          -59.31
+        ],
+        [
+          -76.8,
+          1.32,
+          -59.31
+        ],
+        [
+          -76.8,
+          1.32,
+          -59.31
+        ],
+        [
+          -76.8,
+          1.32,
+          -59.31
+        ]
+      ]
+    },
+    {
+      "id": "barrel_cross",
+      "kind": "rusty_barrel_01",
+      "objectId": "poi:poi_ranger_house:out_4:rusty_barrel_01",
+      "expect": "blocked",
+      "outcome": "BLOCKED_0.78m_BEFORE_CENTER",
+      "pass": true,
+      "finalProgress": 1.22,
+      "centerProgress": 2,
+      "maxRise": 0,
+      "distToCenter": 0.78,
+      "distToEnd": 2.78,
+      "start": {
+        "x": -63.8,
+        "y": 1.32,
+        "z": -66.8
+      },
+      "final": {
+        "x": -65.01989999999999,
+        "y": 1.32,
+        "z": -66.79998754290281,
+        "onGround": true
+      },
+      "steps": 36,
+      "pathSample": [
+        [
+          -63.8,
+          1.32,
+          -66.8
+        ],
+        [
+          -64.168,
+          1.32,
+          -66.8
+        ],
+        [
+          -64.773,
+          1.32,
+          -66.8
+        ],
+        [
+          -65.02,
+          1.32,
+          -66.8
+        ],
+        [
+          -65.02,
+          1.32,
+          -66.8
+        ],
+        [
+          -65.02,
+          1.32,
+          -66.8
+        ],
+        [
+          -65.02,
+          1.32,
+          -66.8
+        ]
+      ]
+    },
+    {
+      "id": "cabin_wall",
+      "kind": "building_wall",
+      "objectId": "poi:poi_cabin_cluster:bld:0:mod_09:wood_wall_01:wall_solid:col",
+      "expect": "blocked",
+      "outcome": "BLOCKED_0.501m_BEFORE_CENTER",
+      "pass": true,
+      "finalProgress": 1.499,
+      "centerProgress": 2,
+      "maxRise": 0,
+      "distToCenter": 0.501,
+      "distToEnd": 2.501,
+      "start": {
+        "x": 64,
+        "y": 1.87,
+        "z": -74
+      },
+      "final": {
+        "x": 64.0000098014403,
+        "y": 1.87,
+        "z": -72.50110000000001,
+        "onGround": true
+      },
+      "steps": 39,
+      "pathSample": [
+        [
+          64,
+          1.87,
+          -74
+        ],
+        [
+          64,
+          1.87,
+          -73.632
+        ],
+        [
+          64,
+          1.87,
+          -73.027
+        ],
+        [
+          64,
+          1.87,
+          -72.501
+        ],
+        [
+          64,
+          1.87,
+          -72.501
+        ],
+        [
+          64,
+          1.87,
+          -72.501
+        ],
+        [
+          64,
+          1.87,
+          -72.501
+        ],
+        [
+          64,
+          1.87,
+          -72.501
+        ]
+      ]
+    },
+    {
+      "id": "cabin_stairs_loft",
+      "kind": "stairs_loft",
+      "objectId": "poi:poi_cabin_cluster:bld:0:mod_17:wood_stairs_01",
+      "expect": "climb to loft (final y ≈ 5.03)",
+      "outcome": "CLIMBED_TO_5.03",
+      "pass": true,
+      "finalProgress": 5.139,
+      "centerProgress": 1.989,
+      "maxRise": 1.073,
+      "distToCenter": 3.299,
+      "distToEnd": 0.16,
+      "start": {
+        "x": 62.6,
+        "y": 2.03,
+        "z": -69.5
+      },
+      "final": {
+        "x": 67.44894858751222,
+        "y": 5.03,
+        "z": -71.20387613696617,
+        "onGround": true
+      },
+      "steps": 86,
+      "pathSample": [
+        [
+          62.6,
+          2.03,
+          -69.5
+        ],
+        [
+          62.6,
+          2.03,
+          -69.868
+        ],
+        [
+          62.6,
+          2.43,
+          -70.473
+        ],
+        [
+          62.615,
+          2.43,
+          -70.977
+        ],
+        [
+          62.7,
+          2.63,
+          -70.99
+        ],
+        [
+          62.7,
+          2.63,
+          -71.009
+        ],
+        [
+          62.7,
+          2.63,
+          -71.029
+        ],
+        [
+          63.018,
+          2.83,
+          -71.05
+        ],
+        [
+          63.622,
+          3.43,
+          -71.071
+        ],
+        [
+          64.226,
+          3.83,
+          -71.092
+        ],
+        [
+          64.83,
+          4.43,
+          -71.113
+        ],
+        [
+          65.435,
+          4.83,
+          -71.134
+        ],
+        [
+          66.039,
+          5.03,
+          -71.155
+        ],
+        [
+          66.643,
+          5.03,
+          -71.176
+        ],
+        [
+          67.248,
+          5.03,
+          -71.197
+        ],
+        [
+          67.449,
+          5.03,
+          -71.204
+        ]
+      ]
+    }
+  ],
+  "errors": {
+    "consoleErrors": [],
+    "consoleWarnings": 2,
+    "pageExceptions": [],
+    "networkErrors": []
+  }
+}

@@ -1,0 +1,5 @@
+quality,scene,warmupSeconds,measurementSeconds,repeats,fpsMean,fpsMedian,fpsP10,fps1PctLow,frameTimeMedianMs,frameTimeP95Ms,frameTimeP99Ms,calls,sceneCalls,vmCalls,triangles,geometries,textures,programs,outdoorVisiblePlacements,outdoorInstancedBatches,outdoorActiveDrawCalls,cullCpuMedianMs,cullCpuP95Ms,heapUsedMB
+medium,open_forest_movement,5,15,2,126.89,238.1,56.82,21.74,5.1,31.5,47.2,87,87,0,408110,155,52,45,0,16,0,0.1,0.2,66.36
+medium,poi_lumber_mill_outdoor,5,15,2,116.96,136.99,66.23,36.9,7.4,19.1,31.8,202,202,0,503657,155,52,45,14,16,9,0,0.1,74.67
+medium,poi_service_station_outdoor,5,15,2,94.58,109.89,64.52,21.32,9.3,21.5,47.7,215,215,0,577169,155,52,45,13,16,12,0,0.1,66.85
+medium,poi_forest_camp_outdoor,5,15,2,108.36,125,65.36,33,8.2,19.3,31.7,222,222,0,587693,155,52,45,22,16,16,0,0.1,72.12

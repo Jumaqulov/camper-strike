@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Camper Strike 65</title>
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <div id="app">
+      <div id="game-root"></div>
+
+      <!-- ================= HUD ================= -->
+      <div id="hud" class="hidden">
+        <div id="crosshair">
+          <span class="ch ch-t"></span><span class="ch ch-b"></span><span class="ch ch-l"></span><span class="ch ch-r"></span>
+          <span class="ch-dot"></span>
+        </div>
+        <div id="hitmarker"></div>
+        <div id="damage-indicators"></div>
+        <div id="damage-flash"></div>
+        <div id="scope-overlay" class="hidden"><div class="scope-h"></div><div class="scope-v"></div></div>
+
+        <div id="top-bar">
+          <div id="score-red" class="score red">0</div>
+          <div class="timer-box"><div id="timer">10:00</div><div id="score-limit">50 gacha</div></div>
+          <div id="score-blue" class="score blue">0</div>
+        </div>
+
+        <div id="dev-stats" class="hidden"></div>
+
+        <div id="killfeed"></div>
+
+        <div id="chat">
+          <div id="chat-log"></div>
+          <input id="chat-input" class="hidden" maxlength="120" autocomplete="off" placeholder="Xabar yozing va Enter bosing..." />
+        </div>
+
+        <div id="hud-health">
+          <div class="rv-tag">🚐 MABUTTS VALLEY · ROUTE 65</div>
+          <div class="hp-row"><span class="hp-icon">🍔</span><span id="hp-value">100</span></div>
+          <div id="hp-bar"><div id="hp-fill"></div></div>
+        </div>
+
+        <div id="team-badge"></div>
+
+        <div id="hud-ammo">
+          <div id="weapon-slots"></div>
+          <div id="weapon-name">Avtomat</div>
+          <div class="ammo-row"><span id="ammo-mag">30</span><span class="sep">/</span><span id="ammo-reserve">120</span></div>
+          <div id="grenades">GRANATA ×2</div>
+          <div class="rv-cam-hint">[V] Kamera (3-shaxs / 1-shaxs)</div>
+        </div>
+
+        <div id="reload-hint" class="hidden">QAYTA O'QLASH — [R]</div>
+        <div id="center-msg" class="hidden"></div>
+
+        <div id="death-screen" class="hidden">
+          <div class="death-title">SIZ O'LDINGIZ</div>
+          <div id="death-killer"></div>
+          <div id="respawn-timer"></div>
+        </div>
+
+        <div id="scoreboard" class="hidden"></div>
+      </div>
+
+      <!-- ================= PAUZA ================= -->
+      <div id="pause-menu" class="overlay hidden">
+        <div class="panel pause-panel">
+          <h2 id="pause-room-name">Xona</h2>
+          <button id="btn-resume" class="btn primary big">▶ O'YINGA QAYTISH</button>
+          <div class="settings">
+            <label>Sichqoncha sezgirligi <span id="val-sens">1.0</span>
+              <input id="set-sens" type="range" min="0.1" max="4" step="0.05" />
+            </label>
+            <label>Ovoz balandligi <span id="val-vol">70</span>
+              <input id="set-vol" type="range" min="0" max="1" step="0.01" />
+            </label>
+            <label>Ko'rish burchagi (FOV) <span id="val-fov">80</span>
+              <input id="set-fov" type="range" min="60" max="110" step="1" />
+            </label>
+            <label>Grafika sifati
+              <select id="set-quality">
+                <option value="low">Past (Low)</option>
+                <option value="medium" selected>O'rta (Medium)</option>
+                <option value="high">Yuqori (High)</option>
+              </select>
+            </label>
+          </div>
+          <div class="controls-help">
+            <div><b>W A S D</b> — yurish</div>
+            <div><b>Sichqoncha</b> — qarash / otish</div>
+            <div><b>O'ng tugma</b> — snayper pritsel</div>
+            <div><b>Space</b> — sakrash</div>
+            <div><b>Shift</b> — sekin (ovozsiz) yurish</div>
+            <div><b>R</b> — qayta o'qlash</div>
+            <div><b>E</b> — konteyner ochish / buyum olish</div>
+            <div><b>H</b> — tibbiy quti (+45 HP)</div>
+            <div><b>1-4 / g'ildirak</b> — qurol</div>
+            <div><b>V</b> — 3-shaxs / 1-shaxs kamera</div>
+            <div><b>G</b> — granata</div>
+            <div><b>Tab</b> — hisob jadvali</div>
+            <div><b>Enter</b> — chat</div>
+            <div><b>M</b> — jamoani almashtirish</div>
+            <div><b>/addbot, /removebot</b> — chatda</div>
+          </div>
+          <button id="btn-leave" class="btn danger">Xonadan chiqish</button>
+        </div>
+      </div>
+
+      <!-- ================= ASOSIY MENYU (DAYLIGHT CAMPER) ================= -->
+      <div id="screen-menu" class="screen">
+        <div class="menu-bg"></div>
+
+        <div class="menu-container">
+          <!-- Yuqori panel: Brending, Server holati, O'yinchi profili -->
+          <header class="menu-topbar" role="banner">
+            <div class="menu-topbar-brand">
+              <span class="route-badge">🚐 MABUTTS VALLEY · ROUTE 65</span>
+            </div>
+            <div class="menu-topbar-actions">
+              <div id="conn-status" class="conn" role="status" aria-live="polite">Serverga ulanmoqda...</div>
+              <div id="menu-profile-chip" class="menu-profile-chip" title="O'yinchi profili">
+                <span class="profile-avatar" aria-hidden="true">🏕️</span>
+                <span class="profile-label">O'yinchi:</span>
+                <b id="menu-player-name" class="profile-name">Mehmon</b>
+                <input id="name-input" class="menu-name-input hidden" maxlength="16" placeholder="Masalan: Sardor" autocomplete="off" aria-label="O'yinchi ismi" />
+                <button id="btn-menu-edit-name" class="btn tiny btn-edit-name" type="button" title="Ismni o'zgartirish" aria-label="Ismni o'zgartirish">✎ O'zgartirish</button>
+              </div>
+            </div>
+          </header>
+
+          <!-- Asosiy menyu mazmuni -->
+          <div class="menu-content">
+            <div class="menu-brand-header">
+              <h1 class="logo">CAMPER<span>STRIKE 65</span></h1>
+              <p class="subtitle">🌲 "RV There Yet?" uslubidagi 3D o'rmon &amp; furgon shooteri 🚐</p>
+            </div>
+
+            <div class="menu-main-grid">
+              <!-- Asosiy menyu navigatsiyasi -->
+              <nav class="panel menu-panel menu-nav-panel" aria-label="Asosiy menyu">
+                <div class="menu-nav-list">
+                  <button id="btn-enter" class="btn primary big btn-nav-play" data-action="quick-play" aria-label="O'ynash (Lobbiyga kirish)">
+                    <span class="btn-icon" aria-hidden="true">▶</span> O'YNASH (LOBBI)
+                  </button>
+                  <button id="btn-open-rooms" class="btn secondary big btn-nav-rooms" aria-label="Mavjud xonalar ro'yxatini ko'rish">
+                    <span class="btn-icon" aria-hidden="true">🏕️</span> XONALAR
+                  </button>
+                  <button id="btn-open-settings" class="btn secondary big btn-nav-settings" aria-label="O'yin sozlamalarini ko'rish">
+                    <span class="btn-icon" aria-hidden="true">⚙️</span> SOZLAMALAR
+                  </button>
+                </div>
+              </nav>
+
+              <!-- Tavsiya etilgan o'yin rejimi kartasi -->
+              <aside class="menu-featured-card" id="menu-featured-card" aria-label="Tavsiya etilgan o'yin rejimi">
+                <div class="featured-badge">🌲 TAVSIYA ETILGAN REJIM</div>
+                <div class="featured-card-body">
+                  <h3 class="featured-title">🌲 Forest Survival</h3>
+                  <p class="featured-summary">256×256 Katta O'rmon, 6 POI, qurolsiz start, konteynerlardan qurol qidirish va tirik qolish!</p>
+                  <div class="featured-meta-grid">
+                    <span class="meta-tag meta-item">🗺️ 256×256 m</span>
+                    <span class="meta-tag meta-item">📦 26 ta Konteyner</span>
+                    <span class="meta-tag meta-item">⚔️ Qurolsiz Start</span>
+                  </div>
+                </div>
+                <div class="featured-card-footer">
+                  <button id="btn-quick-play" class="btn primary featured-play-btn" aria-label="Tezkor start (Forest Survival)">
+                    <span class="btn-icon" aria-hidden="true">⚡</span> TEZKOR START (SURVIVAL)
+                  </button>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= LOBBY ================= -->
+      <div id="screen-lobby" class="screen hidden">
+        <div class="menu-bg"></div>
+        <div class="lobby">
+          <div class="lobby-header">
+            <div class="lobby-header-left">
+              <button id="btn-back-to-menu" class="btn secondary btn-back" title="Asosiy menyuga qaytish">
+                <span class="btn-icon">←</span> Asosiy menyu
+              </button>
+              <h1 class="logo small">CAMPER<span>STRIKE 65</span></h1>
+            </div>
+            <div class="lobby-user">O'yinchi: <b id="lobby-name"></b> <button id="btn-change-name" class="btn tiny">o'zgartirish</button></div>
+          </div>
+
+          <div class="lobby-body">
+            <div class="panel rooms-panel">
+              <div class="panel-title">Xonalar <button id="btn-refresh" class="btn tiny">↻ yangilash</button></div>
+              <div id="room-list"></div>
+            </div>
+
+            <div class="panel create-panel">
+              <div class="panel-title">Yangi xona yaratish</div>
+
+              <!-- Rejim kartalari (tezkor tanlov) -->
+              <div class="mode-cards-header">O'yin rejimi tanlovi:</div>
+              <div class="mode-cards" id="lobby-mode-cards">
+                <div class="mode-card featured active" data-mode="forest_survival">
+                  <div class="mode-card-badge">TAVSIYA</div>
+                  <div class="mode-card-title">🌲 Forest Survival</div>
+                  <div class="mode-card-desc">256×256 O'rmon · 6 POI · Qurolsiz start · Loot</div>
+                </div>
+                <div class="mode-card" data-mode="tdm">
+                  <div class="mode-card-title">⚔️ TDM Jamoaviy</div>
+                  <div class="mode-card-desc">Qizil vs Ko'k jamoaviy jang</div>
+                </div>
+                <div class="mode-card" data-mode="ffa">
+                  <div class="mode-card-title">🎯 FFA Hamma qarshi</div>
+                  <div class="mode-card-desc">Klassik individual duel</div>
+                </div>
+              </div>
+
+              <label class="field">Rejim
+                <select id="room-mode">
+                  <option value="forest_survival">🌲 Forest Survival (Oxirgi tirik qolgan)</option>
+                  <option value="tdm" selected>Jamoaviy (Qizil vs Ko'k)</option>
+                  <option value="ffa">Hamma hammaga qarshi</option>
+                </select>
+              </label>
+
+              <label class="field">Xona nomi <input id="room-name" maxlength="24" placeholder="Mening xonam" /></label>
+
+              <label class="field">Xarita
+                <select id="room-map">
+                  <optgroup label="Asosiy xarita">
+                    <option value="forest_square" selected>🌲 Forest Square (256×256, 6 POI)</option>
+                  </optgroup>
+                  <optgroup label="Boshqa xaritalar">
+                    <option value="forest_assets_preview">🏚️ Forest Assets Preview (04A Binolar &amp; Interyer)</option>
+                    <option value="forest_sample">🌲 Forest Preview (96×96 O'rmon)</option>
+                    <option value="dust_arena">🚐 Dust Arena (100×70)</option>
+                  </optgroup>
+                </select>
+              </label>
+
+              <label class="field" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:4px 0 8px;">
+                <input id="room-loot-preview" type="checkbox" style="width:18px;height:18px;accent-color:#f59e0b;" />
+                <span>📦 Qurolsiz boshlash + Loot sinovi (Bosqich 06)</span>
+              </label>
+
+              <label class="field">Maks. o'yinchi <input id="room-max" type="number" min="1" max="16" value="10" /></label>
+
+              <!-- Qo'shimcha sozlamalar (Accordion) -->
+              <details class="accordion-panel" id="advanced-settings-accordion">
+                <summary class="accordion-summary">
+                  <span class="accordion-title">⚙️ Qo'shimcha sozlamalar</span>
+                  <span class="accordion-hint">(botlar, vaqt, ochko)</span>
+                  <span class="accordion-arrow">▾</span>
+                </summary>
+                <div class="accordion-content">
+                  <div class="row">
+                    <label class="field">Botlar soni <input id="room-bots" type="number" min="0" max="16" value="4" /></label>
+                    <label class="field">Vaqt (daqiqa) <input id="room-time" type="number" min="1" max="60" value="10" /></label>
+                  </div>
+                  <div class="row">
+                    <label class="field">Hisob chegarasi <input id="room-score" type="number" min="1" max="500" value="50" /></label>
+                  </div>
+                </div>
+              </details>
+
+              <button id="btn-create" class="btn primary big">XONA YARATISH</button>
+
+              <div class="lan-box">
+                <div class="lan-title">Boshqa kompyuterlardan ulanish manzili:</div>
+                <div id="lan-urls">...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SOZLAMALAR MODAL ================= -->
+      <div id="modal-settings" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-settings-title">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h2 id="modal-settings-title" class="modal-title">⚙️ O'yin sozlamalari</h2>
+            <button class="btn-close" id="btn-settings-close" aria-label="Sozlamalarni yopish" data-close="settings">✕</button>
+          </div>
+          <div class="modal-body settings">
+            <label>Sichqoncha sezgirligi <span id="menu-val-sens">1.0</span>
+              <input id="menu-set-sens" type="range" min="0.1" max="4" step="0.05" value="1.0" aria-label="Sichqoncha sezgirligi" />
+            </label>
+            <label>Ovoz balandligi <span id="menu-val-vol">70</span>
+              <input id="menu-set-vol" type="range" min="0" max="1" step="0.01" value="0.7" aria-label="Ovoz balandligi" />
+            </label>
+            <label>Ko'rish burchagi (FOV) <span id="menu-val-fov">80</span>
+              <input id="menu-set-fov" type="range" min="60" max="110" step="1" value="80" aria-label="Ko'rish burchagi (FOV)" />
+            </label>
+            <label>Grafika sifati
+              <select id="menu-set-quality" aria-label="Grafika sifati">
+                <option value="low">Past (Low)</option>
+                <option value="medium" selected>O'rta (Medium)</option>
+                <option value="high">Yuqori (High)</option>
+              </select>
+            </label>
+          </div>
+          <div class="modal-footer">
+            <button id="btn-close-settings" class="btn primary" aria-label="Sozlamalarni saqlash va yopish">Yopish</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= NICKNAME MODAL ================= -->
+      <div id="modal-nickname" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-nickname-title">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h2 id="modal-nickname-title" class="modal-title">✏️ O'yinchi ismini o'zgartirish</h2>
+            <button class="btn-close" id="btn-close-nickname" aria-label="Yopish" data-close="nickname">✕</button>
+          </div>
+          <div class="modal-body">
+            <label class="field">Ismingiz
+              <input id="modal-name-input" maxlength="16" placeholder="Masalan: Sardor" autocomplete="off" aria-label="O'yinchi ismi" />
+            </label>
+          </div>
+          <div class="modal-footer">
+            <button id="btn-cancel-nickname" class="btn secondary" aria-label="Bekor qilish">Bekor qilish</button>
+            <button id="btn-save-nickname" class="btn primary" aria-label="Ismni saqlash">Saqlash</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="toast"></div>
+    </div>
+    <script type="module" src="/src/client/main.ts"></script>
+  </body>
+</html>

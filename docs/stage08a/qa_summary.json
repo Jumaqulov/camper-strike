@@ -1,0 +1,1632 @@
+{
+  "stage": "BOSQICH 08A — OUTDOOR-ASSET-01 Tashqi Muhit 3D Modellarini O'yin Dunyosiga Integratsiya Qilish",
+  "timestamp": "2026-10-22T10:54:08.674Z",
+  "methodology": {
+    "warmupSeconds": 5,
+    "measurementSeconds": 15,
+    "repeatsPerScene": 2,
+    "viewport": "1280x720",
+    "devicePixelRatio": 1,
+    "quality": "medium",
+    "scenes": [
+      "open_forest_movement",
+      "poi_lumber_mill_outdoor",
+      "poi_service_station_outdoor",
+      "poi_forest_camp_outdoor"
+    ],
+    "mode": "forest_survival",
+    "mapId": "forest_square",
+    "worldVersion": 1,
+    "publicLayoutSeed": 6501,
+    "gameplayHash": "3b0c6559d00b96f8"
+  },
+  "environment": {
+    "platform": "win32 10.0.26300 (x64)",
+    "cpuModel": "Intel(R) Core(TM) i5-14400",
+    "cpuCores": 16,
+    "totalRamGB": 31.67,
+    "nodeVersion": "v24.11.1",
+    "chromeVersion": "Chrome/155.0.8059.80",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+    "gpu": {
+      "vendor": "Google Inc. (Intel)",
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 730 (0x0000A782) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    }
+  },
+  "verification": {
+    "multiplayerSync": {
+      "client1GameplayHash": "3b0c6559d00b96f8",
+      "client2GameplayHash": "3b0c6559d00b96f8",
+      "gameplayHashMatch": true
+    },
+    "glbAssets36": {
+      "totalExpected": 36,
+      "totalLoaded": 36,
+      "weaponAssetsLoaded": 4,
+      "forestAssetsLoaded": 7,
+      "buildingAssetsLoaded": 8,
+      "interiorAssetsLoaded": 6,
+      "containerAssetsLoaded": 3,
+      "outdoorAssetsLoaded": 8,
+      "allStage04ALoaded": true,
+      "allOutdoorLoadedClient1": true,
+      "allOutdoorLoadedClient2": true,
+      "outdoorAssets": {
+        "wooden_signpost_01": {
+          "assetId": "wooden_signpost_01",
+          "code": "OUT-001",
+          "url": "/models/outdoor/wooden_signpost_01.glb",
+          "category": "navigation_prop",
+          "loaded": true,
+          "failed": false,
+          "isFallback": false,
+          "triangles": 586,
+          "expectedTriangles": 586,
+          "trianglesMatch": true,
+          "vertices": 1758,
+          "expectedVertices": 1758,
+          "meshNames": [
+            "wooden_signpost_01_wood",
+            "wooden_signpost_01_rocks"
+          ],
+          "subMeshCount": 2,
+          "materialsUsed": [
+            "wood",
+            "stone"
+          ],
+          "materialNames": [
+            "wood",
+            "stone"
+          ],
+          "hasVertexColors": true,
+          "noCamerasOrLights": true,
+          "boundsMin": [
+            -0.623,
+            -0.05,
+            -0.562
+          ],
+          "boundsMax": [
+            0.722,
+            2.07,
+            0.249
+          ],
+          "dimensions": [
+            1.345,
+            2.12,
+            0.811
+          ],
+          "size": [
+            1.345,
+            2.12,
+            0.811
+          ],
+          "signAnchors": {
+            "sign_1_text_front": [
+              0.34,
+              1.72,
+              -0.004
+            ],
+            "sign_1_text_back": [
+              0.33,
+              1.72,
+              -0.043
+            ],
+            "sign_2_text_front": [
+              -0.298,
+              1.5,
+              0.039
+            ],
+            "sign_2_text_back": [
+              -0.283,
+              1.5,
+              0.076
+            ],
+            "sign_3_text_front": [
+              0.135,
+              1.28,
+              -0.236
+            ],
+            "sign_3_text_back": [
+              0.096,
+              1.28,
+              -0.245
+            ]
+          },
+          "signAnchorDiagnostics": [
+            {
+              "name": "sign_1_text_front",
+              "found": true,
+              "position": [
+                0.34,
+                1.72,
+                -0.004
+              ],
+              "positionOK": true
+            },
+            {
+              "name": "sign_1_text_back",
+              "found": true,
+              "position": [
+                0.33,
+                1.72,
+                -0.043
+              ],
+              "positionOK": true
+            },
+            {
+              "name": "sign_2_text_front",
+              "found": true,
+              "position": [
+                -0.298,
+                1.5,
+                0.039
+              ],
+              "positionOK": true
+            },
+            {
+              "name": "sign_2_text_back",
+              "found": true,
+              "position": [
+                -0.283,
+                1.5,
+                0.076
+              ],
+              "positionOK": true
+            },
+            {
+              "name": "sign_3_text_front",
+              "found": true,
+              "position": [
+                0.135,
+                1.28,
+                -0.236
+              ],
+              "positionOK": true
+            },
+            {
+              "name": "sign_3_text_back",
+              "found": true,
+              "position": [
+                0.096,
+                1.28,
+                -0.245
+              ],
+              "positionOK": true
+            }
+          ],
+          "fireAnchor": null,
+          "fireAnchorDiagnostic": null,
+          "hasRailingPostStart": false
+        },
+        "lumber_stack_01": {
+          "assetId": "lumber_stack_01",
+          "code": "OUT-002",
+          "url": "/models/outdoor/lumber_stack_01.glb",
+          "category": "industrial_prop",
+          "loaded": true,
+          "failed": false,
+          "isFallback": false,
+          "triangles": 688,
+          "expectedTriangles": 688,
+          "trianglesMatch": true,
+          "vertices": 2064,
+          "expectedVertices": 2064,
+          "meshNames": [
+            "lumber_stack_01_wood"
+          ],
+          "subMeshCount": 1,
+          "materialsUsed": [
+            "wood"
+          ],
+          "materialNames": [
+            "wood"
+          ],
+          "hasVertexColors": true,
+          "noCamerasOrLights": true,
+          "boundsMin": [
+            -1.129,
+            -0.103,
+            -0.695
+          ],
+          "boundsMax": [
+            1.14,
+            1.003,
+            0.695
+          ],
+          "dimensions": [
+            2.269,
+            1.106,
+            1.39
+          ],
+          "size": [
+            2.269,
+            1.106,
+            1.39
+          ],
+          "signAnchors": null,
+          "signAnchorDiagnostics": [],
+          "fireAnchor": null,
+          "fireAnchorDiagnostic": null,
+          "hasRailingPostStart": false
+        },
+        "sawhorse_01": {
+          "assetId": "sawhorse_01",
+          "code": "OUT-003",
+          "url": "/models/outdoor/sawhorse_01.glb",
+          "category": "industrial_prop",
+          "loaded": true,
+          "failed": false,
+          "isFallback": false,
+          "triangles": 480,
+          "expectedTriangles": 480,
+          "trianglesMatch": true,
+          "vertices": 1440,
+          "expectedVertices": 1440,
+          "meshNames": [
+            "sawhorse_01_wood",
+            "sawhorse_01_metal"
+          ],
+          "subMeshCount": 2,
+          "materialsUsed": [
+            "wood",
+            "iron"
+          ],
+          "materialNames": [
+            "wood",
+            "iron"
+          ],
+          "hasVertexColors": true,
+          "noCamerasOrLights": true,
+          "boundsMin": [
+            -0.779,
+            -0.011,
+            -0.418
+          ],
+          "boundsMax": [
+            0.779,
+            1.016,
+            0.415
+          ],
+          "dimensions": [
+            1.558,
+            1.028,
+            0.833
+          ],
+          "size": [
+            1.558,
+            1.028,
+            0.833
+          ],
+          "signAnchors": null,
+          "signAnchorDiagnostics": [],
+          "fireAnchor": null,
+          "fireAnchorDiagnostic": null,
+          "hasRailingPostStart": false
+        },
+        "old_fuel_pump_01": {
+          "assetId": "old_fuel_pump_01",
+          "code": "OUT-004",
+          "url": "/models/outdoor/old_fuel_pump_01.glb",
+          "category": "service_station_prop",
+          "loaded": true,
+          "failed": false,
+          "isFallback": false,
+          "triangles": 1510,
+          "expectedTriangles": 1510,
+          "trianglesMatch": true,
+          "vertices": 4530,
+          "expectedVertices": 4530,
+          "meshNames": [
+            "old_fuel_pump_01_body",
+            "old_fuel_pump_01_metal",
+            "old_fuel_pump_01_base"
+          ],
+          "subMeshCount": 3,
+          "materialsUsed": [
+            "painted_metal",
+            "iron",
+            "stone"
+          ],
+          "materialNames": [
+            "painted_metal",
+            "iron",
+            "stone"
+          ],
+          "hasVertexColors": true,
+          "noCamerasOrLights": true,
+          "boundsMin": [
+            -0.35,
+            0,
+            -0.3
+          ],
+          "boundsMax": [
+            0.39,
+            1.6,
+            0.3
+          ],
+          "dimensions": [
+            0.74,
+            1.6,
+            0.6
+          ],
+          "size": [
+            0.74,
+            1.6,
+            0.6
+          ],
+          "signAnchors": null,
+          "signAnchorDiagnostics": [],
+          "fireAnchor": null,
+          "fireAnchorDiagnostic": null,
+          "hasRailingPostStart": false
+        },
+        "rusty_barrel_01": {
+          "assetId": "rusty_barrel_01",
+          "code": "OUT-005",
+          "url": "/models/outdoor/rusty_barrel_01.glb",
+          "category": "industrial_prop",
+          "loaded": true,
+          "failed": false,
+          "isFallback": false,
+          "triangles": 912,
+          "expectedTriangles": 912,
+          "trianglesMatch": true,
+          "vertices": 2736,
+          "expectedVertices": 2736,
+          "meshNames": [
+            "rusty_barrel_01_body"
+          ],
+          "subMeshCount": 1,
+          "materialsUsed": [
+            "painted_metal"
+          ],
+          "materialNames": [
+            "painted_metal"
+          ],
+          "hasVertexColors": true,
+          "noCamerasOrLights": true,
+          "boundsMin": [
+            -0.298,
+            0,
+            -0.291
+          ],
+          "boundsMax": [
+            0.298,
+            0.895,
+            0.291
+          ],
+          "dimensions": [
+            0.596,
+            0.895,
+            0.581
+          ],
+          "size": [
+            0.596,
+            0.895,
+            0.581
+          ],
+          "signAnchors": null,
+          "signAnchorDiagnostics": [],
+          "fireAnchor": null,
+          "fireAnchorDiagnostic": null,
+          "hasRailingPostStart": false
+        },
+        "forest_tent_01": {
+          "assetId": "forest_tent_01",
+          "code": "OUT-006",
+          "url": "/models/outdoor/forest_tent_01.glb",
+          "category": "camp_structure",
+          "loaded": true,
+          "failed": false,
+          "isFallback": false,
+          "triangles": 524,
+          "expectedTriangles": 524,
+          "trianglesMatch": true,
+          "vertices": 1572,
+          "expectedVertices": 1572,
+          "meshNames": [
+            "forest_tent_01_fabric",
+            "forest_tent_01_poles"
+          ],
+          "subMeshCount": 2,
+          "materialsUsed": [
+            "fabric",
+            "wood"
+          ],
+          "materialNames": [
+            "fabric",
+            "wood"
+          ],
+          "hasVertexColors": true,
+          "noCamerasOrLights": true,
+          "boundsMin": [
+            -1.097,
+            -0.048,
+            -1.332
+          ],
+          "boundsMax": [
+            1.097,
+            1.63,
+            1.283
+          ],
+          "dimensions": [
+            2.193,
+            1.678,
+            2.615
+          ],
+          "size": [
+            2.193,
+            1.678,
+            2.615
+          ],
+          "signAnchors": null,
+          "signAnchorDiagnostics": [],
+          "fireAnchor": null,
+          "fireAnchorDiagnostic": null,
+          "hasRailingPostStart": false
+        },
+        "campfire_pit_01": {
+          "assetId": "campfire_pit_01",
+          "code": "OUT-007",
+          "url": "/models/outdoor/campfire_pit_01.glb",
+          "category": "camp_prop",
+          "loaded": true,
+          "failed": false,
+          "isFallback": false,
+          "triangles": 1462,
+          "expectedTriangles": 1462,
+          "trianglesMatch": true,
+          "vertices": 4386,
+          "expectedVertices": 4386,
+          "meshNames": [
+            "campfire_pit_01_stones",
+            "campfire_pit_01_logs"
+          ],
+          "subMeshCount": 2,
+          "materialsUsed": [
+            "stone",
+            "wood"
+          ],
+          "materialNames": [
+            "stone",
+            "wood"
+          ],
+          "hasVertexColors": true,
+          "noCamerasOrLights": true,
+          "boundsMin": [
+            -0.683,
+            -0.02,
+            -0.683
+          ],
+          "boundsMax": [
+            0.685,
+            0.385,
+            0.689
+          ],
+          "dimensions": [
+            1.368,
+            0.405,
+            1.371
+          ],
+          "size": [
+            1.368,
+            0.405,
+            1.371
+          ],
+          "signAnchors": null,
+          "signAnchorDiagnostics": [],
+          "fireAnchor": [
+            0,
+            0.15,
+            0
+          ],
+          "fireAnchorDiagnostic": {
+            "name": "fire_anchor",
+            "found": true,
+            "position": [
+              0,
+              0.15,
+              0
+            ],
+            "positionOK": true
+          },
+          "hasRailingPostStart": false
+        },
+        "wooden_railing_01": {
+          "assetId": "wooden_railing_01",
+          "code": "OUT-008",
+          "url": "/models/outdoor/wooden_railing_01.glb",
+          "category": "modular_architecture",
+          "loaded": true,
+          "failed": false,
+          "isFallback": false,
+          "triangles": 164,
+          "expectedTriangles": 164,
+          "trianglesMatch": true,
+          "vertices": 492,
+          "expectedVertices": 492,
+          "meshNames": [
+            "wooden_railing_01_body",
+            "railing_post_start",
+            "wooden_railing_01_metal"
+          ],
+          "subMeshCount": 3,
+          "materialsUsed": [
+            "wood",
+            "iron"
+          ],
+          "materialNames": [
+            "wood",
+            "iron"
+          ],
+          "hasVertexColors": true,
+          "noCamerasOrLights": true,
+          "boundsMin": [
+            -1.56,
+            -0.15,
+            -0.06
+          ],
+          "boundsMax": [
+            1.5,
+            1.2,
+            0.101
+          ],
+          "dimensions": [
+            3.06,
+            1.35,
+            0.161
+          ],
+          "size": [
+            3.06,
+            1.35,
+            0.161
+          ],
+          "signAnchors": null,
+          "signAnchorDiagnostics": [],
+          "fireAnchor": null,
+          "fireAnchorDiagnostic": null,
+          "hasRailingPostStart": true
+        }
+      }
+    },
+    "outdoorRenderer": {
+      "totalPlacements": 42,
+      "visiblePlacements": 0,
+      "instancedBatchCount": 16,
+      "activeDrawCalls": 0,
+      "signpostOverlayCount": 8,
+      "campfireEffectCount": 3,
+      "allGlbLoaded": true,
+      "byAssetCount": {
+        "wooden_signpost_01": 8,
+        "lumber_stack_01": 5,
+        "sawhorse_01": 4,
+        "old_fuel_pump_01": 2,
+        "rusty_barrel_01": 10,
+        "forest_tent_01": 2,
+        "campfire_pit_01": 3,
+        "wooden_railing_01": 8
+      }
+    },
+    "liveContainerLootSmokeTest": {
+      "containerId": "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01",
+      "openOk": true,
+      "pickedCatalogIds": [
+        "weapon:sniper"
+      ],
+      "equippedWeaponAfterPickup": "sniper",
+      "passed": true
+    },
+    "memoryTest5xReload": {
+      "cycles": [
+        {
+          "cycle": 1,
+          "render": {
+            "calls": 289,
+            "sceneCalls": 289,
+            "vmCalls": 0,
+            "triangles": 1292140,
+            "sceneTris": 1292140,
+            "vmTris": 0,
+            "geometries": 100,
+            "textures": 36
+          },
+          "outdoor": {
+            "totalPlacements": 42,
+            "visiblePlacements": 42,
+            "instancedBatchCount": 16,
+            "activeDrawCalls": 16,
+            "signpostOverlayCount": 8,
+            "campfireEffectCount": 3,
+            "allGlbLoaded": true,
+            "byAssetCount": {
+              "wooden_signpost_01": 8,
+              "lumber_stack_01": 5,
+              "sawhorse_01": 4,
+              "old_fuel_pump_01": 2,
+              "rusty_barrel_01": 10,
+              "forest_tent_01": 2,
+              "campfire_pit_01": 3,
+              "wooden_railing_01": 8
+            }
+          },
+          "programs": 25,
+          "heapUsedMB": 58.47,
+          "heapTotalMB": 60.39
+        },
+        {
+          "cycle": 2,
+          "render": {
+            "calls": 289,
+            "sceneCalls": 289,
+            "vmCalls": 0,
+            "triangles": 1292140,
+            "sceneTris": 1292140,
+            "vmTris": 0,
+            "geometries": 97,
+            "textures": 8
+          },
+          "outdoor": {
+            "totalPlacements": 42,
+            "visiblePlacements": 42,
+            "instancedBatchCount": 16,
+            "activeDrawCalls": 16,
+            "signpostOverlayCount": 8,
+            "campfireEffectCount": 3,
+            "allGlbLoaded": true,
+            "byAssetCount": {
+              "wooden_signpost_01": 8,
+              "lumber_stack_01": 5,
+              "sawhorse_01": 4,
+              "old_fuel_pump_01": 2,
+              "rusty_barrel_01": 10,
+              "forest_tent_01": 2,
+              "campfire_pit_01": 3,
+              "wooden_railing_01": 8
+            }
+          },
+          "programs": 12,
+          "heapUsedMB": 58.74,
+          "heapTotalMB": 60.89
+        },
+        {
+          "cycle": 3,
+          "render": {
+            "calls": 289,
+            "sceneCalls": 289,
+            "vmCalls": 0,
+            "triangles": 1292140,
+            "sceneTris": 1292140,
+            "vmTris": 0,
+            "geometries": 97,
+            "textures": 8
+          },
+          "outdoor": {
+            "totalPlacements": 42,
+            "visiblePlacements": 42,
+            "instancedBatchCount": 16,
+            "activeDrawCalls": 16,
+            "signpostOverlayCount": 8,
+            "campfireEffectCount": 3,
+            "allGlbLoaded": true,
+            "byAssetCount": {
+              "wooden_signpost_01": 8,
+              "lumber_stack_01": 5,
+              "sawhorse_01": 4,
+              "old_fuel_pump_01": 2,
+              "rusty_barrel_01": 10,
+              "forest_tent_01": 2,
+              "campfire_pit_01": 3,
+              "wooden_railing_01": 8
+            }
+          },
+          "programs": 12,
+          "heapUsedMB": 58.43,
+          "heapTotalMB": 60.14
+        },
+        {
+          "cycle": 4,
+          "render": {
+            "calls": 289,
+            "sceneCalls": 289,
+            "vmCalls": 0,
+            "triangles": 1292140,
+            "sceneTris": 1292140,
+            "vmTris": 0,
+            "geometries": 97,
+            "textures": 8
+          },
+          "outdoor": {
+            "totalPlacements": 42,
+            "visiblePlacements": 42,
+            "instancedBatchCount": 16,
+            "activeDrawCalls": 16,
+            "signpostOverlayCount": 8,
+            "campfireEffectCount": 3,
+            "allGlbLoaded": true,
+            "byAssetCount": {
+              "wooden_signpost_01": 8,
+              "lumber_stack_01": 5,
+              "sawhorse_01": 4,
+              "old_fuel_pump_01": 2,
+              "rusty_barrel_01": 10,
+              "forest_tent_01": 2,
+              "campfire_pit_01": 3,
+              "wooden_railing_01": 8
+            }
+          },
+          "programs": 12,
+          "heapUsedMB": 59.21,
+          "heapTotalMB": 61.14
+        },
+        {
+          "cycle": 5,
+          "render": {
+            "calls": 289,
+            "sceneCalls": 289,
+            "vmCalls": 0,
+            "triangles": 1292140,
+            "sceneTris": 1292140,
+            "vmTris": 0,
+            "geometries": 97,
+            "textures": 8
+          },
+          "outdoor": {
+            "totalPlacements": 42,
+            "visiblePlacements": 42,
+            "instancedBatchCount": 16,
+            "activeDrawCalls": 16,
+            "signpostOverlayCount": 8,
+            "campfireEffectCount": 3,
+            "allGlbLoaded": true,
+            "byAssetCount": {
+              "wooden_signpost_01": 8,
+              "lumber_stack_01": 5,
+              "sawhorse_01": 4,
+              "old_fuel_pump_01": 2,
+              "rusty_barrel_01": 10,
+              "forest_tent_01": 2,
+              "campfire_pit_01": 3,
+              "wooden_railing_01": 8
+            }
+          },
+          "programs": 12,
+          "heapUsedMB": 59.6,
+          "heapTotalMB": 61.64
+        }
+      ],
+      "steadyBaselineCycle": 2,
+      "initialGeometries": 97,
+      "finalGeometries": 97,
+      "geometryDelta": 0,
+      "initialTextures": 8,
+      "finalTextures": 8,
+      "textureDelta": 0,
+      "initialPrograms": 12,
+      "finalPrograms": 12,
+      "programDelta": 0,
+      "initialHeapUsedMB": 58.74,
+      "finalHeapUsedMB": 59.6,
+      "heapDeltaMB": 0.86,
+      "leakDetected": false
+    },
+    "errors": {
+      "consoleErrorsCount": 0,
+      "pageExceptionsCount": 0,
+      "networkErrorsCount": 0,
+      "consoleErrors": [],
+      "pageExceptions": [],
+      "networkErrors": []
+    }
+  },
+  "stage07QaBaseline": {
+    "quality": "medium",
+    "durationSec": 5,
+    "frames": 561,
+    "fpsMean": 111.85,
+    "fpsMedian": 200,
+    "fpsP10": 43.48,
+    "fps1PctLow": 20.92,
+    "frameTimeMedianMs": 5,
+    "frameTimeP95Ms": 34,
+    "frameTimeP99Ms": 47.8,
+    "cullCpuMedianMs": 0.1,
+    "cullCpuP95Ms": 0.2,
+    "render": {
+      "calls": 146,
+      "sceneCalls": 146,
+      "vmCalls": 0,
+      "triangles": 605175,
+      "sceneTris": 605175,
+      "vmTris": 0,
+      "geometries": 132,
+      "textures": 11
+    },
+    "programs": 26,
+    "heapUsedMB": 72.43
+  },
+  "scenes": {
+    "open_forest_movement": {
+      "quality": "medium",
+      "scene": "open_forest_movement",
+      "description": "Active authoritative movement & camera sweep across central forest roads & signposts",
+      "warmupSeconds": 5,
+      "measurementSeconds": 15,
+      "repeats": 2,
+      "fpsMean": 126.89,
+      "fpsMedian": 238.1,
+      "fpsP10": 56.82,
+      "fps1PctLow": 21.74,
+      "frameTimeMedianMs": 5.1,
+      "frameTimeP95Ms": 31.5,
+      "frameTimeP99Ms": 47.2,
+      "cullCpuMedianMs": 0.1,
+      "cullCpuP95Ms": 0.2,
+      "calls": 87,
+      "sceneCalls": 87,
+      "vmCalls": 0,
+      "triangles": 408110,
+      "geometries": 155,
+      "textures": 52,
+      "programs": 45,
+      "outdoorRenderer": {
+        "totalPlacements": 42,
+        "visiblePlacements": 0,
+        "instancedBatchCount": 16,
+        "activeDrawCalls": 0,
+        "signpostOverlayCount": 8,
+        "campfireEffectCount": 3,
+        "allGlbLoaded": true,
+        "byAssetCount": {
+          "wooden_signpost_01": 8,
+          "lumber_stack_01": 5,
+          "sawhorse_01": 4,
+          "old_fuel_pump_01": 2,
+          "rusty_barrel_01": 10,
+          "forest_tent_01": 2,
+          "campfire_pit_01": 3,
+          "wooden_railing_01": 8
+        }
+      },
+      "cullingProfile": {
+        "calls": 1908,
+        "evaluatedFrames": 1907,
+        "skippedStaticFrames": 1,
+        "batchBufferUploads": 1699,
+        "batchBufferSkips": 34534,
+        "lastCpuMs": 0.1,
+        "avgCpuMs": 0.1041,
+        "p95CpuMs": 0.2,
+        "maxCpuMs": 0.5
+      },
+      "heapUsedMB": 66.36,
+      "runs": [
+        {
+          "repeat": 1,
+          "frames": 1745,
+          "durationMs": 15003.3,
+          "fpsMean": 116.31,
+          "fpsMedian": 196.08,
+          "fpsP10": 50.25,
+          "fps1PctLow": 21.19,
+          "frameTimeMedianMs": 5.1,
+          "frameTimeP95Ms": 31.5,
+          "frameTimeP99Ms": 47.2,
+          "cullCpuMedianMs": 0.1,
+          "cullCpuP95Ms": 0.2,
+          "cullCpuMaxMs": 0.7,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 6.707,
+          "gpuTimeP95Ms": 8.332,
+          "render": {
+            "calls": 92,
+            "sceneCalls": 92,
+            "vmCalls": 0,
+            "triangles": 445778,
+            "sceneTris": 445778,
+            "vmTris": 0,
+            "geometries": 155,
+            "textures": 52
+          },
+          "culling": {
+            "calls": 1745,
+            "evaluatedFrames": 1741,
+            "skippedStaticFrames": 4,
+            "batchBufferUploads": 1335,
+            "batchBufferSkips": 31744,
+            "lastCpuMs": 0.1,
+            "avgCpuMs": 0.1043,
+            "p95CpuMs": 0.2,
+            "maxCpuMs": 0.7
+          },
+          "heapUsedMB": 75.51,
+          "heapTotalMB": 95.68,
+          "programs": 45,
+          "outdoor": {
+            "totalPlacements": 42,
+            "visiblePlacements": 2,
+            "instancedBatchCount": 16,
+            "activeDrawCalls": 4,
+            "signpostOverlayCount": 8,
+            "campfireEffectCount": 3,
+            "allGlbLoaded": true,
+            "byAssetCount": {
+              "wooden_signpost_01": 8,
+              "lumber_stack_01": 5,
+              "sawhorse_01": 4,
+              "old_fuel_pump_01": 2,
+              "rusty_barrel_01": 10,
+              "forest_tent_01": 2,
+              "campfire_pit_01": 3,
+              "wooden_railing_01": 8
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "frames": 1908,
+          "durationMs": 15036.4,
+          "fpsMean": 126.89,
+          "fpsMedian": 238.1,
+          "fpsP10": 56.82,
+          "fps1PctLow": 21.74,
+          "frameTimeMedianMs": 4.2,
+          "frameTimeP95Ms": 28.2,
+          "frameTimeP99Ms": 46,
+          "cullCpuMedianMs": 0.1,
+          "cullCpuP95Ms": 0.2,
+          "cullCpuMaxMs": 0.5,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 6.06,
+          "gpuTimeP95Ms": 7.434,
+          "render": {
+            "calls": 87,
+            "sceneCalls": 87,
+            "vmCalls": 0,
+            "triangles": 408110,
+            "sceneTris": 408110,
+            "vmTris": 0,
+            "geometries": 155,
+            "textures": 52
+          },
+          "culling": {
+            "calls": 1908,
+            "evaluatedFrames": 1907,
+            "skippedStaticFrames": 1,
+            "batchBufferUploads": 1699,
+            "batchBufferSkips": 34534,
+            "lastCpuMs": 0.1,
+            "avgCpuMs": 0.1041,
+            "p95CpuMs": 0.2,
+            "maxCpuMs": 0.5
+          },
+          "heapUsedMB": 66.36,
+          "heapTotalMB": 95.71,
+          "programs": 45,
+          "outdoor": {
+            "totalPlacements": 42,
+            "visiblePlacements": 0,
+            "instancedBatchCount": 16,
+            "activeDrawCalls": 0,
+            "signpostOverlayCount": 8,
+            "campfireEffectCount": 3,
+            "allGlbLoaded": true,
+            "byAssetCount": {
+              "wooden_signpost_01": 8,
+              "lumber_stack_01": 5,
+              "sawhorse_01": 4,
+              "old_fuel_pump_01": 2,
+              "rusty_barrel_01": 10,
+              "forest_tent_01": 2,
+              "campfire_pit_01": 3,
+              "wooden_railing_01": 8
+            }
+          }
+        }
+      ]
+    },
+    "poi_lumber_mill_outdoor": {
+      "quality": "medium",
+      "scene": "poi_lumber_mill_outdoor",
+      "description": "POI 3 (Arrakorlik) outdoor timber yard with 3 lumber_stack_01, 3 sawhorse_01, 2 rusty_barrel_01 & wooden_signpost_01",
+      "warmupSeconds": 5,
+      "measurementSeconds": 15,
+      "repeats": 2,
+      "fpsMean": 116.96,
+      "fpsMedian": 136.99,
+      "fpsP10": 66.23,
+      "fps1PctLow": 36.9,
+      "frameTimeMedianMs": 7.4,
+      "frameTimeP95Ms": 19.1,
+      "frameTimeP99Ms": 31.8,
+      "cullCpuMedianMs": 0,
+      "cullCpuP95Ms": 0.1,
+      "calls": 202,
+      "sceneCalls": 202,
+      "vmCalls": 0,
+      "triangles": 503657,
+      "geometries": 155,
+      "textures": 52,
+      "programs": 45,
+      "outdoorRenderer": {
+        "totalPlacements": 42,
+        "visiblePlacements": 14,
+        "instancedBatchCount": 16,
+        "activeDrawCalls": 9,
+        "signpostOverlayCount": 8,
+        "campfireEffectCount": 3,
+        "allGlbLoaded": true,
+        "byAssetCount": {
+          "wooden_signpost_01": 8,
+          "lumber_stack_01": 5,
+          "sawhorse_01": 4,
+          "old_fuel_pump_01": 2,
+          "rusty_barrel_01": 10,
+          "forest_tent_01": 2,
+          "campfire_pit_01": 3,
+          "wooden_railing_01": 8
+        }
+      },
+      "cullingProfile": {
+        "calls": 1751,
+        "evaluatedFrames": 0,
+        "skippedStaticFrames": 1751,
+        "batchBufferUploads": 0,
+        "batchBufferSkips": 0,
+        "lastCpuMs": 0,
+        "avgCpuMs": 0.0053,
+        "p95CpuMs": 0.1,
+        "maxCpuMs": 0.1
+      },
+      "heapUsedMB": 74.67,
+      "runs": [
+        {
+          "repeat": 1,
+          "frames": 1756,
+          "durationMs": 15013.8,
+          "fpsMean": 116.96,
+          "fpsMedian": 135.14,
+          "fpsP10": 66.23,
+          "fps1PctLow": 36.9,
+          "frameTimeMedianMs": 7.4,
+          "frameTimeP95Ms": 19.1,
+          "frameTimeP99Ms": 27.1,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.1,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 6.364,
+          "gpuTimeP95Ms": 7.732,
+          "render": {
+            "calls": 202,
+            "sceneCalls": 202,
+            "vmCalls": 0,
+            "triangles": 503657,
+            "sceneTris": 503657,
+            "vmTris": 0,
+            "geometries": 155,
+            "textures": 52
+          },
+          "culling": {
+            "calls": 1756,
+            "evaluatedFrames": 0,
+            "skippedStaticFrames": 1756,
+            "batchBufferUploads": 0,
+            "batchBufferSkips": 0,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0042,
+            "p95CpuMs": 0,
+            "maxCpuMs": 0.1
+          },
+          "heapUsedMB": 64.71,
+          "heapTotalMB": 95.42,
+          "programs": 45,
+          "outdoor": {
+            "totalPlacements": 42,
+            "visiblePlacements": 14,
+            "instancedBatchCount": 16,
+            "activeDrawCalls": 9,
+            "signpostOverlayCount": 8,
+            "campfireEffectCount": 3,
+            "allGlbLoaded": true,
+            "byAssetCount": {
+              "wooden_signpost_01": 8,
+              "lumber_stack_01": 5,
+              "sawhorse_01": 4,
+              "old_fuel_pump_01": 2,
+              "rusty_barrel_01": 10,
+              "forest_tent_01": 2,
+              "campfire_pit_01": 3,
+              "wooden_railing_01": 8
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "frames": 1751,
+          "durationMs": 15017.7,
+          "fpsMean": 116.6,
+          "fpsMedian": 136.99,
+          "fpsP10": 65.79,
+          "fps1PctLow": 31.45,
+          "frameTimeMedianMs": 7.3,
+          "frameTimeP95Ms": 18.8,
+          "frameTimeP99Ms": 31.8,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.2,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 6.365,
+          "gpuTimeP95Ms": 8.381,
+          "render": {
+            "calls": 202,
+            "sceneCalls": 202,
+            "vmCalls": 0,
+            "triangles": 503657,
+            "sceneTris": 503657,
+            "vmTris": 0,
+            "geometries": 155,
+            "textures": 52
+          },
+          "culling": {
+            "calls": 1751,
+            "evaluatedFrames": 0,
+            "skippedStaticFrames": 1751,
+            "batchBufferUploads": 0,
+            "batchBufferSkips": 0,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0053,
+            "p95CpuMs": 0.1,
+            "maxCpuMs": 0.1
+          },
+          "heapUsedMB": 74.67,
+          "heapTotalMB": 95.41,
+          "programs": 45,
+          "outdoor": {
+            "totalPlacements": 42,
+            "visiblePlacements": 14,
+            "instancedBatchCount": 16,
+            "activeDrawCalls": 9,
+            "signpostOverlayCount": 8,
+            "campfireEffectCount": 3,
+            "allGlbLoaded": true,
+            "byAssetCount": {
+              "wooden_signpost_01": 8,
+              "lumber_stack_01": 5,
+              "sawhorse_01": 4,
+              "old_fuel_pump_01": 2,
+              "rusty_barrel_01": 10,
+              "forest_tent_01": 2,
+              "campfire_pit_01": 3,
+              "wooden_railing_01": 8
+            }
+          }
+        }
+      ]
+    },
+    "poi_service_station_outdoor": {
+      "quality": "medium",
+      "scene": "poi_service_station_outdoor",
+      "description": "POI 4 (Avto Servis) forecourt with 2 old_fuel_pump_01 on island, 4 rusty_barrel_01, sawhorse_01 & wooden_signpost_01",
+      "warmupSeconds": 5,
+      "measurementSeconds": 15,
+      "repeats": 2,
+      "fpsMean": 94.58,
+      "fpsMedian": 109.89,
+      "fpsP10": 64.52,
+      "fps1PctLow": 21.32,
+      "frameTimeMedianMs": 9.3,
+      "frameTimeP95Ms": 21.5,
+      "frameTimeP99Ms": 47.7,
+      "cullCpuMedianMs": 0,
+      "cullCpuP95Ms": 0.1,
+      "calls": 215,
+      "sceneCalls": 215,
+      "vmCalls": 0,
+      "triangles": 577169,
+      "geometries": 155,
+      "textures": 52,
+      "programs": 45,
+      "outdoorRenderer": {
+        "totalPlacements": 42,
+        "visiblePlacements": 13,
+        "instancedBatchCount": 16,
+        "activeDrawCalls": 12,
+        "signpostOverlayCount": 8,
+        "campfireEffectCount": 3,
+        "allGlbLoaded": true,
+        "byAssetCount": {
+          "wooden_signpost_01": 8,
+          "lumber_stack_01": 5,
+          "sawhorse_01": 4,
+          "old_fuel_pump_01": 2,
+          "rusty_barrel_01": 10,
+          "forest_tent_01": 2,
+          "campfire_pit_01": 3,
+          "wooden_railing_01": 8
+        }
+      },
+      "cullingProfile": {
+        "calls": 1389,
+        "evaluatedFrames": 0,
+        "skippedStaticFrames": 1389,
+        "batchBufferUploads": 0,
+        "batchBufferSkips": 0,
+        "lastCpuMs": 0,
+        "avgCpuMs": 0.0049,
+        "p95CpuMs": 0,
+        "maxCpuMs": 0.1
+      },
+      "heapUsedMB": 66.85,
+      "runs": [
+        {
+          "repeat": 1,
+          "frames": 1420,
+          "durationMs": 15013,
+          "fpsMean": 94.58,
+          "fpsMedian": 107.53,
+          "fpsP10": 64.52,
+          "fps1PctLow": 21.32,
+          "frameTimeMedianMs": 9.3,
+          "frameTimeP95Ms": 20.2,
+          "frameTimeP99Ms": 46.9,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.1,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 8.078,
+          "gpuTimeP95Ms": 10.258,
+          "render": {
+            "calls": 215,
+            "sceneCalls": 215,
+            "vmCalls": 0,
+            "triangles": 577169,
+            "sceneTris": 577169,
+            "vmTris": 0,
+            "geometries": 155,
+            "textures": 52
+          },
+          "culling": {
+            "calls": 1420,
+            "evaluatedFrames": 0,
+            "skippedStaticFrames": 1420,
+            "batchBufferUploads": 0,
+            "batchBufferSkips": 0,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0046,
+            "p95CpuMs": 0,
+            "maxCpuMs": 0.1
+          },
+          "heapUsedMB": 61.42,
+          "heapTotalMB": 95.49,
+          "programs": 45,
+          "outdoor": {
+            "totalPlacements": 42,
+            "visiblePlacements": 13,
+            "instancedBatchCount": 16,
+            "activeDrawCalls": 12,
+            "signpostOverlayCount": 8,
+            "campfireEffectCount": 3,
+            "allGlbLoaded": true,
+            "byAssetCount": {
+              "wooden_signpost_01": 8,
+              "lumber_stack_01": 5,
+              "sawhorse_01": 4,
+              "old_fuel_pump_01": 2,
+              "rusty_barrel_01": 10,
+              "forest_tent_01": 2,
+              "campfire_pit_01": 3,
+              "wooden_railing_01": 8
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "frames": 1389,
+          "durationMs": 15007.4,
+          "fpsMean": 92.55,
+          "fpsMedian": 109.89,
+          "fpsP10": 57.14,
+          "fps1PctLow": 20.96,
+          "frameTimeMedianMs": 9.1,
+          "frameTimeP95Ms": 21.5,
+          "frameTimeP99Ms": 47.7,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.1,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 8.061,
+          "gpuTimeP95Ms": 10.409,
+          "render": {
+            "calls": 215,
+            "sceneCalls": 215,
+            "vmCalls": 0,
+            "triangles": 577169,
+            "sceneTris": 577169,
+            "vmTris": 0,
+            "geometries": 155,
+            "textures": 52
+          },
+          "culling": {
+            "calls": 1389,
+            "evaluatedFrames": 0,
+            "skippedStaticFrames": 1389,
+            "batchBufferUploads": 0,
+            "batchBufferSkips": 0,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0049,
+            "p95CpuMs": 0,
+            "maxCpuMs": 0.1
+          },
+          "heapUsedMB": 66.85,
+          "heapTotalMB": 95.2,
+          "programs": 45,
+          "outdoor": {
+            "totalPlacements": 42,
+            "visiblePlacements": 13,
+            "instancedBatchCount": 16,
+            "activeDrawCalls": 12,
+            "signpostOverlayCount": 8,
+            "campfireEffectCount": 3,
+            "allGlbLoaded": true,
+            "byAssetCount": {
+              "wooden_signpost_01": 8,
+              "lumber_stack_01": 5,
+              "sawhorse_01": 4,
+              "old_fuel_pump_01": 2,
+              "rusty_barrel_01": 10,
+              "forest_tent_01": 2,
+              "campfire_pit_01": 3,
+              "wooden_railing_01": 8
+            }
+          }
+        }
+      ]
+    },
+    "poi_forest_camp_outdoor": {
+      "quality": "medium",
+      "scene": "poi_forest_camp_outdoor",
+      "description": "POI 5 (Kemper Lageri) clearing with 2 forest_tent_01, lit campfire_pit_01, lumber_stack_01, rusty_barrel_01 & wooden_signpost_01",
+      "warmupSeconds": 5,
+      "measurementSeconds": 15,
+      "repeats": 2,
+      "fpsMean": 108.36,
+      "fpsMedian": 125,
+      "fpsP10": 65.36,
+      "fps1PctLow": 33,
+      "frameTimeMedianMs": 8.2,
+      "frameTimeP95Ms": 19.3,
+      "frameTimeP99Ms": 31.7,
+      "cullCpuMedianMs": 0,
+      "cullCpuP95Ms": 0.1,
+      "calls": 222,
+      "sceneCalls": 222,
+      "vmCalls": 0,
+      "triangles": 587693,
+      "geometries": 155,
+      "textures": 52,
+      "programs": 45,
+      "outdoorRenderer": {
+        "totalPlacements": 42,
+        "visiblePlacements": 22,
+        "instancedBatchCount": 16,
+        "activeDrawCalls": 16,
+        "signpostOverlayCount": 8,
+        "campfireEffectCount": 3,
+        "allGlbLoaded": true,
+        "byAssetCount": {
+          "wooden_signpost_01": 8,
+          "lumber_stack_01": 5,
+          "sawhorse_01": 4,
+          "old_fuel_pump_01": 2,
+          "rusty_barrel_01": 10,
+          "forest_tent_01": 2,
+          "campfire_pit_01": 3,
+          "wooden_railing_01": 8
+        }
+      },
+      "cullingProfile": {
+        "calls": 1627,
+        "evaluatedFrames": 0,
+        "skippedStaticFrames": 1627,
+        "batchBufferUploads": 0,
+        "batchBufferSkips": 0,
+        "lastCpuMs": 0,
+        "avgCpuMs": 0.0042,
+        "p95CpuMs": 0,
+        "maxCpuMs": 0.1
+      },
+      "heapUsedMB": 72.12,
+      "runs": [
+        {
+          "repeat": 1,
+          "frames": 1605,
+          "durationMs": 15013.3,
+          "fpsMean": 106.91,
+          "fpsMedian": 121.95,
+          "fpsP10": 64.94,
+          "fps1PctLow": 33,
+          "frameTimeMedianMs": 8.2,
+          "frameTimeP95Ms": 18.9,
+          "frameTimeP99Ms": 30.3,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.3,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 7.157,
+          "gpuTimeP95Ms": 9.228,
+          "render": {
+            "calls": 222,
+            "sceneCalls": 222,
+            "vmCalls": 0,
+            "triangles": 587693,
+            "sceneTris": 587693,
+            "vmTris": 0,
+            "geometries": 155,
+            "textures": 52
+          },
+          "culling": {
+            "calls": 1605,
+            "evaluatedFrames": 0,
+            "skippedStaticFrames": 1605,
+            "batchBufferUploads": 0,
+            "batchBufferSkips": 0,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0045,
+            "p95CpuMs": 0,
+            "maxCpuMs": 0.1
+          },
+          "heapUsedMB": 63.75,
+          "heapTotalMB": 126.22,
+          "programs": 45,
+          "outdoor": {
+            "totalPlacements": 42,
+            "visiblePlacements": 22,
+            "instancedBatchCount": 16,
+            "activeDrawCalls": 16,
+            "signpostOverlayCount": 8,
+            "campfireEffectCount": 3,
+            "allGlbLoaded": true,
+            "byAssetCount": {
+              "wooden_signpost_01": 8,
+              "lumber_stack_01": 5,
+              "sawhorse_01": 4,
+              "old_fuel_pump_01": 2,
+              "rusty_barrel_01": 10,
+              "forest_tent_01": 2,
+              "campfire_pit_01": 3,
+              "wooden_railing_01": 8
+            }
+          }
+        },
+        {
+          "repeat": 2,
+          "frames": 1627,
+          "durationMs": 15015,
+          "fpsMean": 108.36,
+          "fpsMedian": 125,
+          "fpsP10": 65.36,
+          "fps1PctLow": 31.55,
+          "frameTimeMedianMs": 8,
+          "frameTimeP95Ms": 19.3,
+          "frameTimeP99Ms": 31.7,
+          "cullCpuMedianMs": 0,
+          "cullCpuP95Ms": 0.1,
+          "cullCpuMaxMs": 0.1,
+          "gpuTimerSupported": true,
+          "gpuTimeMedianMs": 7.136,
+          "gpuTimeP95Ms": 8.887,
+          "render": {
+            "calls": 222,
+            "sceneCalls": 222,
+            "vmCalls": 0,
+            "triangles": 587693,
+            "sceneTris": 587693,
+            "vmTris": 0,
+            "geometries": 155,
+            "textures": 52
+          },
+          "culling": {
+            "calls": 1627,
+            "evaluatedFrames": 0,
+            "skippedStaticFrames": 1627,
+            "batchBufferUploads": 0,
+            "batchBufferSkips": 0,
+            "lastCpuMs": 0,
+            "avgCpuMs": 0.0042,
+            "p95CpuMs": 0,
+            "maxCpuMs": 0.1
+          },
+          "heapUsedMB": 72.12,
+          "heapTotalMB": 127.96,
+          "programs": 45,
+          "outdoor": {
+            "totalPlacements": 42,
+            "visiblePlacements": 22,
+            "instancedBatchCount": 16,
+            "activeDrawCalls": 16,
+            "signpostOverlayCount": 8,
+            "campfireEffectCount": 3,
+            "allGlbLoaded": true,
+            "byAssetCount": {
+              "wooden_signpost_01": 8,
+              "lumber_stack_01": 5,
+              "sawhorse_01": 4,
+              "old_fuel_pump_01": 2,
+              "rusty_barrel_01": 10,
+              "forest_tent_01": 2,
+              "campfire_pit_01": 3,
+              "wooden_railing_01": 8
+            }
+          }
+        }
+      ]
+    }
+  },
+  "screenshots": [
+    {
+      "filename": "01_topdown_256x256_stage08a_overview.png",
+      "bytes": 551241,
+      "width": 1280,
+      "height": 720,
+      "path": "docs/screenshots/stage08a/01_topdown_256x256_stage08a_overview.png"
+    },
+    {
+      "filename": "02_crossroads_wooden_signpost_uz.png",
+      "bytes": 566197,
+      "width": 1280,
+      "height": 720,
+      "path": "docs/screenshots/stage08a/02_crossroads_wooden_signpost_uz.png"
+    },
+    {
+      "filename": "03_poi1_ranger_house_railing_and_lumber.png",
+      "bytes": 515261,
+      "width": 1280,
+      "height": 720,
+      "path": "docs/screenshots/stage08a/03_poi1_ranger_house_railing_and_lumber.png"
+    },
+    {
+      "filename": "04_poi2_cabin_cluster_courtyard_campfire.png",
+      "bytes": 479522,
+      "width": 1280,
+      "height": 720,
+      "path": "docs/screenshots/stage08a/04_poi2_cabin_cluster_courtyard_campfire.png"
+    },
+    {
+      "filename": "05_poi3_lumber_mill_stacks_and_sawhorses.png",
+      "bytes": 527811,
+      "width": 1280,
+      "height": 720,
+      "path": "docs/screenshots/stage08a/05_poi3_lumber_mill_stacks_and_sawhorses.png"
+    },
+    {
+      "filename": "06_poi4_service_station_fuel_pumps_and_barrels.png",
+      "bytes": 503795,
+      "width": 1280,
+      "height": 720,
+      "path": "docs/screenshots/stage08a/06_poi4_service_station_fuel_pumps_and_barrels.png"
+    },
+    {
+      "filename": "07_poi5_forest_camp_tents_and_campfire.png",
+      "bytes": 588191,
+      "width": 1280,
+      "height": 720,
+      "path": "docs/screenshots/stage08a/07_poi5_forest_camp_tents_and_campfire.png"
+    },
+    {
+      "filename": "08_poi6_cliff_watch_chained_railings_and_fire.png",
+      "bytes": 565394,
+      "width": 1280,
+      "height": 720,
+      "path": "docs/screenshots/stage08a/08_poi6_cliff_watch_chained_railings_and_fire.png"
+    },
+    {
+      "filename": "09_survival_loot_and_combat_with_outdoor_props.png",
+      "bytes": 545355,
+      "width": 1280,
+      "height": 720,
+      "path": "docs/screenshots/stage08a/09_survival_loot_and_combat_with_outdoor_props.png"
+    }
+  ]
+}

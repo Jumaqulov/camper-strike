@@ -1,0 +1,32 @@
+export {
+  areContainerAssetsReady,
+  buildProceduralContainerFallback,
+  type CachedContainerAssetTemplate,
+  CONTAINER_ASSET_IDS,
+  CONTAINER_ASSET_MANIFEST,
+  CONTAINER_GLB_URLS,
+  CONTAINER_KIND_TO_ASSET_ID,
+  CONTAINER_PIVOT_SPECS,
+  type ContainerAssetDiagnosticEntry,
+  type ContainerAssetId,
+  type ContainerAssetManifestSpec,
+  type ContainerPivotDiagnostics,
+  type ContainerVisualPlacement,
+  getCachedContainerAsset,
+  getContainerAssetDiagnostics,
+  hasContainerAssetFailed,
+  type InstantiatedContainerHierarchy,
+  instantiateContainerAsset,
+  onContainerAssetsReady,
+  type PivotSpec,
+  preloadContainerAssets,
+  registerContainerAssetFromObject,
+  resolveContainerAssetId,
+} from './ContainerAssetRegistry';
+
+export {
+  buildContainerVisualsScene,
+  computeContainerWorldAnchors,
+  type ContainerInstanceController,
+  type ContainerVisualsSceneHandles,
+} from './ContainerRenderer';

@@ -1,0 +1,225 @@
+{
+  "timestamp": "2026-10-22T13:20:39.166Z",
+  "criteria": {
+    "camper_bg_image_loaded": true,
+    "logo_visible": true,
+    "camping_sign_unoccluded": true,
+    "profile_name_sync": true,
+    "settings_persistence": true,
+    "no_game_canvas_in_menu": true,
+    "survival_configuration": true,
+    "two_clients_join_same_room": true
+  },
+  "tests": [
+    {
+      "id": "camper_bg_image_loaded",
+      "pass": true,
+      "detail": "Background image contains camper-daylight.webp (url(\"http://127.0.0.1:5373/ui/menu/camper-daylight.webp\"))"
+    },
+    {
+      "id": "logo_visible",
+      "pass": true,
+      "detail": "Logo present, text='CAMPERSTRIKE 65', size=424.609375x98.28125px, inViewport=true"
+    },
+    {
+      "id": "camping_sign_unoccluded",
+      "pass": true,
+      "detail": "CAMPING sign (x:8-37%, y:19-62%) unoccluded at 1080p and 720p: true. Camper van (x:46-80%, y:41-75%) unoccluded: true."
+    },
+    {
+      "id": "profile_name_sync",
+      "pass": true,
+      "detail": "Name 'Alisher_QA' saved and persisted across page reload: domName='Alisher_QA', storedName='Alisher_QA'"
+    },
+    {
+      "id": "settings_persistence",
+      "pass": true,
+      "detail": "Settings saved FOV 95 and persisted across page reload: fov=95"
+    },
+    {
+      "id": "no_game_canvas_in_menu",
+      "pass": true,
+      "detail": "No active game canvas / no gameplay render loop in menu/lobby (verified canvas absent in both screen-menu and screen-lobby)"
+    },
+    {
+      "id": "survival_configuration",
+      "pass": true,
+      "detail": "mode=forest_survival, map=forest_square, lootPreview=true, bots=0, botsDisabled=true"
+    },
+    {
+      "id": "two_clients_join_same_room",
+      "pass": true,
+      "detail": "Client 1 ('Alisher_QA') and Client 2 ('Bekzod_QA') both joined room 'CamperQA_Survival' (c1_pause='CamperQA_Survival', c2_pause='CamperQA_Survival'): true"
+    }
+  ],
+  "screenshots": [
+    {
+      "name": "01_menu_1920x1080.png",
+      "viewport": "1920x1080",
+      "size": 2521356
+    },
+    {
+      "name": "02_menu_1280x720.png",
+      "viewport": "1280x720",
+      "size": 1276458
+    },
+    {
+      "name": "03_menu_1366x768.png",
+      "viewport": "1366x768",
+      "size": 1435486
+    },
+    {
+      "name": "04_menu_390x844.png",
+      "viewport": "390x844",
+      "size": 274654
+    },
+    {
+      "name": "04b_menu_768x1024.png",
+      "viewport": "768x1024",
+      "size": 847431
+    },
+    {
+      "name": "05_settings_modal.png",
+      "viewport": "1280x720",
+      "size": 235015
+    },
+    {
+      "name": "06_lobby_forest_survival.png",
+      "viewport": "1280x720",
+      "size": 615927
+    },
+    {
+      "name": "07_lobby_two_clients.png",
+      "viewport": "1280x720",
+      "size": 624499
+    },
+    {
+      "name": "07_two_clients_in_room.png",
+      "viewport": "1280x720",
+      "size": 281087
+    }
+  ],
+  "occlusionMeasurements": {
+    "1920x1080": {
+      "vw": 1920,
+      "vh": 1080,
+      "signRegion": {
+        "name": "CAMPING Sign",
+        "left": 153.6,
+        "right": 710.4,
+        "top": 205.2,
+        "bottom": 669.6
+      },
+      "camperRegion": {
+        "name": "Camper Van",
+        "left": 883.2,
+        "right": 1536,
+        "top": 442.79999999999995,
+        "bottom": 810
+      },
+      "panels": [
+        {
+          "selector": ".menu-main-grid",
+          "found": true,
+          "rect": {
+            "left": 104,
+            "right": 784,
+            "top": 733.015625,
+            "bottom": 1020.609375,
+            "width": 680,
+            "height": 287.59375
+          }
+        },
+        {
+          "selector": ".menu-nav-panel",
+          "found": true,
+          "rect": {
+            "left": 104,
+            "right": 404,
+            "top": 831.609375,
+            "bottom": 1020.609375,
+            "width": 300,
+            "height": 189
+          }
+        },
+        {
+          "selector": ".menu-featured-card",
+          "found": true,
+          "rect": {
+            "left": 424,
+            "right": 784,
+            "top": 733.015625,
+            "bottom": 1020.609375,
+            "width": 360,
+            "height": 287.59375
+          }
+        }
+      ],
+      "signOccluded": false,
+      "camperOccluded": false,
+      "signOverlaps": [],
+      "camperOverlaps": []
+    },
+    "1280x720": {
+      "vw": 1280,
+      "vh": 720,
+      "signRegion": {
+        "name": "CAMPING Sign",
+        "left": 102.4,
+        "right": 473.6,
+        "top": 136.8,
+        "bottom": 446.4
+      },
+      "camperRegion": {
+        "name": "Camper Van",
+        "left": 588.8000000000001,
+        "right": 1024,
+        "top": 295.2,
+        "bottom": 540
+      },
+      "panels": [
+        {
+          "selector": ".menu-main-grid",
+          "found": true,
+          "rect": {
+            "left": 51.1875,
+            "right": 583.1875,
+            "top": 457.359375,
+            "bottom": 697.046875,
+            "width": 532,
+            "height": 239.6875
+          }
+        },
+        {
+          "selector": ".menu-nav-panel",
+          "found": true,
+          "rect": {
+            "left": 51.1875,
+            "right": 291.1875,
+            "top": 550.046875,
+            "bottom": 697.046875,
+            "width": 240,
+            "height": 147
+          }
+        },
+        {
+          "selector": ".menu-featured-card",
+          "found": true,
+          "rect": {
+            "left": 303.1875,
+            "right": 583.1875,
+            "top": 457.359375,
+            "bottom": 697.046875,
+            "width": 280,
+            "height": 239.6875
+          }
+        }
+      ],
+      "signOccluded": false,
+      "camperOccluded": false,
+      "signOverlaps": [],
+      "camperOverlaps": []
+    }
+  },
+  "allPassed": true
+}
