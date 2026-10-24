@@ -4,6 +4,16 @@ import type { WeaponId } from '../../shared/weapons';
 import { buildGun, type GunModel } from './GunModels';
 import { flashTexture } from './Textures';
 import { onWeaponAssetsReady } from './WeaponAssetRegistry';
+import { CamperBuddyAnimator } from './animation/CamperBuddyAnimator';
+import { applyUpperBodyAimPose } from './character/CharacterAimPose';
+import {
+  instantiateCamperBuddy,
+  onCharacterAssetReady,
+  preloadCharacterAssets,
+  type CamperBuddyInstance,
+} from './character/CharacterAssetRegistry';
+import { applyTeamColor } from './character/CharacterMaterials';
+import { CharacterWeaponMount } from './character/CharacterWeaponMount';
 
 const geoCache = new Map<string, THREE.BufferGeometry>();
 function capsule(len: number, r: number): THREE.BufferGeometry {
@@ -131,6 +141,28 @@ export interface StickmanState {
   reloading: boolean;
 }
 
+/** 08B: DEV diagnostics of one character model (Camper Buddy GLB or the procedural fallback). */
+export interface CharacterModelDiag {
+  mode: 'buddy' | 'procedural';
+  visible: boolean;
+  state: string | null;
+  weights: Record<string, number>;
+  timeScale: number;
+  weapon: string | null;
+  muzzleWorld: { x: number; y: number; z: number };
+  gripWorld: { x: number; y: number; z: number } | null;
+}
+
+/** 08B: Camper Buddy GLB visual + its animator / weapon mount (one per Stickman, never shared). */
+interface BuddyRig {
+  inst: CamperBuddyInstance;
+  /** Death/fall transforms are applied here so the clip-driven skeleton stays untouched. */
+  pivot: THREE.Group;
+  anim: CamperBuddyAnimator;
+  mount: CharacterWeaponMount;
+  head: THREE.Bone | null;
+}
+
 /**
  * "RV There Yet?" (Nuggets Entertainment) uslubidagi baqaloq, silliq "Bean / Russell Scout"
  * karikatura sayohatchilari va 6 xil kreativ yiqilish (o'lim) animatsiyalari!
@@ -189,9 +221,15 @@ export class Stickman {
   private weapon: WeaponId | null = null;
   private nameTag: THREE.Sprite | null = null;
   private ownedGeometries: THREE.BufferGeometry[] = [];
+  private teamHex: string;
+  private buddy: BuddyRig | null = null;
+  private unsubCharacterReady: (() => void) | null = null;
+  private disposed = false;
+  private buddyReloadTilt = 0;
 
   constructor(color: THREE.ColorRepresentation) {
     const hex = '#' + new THREE.Color(color).getHexString();
+    this.teamHex = hex;
     this.shirtMat = new THREE.MeshStandardMaterial({ color: hex, roughness: 0.55 });
     this.hatMat = new THREE.MeshStandardMaterial({ color: hex, roughness: 0.45 });
 
@@ -425,6 +463,73 @@ export class Stickman {
 
     this.mergeStaticBoneMeshes();
     this.setArchetype(Stickman.spawnCounter++ % 6);
+
+    // 08B: Camper Buddy GLB replaces the procedural body once loaded; until then (or on failure) the
+    // procedural camper stays visible, so the game never waits on the character asset.
+    void preloadCharacterAssets();
+    this.unsubCharacterReady = onCharacterAssetReady(() => this.attachBuddy());
+  }
+
+  /** 08B: swaps the procedural body for a Camper Buddy instance (own skeleton, own team material). */
+  private attachBuddy(): void {
+    if (this.buddy || this.disposed) return;
+    const inst = instantiateCamperBuddy();
+    if (!inst) return;
+    const socket = inst.sockets.get('Hand_R_Grip');
+    if (!socket) {
+      inst.dispose();
+      return;
+    }
+    const pivot = new THREE.Group();
+    pivot.name = 'camper_buddy_pivot';
+    pivot.add(inst.root);
+    this.root.add(pivot);
+    const anim = new CamperBuddyAnimator(inst.root, inst.clips);
+    const mount = new CharacterWeaponMount(socket, inst.root);
+    this.buddy = { inst, pivot, anim, mount, head: inst.bones.get('Head') ?? null };
+    applyTeamColor(inst, this.teamHex);
+    this.body.visible = false;
+    // Re-mount the current weapon into the hand socket.
+    const w = this.weapon;
+    this.weapon = null;
+    this.gunModel = null;
+    this.setWeapon(w);
+  }
+
+  /** Where the 3P gun, muzzle, eject port and flash live: the hand socket mount, or the chest holder. */
+  private gunParent(): THREE.Group {
+    return this.buddy ? this.buddy.mount.holder : this.gunHolder;
+  }
+
+  /** 08B: true while the Camper Buddy GLB (not the procedural fallback) renders this player. */
+  usesCharacterAsset(): boolean {
+    return this.buddy !== null;
+  }
+
+  /** 08B: one-shot Interact clip (container open). No-op on the procedural fallback. */
+  playInteract(): void {
+    this.buddy?.anim.playInteract();
+  }
+
+  getCharacterDiagnostics(): CharacterModelDiag {
+    const muzzle = this.muzzle.getWorldPosition(new THREE.Vector3());
+    const b = this.buddy;
+    let gripWorld: CharacterModelDiag['gripWorld'] = null;
+    if (b) {
+      const g = b.mount.holder.parent?.getWorldPosition(new THREE.Vector3());
+      if (g) gripWorld = { x: g.x, y: g.y, z: g.z };
+    }
+    const d = b?.anim.getDiagnostics();
+    return {
+      mode: b ? 'buddy' : 'procedural',
+      visible: this.root.visible,
+      state: d?.state ?? null,
+      weights: d?.weights ?? {},
+      timeScale: d?.timeScale ?? 1,
+      weapon: this.weapon,
+      muzzleWorld: { x: muzzle.x, y: muzzle.y, z: muzzle.z },
+      gripWorld,
+    };
   }
 
   /**
@@ -770,8 +875,10 @@ export class Stickman {
 
   setColor(color: THREE.ColorRepresentation): void {
     const hex = '#' + new THREE.Color(color).getHexString();
+    this.teamHex = hex;
     this.shirtMat.color.set(hex);
     this.hatMat.color.set(hex);
+    if (this.buddy) applyTeamColor(this.buddy.inst, hex);
   }
 
   setWeapon(w: WeaponId | null): void {
@@ -780,14 +887,17 @@ export class Stickman {
     this.unsubWeaponReady?.();
     this.unsubWeaponReady = null;
     this.gunHolder.clear();
+    const holder = this.gunParent();
+    holder.clear();
+    this.buddy?.mount.setWeapon(w);
     if (!w) {
       this.gunModel = null;
       this.gunSlide = undefined;
       this.gunMag = undefined;
-      this.gunHolder.visible = false;
+      holder.visible = false;
       return;
     }
-    this.gunHolder.visible = true;
+    holder.visible = true;
     this.armR.rotation.set(1.18, -0.12, -0.18);
     this.elbowR.rotation.x = 0.45;
     this.armL.rotation.set(1.24, 0.28, 0.44);
@@ -796,7 +906,7 @@ export class Stickman {
     this.gunModel = gun;
     const scale3P = 1.32;
     gun.group.scale.setScalar(scale3P);
-    this.gunHolder.add(gun.group);
+    holder.add(gun.group);
     this.gunSlide = gun.slide;
     this.gunMag = gun.mag;
     const syncAnchors = () => {
@@ -808,9 +918,9 @@ export class Stickman {
       this.flash.position.copy(this.muzzle.position);
     };
     syncAnchors();
-    this.gunHolder.add(this.muzzle);
-    this.gunHolder.add(this.ejectPort);
-    this.gunHolder.add(this.flash);
+    holder.add(this.muzzle);
+    holder.add(this.ejectPort);
+    holder.add(this.flash);
     this.unsubWeaponReady = onWeaponAssetsReady(() => syncAnchors());
   }
 
@@ -894,7 +1004,9 @@ export class Stickman {
       this.wasAlive = false;
       // O'lgan zahoti qo'lidagi qurol yo'qoladi (chunki qurol fizik tarzda yerga tushib ketadi!)
       this.gunHolder.visible = false;
+      this.gunParent().visible = false;
       this.flash.visible = false;
+      this.buddy?.anim.freeze();
 
       this.deathT = Math.min(1, this.deathT + dt * 2.2);
       const t = this.deathT;
@@ -996,6 +1108,12 @@ export class Stickman {
           break;
         }
       }
+      // 08B: the GLB has no death clip — the frozen Camper Buddy follows the same procedural fall
+      // (whole-body transform about the feet), the fallback agreed for this stage.
+      if (this.buddy) {
+        this.buddy.pivot.position.copy(this.body.position);
+        this.buddy.pivot.rotation.copy(this.body.rotation);
+      }
       return;
     }
 
@@ -1014,6 +1132,18 @@ export class Stickman {
       this.legR.rotation.set(0, 0, 0);
       this.headGroup.rotation.set(0, 0, 0);
       this.jawGroup.rotation.set(0, 0, 0);
+      if (this.buddy) {
+        this.buddy.pivot.position.set(0, 0, 0);
+        this.buddy.pivot.rotation.set(0, 0, 0);
+        this.buddy.pivot.visible = true;
+        this.buddy.anim.resetToIdle();
+        this.gunParent().visible = this.weapon !== null;
+      }
+    }
+
+    if (this.buddy) {
+      this.updateBuddy(dt, s, this.buddy);
+      return;
     }
 
     const amp = Math.min(1, s.speed / RUN_SPEED);
@@ -1097,6 +1227,47 @@ export class Stickman {
   }
 
   /**
+   * 08B alive update for the Camper Buddy GLB: baked clips (mixer) → upper-body aim override →
+   * gun solved onto the Hand_R_Grip socket. Recoil/reload feel mirrors the procedural branch above.
+   */
+  private updateBuddy(dt: number, s: StickmanState, b: BuddyRig): void {
+    b.anim.update(dt, { speed: s.speed, onGround: s.onGround, alive: true });
+
+    this.recoilKick *= Math.exp(-dt * 14);
+    if (s.reloading) this.reloadAnimT += dt * 4.5;
+    else this.reloadAnimT = 0;
+    const armed = this.weapon !== null;
+    const reloadT = s.reloading ? (this.reloadAnimT / (Math.PI * 2)) % 1 : 0;
+    applyUpperBodyAimPose(b.inst.bones, {
+      weight: 1,
+      pitch: s.pitch,
+      armed,
+      reloadT,
+      weapon: this.weapon ?? undefined,
+    });
+
+    if (!armed) {
+      b.mount.holder.visible = false;
+      return;
+    }
+    b.mount.holder.visible = true;
+    if (this.gunSlide) {
+      this.gunSlide.position.z = this.recoilKick * 0.065;
+      this.gunSlide.rotation.z = this.weapon === 'sniper' ? -this.recoilKick * 0.45 : 0;
+    }
+    if (this.gunMag) {
+      const magDrop = s.reloading ? Math.max(0, Math.sin(this.reloadAnimT)) * 0.14 : 0;
+      this.gunMag.position.y = -magDrop;
+    }
+    // Smoothed like the procedural gunHolder tilt so reload in/out never snaps.
+    const reloadTarget = s.reloading ? -0.5 : 0;
+    this.buddyReloadTilt = THREE.MathUtils.lerp(this.buddyReloadTilt, reloadTarget, Math.min(1, dt * 14));
+    // The mount solves against world matrices: refresh them after the clip + aim pose writes.
+    this.root.updateMatrixWorld(true);
+    b.mount.update(s.pitch, this.recoilKick, this.buddyReloadTilt);
+  }
+
+  /**
    * Local-player-only proximity visibility helper for 3P camera:
    * when the 3P spring-arm pulls in very close to the local player's head/back due to a solid wall
    * or low branch behind the player, hide only the local player's own head/torso so it never blocks
@@ -1105,11 +1276,26 @@ export class Stickman {
   setCameraProximityFade(cameraDist: number): void {
     const showFull = cameraDist >= 0.78;
     const showBody = cameraDist >= 0.48;
+    if (this.buddy) {
+      // One skinned mesh: hide the head by collapsing the Head bone (no clip animates scale).
+      this.buddy.head?.scale.setScalar(showFull ? 1 : 0.0001);
+      this.buddy.pivot.visible = showBody;
+      return;
+    }
     this.headGroup.visible = showFull;
     this.body.visible = showBody;
   }
 
   dispose(): void {
+    this.disposed = true;
+    this.unsubCharacterReady?.();
+    this.unsubCharacterReady = null;
+    if (this.buddy) {
+      this.buddy.anim.dispose();
+      this.buddy.pivot.removeFromParent();
+      this.buddy.inst.dispose();
+      this.buddy = null;
+    }
     this.unsubWeaponReady?.();
     this.unsubWeaponReady = null;
     this.setNameTag(null);

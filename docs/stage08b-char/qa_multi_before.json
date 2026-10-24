@@ -1,0 +1,1892 @@
+{
+  "meta": {
+    "label": "before",
+    "root": "C:\\Users\\user\\AppData\\Local\\Temp\\claude\\C--Users-user-Desktop-Games-camper-strike\\6b89898d-c9a4-44be-bbb4-fb97123d8b54\\scratchpad\\before_head",
+    "phases": [
+      "multi"
+    ],
+    "ports": {
+      "server": 3300,
+      "vite": 5473,
+      "chromeDebug": 9500
+    },
+    "viewport": "1280x720",
+    "dpr": 1,
+    "quality": "medium",
+    "map": "forest_square",
+    "seed": 6501,
+    "timestamp": "2026-10-24T17:44:45.385Z",
+    "command": "node scripts/qa-stage08b-char.mjs --phase=multi --label=before --root=C:/Users/user/AppData/Local/Temp/claude/C--Users-user-Desktop-Games-camper-strike/6b89898d-c9a4-44be-bbb4-fb97123d8b54/scratchpad/before_head",
+    "gitHead": null,
+    "environment": {
+      "platform": "win32 10.0.26300 (x64)",
+      "cpuModel": "AMD Ryzen 7 6800H with Radeon Graphics         ",
+      "cpuCores": 16,
+      "totalRamGB": 15.25,
+      "nodeVersion": "v22.14.0",
+      "chromeVersion": "Chrome/156.0.8078.47",
+      "headless": true,
+      "ffmpeg": "C:\\Users\\user\\AppData\\Local\\ms-playwright\\ffmpeg-1011\\ffmpeg-win64.exe"
+    },
+    "helperWorld": {
+      "ready": true,
+      "gameplayHash": "670a9c21f0565c94",
+      "worldVersion": 2
+    }
+  },
+  "lane": null,
+  "checks": [
+    {
+      "id": "tdm.seeEachOther",
+      "status": "PASS",
+      "details": {
+        "aSees": [
+          {
+            "id": "Jvc3p8o-EZdPGrfwAAAA",
+            "name": "QA_Bravo",
+            "pos": {
+              "x": -25.693,
+              "y": 0.1,
+              "z": -83.372
+            },
+            "weapon": "rifle"
+          }
+        ],
+        "bSees": [
+          {
+            "id": "94ClqBdnQ3ik443MAAAB",
+            "name": "QA_Alpha",
+            "pos": {
+              "x": 16.875,
+              "y": 1.825,
+              "z": 89.717
+            },
+            "weapon": "rifle"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tdm.gameplayHash",
+      "status": "PASS",
+      "details": {
+        "a": "670a9c21f0565c94",
+        "b": "670a9c21f0565c94",
+        "expected": "670a9c21f0565c94"
+      }
+    },
+    {
+      "id": "tdm.worldVersion",
+      "status": "PASS",
+      "details": {
+        "a": 2,
+        "b": 2,
+        "expected": 2
+      }
+    },
+    {
+      "id": "tdm.sameRoomId",
+      "status": "PASS",
+      "details": {
+        "a": "r1i8cu",
+        "b": "r1i8cu"
+      }
+    },
+    {
+      "id": "tdm.characterModels",
+      "status": "SKIP",
+      "note": "getCharacterDiagnostics() hook absent",
+      "details": {
+        "a": null,
+        "b": null
+      }
+    },
+    {
+      "id": "tdm.weaponEquipSync",
+      "status": "PASS",
+      "details": {
+        "rows": [
+          {
+            "weapon": "pistol",
+            "bSeesWeapon": "pistol",
+            "bModelWeapon": null,
+            "ms": 162
+          },
+          {
+            "weapon": "shotgun",
+            "bSeesWeapon": "shotgun",
+            "bModelWeapon": null,
+            "ms": 155
+          },
+          {
+            "weapon": "sniper",
+            "bSeesWeapon": "sniper",
+            "bModelWeapon": null,
+            "ms": 167
+          },
+          {
+            "weapon": "rifle",
+            "bSeesWeapon": "rifle",
+            "bModelWeapon": null,
+            "ms": 163
+          }
+        ]
+      }
+    },
+    {
+      "id": "tdm.remoteAnim.Idle",
+      "status": "SKIP",
+      "note": "hook absent",
+      "details": {
+        "mode": null,
+        "snapSpeedMedian": 0
+      }
+    },
+    {
+      "id": "tdm.remoteAnim.Walk",
+      "status": "SKIP",
+      "note": "hook absent",
+      "details": {
+        "mode": null,
+        "snapSpeedMedian": 3,
+        "timeScaleMedian": null
+      }
+    },
+    {
+      "id": "tdm.remoteAnim.Run",
+      "status": "SKIP",
+      "note": "hook absent",
+      "details": {
+        "mode": null,
+        "snapSpeedMedian": 6.5,
+        "timeScaleMedian": null
+      }
+    },
+    {
+      "id": "tdm.remoteAnim.JumpAir",
+      "status": "SKIP",
+      "note": "hook absent",
+      "details": {
+        "states": [
+          null
+        ],
+        "airborneSamples": 11
+      }
+    },
+    {
+      "id": "tdm.remoteSpeed.walk≈3.0",
+      "status": "PASS",
+      "details": {
+        "snapSpeedMedian": 3,
+        "weapon": "pistol"
+      }
+    },
+    {
+      "id": "tdm.remoteSpeed.run≈6.5",
+      "status": "PASS",
+      "details": {
+        "snapSpeedMedian": 6.5,
+        "weapon": "pistol"
+      }
+    },
+    {
+      "id": "tdm.rejoinX5.connectivity",
+      "status": "PASS",
+      "details": {
+        "iterations": [
+          {
+            "i": 1,
+            "leftOk": true,
+            "othersAfterJoin": 1,
+            "bSeesA": true
+          },
+          {
+            "i": 2,
+            "leftOk": true,
+            "othersAfterJoin": 1,
+            "bSeesA": true
+          },
+          {
+            "i": 3,
+            "leftOk": true,
+            "othersAfterJoin": 1,
+            "bSeesA": true
+          },
+          {
+            "i": 4,
+            "leftOk": true,
+            "othersAfterJoin": 1,
+            "bSeesA": true
+          },
+          {
+            "i": 5,
+            "leftOk": true,
+            "othersAfterJoin": 1,
+            "bSeesA": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "tdm.rejoin.liveInstancesStable",
+      "status": "SKIP",
+      "note": "hook absent",
+      "details": {}
+    },
+    {
+      "id": "tdm.rejoin.heapGrowth<15MB",
+      "status": "PASS",
+      "details": {
+        "heapGrowthMB": 0.24,
+        "geometryGrowth": 0,
+        "programGrowth": 0
+      }
+    },
+    {
+      "id": "tdm.noPageExceptions",
+      "status": "PASS",
+      "details": {
+        "A": [],
+        "B": []
+      }
+    },
+    {
+      "id": "ffa.seeEachOther",
+      "status": "PASS",
+      "details": {
+        "aSees": [
+          {
+            "id": "d4qN-KkxNGyKOBQzAAAN",
+            "name": "QA_Bravo",
+            "pos": {
+              "x": 92.426,
+              "y": 0.192,
+              "z": 44.995
+            },
+            "weapon": "rifle"
+          }
+        ],
+        "bSees": [
+          {
+            "id": "aYRT_uq1Sd57Mq2OAAAM",
+            "name": "QA_Alpha",
+            "pos": {
+              "x": -98.284,
+              "y": -0.013,
+              "z": -67.441
+            },
+            "weapon": "rifle"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ffa.gameplayHash",
+      "status": "PASS",
+      "details": {
+        "a": "670a9c21f0565c94",
+        "b": "670a9c21f0565c94",
+        "expected": "670a9c21f0565c94"
+      }
+    },
+    {
+      "id": "ffa.worldVersion",
+      "status": "PASS",
+      "details": {
+        "a": 2,
+        "b": 2,
+        "expected": 2
+      }
+    },
+    {
+      "id": "ffa.sameRoomId",
+      "status": "PASS",
+      "details": {
+        "a": "r25pwq",
+        "b": "r25pwq"
+      }
+    },
+    {
+      "id": "ffa.characterModels",
+      "status": "SKIP",
+      "note": "getCharacterDiagnostics() hook absent",
+      "details": {
+        "a": null,
+        "b": null
+      }
+    },
+    {
+      "id": "ffa.noPageExceptions",
+      "status": "PASS",
+      "details": {
+        "A": [],
+        "B": []
+      }
+    },
+    {
+      "id": "survival.seeEachOther",
+      "status": "PASS",
+      "details": {
+        "aSees": [
+          {
+            "id": "H8kS40OFoY2I58TeAAAP",
+            "name": "QA_Bravo",
+            "pos": {
+              "x": 72.607,
+              "y": 0.439,
+              "z": 37.498
+            },
+            "weapon": null
+          }
+        ],
+        "bSees": [
+          {
+            "id": "BVc8qRPIukY5E_-UAAAO",
+            "name": "QA_Alpha",
+            "pos": {
+              "x": 6.302,
+              "y": 0.039,
+              "z": -56.366
+            },
+            "weapon": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "survival.gameplayHash",
+      "status": "PASS",
+      "details": {
+        "a": "670a9c21f0565c94",
+        "b": "670a9c21f0565c94",
+        "expected": "670a9c21f0565c94"
+      }
+    },
+    {
+      "id": "survival.worldVersion",
+      "status": "PASS",
+      "details": {
+        "a": 2,
+        "b": 2,
+        "expected": 2
+      }
+    },
+    {
+      "id": "survival.sameRoomId",
+      "status": "PASS",
+      "details": {
+        "a": "r30g7h",
+        "b": "r30g7h"
+      }
+    },
+    {
+      "id": "survival.characterModels",
+      "status": "SKIP",
+      "note": "getCharacterDiagnostics() hook absent",
+      "details": {
+        "a": null,
+        "b": null
+      }
+    },
+    {
+      "id": "survival.openContainer",
+      "status": "PASS",
+      "details": {
+        "attempts": [
+          {
+            "id": "poi:poi_service_station:cnt_2:old_toolbox_01",
+            "reached": true,
+            "openOk": true,
+            "code": null
+          },
+          {
+            "id": "poi:poi_lumber_mill:cnt_3:wooden_loot_crate_01",
+            "reached": true,
+            "openOk": true,
+            "code": null
+          },
+          {
+            "id": "poi:poi_lumber_mill:cnt_2:old_toolbox_01",
+            "reached": true,
+            "openOk": true,
+            "code": null
+          },
+          {
+            "id": "poi:poi_forest_camp:cnt_2:wooden_loot_crate_01",
+            "reached": true,
+            "openOk": true,
+            "code": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "survival.pickupItem",
+      "status": "PASS",
+      "details": {
+        "container": "poi:poi_forest_camp:cnt_2:wooden_loot_crate_01",
+        "item": "weapon:pistol",
+        "kind": "weapon"
+      }
+    },
+    {
+      "id": "survival.equipWeapon",
+      "status": "PASS",
+      "details": {
+        "equipped": "pistol"
+      }
+    },
+    {
+      "id": "survival.remoteSeesLootedWeapon",
+      "status": "PASS",
+      "details": {
+        "bSees": "pistol",
+        "bModel": null,
+        "equipped": "pistol"
+      }
+    },
+    {
+      "id": "survival.spectatorCycle",
+      "status": "PASS",
+      "details": {
+        "cycleNext": "BVc8qRPIukY5E_-UAAAO",
+        "cyclePrev": "BVc8qRPIukY5E_-UAAAO",
+        "expected": "BVc8qRPIukY5E_-UAAAO",
+        "matchPhase": "ended"
+      }
+    },
+    {
+      "id": "survival.roundReset",
+      "status": "PASS",
+      "details": {
+        "roundIdStart": 1,
+        "nextRound": 2,
+        "afterReset": {
+          "A": null,
+          "BremoteA": null,
+          "aSeesB": true
+        }
+      }
+    },
+    {
+      "id": "survival.noPageExceptions",
+      "status": "PASS",
+      "details": {
+        "A": [],
+        "B": []
+      }
+    }
+  ],
+  "notes": [
+    "getCharacterDiagnostics() hook absent → character-state checks are SKIP (not PASS); weapon sync still checked via getOtherPlayers()."
+  ],
+  "parts": [
+    "tdm",
+    "ffa",
+    "survival"
+  ],
+  "tdm": {
+    "roomName": "Q8B_tdm_before_8289",
+    "idA": "94ClqBdnQ3ik443MAAAB",
+    "idB": "Jvc3p8o-EZdPGrfwAAAA",
+    "world": {
+      "a": {
+        "meta": {
+          "mapId": "forest_square",
+          "worldVersion": 2,
+          "publicLayoutSeed": 6501,
+          "gameplayHash": "670a9c21f0565c94"
+        },
+        "gameplayHash": "670a9c21f0565c94",
+        "worldVersion": 2,
+        "roomId": "r1i8cu"
+      },
+      "b": {
+        "meta": {
+          "mapId": "forest_square",
+          "worldVersion": 2,
+          "publicLayoutSeed": 6501,
+          "gameplayHash": "670a9c21f0565c94"
+        },
+        "gameplayHash": "670a9c21f0565c94",
+        "worldVersion": 2,
+        "roomId": "r1i8cu"
+      }
+    },
+    "animRoutes": {
+      "walk": {
+        "attempts": [
+          {
+            "attempt": 1,
+            "route": {
+              "from": {
+                "x": 16.875,
+                "z": 89.717
+              },
+              "waypoints": [
+                {
+                  "x": 35.316,
+                  "z": 93.385
+                }
+              ],
+              "segments": [
+                {
+                  "yaw": -1.767,
+                  "len": 18.802
+                }
+              ],
+              "totalLen": 18.802
+            },
+            "driverAtEnd": {
+              "i": 0,
+              "n": 1,
+              "done": false,
+              "detours": 0
+            },
+            "from": {
+              "x": 16.875,
+              "z": 89.717
+            },
+            "end": {
+              "x": 25.395,
+              "z": 91.412
+            },
+            "predictionAtEnd": {
+              "divergenceM": 0.0002,
+              "predictedPos": {
+                "x": 25.3949,
+                "y": 2.3841,
+                "z": 91.4119
+              },
+              "authoritativePos": {
+                "x": 25.395,
+                "y": 2.384,
+                "z": 91.412
+              },
+              "pendingInputs": 0,
+              "reconcileCount": 292
+            },
+            "snapSpeedMedian": 3
+          }
+        ]
+      },
+      "run": {
+        "attempts": [
+          {
+            "attempt": 1,
+            "route": {
+              "from": {
+                "x": 25.436,
+                "z": 91.42
+              },
+              "waypoints": [
+                {
+                  "x": 56.304,
+                  "z": 97.56
+                }
+              ],
+              "segments": [
+                {
+                  "yaw": -1.767,
+                  "len": 31.473
+                }
+              ],
+              "totalLen": 31.473
+            },
+            "driverAtEnd": {
+              "i": 0,
+              "n": 1,
+              "done": false,
+              "detours": 0
+            },
+            "from": {
+              "x": 25.436,
+              "z": 91.42
+            },
+            "end": {
+              "x": 43.714,
+              "z": 95.056
+            },
+            "predictionAtEnd": {
+              "divergenceM": 0.0008,
+              "predictedPos": {
+                "x": 43.7136,
+                "y": 0.5578,
+                "z": 95.0553
+              },
+              "authoritativePos": {
+                "x": 43.714,
+                "y": 0.558,
+                "z": 95.056
+              },
+              "pendingInputs": 0,
+              "reconcileCount": 410
+            },
+            "snapSpeedMedian": 6.5
+          }
+        ]
+      }
+    },
+    "remoteAnim": {
+      "idle": [
+        {
+          "tMs": 1,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 119,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 227,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 329,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 442,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 551,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 657,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 760,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 864,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 972,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1082,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1189,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1298,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1405,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        }
+      ],
+      "walk": [
+        {
+          "tMs": 2,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 111,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 212,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 313,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 423,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 532,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 642,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 756,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 856,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 970,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1079,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1190,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1298,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1406,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1520,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1629,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1735,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1844,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1946,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 3,
+          "snapOnGround": true
+        }
+      ],
+      "run": [
+        {
+          "tMs": 3,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 110,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 215,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 316,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 429,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 534,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 645,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 748,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 857,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 964,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1073,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1174,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1286,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1392,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1500,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1606,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1707,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1809,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1914,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 6.5,
+          "snapOnGround": true
+        }
+      ],
+      "jump": [
+        {
+          "tMs": 1,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": false
+        },
+        {
+          "tMs": 60,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": false
+        },
+        {
+          "tMs": 111,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": false
+        },
+        {
+          "tMs": 168,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": false
+        },
+        {
+          "tMs": 222,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": false
+        },
+        {
+          "tMs": 277,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": false
+        },
+        {
+          "tMs": 340,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": false
+        },
+        {
+          "tMs": 408,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": false
+        },
+        {
+          "tMs": 462,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": false
+        },
+        {
+          "tMs": 523,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": false
+        },
+        {
+          "tMs": 589,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": false
+        },
+        {
+          "tMs": 646,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 697,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 752,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 813,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 866,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 920,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 981,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1033,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1088,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1152,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1210,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1271,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1326,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1381,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1446,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1503,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1558,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1611,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1675,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1734,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        },
+        {
+          "tMs": 1795,
+          "state": null,
+          "weapon": null,
+          "snapSpeed": 0,
+          "snapOnGround": true
+        }
+      ]
+    },
+    "remoteAnimSummary": {
+      "idle": {
+        "mode": null,
+        "snapSpeedMedian": 0
+      },
+      "walk": {
+        "mode": null,
+        "snapSpeedMedian": 3,
+        "timeScaleMedian": null
+      },
+      "run": {
+        "mode": null,
+        "snapSpeedMedian": 6.5,
+        "timeScaleMedian": null
+      },
+      "jump": {
+        "states": [
+          null
+        ],
+        "airborneSamples": 11
+      }
+    },
+    "rejoin": {
+      "iterations": [
+        {
+          "i": 1,
+          "leftOk": true,
+          "leaveDetectMs": 182,
+          "afterLeave": {
+            "heap": {
+              "usedMB": 63.59,
+              "totalMB": 65.58
+            },
+            "asset": null,
+            "others": 0,
+            "programs": 18,
+            "geometries": 163
+          },
+          "afterJoin": {
+            "asset": null,
+            "others": 1,
+            "bSeesA": true,
+            "bAsset": null
+          },
+          "newIdB": "RUMyMQknIXEpO7dYAAAD"
+        },
+        {
+          "i": 2,
+          "leftOk": true,
+          "leaveDetectMs": 182,
+          "afterLeave": {
+            "heap": {
+              "usedMB": 63.62,
+              "totalMB": 65.83
+            },
+            "asset": null,
+            "others": 0,
+            "programs": 18,
+            "geometries": 163
+          },
+          "afterJoin": {
+            "asset": null,
+            "others": 1,
+            "bSeesA": true,
+            "bAsset": null
+          },
+          "newIdB": "BoQuJsO0SVSy2NHLAAAF"
+        },
+        {
+          "i": 3,
+          "leftOk": true,
+          "leaveDetectMs": 171,
+          "afterLeave": {
+            "heap": {
+              "usedMB": 63.61,
+              "totalMB": 65.58
+            },
+            "asset": null,
+            "others": 0,
+            "programs": 18,
+            "geometries": 163
+          },
+          "afterJoin": {
+            "asset": null,
+            "others": 1,
+            "bSeesA": true,
+            "bAsset": null
+          },
+          "newIdB": "U_NCp-msLLv_llq0AAAH"
+        },
+        {
+          "i": 4,
+          "leftOk": true,
+          "leaveDetectMs": 177,
+          "afterLeave": {
+            "heap": {
+              "usedMB": 63.78,
+              "totalMB": 65.83
+            },
+            "asset": null,
+            "others": 0,
+            "programs": 18,
+            "geometries": 163
+          },
+          "afterJoin": {
+            "asset": null,
+            "others": 1,
+            "bSeesA": true,
+            "bAsset": null
+          },
+          "newIdB": "DfgsLgga_TUeWtaHAAAJ"
+        },
+        {
+          "i": 5,
+          "leftOk": true,
+          "leaveDetectMs": 295,
+          "afterLeave": {
+            "heap": {
+              "usedMB": 63.83,
+              "totalMB": 65.83
+            },
+            "asset": null,
+            "others": 0,
+            "programs": 18,
+            "geometries": 163
+          },
+          "afterJoin": {
+            "asset": null,
+            "others": 1,
+            "bSeesA": true,
+            "bAsset": null
+          },
+          "newIdB": "VGyY-e4tBVB6KJZSAAAL"
+        }
+      ],
+      "baseline": {
+        "heap": {
+          "usedMB": 64.48,
+          "totalMB": 66.81
+        },
+        "asset": null,
+        "programs": 18,
+        "render": {
+          "calls": 106,
+          "sceneCalls": 106,
+          "vmCalls": 0,
+          "triangles": 497864,
+          "sceneTris": 497864,
+          "vmTris": 0,
+          "geometries": 172,
+          "textures": 37
+        }
+      },
+      "heapGrowthMB_firstToLastLeave": 0.24,
+      "geometryGrowth_firstToLastLeave": 0,
+      "programGrowth_firstToLastLeave": 0
+    },
+    "errors": {
+      "A": {
+        "consoleErrors": [],
+        "consoleWarnings": 2,
+        "pageExceptions": [],
+        "networkErrors": []
+      },
+      "B": {
+        "consoleErrors": [],
+        "consoleWarnings": 12,
+        "pageExceptions": [],
+        "networkErrors": []
+      }
+    }
+  },
+  "charHook": false,
+  "ffa": {
+    "roomName": "Q8B_ffa_before_9139",
+    "idA": "aYRT_uq1Sd57Mq2OAAAM",
+    "idB": "d4qN-KkxNGyKOBQzAAAN",
+    "world": {
+      "a": {
+        "meta": {
+          "mapId": "forest_square",
+          "worldVersion": 2,
+          "publicLayoutSeed": 6501,
+          "gameplayHash": "670a9c21f0565c94"
+        },
+        "gameplayHash": "670a9c21f0565c94",
+        "worldVersion": 2,
+        "roomId": "r25pwq"
+      },
+      "b": {
+        "meta": {
+          "mapId": "forest_square",
+          "worldVersion": 2,
+          "publicLayoutSeed": 6501,
+          "gameplayHash": "670a9c21f0565c94"
+        },
+        "gameplayHash": "670a9c21f0565c94",
+        "worldVersion": 2,
+        "roomId": "r25pwq"
+      }
+    },
+    "errors": {
+      "A": {
+        "consoleErrors": [],
+        "consoleWarnings": 2,
+        "pageExceptions": [],
+        "networkErrors": []
+      },
+      "B": {
+        "consoleErrors": [],
+        "consoleWarnings": 2,
+        "pageExceptions": [],
+        "networkErrors": []
+      }
+    }
+  },
+  "survival": {
+    "roomName": "Q8B_surv_before_5060",
+    "idA": "BVc8qRPIukY5E_-UAAAO",
+    "idB": "H8kS40OFoY2I58TeAAAP",
+    "roundIdStart": 1,
+    "world": {
+      "a": {
+        "meta": {
+          "mapId": "forest_square",
+          "worldVersion": 2,
+          "publicLayoutSeed": 6501,
+          "gameplayHash": "670a9c21f0565c94"
+        },
+        "gameplayHash": "670a9c21f0565c94",
+        "worldVersion": 2,
+        "roomId": "r30g7h"
+      },
+      "b": {
+        "meta": {
+          "mapId": "forest_square",
+          "worldVersion": 2,
+          "publicLayoutSeed": 6501,
+          "gameplayHash": "670a9c21f0565c94"
+        },
+        "gameplayHash": "670a9c21f0565c94",
+        "worldVersion": 2,
+        "roomId": "r30g7h"
+      }
+    },
+    "containerCandidates": [
+      [
+        {
+          "id": "poi:poi_service_station:cnt_2:old_toolbox_01",
+          "pathLen": 70.446,
+          "approach": {
+            "x": 18.4,
+            "z": -15.974
+          }
+        },
+        {
+          "id": "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01",
+          "pathLen": 93.914,
+          "approach": {
+            "x": -66.407,
+            "z": -59.207
+          }
+        },
+        {
+          "id": "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+          "pathLen": 96.122,
+          "approach": {
+            "x": -69.2,
+            "z": -67.024
+          }
+        },
+        {
+          "id": "poi:poi_lumber_mill:cnt_3:wooden_loot_crate_01",
+          "pathLen": 139.321,
+          "approach": {
+            "x": -70.554,
+            "z": 8.68
+          }
+        },
+        {
+          "id": "poi:poi_lumber_mill:cnt_2:old_toolbox_01",
+          "pathLen": 143.371,
+          "approach": {
+            "x": -76.153,
+            "z": 11.759
+          }
+        },
+        {
+          "id": "poi:poi_forest_camp:cnt_2:wooden_loot_crate_01",
+          "pathLen": 176.266,
+          "approach": {
+            "x": -61.954,
+            "z": 63.98
+          }
+        }
+      ],
+      [
+        {
+          "id": "poi:poi_lumber_mill:cnt_3:wooden_loot_crate_01",
+          "pathLen": 91.575,
+          "approach": {
+            "x": -67.83,
+            "z": 10.5
+          }
+        },
+        {
+          "id": "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01",
+          "pathLen": 95.851,
+          "approach": {
+            "x": -66.407,
+            "z": -59.207
+          }
+        },
+        {
+          "id": "poi:poi_lumber_mill:cnt_2:old_toolbox_01",
+          "pathLen": 106.537,
+          "approach": {
+            "x": -76.153,
+            "z": 11.759
+          }
+        },
+        {
+          "id": "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+          "pathLen": 108.902,
+          "approach": {
+            "x": -69.2,
+            "z": -67.024
+          }
+        },
+        {
+          "id": "poi:poi_forest_camp:cnt_3:wooden_loot_crate_01",
+          "pathLen": 115.49,
+          "approach": {
+            "x": -51.007,
+            "z": 71.407
+          }
+        },
+        {
+          "id": "poi:poi_forest_camp:cnt_2:wooden_loot_crate_01",
+          "pathLen": 117.849,
+          "approach": {
+            "x": -61.954,
+            "z": 63.98
+          }
+        }
+      ],
+      [
+        {
+          "id": "poi:poi_lumber_mill:cnt_2:old_toolbox_01",
+          "pathLen": 15.817,
+          "approach": {
+            "x": -76.153,
+            "z": 11.759
+          }
+        },
+        {
+          "id": "poi:poi_forest_camp:cnt_2:wooden_loot_crate_01",
+          "pathLen": 55.407,
+          "approach": {
+            "x": -61.954,
+            "z": 63.98
+          }
+        },
+        {
+          "id": "poi:poi_forest_camp:cnt_3:wooden_loot_crate_01",
+          "pathLen": 64.262,
+          "approach": {
+            "x": -53.154,
+            "z": 70.98
+          }
+        },
+        {
+          "id": "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01",
+          "pathLen": 71.024,
+          "approach": {
+            "x": -66.407,
+            "z": -59.207
+          }
+        },
+        {
+          "id": "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+          "pathLen": 92.182,
+          "approach": {
+            "x": -69.2,
+            "z": -67.024
+          }
+        }
+      ],
+      [
+        {
+          "id": "poi:poi_forest_camp:cnt_2:wooden_loot_crate_01",
+          "pathLen": 55.226,
+          "approach": {
+            "x": -61.954,
+            "z": 63.98
+          }
+        },
+        {
+          "id": "poi:poi_forest_camp:cnt_3:wooden_loot_crate_01",
+          "pathLen": 64.484,
+          "approach": {
+            "x": -53.154,
+            "z": 70.98
+          }
+        },
+        {
+          "id": "poi:poi_ranger_house:cnt_3:wooden_loot_crate_01",
+          "pathLen": 73.856,
+          "approach": {
+            "x": -69.193,
+            "z": -59.207
+          }
+        },
+        {
+          "id": "poi:poi_ranger_house:cnt_2:old_toolbox_01",
+          "pathLen": 93.071,
+          "approach": {
+            "x": -69.2,
+            "z": -67.024
+          }
+        }
+      ]
+    ],
+    "lootFlow": {
+      "opened": "poi:poi_forest_camp:cnt_2:wooden_loot_crate_01",
+      "picked": {
+        "container": "poi:poi_forest_camp:cnt_2:wooden_loot_crate_01",
+        "item": "weapon:pistol",
+        "kind": "weapon"
+      },
+      "equipped": "pistol",
+      "attempts": [
+        {
+          "id": "poi:poi_service_station:cnt_2:old_toolbox_01",
+          "drive": {
+            "reached": true,
+            "ms": 11583,
+            "pos": {
+              "x": 18.398,
+              "y": 0.59,
+              "z": -15.983
+            }
+          },
+          "openOk": true,
+          "openCode": null,
+          "items": [
+            {
+              "id": "itm:r30g7h:r1:c16:0",
+              "kind": "ammo",
+              "catalogId": "ammo:rifle",
+              "weaponId": null
+            },
+            {
+              "id": "itm:r30g7h:r1:c16:1",
+              "kind": "grenade",
+              "catalogId": "throwable:grenade",
+              "weaponId": null
+            }
+          ],
+          "remoteStatesDuringOpen": [
+            null
+          ],
+          "pickOk": true,
+          "pickCode": null
+        },
+        {
+          "id": "poi:poi_lumber_mill:cnt_3:wooden_loot_crate_01",
+          "drive": {
+            "reached": true,
+            "ms": 14574,
+            "pos": {
+              "x": -67.652,
+              "y": 0.89,
+              "z": 10.456
+            }
+          },
+          "openOk": true,
+          "openCode": null,
+          "items": [
+            {
+              "id": "itm:r30g7h:r1:c13:0",
+              "kind": "ammo",
+              "catalogId": "ammo:rifle",
+              "weaponId": null
+            },
+            {
+              "id": "itm:r30g7h:r1:c13:1",
+              "kind": "medkit",
+              "catalogId": "heal:medkit",
+              "weaponId": null
+            },
+            {
+              "id": "itm:r30g7h:r1:c13:2",
+              "kind": "grenade",
+              "catalogId": "throwable:grenade",
+              "weaponId": null
+            }
+          ],
+          "remoteStatesDuringOpen": [
+            null
+          ],
+          "pickOk": true,
+          "pickCode": null
+        },
+        {
+          "id": "poi:poi_lumber_mill:cnt_2:old_toolbox_01",
+          "drive": {
+            "reached": true,
+            "ms": 3924,
+            "pos": {
+              "x": -76.017,
+              "y": 0.89,
+              "z": 11.642
+            }
+          },
+          "openOk": true,
+          "openCode": null,
+          "items": [
+            {
+              "id": "itm:r30g7h:r1:c12:0",
+              "kind": "ammo",
+              "catalogId": "ammo:shotgun",
+              "weaponId": null
+            },
+            {
+              "id": "itm:r30g7h:r1:c12:1",
+              "kind": "grenade",
+              "catalogId": "throwable:grenade",
+              "weaponId": null
+            }
+          ],
+          "remoteStatesDuringOpen": [
+            null
+          ],
+          "pickOk": true,
+          "pickCode": null
+        },
+        {
+          "id": "poi:poi_forest_camp:cnt_2:wooden_loot_crate_01",
+          "drive": {
+            "reached": true,
+            "ms": 9099,
+            "pos": {
+              "x": -61.957,
+              "y": 0.5,
+              "z": 63.939
+            }
+          },
+          "openOk": true,
+          "openCode": null,
+          "items": [
+            {
+              "id": "itm:r30g7h:r1:c21:0",
+              "kind": "weapon",
+              "catalogId": "weapon:pistol",
+              "weaponId": "pistol"
+            },
+            {
+              "id": "itm:r30g7h:r1:c21:1",
+              "kind": "ammo",
+              "catalogId": "ammo:pistol",
+              "weaponId": null
+            },
+            {
+              "id": "itm:r30g7h:r1:c21:2",
+              "kind": "grenade",
+              "catalogId": "throwable:grenade",
+              "weaponId": null
+            }
+          ],
+          "remoteStatesDuringOpen": [
+            null
+          ],
+          "pickOk": true,
+          "pickCode": null
+        }
+      ],
+      "bSeesWeapon": "pistol",
+      "bModelWeapon": null,
+      "aLocalModelWeapon": null
+    },
+    "spectator": {
+      "attempted": true,
+      "bPathLen": 127.91,
+      "bReached": true,
+      "lastTargetState": {
+        "role": "eliminated",
+        "alive": false,
+        "hp": 0,
+        "phase": "ended"
+      },
+      "shotsFired": 4,
+      "eliminated": true,
+      "diagBefore": {
+        "active": true,
+        "mode": "follow",
+        "targetId": "BVc8qRPIukY5E_-UAAAO",
+        "targetName": "QA_Alpha",
+        "availableTargetIds": [
+          "BVc8qRPIukY5E_-UAAAO"
+        ],
+        "thirdPerson": true,
+        "cameraPose": {
+          "x": -61.78419008363817,
+          "y": 2.6027343143542017,
+          "z": 66.4997398672492,
+          "yaw": -0.097,
+          "pitch": -0.119
+        }
+      },
+      "cycleNext": "BVc8qRPIukY5E_-UAAAO",
+      "cyclePrev": "BVc8qRPIukY5E_-UAAAO",
+      "diagAfter": {
+        "active": true,
+        "mode": "follow",
+        "targetId": "BVc8qRPIukY5E_-UAAAO",
+        "targetName": "QA_Alpha",
+        "availableTargetIds": [
+          "BVc8qRPIukY5E_-UAAAO"
+        ],
+        "thirdPerson": true,
+        "cameraPose": {
+          "x": -61.78419008363817,
+          "y": 2.6027343143542017,
+          "z": 66.4997398672492,
+          "yaw": -0.097,
+          "pitch": -0.119
+        }
+      },
+      "matchPhase": "ended",
+      "aRemoteOnB": null
+    },
+    "roundReset": {
+      "roundIdStart": 1,
+      "nextRound": 2,
+      "afterReset": {
+        "A": null,
+        "BremoteA": null,
+        "aSeesB": true
+      }
+    },
+    "errors": {
+      "A": {
+        "consoleErrors": [],
+        "consoleWarnings": 2,
+        "pageExceptions": [],
+        "networkErrors": []
+      },
+      "B": {
+        "consoleErrors": [],
+        "consoleWarnings": 2,
+        "pageExceptions": [],
+        "networkErrors": []
+      }
+    }
+  },
+  "summary": {
+    "pass": 26,
+    "fail": 0,
+    "skip": 8,
+    "notAchieved": 0,
+    "info": 0
+  },
+  "durationSec": 135.123
+}

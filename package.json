@@ -12,7 +12,7 @@
     "start": "npm run build && tsx src/server/index.ts",
     "serve": "tsx src/server/index.ts",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/shared/__tests__/*.test.ts src/client/game/terrain/__tests__/*.test.ts"
+    "test": "tsx --test src/shared/__tests__/*.test.ts src/client/game/terrain/__tests__/*.test.ts src/client/game/character/__tests__/*.test.ts src/client/game/animation/__tests__/*.test.ts"
   },
   "dependencies": {
     "express": "^5.3.0",

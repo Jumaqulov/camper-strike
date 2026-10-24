@@ -1,0 +1,1046 @@
+{
+  "meta": {
+    "label": "before",
+    "root": "C:\\Users\\user\\AppData\\Local\\Temp\\claude\\C--Users-user-Desktop-Games-camper-strike\\6b89898d-c9a4-44be-bbb4-fb97123d8b54\\scratchpad\\before_head",
+    "phases": [
+      "shots",
+      "video"
+    ],
+    "ports": {
+      "server": 3300,
+      "vite": 5473,
+      "chromeDebug": 9500
+    },
+    "viewport": "1280x720",
+    "dpr": 1,
+    "quality": "medium",
+    "map": "forest_square",
+    "seed": 6501,
+    "timestamp": "2026-10-24T17:14:01.955Z",
+    "command": "node scripts/qa-stage08b-char.mjs --phase=shots,video --label=before --root=C:/Users/user/AppData/Local/Temp/claude/C--Users-user-Desktop-Games-camper-strike/6b89898d-c9a4-44be-bbb4-fb97123d8b54/scratchpad/before_head",
+    "gitHead": null,
+    "environment": {
+      "platform": "win32 10.0.26300 (x64)",
+      "cpuModel": "AMD Ryzen 7 6800H with Radeon Graphics         ",
+      "cpuCores": 16,
+      "totalRamGB": 15.25,
+      "nodeVersion": "v22.14.0",
+      "chromeVersion": "Chrome/156.0.8078.47",
+      "headless": true,
+      "ffmpeg": "C:\\Users\\user\\AppData\\Local\\ms-playwright\\ffmpeg-1011\\ffmpeg-win64.exe"
+    },
+    "helperWorld": {
+      "ready": true,
+      "gameplayHash": "670a9c21f0565c94",
+      "worldVersion": 2
+    }
+  },
+  "lane": {
+    "start": {
+      "x": 0.574,
+      "y": -0.155,
+      "z": 104.05
+    },
+    "yaw": 0.05,
+    "len": 50.002,
+    "end": {
+      "x": -1.938,
+      "y": -0.112,
+      "z": 54.111
+    },
+    "yRange": 0.092,
+    "maxStepDy": 0.002,
+    "lateral": 0,
+    "closeupClear": 1,
+    "side": 1,
+    "sideClearRatio": 1,
+    "score": 63.905,
+    "evaluated": 4994,
+    "candidates": 285
+  },
+  "ffmpeg": "C:\\Users\\user\\AppData\\Local\\ms-playwright\\ffmpeg-1011\\ffmpeg-win64.exe",
+  "clips": [
+    {
+      "name": "remote_run",
+      "file": "docs/stage08b-char/qa_videos/before_remote_run.webm",
+      "exitCode": 0,
+      "ffmpegError": null,
+      "bytes": 5020648,
+      "outFrames": 180,
+      "outFps": 30,
+      "capturedFrames": 336,
+      "capturedSpanSec": 6.563,
+      "captureFps": 51.198,
+      "uniqueFramesUsed": 180,
+      "duplicatedOutFrames": 0,
+      "droppedCapturedFrames": 123,
+      "captureIntervalMs": {
+        "median": 17.492,
+        "max": 40.967
+      },
+      "samples": [
+        {
+          "tMs": 0,
+          "remotePos": {
+            "x": -68.87232492111892,
+            "y": 0.016,
+            "z": -95.88967507888108
+          },
+          "snapSpeed": 4.312,
+          "state": null
+        },
+        {
+          "tMs": 406,
+          "remotePos": {
+            "x": -70.3546075949155,
+            "y": 0.013219409282798572,
+            "z": -94.4073924050845
+          },
+          "snapSpeed": 6.5,
+          "state": null
+        },
+        {
+          "tMs": 809,
+          "remotePos": {
+            "x": -72.18446557373493,
+            "y": 0.017134426229312775,
+            "z": -92.57753442626507
+          },
+          "snapSpeed": 6.5,
+          "state": null
+        },
+        {
+          "tMs": 1214,
+          "remotePos": {
+            "x": -74.07088535031605,
+            "y": 0.03652229299360793,
+            "z": -90.69111464968395
+          },
+          "snapSpeed": 6.5,
+          "state": null
+        },
+        {
+          "tMs": 1616,
+          "remotePos": {
+            "x": -75.81269546436779,
+            "y": 0.06644708423335449,
+            "z": -88.94930453563221
+          },
+          "snapSpeed": 6.5,
+          "state": null
+        },
+        {
+          "tMs": 2026,
+          "remotePos": {
+            "x": -77.67888198759395,
+            "y": 0.1434782608706318,
+            "z": -87.08311801240605
+          },
+          "snapSpeed": 6.5,
+          "state": null
+        },
+        {
+          "tMs": 2442,
+          "remotePos": {
+            "x": -79.64303548385998,
+            "y": 0.30465483870838017,
+            "z": -85.11990322581751
+          },
+          "snapSpeed": 6.5,
+          "state": null
+        },
+        {
+          "tMs": 2869,
+          "remotePos": {
+            "x": -81.45260714288003,
+            "y": 0.49909285714530566,
+            "z": -83.30961428569151
+          },
+          "snapSpeed": 6.5,
+          "state": null
+        },
+        {
+          "tMs": 3288,
+          "remotePos": {
+            "x": -83.384,
+            "y": 0.671,
+            "z": -81.379
+          },
+          "snapSpeed": 6.5,
+          "state": null
+        },
+        {
+          "tMs": 3696,
+          "remotePos": {
+            "x": -85.37471229051346,
+            "y": 0.7650139664806562,
+            "z": -79.38728770948653
+          },
+          "snapSpeed": 6.5,
+          "state": null
+        },
+        {
+          "tMs": 4107,
+          "remotePos": {
+            "x": -87.233,
+            "y": 0.772,
+            "z": -77.529
+          },
+          "snapSpeed": 6.5,
+          "state": null
+        },
+        {
+          "tMs": 4523,
+          "remotePos": {
+            "x": -89.252,
+            "y": 0.697,
+            "z": -75.511
+          },
+          "snapSpeed": 6.5,
+          "state": null
+        },
+        {
+          "tMs": 4928,
+          "remotePos": {
+            "x": -91.12506840387026,
+            "y": 0.5596677524468143,
+            "z": -73.63693159612974
+          },
+          "snapSpeed": 6.5,
+          "state": null
+        },
+        {
+          "tMs": 5354,
+          "remotePos": {
+            "x": -92.99451097181314,
+            "y": 0.37516927899379043,
+            "z": -71.76748902818684
+          },
+          "snapSpeed": 6.5,
+          "state": null
+        },
+        {
+          "tMs": 5762,
+          "remotePos": {
+            "x": -94.89182575758898,
+            "y": 0.18967424242297565,
+            "z": -69.87017424241103
+          },
+          "snapSpeed": 6.5,
+          "state": null
+        },
+        {
+          "tMs": 6166,
+          "remotePos": {
+            "x": -96.83759659088281,
+            "y": 0.055465909091885014,
+            "z": -67.92440340911719
+          },
+          "snapSpeed": 6.5,
+          "state": null
+        }
+      ],
+      "driver": {
+        "i": 1,
+        "n": 1,
+        "done": true,
+        "detours": 0
+      },
+      "stateMode": null,
+      "snapSpeedMedian": 6.5
+    },
+    {
+      "name": "walk_3p",
+      "file": "docs/stage08b-char/qa_videos/before_walk_3p.webm",
+      "exitCode": 0,
+      "ffmpegError": null,
+      "bytes": 4883501,
+      "outFrames": 180,
+      "outFps": 30,
+      "capturedFrames": 388,
+      "capturedSpanSec": 6.574,
+      "captureFps": 59.016,
+      "uniqueFramesUsed": 180,
+      "duplicatedOutFrames": 0,
+      "droppedCapturedFrames": 174,
+      "captureIntervalMs": {
+        "median": 16.949,
+        "max": 19.978
+      },
+      "samples": [
+        {
+          "tMs": 0,
+          "pos": {
+            "x": 0.467,
+            "y": -0.145,
+            "z": 101.91
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 407,
+          "pos": {
+            "x": 0.406,
+            "y": -0.134,
+            "z": 100.697
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 812,
+          "pos": {
+            "x": 0.345,
+            "y": -0.124,
+            "z": 99.48
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 1216,
+          "pos": {
+            "x": 0.287,
+            "y": -0.116,
+            "z": 98.312
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 1620,
+          "pos": {
+            "x": 0.226,
+            "y": -0.109,
+            "z": 97.099
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 2027,
+          "pos": {
+            "x": 0.164,
+            "y": -0.104,
+            "z": 95.866
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 2450,
+          "pos": {
+            "x": 0.1,
+            "y": -0.103,
+            "z": 94.583
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 2859,
+          "pos": {
+            "x": 0.039,
+            "y": -0.106,
+            "z": 93.354
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 3274,
+          "pos": {
+            "x": -0.022,
+            "y": -0.112,
+            "z": 92.136
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 3694,
+          "pos": {
+            "x": -0.086,
+            "y": -0.123,
+            "z": 90.854
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 4099,
+          "pos": {
+            "x": -0.148,
+            "y": -0.134,
+            "z": 89.623
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 4511,
+          "pos": {
+            "x": -0.209,
+            "y": -0.147,
+            "z": 88.395
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 4932,
+          "pos": {
+            "x": -0.27,
+            "y": -0.154,
+            "z": 87.176
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 5340,
+          "pos": {
+            "x": -0.332,
+            "y": -0.159,
+            "z": 85.949
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 5758,
+          "pos": {
+            "x": -0.395,
+            "y": -0.161,
+            "z": 84.681
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 6176,
+          "pos": {
+            "x": -0.458,
+            "y": -0.161,
+            "z": 83.42
+          },
+          "onGround": true,
+          "state": null
+        }
+      ],
+      "measuredSpeedMps": 2.998,
+      "startPos": {
+        "x": 0.47,
+        "z": 101.962
+      },
+      "expectedSpeedMps": 3,
+      "stateMode": null,
+      "weapon": "pistol"
+    },
+    {
+      "name": "walk_side",
+      "file": "docs/stage08b-char/qa_videos/before_walk_side.webm",
+      "exitCode": 0,
+      "ffmpegError": null,
+      "bytes": 4748876,
+      "outFrames": 180,
+      "outFps": 30,
+      "capturedFrames": 383,
+      "capturedSpanSec": 6.598,
+      "captureFps": 58.049,
+      "uniqueFramesUsed": 180,
+      "duplicatedOutFrames": 0,
+      "droppedCapturedFrames": 168,
+      "captureIntervalMs": {
+        "median": 17.066,
+        "max": 35.774
+      },
+      "samples": [
+        {
+          "tMs": 0,
+          "pos": {
+            "x": 0.471,
+            "y": -0.147,
+            "z": 101.989
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 403,
+          "pos": {
+            "x": 0.409,
+            "y": -0.134,
+            "z": 100.756
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 823,
+          "pos": {
+            "x": 0.343,
+            "y": -0.124,
+            "z": 99.428
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 1277,
+          "pos": {
+            "x": 0.274,
+            "y": -0.114,
+            "z": 98.06
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 1710,
+          "pos": {
+            "x": 0.213,
+            "y": -0.107,
+            "z": 96.832
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 2127,
+          "pos": {
+            "x": 0.151,
+            "y": -0.103,
+            "z": 95.606
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 2533,
+          "pos": {
+            "x": 0.089,
+            "y": -0.102,
+            "z": 94.367
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 2941,
+          "pos": {
+            "x": 0.028,
+            "y": -0.107,
+            "z": 93.138
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 3352,
+          "pos": {
+            "x": -0.034,
+            "y": -0.113,
+            "z": 91.908
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 3762,
+          "pos": {
+            "x": -0.095,
+            "y": -0.125,
+            "z": 90.686
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 4166,
+          "pos": {
+            "x": -0.155,
+            "y": -0.135,
+            "z": 89.487
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 4570,
+          "pos": {
+            "x": -0.216,
+            "y": -0.149,
+            "z": 88.264
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 4991,
+          "pos": {
+            "x": -0.278,
+            "y": -0.155,
+            "z": 87.024
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 5396,
+          "pos": {
+            "x": -0.34,
+            "y": -0.16,
+            "z": 85.791
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 5800,
+          "pos": {
+            "x": -0.401,
+            "y": -0.161,
+            "z": 84.569
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 6210,
+          "pos": {
+            "x": -0.463,
+            "y": -0.161,
+            "z": 83.333
+          },
+          "onGround": true,
+          "state": null
+        }
+      ],
+      "measuredSpeedMps": 3.008,
+      "startPos": {
+        "x": 0.471,
+        "z": 101.989
+      },
+      "expectedSpeedMps": 3,
+      "stateMode": null,
+      "weapon": "pistol"
+    },
+    {
+      "name": "run_3p",
+      "file": "docs/stage08b-char/qa_videos/before_run_3p.webm",
+      "exitCode": 0,
+      "ffmpegError": null,
+      "bytes": 5933347,
+      "outFrames": 180,
+      "outFps": 30,
+      "capturedFrames": 383,
+      "capturedSpanSec": 6.502,
+      "captureFps": 58.908,
+      "uniqueFramesUsed": 180,
+      "duplicatedOutFrames": 0,
+      "droppedCapturedFrames": 173,
+      "captureIntervalMs": {
+        "median": 16.915,
+        "max": 33.154
+      },
+      "samples": [
+        {
+          "tMs": 0,
+          "pos": {
+            "x": 0.355,
+            "y": -0.126,
+            "z": 99.676
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 403,
+          "pos": {
+            "x": 0.222,
+            "y": -0.108,
+            "z": 97.012
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 813,
+          "pos": {
+            "x": 0.09,
+            "y": -0.102,
+            "z": 94.37
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 1217,
+          "pos": {
+            "x": -0.042,
+            "y": -0.115,
+            "z": 91.731
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 1620,
+          "pos": {
+            "x": -0.174,
+            "y": -0.139,
+            "z": 89.106
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 2027,
+          "pos": {
+            "x": -0.307,
+            "y": -0.159,
+            "z": 86.448
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 2438,
+          "pos": {
+            "x": -0.438,
+            "y": -0.161,
+            "z": 83.817
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 2843,
+          "pos": {
+            "x": -0.571,
+            "y": -0.161,
+            "z": 81.179
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 3247,
+          "pos": {
+            "x": -0.704,
+            "y": -0.17,
+            "z": 78.513
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 3657,
+          "pos": {
+            "x": -0.836,
+            "y": -0.184,
+            "z": 75.867
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 4065,
+          "pos": {
+            "x": -0.969,
+            "y": -0.188,
+            "z": 73.208
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 4477,
+          "pos": {
+            "x": -1.1,
+            "y": -0.167,
+            "z": 70.589
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 4880,
+          "pos": {
+            "x": -1.232,
+            "y": -0.148,
+            "z": 67.952
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 5289,
+          "pos": {
+            "x": -1.366,
+            "y": -0.138,
+            "z": 65.29
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 5711,
+          "pos": {
+            "x": -1.504,
+            "y": -0.14,
+            "z": 62.516
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 6117,
+          "pos": {
+            "x": -1.637,
+            "y": -0.14,
+            "z": 59.867
+          },
+          "onGround": true,
+          "state": null
+        }
+      ],
+      "measuredSpeedMps": 6.516,
+      "startPos": {
+        "x": 0.355,
+        "z": 99.676
+      },
+      "expectedSpeedMps": 6.5,
+      "stateMode": null,
+      "weapon": "pistol"
+    },
+    {
+      "name": "run_side",
+      "file": "docs/stage08b-char/qa_videos/before_run_side.webm",
+      "exitCode": 0,
+      "ffmpegError": null,
+      "bytes": 5785399,
+      "outFrames": 180,
+      "outFps": 30,
+      "capturedFrames": 382,
+      "capturedSpanSec": 6.576,
+      "captureFps": 58.092,
+      "uniqueFramesUsed": 178,
+      "duplicatedOutFrames": 2,
+      "droppedCapturedFrames": 170,
+      "captureIntervalMs": {
+        "median": 16.998,
+        "max": 86.871
+      },
+      "samples": [
+        {
+          "tMs": 0,
+          "pos": {
+            "x": 0.351,
+            "y": -0.125,
+            "z": 99.596
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 405,
+          "pos": {
+            "x": 0.224,
+            "y": -0.108,
+            "z": 97.056
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 818,
+          "pos": {
+            "x": 0.085,
+            "y": -0.102,
+            "z": 94.286
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 1225,
+          "pos": {
+            "x": -0.047,
+            "y": -0.116,
+            "z": 91.641
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 1639,
+          "pos": {
+            "x": -0.18,
+            "y": -0.141,
+            "z": 88.982
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 2054,
+          "pos": {
+            "x": -0.319,
+            "y": -0.16,
+            "z": 86.202
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 2477,
+          "pos": {
+            "x": -0.457,
+            "y": -0.161,
+            "z": 83.443
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 2893,
+          "pos": {
+            "x": -0.589,
+            "y": -0.161,
+            "z": 80.801
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 3306,
+          "pos": {
+            "x": -0.724,
+            "y": -0.169,
+            "z": 78.116
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 3725,
+          "pos": {
+            "x": -0.861,
+            "y": -0.19,
+            "z": 75.365
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 4137,
+          "pos": {
+            "x": -0.994,
+            "y": -0.186,
+            "z": 72.723
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 4554,
+          "pos": {
+            "x": -1.127,
+            "y": -0.164,
+            "z": 70.065
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 4973,
+          "pos": {
+            "x": -1.265,
+            "y": -0.14,
+            "z": 67.297
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 5378,
+          "pos": {
+            "x": -1.4,
+            "y": -0.14,
+            "z": 64.61
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 5794,
+          "pos": {
+            "x": -1.532,
+            "y": -0.141,
+            "z": 61.961
+          },
+          "onGround": true,
+          "state": null
+        },
+        {
+          "tMs": 6199,
+          "pos": {
+            "x": -1.66,
+            "y": -0.14,
+            "z": 59.405
+          },
+          "onGround": true,
+          "state": null
+        }
+      ],
+      "measuredSpeedMps": 6.492,
+      "startPos": {
+        "x": 0.356,
+        "z": 99.702
+      },
+      "expectedSpeedMps": 6.5,
+      "stateMode": null,
+      "weapon": "pistol"
+    }
+  ],
+  "notes": [
+    "Local clips use pistol (speedMul 1.0 → 3.0/6.5 m/s); client A runs offline-local (DEV netSim dropRate=1) on the helper lane so placement is identical BEFORE/AFTER. remote_run is server-authoritative (A in a separate pre-offline window, route from its spawn) and its framing depends on the spawn."
+  ],
+  "roomName": "S08B_before_video_18698",
+  "charHook": false,
+  "remoteRoute": {
+    "from": {
+      "x": -64.177,
+      "z": -100.585
+    },
+    "waypoints": [
+      {
+        "x": -104.667,
+        "z": -60.095
+      }
+    ],
+    "segments": [
+      {
+        "yaw": 2.356,
+        "len": 57.262
+      }
+    ],
+    "totalLen": 57.262
+  },
+  "errorsB": {
+    "consoleErrors": [],
+    "consoleWarnings": 2,
+    "pageExceptions": [],
+    "networkErrors": []
+  },
+  "errorsA": {
+    "consoleErrors": [],
+    "consoleWarnings": 2,
+    "pageExceptions": [],
+    "networkErrors": []
+  },
+  "durationSec": 67.398
+}

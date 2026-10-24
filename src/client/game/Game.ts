@@ -49,7 +49,8 @@ import {
   SurvivalUI,
   type SurvivalUIDiagnostics,
 } from './survival';
-import { colorFor, Stickman } from './Stickman';
+import { colorFor, Stickman, type CharacterModelDiag } from './Stickman';
+import { getCharacterAssetDiagnostics } from './character/CharacterAssetRegistry';
 import { ViewModel } from './ViewModel';
 import { getBuildingAssetDiagnostics } from './buildings';
 import { getContainerAssetDiagnostics } from './containers';
@@ -284,6 +285,12 @@ declare global {
       getOtherPlayerCount?: () => number;
       getOtherPlayers?: () => Array<{ id: string; name: string; pos: Vec3; weapon: WeaponId | null }>;
       getContainersCount?: () => number;
+      /** 08B: Camper Buddy asset + per-model animator/weapon-mount diagnostics. */
+      getCharacterDiagnostics?: () => {
+        asset: ReturnType<typeof getCharacterAssetDiagnostics>;
+        local: CharacterModelDiag;
+        remotes: Array<{ id: string } & CharacterModelDiag>;
+      };
     } | null;
   }
 }
@@ -906,6 +913,14 @@ export class Game {
             weapon: r.weapon,
           })),
         getContainersCount: () => this.lootSnapshot?.containers.length ?? 0,
+        getCharacterDiagnostics: () => ({
+          asset: getCharacterAssetDiagnostics(),
+          local: this.myModel.getCharacterDiagnostics(),
+          remotes: Array.from(this.remotes.values()).map((r) => ({
+            id: r.id,
+            ...r.model.getCharacterDiagnostics(),
+          })),
+        }),
       };
       // 08-FIX: F9 collision debug overlay (DEV only — never constructed in production builds)
       this.collisionDebug = new CollisionDebugOverlay(this.scene, document.body);
@@ -1088,6 +1103,7 @@ export class Game {
           this.onInventoryState(ack.inventory);
         }
         if (ack?.ok && ack.container) {
+          this.myModel.playInteract();
           this.lootUi.setActiveContainer(ack.container);
           this.lootUi.showStatus(`${ack.container.labelUz} ochildi`, 'info', 2000);
         } else if (ack && !ack.ok) {

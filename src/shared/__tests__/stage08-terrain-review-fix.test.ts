@@ -119,13 +119,18 @@ describe('STAGE 08-TERRAIN-ART-POLISH-REVIEW-FIX — Unit & Integratsiya QA', ()
     }
     assert.equal(EXPECTED_GRASS_GLBS.length, 17, 'Aynan 17 ta grass GLB bo\'lishi shart');
 
-    // 1b. Jami 53 GLB tekshiruvi (36 ta dastlabki + 17 ta grass)
+    // 1b. Jami 53 GLB tekshiruvi (36 ta dastlabki + 17 ta grass). 08B: personaj GLB'lari
+    // (public/models/characters/) alohida hisoblanadi — muhit/qurol 53 ta GLB o'zgarmasligi shart.
+    const charactersDir = path.join(modelsDir, 'characters');
     const allGlbs = getAllGlbFiles(modelsDir);
+    const envGlbs = allGlbs.filter((p) => !p.startsWith(charactersDir + path.sep));
     assert.equal(
-      allGlbs.length,
+      envGlbs.length,
       53,
-      `public/models/ ichida jami aynan 53 ta GLB bo'lishi shart, topildi: ${allGlbs.length}`,
+      `public/models/ ichida (characters/ dan tashqari) jami aynan 53 ta GLB bo'lishi shart, topildi: ${envGlbs.length}`,
     );
+    const characterGlbs = allGlbs.length - envGlbs.length;
+    assert.equal(characterGlbs, 1, `08B: public/models/characters/ da aynan 1 ta GLB bo'lishi shart, topildi: ${characterGlbs}`);
 
     for (const glbPath of allGlbs) {
       assertValidGltfHeader(glbPath);
