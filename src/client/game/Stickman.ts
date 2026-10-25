@@ -151,6 +151,11 @@ export interface CharacterModelDiag {
   weapon: string | null;
   muzzleWorld: { x: number; y: number; z: number };
   gripWorld: { x: number; y: number; z: number } | null;
+  /** uuids proving per-instance independence (null on the procedural fallback). */
+  skeletonUuid: string | null;
+  hipsBoneUuid: string | null;
+  teamMaterialUuid: string | null;
+  teamColorHex: string | null;
 }
 
 /** 08B: Camper Buddy GLB visual + its animator / weapon mount (one per Stickman, never shared). */
@@ -529,6 +534,10 @@ export class Stickman {
       weapon: this.weapon,
       muzzleWorld: { x: muzzle.x, y: muzzle.y, z: muzzle.z },
       gripWorld,
+      skeletonUuid: b?.inst.skinnedMeshes[0]?.skeleton.uuid ?? null,
+      hipsBoneUuid: b?.inst.bones.get('Hips')?.uuid ?? null,
+      teamMaterialUuid: b?.inst.teamMaterial.uuid ?? null,
+      teamColorHex: b ? '#' + b.inst.teamMaterial.color.getHexString() : null,
     };
   }
 

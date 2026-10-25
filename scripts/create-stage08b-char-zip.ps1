@@ -1,10 +1,12 @@
+param([string]$Name = 'stickman-strike-stage08b-char')
+
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $sourceDir = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$zipPath = Join-Path $sourceDir 'stickman-strike-stage08b-char.zip'
+$zipPath = Join-Path $sourceDir "$Name.zip"
 
-Write-Host "Creating clean Stage 08B-CHAR-INTEGRATION ZIP at $zipPath..."
+Write-Host "Creating clean Stage 08B ZIP at $zipPath..."
 
 if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 

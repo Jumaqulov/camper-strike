@@ -596,7 +596,7 @@ describe('BOSQICH 04B — forest_square (256×256 m, 6 POI, Multi-Biome Forest &
     }
   });
 
-  it('6. 36 ta Spawn nuqtasi, NavGraph (< 250 ms) yo‘l topishi va buildWorld sahna culler/shadow tekshiruvi', () => {
+  it('6. 36 ta Spawn nuqtasi, NavGraph yo‘l topishi va buildWorld sahna culler/shadow tekshiruvi', (t) => {
     const world = createForestSquareWorld({ publicLayoutSeed: 6501 });
 
     // 6a) 12 'red', 12 'blue', 12 'none' spawns — all safe and non-colliding
@@ -617,15 +617,13 @@ describe('BOSQICH 04B — forest_square (256×256 m, 6 POI, Multi-Biome Forest &
       );
     }
 
-    // 6b) new NavGraph(world) builds in < 250 ms and finds paths from north to south & between POIs
+    // 6b) new NavGraph(world) builds and finds paths from north to south & between POIs.
+    // 08B-FINAL-QA: the < 250 ms budget lives in src/shared/__perf__/navgraph-build.perf.test.ts
+    // (`npm run test:perf`, serial, warm-up + median). Under the parallel functional suite this
+    // single cold sample measured CPU contention (327–507 ms), not NavGraph itself (~150–190 ms alone).
     const t0 = performance.now();
     const nav = new NavGraph(world);
-    const buildMs = performance.now() - t0;
-
-    assert.ok(
-      buildMs < 250,
-      `NavGraph(forest_square) < 250 ms ichida qurilishi shart (actual=${buildMs.toFixed(1)} ms)`,
-    );
+    t.diagnostic(`NavGraph(forest_square) build (parallel suite, info only): ${(performance.now() - t0).toFixed(1)} ms`);
     assert.equal(nav.nx, 64);
     assert.equal(nav.nz, 64);
     assert.ok(nav.validList.length > 2500);

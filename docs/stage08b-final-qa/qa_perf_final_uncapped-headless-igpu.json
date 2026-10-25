@@ -1,0 +1,478 @@
+{
+  "meta": {
+    "label": "final",
+    "root": "C:\\Users\\user\\Desktop\\Games\\camper-strike",
+    "phases": [
+      "perf"
+    ],
+    "ports": {
+      "server": 3300,
+      "vite": 5473,
+      "chromeDebug": 9500
+    },
+    "viewport": "1280x720",
+    "dpr": 1,
+    "quality": "medium",
+    "map": "forest_square",
+    "seed": 6501,
+    "timestamp": "2026-10-25T16:06:23.947Z",
+    "command": "node scripts/qa-stage08b-char.mjs --out=docs/stage08b-final-qa --phase=perf --label=final --perfMode=uncapped --quality=medium --scenes=lane --igpu",
+    "gitHead": "0c3b8ba",
+    "gitDirty": 6,
+    "environment": {
+      "platform": "win32 10.0.26300 (x64)",
+      "cpuModel": "AMD Ryzen 7 6800H with Radeon Graphics         ",
+      "cpuCores": 16,
+      "totalRamGB": 15.25,
+      "nodeVersion": "v22.14.0",
+      "chromeVersion": "Chrome/156.0.8078.47",
+      "chromeArgs": [
+        "--headless=new",
+        "--remote-debugging-port=9500",
+        "--window-size=1280,720",
+        "--force-device-scale-factor=1",
+        "--disable-gpu-vsync",
+        "--disable-frame-rate-limit",
+        "--force_low_power_gpu",
+        "--use-angle=d3d11",
+        "--disable-background-timer-throttling",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding",
+        "--enable-precise-memory-info",
+        "--autoplay-policy=no-user-gesture-required",
+        "--mute-audio",
+        "--no-first-run",
+        "--no-default-browser-check",
+        "--user-data-dir=C:\\Users\\user\\AppData\\Local\\Temp\\camper_qa08b_final_1792944385215",
+        "about:blank"
+      ],
+      "headless": true,
+      "ffmpeg": "C:\\Users\\user\\AppData\\Local\\ms-playwright\\ffmpeg-1011\\ffmpeg-win64.exe"
+    },
+    "helperWorld": {
+      "ready": true,
+      "gameplayHash": "670a9c21f0565c94",
+      "worldVersion": 2
+    }
+  },
+  "lane": {
+    "start": {
+      "x": 0.574,
+      "y": -0.155,
+      "z": 104.05
+    },
+    "yaw": 0.05,
+    "len": 50.002,
+    "end": {
+      "x": -1.938,
+      "y": -0.112,
+      "z": 54.111
+    },
+    "yRange": 0.092,
+    "maxStepDy": 0.002,
+    "lateral": 0,
+    "closeupClear": 1,
+    "side": 1,
+    "sideClearRatio": 1,
+    "score": 63.905,
+    "evaluated": 4994,
+    "candidates": 285
+  },
+  "notes": [
+    "achievedFps / 1% low / p95 / p99 / %>16.7 / %>33.3 come from a page-side rAF interval recorder (presented-frame cadence); gameBench holds the game startBenchmarkCapture() numbers.",
+    "1% low = 1000 / mean of the slowest 1 % of frame intervals."
+  ],
+  "mode": "uncapped-headless-igpu",
+  "perfMode": "uncapped",
+  "headful": false,
+  "igpu": true,
+  "qualities": [
+    "medium"
+  ],
+  "warmupSec": 5,
+  "captureSec": 20,
+  "repeats": 2,
+  "rows": [
+    {
+      "scene": "lane_with_clientB",
+      "desc": "helper lane start: local player (3P, rifle) + client B beside it, fixed camera",
+      "quality": "medium",
+      "mode": "uncapped-headless-igpu",
+      "clientBVisible": true,
+      "clientBRafCapFps": 2,
+      "achievedFps": 272.782,
+      "fps1PctLow": 61.343,
+      "frameTimeMedianMs": 3.6,
+      "frameTimeP95Ms": 5.3,
+      "frameTimeP99Ms": 15.2,
+      "pctFramesOver16_7ms": 0.843,
+      "pctFramesOver20ms": 0.495,
+      "pctFramesOver33_3ms": 0.202,
+      "gameBench": {
+        "fpsMedian": 294.12,
+        "fps1PctLow": 58.38,
+        "frameTimeP95Ms": 5.3,
+        "frameTimeP99Ms": 13.6,
+        "gpuTimeMedianMs": 3.502
+      },
+      "drawCalls": 163,
+      "triangles": 754095,
+      "geometries": 140,
+      "textures": 44,
+      "programs": 34,
+      "heapUsedMB": 73.52,
+      "runs": [
+        {
+          "repeat": 1,
+          "game": {
+            "frames": 5384,
+            "durationMs": 20026.5,
+            "fpsMean": 268.84,
+            "fpsMedian": 277.78,
+            "fpsP10": 208.33,
+            "fps1PctLow": 58.38,
+            "fps1PctLowP99": 135.14,
+            "frameTimeMedianMs": 3.6,
+            "frameTimeP95Ms": 5.3,
+            "frameTimeP99Ms": 7.4,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 3.493,
+            "gpuTimeP95Ms": 3.681,
+            "render": {
+              "calls": 163,
+              "sceneCalls": 163,
+              "vmCalls": 0,
+              "triangles": 754095,
+              "sceneTris": 754095,
+              "vmTris": 0,
+              "geometries": 140,
+              "textures": 44
+            },
+            "heapUsedMB": 77.21,
+            "heapTotalMB": 104.29,
+            "programs": 34
+          },
+          "rafCadence": {
+            "frames": 5385,
+            "durationSec": 20.026,
+            "achievedFps": 268.899,
+            "frameTimeMedianMs": 3.6,
+            "frameTimeP95Ms": 5.3,
+            "frameTimeP99Ms": 7.6,
+            "frameTimeMaxMs": 37.3,
+            "fps1PctLow": 61.343,
+            "pctFramesOver16_7ms": 0.464,
+            "pctFramesOver20ms": 0.316,
+            "pctFramesOver33_3ms": 0.074
+          }
+        },
+        {
+          "repeat": 2,
+          "game": {
+            "frames": 5458,
+            "durationMs": 20006.4,
+            "fpsMean": 272.81,
+            "fpsMedian": 294.12,
+            "fpsP10": 217.39,
+            "fps1PctLow": 36.68,
+            "fps1PctLowP99": 73.53,
+            "frameTimeMedianMs": 3.4,
+            "frameTimeP95Ms": 5,
+            "frameTimeP99Ms": 13.6,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.1,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 3.502,
+            "gpuTimeP95Ms": 3.677,
+            "render": {
+              "calls": 163,
+              "sceneCalls": 163,
+              "vmCalls": 0,
+              "triangles": 754095,
+              "sceneTris": 754095,
+              "vmTris": 0,
+              "geometries": 140,
+              "textures": 44
+            },
+            "heapUsedMB": 73.52,
+            "heapTotalMB": 104.66,
+            "programs": 34
+          },
+          "rafCadence": {
+            "frames": 5459,
+            "durationSec": 20.012,
+            "achievedFps": 272.782,
+            "frameTimeMedianMs": 3.4,
+            "frameTimeP95Ms": 5,
+            "frameTimeP99Ms": 15.2,
+            "frameTimeMaxMs": 38.2,
+            "fps1PctLow": 43.772,
+            "pctFramesOver16_7ms": 0.843,
+            "pctFramesOver20ms": 0.495,
+            "pctFramesOver33_3ms": 0.202
+          }
+        }
+      ],
+      "shot": "docs/stage08b-final-qa/qa_shots/final_perf_uncapped-headless-igpu_lane_with_clientB.png"
+    }
+  ],
+  "roomName": "Q8B_perf_final_6490",
+  "gpu": {
+    "vendor": "Google Inc. (AMD)",
+    "renderer": "ANGLE (AMD, AMD Radeon(TM) Graphics (0x00001681) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "gpuRendererVerbatim": "ANGLE (AMD, AMD Radeon(TM) Graphics (0x00001681) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "gpuMatrix": [
+    {
+      "gpu": "ANGLE (AMD, AMD Radeon(TM) Graphics (0x00001681) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "status": "iGPU attempt"
+    },
+    {
+      "gpu": "Intel UHD Graphics 730",
+      "status": "NOT_TESTED",
+      "note": "not present on this machine (RTX 3050 Ti Laptop + AMD Radeon iGPU); never relabelled"
+    }
+  ],
+  "world": {
+    "meta": {
+      "mapId": "forest_square",
+      "worldVersion": 2,
+      "publicLayoutSeed": 6501,
+      "gameplayHash": "670a9c21f0565c94"
+    },
+    "gameplayHash": "670a9c21f0565c94",
+    "worldVersion": 2,
+    "roomId": "r1r4m8"
+  },
+  "charHook": true,
+  "rafProbe": {
+    "frames": 540,
+    "durationSec": 3.007,
+    "achievedFps": 179.575,
+    "frameTimeMedianMs": 5.5,
+    "frameTimeP95Ms": 7.5,
+    "frameTimeP99Ms": 8.4,
+    "frameTimeMaxMs": 17.6,
+    "fps1PctLow": 92.593,
+    "pctFramesOver16_7ms": 0.185,
+    "pctFramesOver20ms": 0,
+    "pctFramesOver33_3ms": 0
+  },
+  "vsyncPacing": "not paced (median 5.5 ms)",
+  "clientB": {
+    "goal": {
+      "x": 2.896,
+      "z": 102.432
+    },
+    "pathLen": 116.62,
+    "reached": true,
+    "pos": {
+      "x": 2.686,
+      "y": -0.127,
+      "z": 102.331
+    },
+    "ms": 20040
+  },
+  "scenes": [
+    {
+      "id": "lane_with_clientB",
+      "desc": "helper lane start: local player (3P, rifle) + client B beside it, fixed camera",
+      "player": {
+        "x": 0.574,
+        "z": 104.05
+      },
+      "cam": {
+        "x": 2.896,
+        "y": 1.945,
+        "z": 110.442,
+        "yaw": 0.17246105741734105,
+        "pitch": -0.16641009977528912
+      },
+      "sweep": null,
+      "source": "helper lane"
+    }
+  ],
+  "bVisibleOnA": {
+    "id": "KQ6u7Wba2A2n-H-6AAAA",
+    "mode": "buddy",
+    "visible": true,
+    "state": "Idle",
+    "weights": {
+      "Idle": 1,
+      "Walk": 0,
+      "Run": 0,
+      "JumpStart": 0,
+      "JumpAir": 0,
+      "Land": 0,
+      "Interact": 0
+    },
+    "timeScale": 1,
+    "weapon": "rifle",
+    "muzzleWorld": {
+      "x": 3.9450828230362482,
+      "y": 1.1678625441702022,
+      "z": 103.0620166284044
+    },
+    "gripWorld": {
+      "x": 2.9454960980849,
+      "y": 1.0673842439812078,
+      "z": 102.58260395847151
+    },
+    "skeletonUuid": "5c188a5c-720c-4075-80bd-bae6fe7afe31",
+    "hipsBoneUuid": "cd4bed30-3e41-411a-b45a-434339c9d0c9",
+    "teamMaterialUuid": "36e0c1df-3c7d-41d1-aa53-85f5d611a582",
+    "teamColorHex": "#e03a30"
+  },
+  "charDiagA": {
+    "mode": "buddy",
+    "visible": true,
+    "state": "Idle",
+    "timeScale": 1,
+    "weapon": "rifle",
+    "muzzleWorld": {
+      "x": 0.6469703732617416,
+      "y": 1.2138154823884975,
+      "z": 102.60175256996081
+    },
+    "gripWorld": {
+      "x": 0.7020574136318793,
+      "y": 1.0580554823884882,
+      "z": 103.70257510696814
+    },
+    "weights": {
+      "Idle": 1,
+      "Walk": 0,
+      "Run": 0,
+      "JumpStart": 0,
+      "JumpAir": 0,
+      "Land": 0,
+      "Interact": 0
+    },
+    "skeletonUuid": "c9da722a-c156-4c29-81dd-06ece3574422",
+    "teamColorHex": "#2e75e8",
+    "asset": {
+      "state": "ready",
+      "liveInstances": 2,
+      "createdInstances": 2,
+      "disposedInstances": 0,
+      "loadMs": 2718,
+      "error": null
+    }
+  },
+  "table": [
+    {
+      "scene": "lane_with_clientB",
+      "quality": "medium",
+      "fps": 272.782,
+      "low1": 61.343,
+      "p95": 5.3,
+      "p99": 15.2,
+      "over16_7": 0.843,
+      "over33_3": 0.202,
+      "draw": 163,
+      "tris": 754095,
+      "heapMB": 73.52
+    }
+  ],
+  "durationSec": 96.385,
+  "errorCapture": {
+    "clientsCaptured": 2,
+    "totals": {
+      "consoleErrors": 0,
+      "pageExceptions": 0,
+      "logErrorsNonNetwork": 0,
+      "logErrorsNetwork": 0,
+      "networkErrors": 0,
+      "networkAborted": 0,
+      "warningsBenign": 5,
+      "warningsOther": 0
+    },
+    "warnings": [
+      {
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+        "benign": true,
+        "count": 5
+      }
+    ],
+    "perClient": [
+      {
+        "client": "A",
+        "consoleErrors": [],
+        "consoleWarnings": 3,
+        "warnings": [
+          {
+            "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+            "count": 3,
+            "benign": true
+          }
+        ],
+        "pageExceptions": [],
+        "logErrors": [],
+        "networkErrors": [],
+        "networkAborted": []
+      },
+      {
+        "client": "B",
+        "consoleErrors": [],
+        "consoleWarnings": 2,
+        "warnings": [
+          {
+            "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+            "count": 2,
+            "benign": true
+          }
+        ],
+        "pageExceptions": [],
+        "logErrors": [],
+        "networkErrors": [],
+        "networkAborted": []
+      }
+    ]
+  },
+  "checks": [
+    {
+      "id": "perf.noConsoleErrors",
+      "status": "PASS",
+      "note": "console error/assert + uncaught exceptions + Log.entryAdded(error, non-network); benign PCFSoftShadowMap warning is warning-only",
+      "details": {
+        "consoleErrors": 0,
+        "pageExceptions": 0,
+        "logErrorsNonNetwork": 0,
+        "logErrorsNetwork": 0,
+        "networkErrors": 0,
+        "networkAborted": 0,
+        "warningsBenign": 5,
+        "warningsOther": 0
+      }
+    },
+    {
+      "id": "perf.noNetworkErrors",
+      "status": "PASS",
+      "note": "HTTP >= 400 + Network.loadingFailed (canceled/ERR_ABORTED during navigation recorded separately, info only)",
+      "details": {
+        "consoleErrors": 0,
+        "pageExceptions": 0,
+        "logErrorsNonNetwork": 0,
+        "logErrorsNetwork": 0,
+        "networkErrors": 0,
+        "networkAborted": 0,
+        "warningsBenign": 5,
+        "warningsOther": 0,
+        "abortedInfoOnly": 0
+      }
+    }
+  ],
+  "summary": {
+    "pass": 2,
+    "fail": 0,
+    "skip": 0,
+    "notAchieved": 0,
+    "notTested": 0,
+    "info": 0
+  }
+}

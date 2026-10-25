@@ -1,0 +1,1733 @@
+{
+  "meta": {
+    "label": "before",
+    "root": "C:\\Users\\user\\AppData\\Local\\Temp\\claude\\C--Users-user-Desktop-Games-camper-strike\\6b89898d-c9a4-44be-bbb4-fb97123d8b54\\scratchpad\\before_head",
+    "phases": [
+      "perf"
+    ],
+    "ports": {
+      "server": 3300,
+      "vite": 5473,
+      "chromeDebug": 9500
+    },
+    "viewport": "1280x720",
+    "dpr": 1,
+    "quality": "medium",
+    "map": "forest_square",
+    "seed": 6501,
+    "timestamp": "2026-10-25T06:01:52.813Z",
+    "command": "node scripts/qa-stage08b-char.mjs --out=docs/stage08b-final-qa --phase=perf --label=before --root=C:/Users/user/AppData/Local/Temp/claude/C--Users-user-Desktop-Games-camper-strike/6b89898d-c9a4-44be-bbb4-fb97123d8b54/scratchpad/before_head --perfMode=uncapped --quality=low,medium",
+    "gitHead": null,
+    "environment": {
+      "platform": "win32 10.0.26300 (x64)",
+      "cpuModel": "AMD Ryzen 7 6800H with Radeon Graphics         ",
+      "cpuCores": 16,
+      "totalRamGB": 15.25,
+      "nodeVersion": "v22.14.0",
+      "chromeVersion": "Chrome/156.0.8078.47",
+      "chromeArgs": [
+        "--headless=new",
+        "--remote-debugging-port=9500",
+        "--window-size=1280,720",
+        "--force-device-scale-factor=1",
+        "--disable-gpu-vsync",
+        "--disable-frame-rate-limit",
+        "--disable-background-timer-throttling",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding",
+        "--enable-precise-memory-info",
+        "--autoplay-policy=no-user-gesture-required",
+        "--mute-audio",
+        "--no-first-run",
+        "--no-default-browser-check",
+        "--user-data-dir=C:\\Users\\user\\AppData\\Local\\Temp\\camper_qa08b_before_1792908113976",
+        "about:blank"
+      ],
+      "headless": true,
+      "ffmpeg": "C:\\Users\\user\\AppData\\Local\\ms-playwright\\ffmpeg-1011\\ffmpeg-win64.exe"
+    },
+    "helperWorld": {
+      "ready": true,
+      "gameplayHash": "670a9c21f0565c94",
+      "worldVersion": 2
+    }
+  },
+  "lane": {
+    "start": {
+      "x": 0.574,
+      "y": -0.155,
+      "z": 104.05
+    },
+    "yaw": 0.05,
+    "len": 50.002,
+    "end": {
+      "x": -1.938,
+      "y": -0.112,
+      "z": 54.111
+    },
+    "yRange": 0.092,
+    "maxStepDy": 0.002,
+    "lateral": 0,
+    "closeupClear": 1,
+    "side": 1,
+    "sideClearRatio": 1,
+    "score": 63.905,
+    "evaluated": 4994,
+    "candidates": 285
+  },
+  "notes": [
+    "achievedFps / 1% low / p95 / p99 / %>16.7 / %>33.3 come from a page-side rAF interval recorder (presented-frame cadence); gameBench holds the game startBenchmarkCapture() numbers.",
+    "1% low = 1000 / mean of the slowest 1 % of frame intervals."
+  ],
+  "mode": "uncapped-headless",
+  "perfMode": "uncapped",
+  "headful": false,
+  "igpu": false,
+  "qualities": [
+    "low",
+    "medium"
+  ],
+  "warmupSec": 5,
+  "captureSec": 20,
+  "repeats": 2,
+  "rows": [
+    {
+      "scene": "lane_with_clientB",
+      "desc": "helper lane start: local player (3P, rifle) + client B beside it, fixed camera",
+      "quality": "low",
+      "mode": "uncapped-headless",
+      "clientBVisible": true,
+      "clientBRafCapFps": 2,
+      "achievedFps": 598.05,
+      "fps1PctLow": 122.637,
+      "frameTimeMedianMs": 1.6,
+      "frameTimeP95Ms": 5.5,
+      "frameTimeP99Ms": 21.2,
+      "pctFramesOver16_7ms": 1.647,
+      "pctFramesOver20ms": 1.153,
+      "pctFramesOver33_3ms": 0.558,
+      "gameBench": {
+        "fpsMedian": 666.67,
+        "fps1PctLow": 120.75,
+        "frameTimeP95Ms": 5.2,
+        "frameTimeP99Ms": 25,
+        "gpuTimeMedianMs": 1.382
+      },
+      "drawCalls": 147,
+      "triangles": 449110,
+      "geometries": 150,
+      "textures": 52,
+      "programs": 53,
+      "heapUsedMB": 69.9,
+      "runs": [
+        {
+          "repeat": 1,
+          "game": {
+            "frames": 7891,
+            "durationMs": 20014.4,
+            "fpsMean": 394.27,
+            "fpsMedian": 625,
+            "fpsP10": 312.5,
+            "fps1PctLow": 22.51,
+            "fps1PctLowP99": 40,
+            "frameTimeMedianMs": 1.6,
+            "frameTimeP95Ms": 5.2,
+            "frameTimeP99Ms": 25,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.4,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.382,
+            "gpuTimeP95Ms": 4.115,
+            "render": {
+              "calls": 147,
+              "sceneCalls": 147,
+              "vmCalls": 0,
+              "triangles": 449110,
+              "sceneTris": 449110,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 72.11,
+            "heapTotalMB": 103.43,
+            "programs": 53
+          },
+          "rafCadence": {
+            "frames": 7892,
+            "durationSec": 20.015,
+            "achievedFps": 394.302,
+            "frameTimeMedianMs": 1.6,
+            "frameTimeP95Ms": 5.5,
+            "frameTimeP99Ms": 21.2,
+            "frameTimeMaxMs": 165.2,
+            "fps1PctLow": 23.743,
+            "pctFramesOver16_7ms": 1.647,
+            "pctFramesOver20ms": 1.153,
+            "pctFramesOver33_3ms": 0.558
+          }
+        },
+        {
+          "repeat": 2,
+          "game": {
+            "frames": 11971,
+            "durationMs": 20006.5,
+            "fpsMean": 598.36,
+            "fpsMedian": 666.67,
+            "fpsP10": 454.55,
+            "fps1PctLow": 120.75,
+            "fps1PctLowP99": 256.41,
+            "frameTimeMedianMs": 1.5,
+            "frameTimeP95Ms": 2.5,
+            "frameTimeP99Ms": 3.9,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.3,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.239,
+            "gpuTimeP95Ms": 2.459,
+            "render": {
+              "calls": 147,
+              "sceneCalls": 147,
+              "vmCalls": 0,
+              "triangles": 449110,
+              "sceneTris": 449110,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 69.9,
+            "heapTotalMB": 136.65,
+            "programs": 53
+          },
+          "rafCadence": {
+            "frames": 11972,
+            "durationSec": 20.018,
+            "achievedFps": 598.05,
+            "frameTimeMedianMs": 1.5,
+            "frameTimeP95Ms": 2.5,
+            "frameTimeP99Ms": 4,
+            "frameTimeMaxMs": 71.4,
+            "fps1PctLow": 122.637,
+            "pctFramesOver16_7ms": 0.092,
+            "pctFramesOver20ms": 0.05,
+            "pctFramesOver33_3ms": 0.025
+          }
+        }
+      ],
+      "shot": "docs/stage08b-final-qa/qa_shots/before_perf_uncapped-headless_lane_with_clientB.png"
+    },
+    {
+      "scene": "open_forest",
+      "desc": "open forest eye-level, deterministic ±1.2 rad camera yaw sweep (10 s period) at shot-01 pose",
+      "quality": "low",
+      "mode": "uncapped-headless",
+      "clientBVisible": false,
+      "clientBRafCapFps": 2,
+      "achievedFps": 563.836,
+      "fps1PctLow": 336.61,
+      "frameTimeMedianMs": 1.9,
+      "frameTimeP95Ms": 2.7,
+      "frameTimeP99Ms": 3.3,
+      "pctFramesOver16_7ms": 0,
+      "pctFramesOver20ms": 0,
+      "pctFramesOver33_3ms": 0,
+      "gameBench": {
+        "fpsMedian": 588.24,
+        "fps1PctLow": 336.54,
+        "frameTimeP95Ms": 2.7,
+        "frameTimeP99Ms": 3.2,
+        "gpuTimeMedianMs": 1.194
+      },
+      "drawCalls": 180,
+      "triangles": 469590,
+      "geometries": 150,
+      "textures": 52,
+      "programs": 53,
+      "heapUsedMB": 90.78,
+      "runs": [
+        {
+          "repeat": 1,
+          "game": {
+            "frames": 10349,
+            "durationMs": 20018,
+            "fpsMean": 516.98,
+            "fpsMedian": 526.32,
+            "fpsP10": 400,
+            "fps1PctLow": 280.81,
+            "fps1PctLowP99": 312.5,
+            "frameTimeMedianMs": 1.9,
+            "frameTimeP95Ms": 2.7,
+            "frameTimeP99Ms": 3.2,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.3,
+            "cullCpuMaxMs": 1,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.194,
+            "gpuTimeP95Ms": 1.905,
+            "render": {
+              "calls": 182,
+              "sceneCalls": 182,
+              "vmCalls": 0,
+              "triangles": 470542,
+              "sceneTris": 470542,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 89.51,
+            "heapTotalMB": 136.1,
+            "programs": 53
+          },
+          "rafCadence": {
+            "frames": 10350,
+            "durationSec": 20.021,
+            "achievedFps": 516.97,
+            "frameTimeMedianMs": 1.9,
+            "frameTimeP95Ms": 2.7,
+            "frameTimeP99Ms": 3.3,
+            "frameTimeMaxMs": 5.4,
+            "fps1PctLow": 278.82,
+            "pctFramesOver16_7ms": 0,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        },
+        {
+          "repeat": 2,
+          "game": {
+            "frames": 11279,
+            "durationMs": 20004,
+            "fpsMean": 563.84,
+            "fpsMedian": 588.24,
+            "fpsP10": 454.55,
+            "fps1PctLow": 336.54,
+            "fps1PctLowP99": 370.37,
+            "frameTimeMedianMs": 1.7,
+            "frameTimeP95Ms": 2.3,
+            "frameTimeP99Ms": 2.7,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.3,
+            "cullCpuMaxMs": 0.8,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.14,
+            "gpuTimeP95Ms": 1.811,
+            "render": {
+              "calls": 180,
+              "sceneCalls": 180,
+              "vmCalls": 0,
+              "triangles": 469590,
+              "sceneTris": 469590,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 90.78,
+            "heapTotalMB": 136.76,
+            "programs": 53
+          },
+          "rafCadence": {
+            "frames": 11280,
+            "durationSec": 20.006,
+            "achievedFps": 563.836,
+            "frameTimeMedianMs": 1.7,
+            "frameTimeP95Ms": 2.4,
+            "frameTimeP99Ms": 2.7,
+            "frameTimeMaxMs": 5.7,
+            "fps1PctLow": 336.61,
+            "pctFramesOver16_7ms": 0,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        }
+      ],
+      "shot": "docs/stage08b-final-qa/qa_shots/before_perf_uncapped-headless_open_forest.png"
+    },
+    {
+      "scene": "service_station",
+      "desc": "poi_service_station forecourt (08A cam06 framing)",
+      "quality": "low",
+      "mode": "uncapped-headless",
+      "clientBVisible": false,
+      "clientBRafCapFps": 2,
+      "achievedFps": 598.764,
+      "fps1PctLow": 365.297,
+      "frameTimeMedianMs": 1.8,
+      "frameTimeP95Ms": 2.3,
+      "frameTimeP99Ms": 2.6,
+      "pctFramesOver16_7ms": 0,
+      "pctFramesOver20ms": 0,
+      "pctFramesOver33_3ms": 0,
+      "gameBench": {
+        "fpsMedian": 588.24,
+        "fps1PctLow": 365.48,
+        "frameTimeP95Ms": 2.3,
+        "frameTimeP99Ms": 2.6,
+        "gpuTimeMedianMs": 1.398
+      },
+      "drawCalls": 173,
+      "triangles": 439274,
+      "geometries": 150,
+      "textures": 52,
+      "programs": 53,
+      "heapUsedMB": 75.05,
+      "runs": [
+        {
+          "repeat": 1,
+          "game": {
+            "frames": 11151,
+            "durationMs": 20003.9,
+            "fpsMean": 557.44,
+            "fpsMedian": 555.56,
+            "fpsP10": 454.55,
+            "fps1PctLow": 334.44,
+            "fps1PctLowP99": 384.62,
+            "frameTimeMedianMs": 1.8,
+            "frameTimeP95Ms": 2.3,
+            "frameTimeP99Ms": 2.6,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0,
+            "cullCpuMaxMs": 0.5,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.398,
+            "gpuTimeP95Ms": 2.044,
+            "render": {
+              "calls": 173,
+              "sceneCalls": 173,
+              "vmCalls": 0,
+              "triangles": 439274,
+              "sceneTris": 439274,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 93.28,
+            "heapTotalMB": 136.45,
+            "programs": 53
+          },
+          "rafCadence": {
+            "frames": 11152,
+            "durationSec": 20.005,
+            "achievedFps": 557.475,
+            "frameTimeMedianMs": 1.8,
+            "frameTimeP95Ms": 2.3,
+            "frameTimeP99Ms": 2.6,
+            "frameTimeMaxMs": 7.3,
+            "fps1PctLow": 332.443,
+            "pctFramesOver16_7ms": 0,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        },
+        {
+          "repeat": 2,
+          "game": {
+            "frames": 11982,
+            "durationMs": 20011.9,
+            "fpsMean": 598.74,
+            "fpsMedian": 588.24,
+            "fpsP10": 500,
+            "fps1PctLow": 365.48,
+            "fps1PctLowP99": 400,
+            "frameTimeMedianMs": 1.7,
+            "frameTimeP95Ms": 2.2,
+            "frameTimeP99Ms": 2.5,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.1,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.313,
+            "gpuTimeP95Ms": 1.876,
+            "render": {
+              "calls": 173,
+              "sceneCalls": 173,
+              "vmCalls": 0,
+              "triangles": 439274,
+              "sceneTris": 439274,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 75.05,
+            "heapTotalMB": 135.6,
+            "programs": 53
+          },
+          "rafCadence": {
+            "frames": 11983,
+            "durationSec": 20.013,
+            "achievedFps": 598.764,
+            "frameTimeMedianMs": 1.7,
+            "frameTimeP95Ms": 2.2,
+            "frameTimeP99Ms": 2.4,
+            "frameTimeMaxMs": 5.6,
+            "fps1PctLow": 365.297,
+            "pctFramesOver16_7ms": 0,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        }
+      ],
+      "shot": "docs/stage08b-final-qa/qa_shots/before_perf_uncapped-headless_service_station.png"
+    },
+    {
+      "scene": "forest_camp",
+      "desc": "poi_forest_camp tents + campfire (08A cam07 framing)",
+      "quality": "low",
+      "mode": "uncapped-headless",
+      "clientBVisible": false,
+      "clientBRafCapFps": 2,
+      "achievedFps": 560.411,
+      "fps1PctLow": 359.689,
+      "frameTimeMedianMs": 1.8,
+      "frameTimeP95Ms": 2.3,
+      "frameTimeP99Ms": 2.6,
+      "pctFramesOver16_7ms": 0,
+      "pctFramesOver20ms": 0,
+      "pctFramesOver33_3ms": 0,
+      "gameBench": {
+        "fpsMedian": 555.56,
+        "fps1PctLow": 361.49,
+        "frameTimeP95Ms": 2.3,
+        "frameTimeP99Ms": 2.6,
+        "gpuTimeMedianMs": 1.459
+      },
+      "drawCalls": 171,
+      "triangles": 447734,
+      "geometries": 150,
+      "textures": 52,
+      "programs": 56,
+      "heapUsedMB": 94.34,
+      "runs": [
+        {
+          "repeat": 1,
+          "game": {
+            "frames": 11074,
+            "durationMs": 20003.8,
+            "fpsMean": 553.59,
+            "fpsMedian": 555.56,
+            "fpsP10": 454.55,
+            "fps1PctLow": 361.49,
+            "fps1PctLowP99": 384.62,
+            "frameTimeMedianMs": 1.8,
+            "frameTimeP95Ms": 2.3,
+            "frameTimeP99Ms": 2.6,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.459,
+            "gpuTimeP95Ms": 2.006,
+            "render": {
+              "calls": 171,
+              "sceneCalls": 171,
+              "vmCalls": 0,
+              "triangles": 447734,
+              "sceneTris": 447734,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 99.09,
+            "heapTotalMB": 135.5,
+            "programs": 56
+          },
+          "rafCadence": {
+            "frames": 11075,
+            "durationSec": 20.006,
+            "achievedFps": 553.581,
+            "frameTimeMedianMs": 1.8,
+            "frameTimeP95Ms": 2.3,
+            "frameTimeP99Ms": 2.6,
+            "frameTimeMaxMs": 5.3,
+            "fps1PctLow": 359.689,
+            "pctFramesOver16_7ms": 0,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        },
+        {
+          "repeat": 2,
+          "game": {
+            "frames": 11214,
+            "durationMs": 20010.4,
+            "fpsMean": 560.41,
+            "fpsMedian": 555.56,
+            "fpsP10": 476.19,
+            "fps1PctLow": 351.43,
+            "fps1PctLowP99": 384.62,
+            "frameTimeMedianMs": 1.8,
+            "frameTimeP95Ms": 2.3,
+            "frameTimeP99Ms": 2.6,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0,
+            "cullCpuMaxMs": 0.1,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.442,
+            "gpuTimeP95Ms": 1.982,
+            "render": {
+              "calls": 171,
+              "sceneCalls": 171,
+              "vmCalls": 0,
+              "triangles": 447734,
+              "sceneTris": 447734,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 94.34,
+            "heapTotalMB": 136.69,
+            "programs": 56
+          },
+          "rafCadence": {
+            "frames": 11215,
+            "durationSec": 20.012,
+            "achievedFps": 560.411,
+            "frameTimeMedianMs": 1.8,
+            "frameTimeP95Ms": 2.3,
+            "frameTimeP99Ms": 2.6,
+            "frameTimeMaxMs": 5.3,
+            "fps1PctLow": 350.714,
+            "pctFramesOver16_7ms": 0,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        }
+      ],
+      "shot": "docs/stage08b-final-qa/qa_shots/before_perf_uncapped-headless_forest_camp.png"
+    },
+    {
+      "scene": "flower_glade",
+      "desc": "south glade eye-level (shot-03 pose) — ground-cover heavy view",
+      "quality": "low",
+      "mode": "uncapped-headless",
+      "clientBVisible": false,
+      "clientBRafCapFps": 2,
+      "achievedFps": 675.516,
+      "fps1PctLow": 420.354,
+      "frameTimeMedianMs": 1.5,
+      "frameTimeP95Ms": 1.9,
+      "frameTimeP99Ms": 2.2,
+      "pctFramesOver16_7ms": 0.007,
+      "pctFramesOver20ms": 0,
+      "pctFramesOver33_3ms": 0,
+      "gameBench": {
+        "fpsMedian": 666.67,
+        "fps1PctLow": 423.08,
+        "frameTimeP95Ms": 1.9,
+        "frameTimeP99Ms": 2.2,
+        "gpuTimeMedianMs": 1.103
+      },
+      "drawCalls": 137,
+      "triangles": 451224,
+      "geometries": 150,
+      "textures": 52,
+      "programs": 56,
+      "heapUsedMB": 83.15,
+      "runs": [
+        {
+          "repeat": 1,
+          "game": {
+            "frames": 13515,
+            "durationMs": 20006.6,
+            "fpsMean": 675.53,
+            "fpsMedian": 666.67,
+            "fpsP10": 555.56,
+            "fps1PctLow": 403.11,
+            "fps1PctLowP99": 454.55,
+            "frameTimeMedianMs": 1.5,
+            "frameTimeP95Ms": 1.9,
+            "frameTimeP99Ms": 2.2,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.083,
+            "gpuTimeP95Ms": 1.671,
+            "render": {
+              "calls": 137,
+              "sceneCalls": 137,
+              "vmCalls": 0,
+              "triangles": 451224,
+              "sceneTris": 451224,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 71.78,
+            "heapTotalMB": 136.18,
+            "programs": 56
+          },
+          "rafCadence": {
+            "frames": 13516,
+            "durationSec": 20.008,
+            "achievedFps": 675.516,
+            "frameTimeMedianMs": 1.5,
+            "frameTimeP95Ms": 1.9,
+            "frameTimeP99Ms": 2.1,
+            "frameTimeMaxMs": 18,
+            "fps1PctLow": 401.654,
+            "pctFramesOver16_7ms": 0.007,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        },
+        {
+          "repeat": 2,
+          "game": {
+            "frames": 13224,
+            "durationMs": 20007.3,
+            "fpsMean": 660.96,
+            "fpsMedian": 666.67,
+            "fpsP10": 555.56,
+            "fps1PctLow": 423.08,
+            "fps1PctLowP99": 454.55,
+            "frameTimeMedianMs": 1.5,
+            "frameTimeP95Ms": 1.9,
+            "frameTimeP99Ms": 2.2,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.103,
+            "gpuTimeP95Ms": 1.678,
+            "render": {
+              "calls": 137,
+              "sceneCalls": 137,
+              "vmCalls": 0,
+              "triangles": 451224,
+              "sceneTris": 451224,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 83.15,
+            "heapTotalMB": 136.38,
+            "programs": 56
+          },
+          "rafCadence": {
+            "frames": 13225,
+            "durationSec": 20.008,
+            "achievedFps": 660.972,
+            "frameTimeMedianMs": 1.5,
+            "frameTimeP95Ms": 1.9,
+            "frameTimeP99Ms": 2.2,
+            "frameTimeMaxMs": 5.2,
+            "fps1PctLow": 420.354,
+            "pctFramesOver16_7ms": 0,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        }
+      ],
+      "shot": "docs/stage08b-final-qa/qa_shots/before_perf_uncapped-headless_flower_glade.png"
+    },
+    {
+      "scene": "lane_with_clientB",
+      "desc": "helper lane start: local player (3P, rifle) + client B beside it, fixed camera",
+      "quality": "medium",
+      "mode": "uncapped-headless",
+      "clientBVisible": true,
+      "clientBRafCapFps": 2,
+      "achievedFps": 509.924,
+      "fps1PctLow": 335.724,
+      "frameTimeMedianMs": 2,
+      "frameTimeP95Ms": 2.8,
+      "frameTimeP99Ms": 3.5,
+      "pctFramesOver16_7ms": 0,
+      "pctFramesOver20ms": 0,
+      "pctFramesOver33_3ms": 0,
+      "gameBench": {
+        "fpsMedian": 500,
+        "fps1PctLow": 336.63,
+        "frameTimeP95Ms": 2.8,
+        "frameTimeP99Ms": 3.4,
+        "gpuTimeMedianMs": 1.821
+      },
+      "drawCalls": 213,
+      "triangles": 726207,
+      "geometries": 150,
+      "textures": 52,
+      "programs": 56,
+      "heapUsedMB": 90.63,
+      "runs": [
+        {
+          "repeat": 1,
+          "game": {
+            "frames": 10206,
+            "durationMs": 20014.6,
+            "fpsMean": 509.93,
+            "fpsMedian": 500,
+            "fpsP10": 434.78,
+            "fps1PctLow": 336.63,
+            "fps1PctLowP99": 370.37,
+            "frameTimeMedianMs": 2,
+            "frameTimeP95Ms": 2.4,
+            "frameTimeP99Ms": 2.7,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.761,
+            "gpuTimeP95Ms": 2.266,
+            "render": {
+              "calls": 213,
+              "sceneCalls": 213,
+              "vmCalls": 0,
+              "triangles": 726207,
+              "sceneTris": 726207,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 90.98,
+            "heapTotalMB": 135.26,
+            "programs": 56
+          },
+          "rafCadence": {
+            "frames": 10207,
+            "durationSec": 20.017,
+            "achievedFps": 509.924,
+            "frameTimeMedianMs": 2,
+            "frameTimeP95Ms": 2.4,
+            "frameTimeP99Ms": 2.7,
+            "frameTimeMaxMs": 5.6,
+            "fps1PctLow": 335.724,
+            "pctFramesOver16_7ms": 0,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        },
+        {
+          "repeat": 2,
+          "game": {
+            "frames": 9592,
+            "durationMs": 20007.9,
+            "fpsMean": 479.41,
+            "fpsMedian": 500,
+            "fpsP10": 384.62,
+            "fps1PctLow": 234.8,
+            "fps1PctLowP99": 294.12,
+            "frameTimeMedianMs": 2,
+            "frameTimeP95Ms": 2.8,
+            "frameTimeP99Ms": 3.4,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.1,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.821,
+            "gpuTimeP95Ms": 2.633,
+            "render": {
+              "calls": 213,
+              "sceneCalls": 213,
+              "vmCalls": 0,
+              "triangles": 726207,
+              "sceneTris": 726207,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 90.63,
+            "heapTotalMB": 135.38,
+            "programs": 56
+          },
+          "rafCadence": {
+            "frames": 9593,
+            "durationSec": 20.01,
+            "achievedFps": 479.415,
+            "frameTimeMedianMs": 2,
+            "frameTimeP95Ms": 2.8,
+            "frameTimeP99Ms": 3.5,
+            "frameTimeMaxMs": 11.4,
+            "fps1PctLow": 234.318,
+            "pctFramesOver16_7ms": 0,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        }
+      ],
+      "shot": "docs/stage08b-final-qa/qa_shots/before_perf_uncapped-headless_lane_with_clientB.png"
+    },
+    {
+      "scene": "open_forest",
+      "desc": "open forest eye-level, deterministic ±1.2 rad camera yaw sweep (10 s period) at shot-01 pose",
+      "quality": "medium",
+      "mode": "uncapped-headless",
+      "clientBVisible": false,
+      "clientBRafCapFps": 2,
+      "achievedFps": 492.408,
+      "fps1PctLow": 273.783,
+      "frameTimeMedianMs": 2,
+      "frameTimeP95Ms": 2.8,
+      "frameTimeP99Ms": 3.3,
+      "pctFramesOver16_7ms": 0.021,
+      "pctFramesOver20ms": 0,
+      "pctFramesOver33_3ms": 0,
+      "gameBench": {
+        "fpsMedian": 500,
+        "fps1PctLow": 276.91,
+        "frameTimeP95Ms": 2.8,
+        "frameTimeP99Ms": 3.3,
+        "gpuTimeMedianMs": 1.533
+      },
+      "drawCalls": 199,
+      "triangles": 720959,
+      "geometries": 150,
+      "textures": 52,
+      "programs": 56,
+      "heapUsedMB": 91.65,
+      "runs": [
+        {
+          "repeat": 1,
+          "game": {
+            "frames": 9854,
+            "durationMs": 20011.1,
+            "fpsMean": 492.43,
+            "fpsMedian": 500,
+            "fpsP10": 384.62,
+            "fps1PctLow": 276.91,
+            "fps1PctLowP99": 303.03,
+            "frameTimeMedianMs": 2,
+            "frameTimeP95Ms": 2.8,
+            "frameTimeP99Ms": 3.3,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.4,
+            "cullCpuMaxMs": 0.7,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.516,
+            "gpuTimeP95Ms": 2.274,
+            "render": {
+              "calls": 199,
+              "sceneCalls": 199,
+              "vmCalls": 0,
+              "triangles": 718578,
+              "sceneTris": 718578,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 78.85,
+            "heapTotalMB": 136.26,
+            "programs": 56
+          },
+          "rafCadence": {
+            "frames": 9855,
+            "durationSec": 20.014,
+            "achievedFps": 492.408,
+            "frameTimeMedianMs": 2,
+            "frameTimeP95Ms": 2.8,
+            "frameTimeP99Ms": 3.3,
+            "frameTimeMaxMs": 4.9,
+            "fps1PctLow": 273.783,
+            "pctFramesOver16_7ms": 0,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        },
+        {
+          "repeat": 2,
+          "game": {
+            "frames": 9683,
+            "durationMs": 20003.3,
+            "fpsMean": 484.07,
+            "fpsMedian": 500,
+            "fpsP10": 384.62,
+            "fps1PctLow": 259.11,
+            "fps1PctLowP99": 312.5,
+            "frameTimeMedianMs": 2,
+            "frameTimeP95Ms": 2.8,
+            "frameTimeP99Ms": 3.2,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.4,
+            "cullCpuMaxMs": 0.8,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.533,
+            "gpuTimeP95Ms": 2.257,
+            "render": {
+              "calls": 199,
+              "sceneCalls": 199,
+              "vmCalls": 0,
+              "triangles": 720959,
+              "sceneTris": 720959,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 91.65,
+            "heapTotalMB": 136.69,
+            "programs": 56
+          },
+          "rafCadence": {
+            "frames": 9684,
+            "durationSec": 20.006,
+            "achievedFps": 484.052,
+            "frameTimeMedianMs": 2,
+            "frameTimeP95Ms": 2.8,
+            "frameTimeP99Ms": 3.2,
+            "frameTimeMaxMs": 18.7,
+            "fps1PctLow": 258.116,
+            "pctFramesOver16_7ms": 0.021,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        }
+      ],
+      "shot": "docs/stage08b-final-qa/qa_shots/before_perf_uncapped-headless_open_forest.png"
+    },
+    {
+      "scene": "service_station",
+      "desc": "poi_service_station forecourt (08A cam06 framing)",
+      "quality": "medium",
+      "mode": "uncapped-headless",
+      "clientBVisible": false,
+      "clientBRafCapFps": 2,
+      "achievedFps": 480.23,
+      "fps1PctLow": 295.732,
+      "frameTimeMedianMs": 2.2,
+      "frameTimeP95Ms": 2.9,
+      "frameTimeP99Ms": 3.2,
+      "pctFramesOver16_7ms": 0,
+      "pctFramesOver20ms": 0,
+      "pctFramesOver33_3ms": 0,
+      "gameBench": {
+        "fpsMedian": 476.19,
+        "fps1PctLow": 296.75,
+        "frameTimeP95Ms": 2.9,
+        "frameTimeP99Ms": 3.2,
+        "gpuTimeMedianMs": 1.982
+      },
+      "drawCalls": 202,
+      "triangles": 693495,
+      "geometries": 150,
+      "textures": 52,
+      "programs": 56,
+      "heapUsedMB": 68.73,
+      "runs": [
+        {
+          "repeat": 1,
+          "game": {
+            "frames": 9605,
+            "durationMs": 20001.1,
+            "fpsMean": 480.22,
+            "fpsMedian": 476.19,
+            "fpsP10": 400,
+            "fps1PctLow": 296.75,
+            "fps1PctLowP99": 322.58,
+            "frameTimeMedianMs": 2.1,
+            "frameTimeP95Ms": 2.7,
+            "frameTimeP99Ms": 3.1,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0,
+            "cullCpuMaxMs": 0.1,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.87,
+            "gpuTimeP95Ms": 2.564,
+            "render": {
+              "calls": 202,
+              "sceneCalls": 202,
+              "vmCalls": 0,
+              "triangles": 693495,
+              "sceneTris": 693495,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 71.49,
+            "heapTotalMB": 135.59,
+            "programs": 56
+          },
+          "rafCadence": {
+            "frames": 9606,
+            "durationSec": 20.003,
+            "achievedFps": 480.23,
+            "frameTimeMedianMs": 2.1,
+            "frameTimeP95Ms": 2.7,
+            "frameTimeP99Ms": 3.1,
+            "frameTimeMaxMs": 5.1,
+            "fps1PctLow": 295.732,
+            "pctFramesOver16_7ms": 0,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        },
+        {
+          "repeat": 2,
+          "game": {
+            "frames": 8994,
+            "durationMs": 20008.1,
+            "fpsMean": 449.52,
+            "fpsMedian": 454.55,
+            "fpsP10": 370.37,
+            "fps1PctLow": 279,
+            "fps1PctLowP99": 312.5,
+            "frameTimeMedianMs": 2.2,
+            "frameTimeP95Ms": 2.9,
+            "frameTimeP99Ms": 3.2,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.982,
+            "gpuTimeP95Ms": 2.761,
+            "render": {
+              "calls": 202,
+              "sceneCalls": 202,
+              "vmCalls": 0,
+              "triangles": 693495,
+              "sceneTris": 693495,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 68.73,
+            "heapTotalMB": 135.69,
+            "programs": 56
+          },
+          "rafCadence": {
+            "frames": 8995,
+            "durationSec": 20.01,
+            "achievedFps": 449.525,
+            "frameTimeMedianMs": 2.2,
+            "frameTimeP95Ms": 2.9,
+            "frameTimeP99Ms": 3.2,
+            "frameTimeMaxMs": 8.2,
+            "fps1PctLow": 279.677,
+            "pctFramesOver16_7ms": 0,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        }
+      ],
+      "shot": "docs/stage08b-final-qa/qa_shots/before_perf_uncapped-headless_service_station.png"
+    },
+    {
+      "scene": "forest_camp",
+      "desc": "poi_forest_camp tents + campfire (08A cam07 framing)",
+      "quality": "medium",
+      "mode": "uncapped-headless",
+      "clientBVisible": false,
+      "clientBRafCapFps": 2,
+      "achievedFps": 481.217,
+      "fps1PctLow": 299.66,
+      "frameTimeMedianMs": 2.1,
+      "frameTimeP95Ms": 2.7,
+      "frameTimeP99Ms": 3.1,
+      "pctFramesOver16_7ms": 0,
+      "pctFramesOver20ms": 0,
+      "pctFramesOver33_3ms": 0,
+      "gameBench": {
+        "fpsMedian": 476.19,
+        "fps1PctLow": 301.03,
+        "frameTimeP95Ms": 2.7,
+        "frameTimeP99Ms": 3.1,
+        "gpuTimeMedianMs": 1.88
+      },
+      "drawCalls": 212,
+      "triangles": 699893,
+      "geometries": 150,
+      "textures": 52,
+      "programs": 56,
+      "heapUsedMB": 68.95,
+      "runs": [
+        {
+          "repeat": 1,
+          "game": {
+            "frames": 9627,
+            "durationMs": 20003.8,
+            "fpsMean": 481.26,
+            "fpsMedian": 476.19,
+            "fpsP10": 400,
+            "fps1PctLow": 301.03,
+            "fps1PctLowP99": 344.83,
+            "frameTimeMedianMs": 2.1,
+            "frameTimeP95Ms": 2.6,
+            "frameTimeP99Ms": 2.9,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.873,
+            "gpuTimeP95Ms": 2.617,
+            "render": {
+              "calls": 212,
+              "sceneCalls": 212,
+              "vmCalls": 0,
+              "triangles": 699893,
+              "sceneTris": 699893,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 89.98,
+            "heapTotalMB": 135.83,
+            "programs": 56
+          },
+          "rafCadence": {
+            "frames": 9628,
+            "durationSec": 20.008,
+            "achievedFps": 481.217,
+            "frameTimeMedianMs": 2.1,
+            "frameTimeP95Ms": 2.6,
+            "frameTimeP99Ms": 2.9,
+            "frameTimeMaxMs": 8.1,
+            "fps1PctLow": 299.66,
+            "pctFramesOver16_7ms": 0,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        },
+        {
+          "repeat": 2,
+          "game": {
+            "frames": 9557,
+            "durationMs": 20011,
+            "fpsMean": 477.59,
+            "fpsMedian": 476.19,
+            "fpsP10": 400,
+            "fps1PctLow": 298.93,
+            "fps1PctLowP99": 322.58,
+            "frameTimeMedianMs": 2.1,
+            "frameTimeP95Ms": 2.7,
+            "frameTimeP99Ms": 3.1,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.88,
+            "gpuTimeP95Ms": 2.625,
+            "render": {
+              "calls": 212,
+              "sceneCalls": 212,
+              "vmCalls": 0,
+              "triangles": 699893,
+              "sceneTris": 699893,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 68.95,
+            "heapTotalMB": 136.2,
+            "programs": 56
+          },
+          "rafCadence": {
+            "frames": 9558,
+            "durationSec": 20.013,
+            "achievedFps": 477.601,
+            "frameTimeMedianMs": 2.1,
+            "frameTimeP95Ms": 2.7,
+            "frameTimeP99Ms": 3.1,
+            "frameTimeMaxMs": 8.8,
+            "fps1PctLow": 297.674,
+            "pctFramesOver16_7ms": 0,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        }
+      ],
+      "shot": "docs/stage08b-final-qa/qa_shots/before_perf_uncapped-headless_forest_camp.png"
+    },
+    {
+      "scene": "flower_glade",
+      "desc": "south glade eye-level (shot-03 pose) — ground-cover heavy view",
+      "quality": "medium",
+      "mode": "uncapped-headless",
+      "clientBVisible": false,
+      "clientBRafCapFps": 2,
+      "achievedFps": 552.4,
+      "fps1PctLow": 342.065,
+      "frameTimeMedianMs": 2.1,
+      "frameTimeP95Ms": 2.9,
+      "frameTimeP99Ms": 3.4,
+      "pctFramesOver16_7ms": 0,
+      "pctFramesOver20ms": 0,
+      "pctFramesOver33_3ms": 0,
+      "gameBench": {
+        "fpsMedian": 555.56,
+        "fps1PctLow": 346.68,
+        "frameTimeP95Ms": 2.9,
+        "frameTimeP99Ms": 3.4,
+        "gpuTimeMedianMs": 1.735
+      },
+      "drawCalls": 173,
+      "triangles": 700602,
+      "geometries": 150,
+      "textures": 52,
+      "programs": 56,
+      "heapUsedMB": 88.5,
+      "runs": [
+        {
+          "repeat": 1,
+          "game": {
+            "frames": 11057,
+            "durationMs": 20016.5,
+            "fpsMean": 552.39,
+            "fpsMedian": 555.56,
+            "fpsP10": 454.55,
+            "fps1PctLow": 346.68,
+            "fps1PctLowP99": 384.62,
+            "frameTimeMedianMs": 1.8,
+            "frameTimeP95Ms": 2.3,
+            "frameTimeP99Ms": 2.6,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.2,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.509,
+            "gpuTimeP95Ms": 2.138,
+            "render": {
+              "calls": 173,
+              "sceneCalls": 173,
+              "vmCalls": 0,
+              "triangles": 700602,
+              "sceneTris": 700602,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 89.38,
+            "heapTotalMB": 136.1,
+            "programs": 56
+          },
+          "rafCadence": {
+            "frames": 11058,
+            "durationSec": 20.018,
+            "achievedFps": 552.4,
+            "frameTimeMedianMs": 1.8,
+            "frameTimeP95Ms": 2.3,
+            "frameTimeP99Ms": 2.6,
+            "frameTimeMaxMs": 6.1,
+            "fps1PctLow": 342.065,
+            "pctFramesOver16_7ms": 0,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        },
+        {
+          "repeat": 2,
+          "game": {
+            "frames": 9345,
+            "durationMs": 20012.3,
+            "fpsMean": 466.96,
+            "fpsMedian": 476.19,
+            "fpsP10": 384.62,
+            "fps1PctLow": 274.34,
+            "fps1PctLowP99": 294.12,
+            "frameTimeMedianMs": 2.1,
+            "frameTimeP95Ms": 2.9,
+            "frameTimeP99Ms": 3.4,
+            "cullCpuMedianMs": 0,
+            "cullCpuP95Ms": 0.1,
+            "cullCpuMaxMs": 0.4,
+            "gpuTimerSupported": true,
+            "gpuTimeMedianMs": 1.735,
+            "gpuTimeP95Ms": 2.456,
+            "render": {
+              "calls": 173,
+              "sceneCalls": 173,
+              "vmCalls": 0,
+              "triangles": 700602,
+              "sceneTris": 700602,
+              "vmTris": 0,
+              "geometries": 150,
+              "textures": 52
+            },
+            "heapUsedMB": 88.5,
+            "heapTotalMB": 135.47,
+            "programs": 56
+          },
+          "rafCadence": {
+            "frames": 9346,
+            "durationSec": 20.015,
+            "achievedFps": 466.943,
+            "frameTimeMedianMs": 2.1,
+            "frameTimeP95Ms": 2.9,
+            "frameTimeP99Ms": 3.4,
+            "frameTimeMaxMs": 6.6,
+            "fps1PctLow": 274.773,
+            "pctFramesOver16_7ms": 0,
+            "pctFramesOver20ms": 0,
+            "pctFramesOver33_3ms": 0
+          }
+        }
+      ],
+      "shot": "docs/stage08b-final-qa/qa_shots/before_perf_uncapped-headless_flower_glade.png"
+    }
+  ],
+  "roomName": "Q8B_perf_before_3650",
+  "gpu": {
+    "vendor": "Google Inc. (NVIDIA)",
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3050 Ti Laptop GPU (0x000025A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "gpuRendererVerbatim": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3050 Ti Laptop GPU (0x000025A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "gpuMatrix": [
+    {
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3050 Ti Laptop GPU (0x000025A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "status": "TESTED"
+    },
+    {
+      "gpu": "Intel UHD Graphics 730",
+      "status": "NOT_TESTED",
+      "note": "not present on this machine (RTX 3050 Ti Laptop + AMD Radeon iGPU); never relabelled"
+    }
+  ],
+  "world": {
+    "meta": {
+      "mapId": "forest_square",
+      "worldVersion": 2,
+      "publicLayoutSeed": 6501,
+      "gameplayHash": "670a9c21f0565c94"
+    },
+    "gameplayHash": "670a9c21f0565c94",
+    "worldVersion": 2,
+    "roomId": "r1qglq"
+  },
+  "charHook": false,
+  "rafProbe": {
+    "frames": 851,
+    "durationSec": 3.009,
+    "achievedFps": 282.799,
+    "frameTimeMedianMs": 3.5,
+    "frameTimeP95Ms": 4.5,
+    "frameTimeP99Ms": 5,
+    "frameTimeMaxMs": 24.9,
+    "fps1PctLow": 117.955,
+    "pctFramesOver16_7ms": 0.118,
+    "pctFramesOver20ms": 0.118,
+    "pctFramesOver33_3ms": 0
+  },
+  "vsyncPacing": "not paced (median 3.5 ms)",
+  "clientB": {
+    "goal": {
+      "x": 2.896,
+      "z": 102.432
+    },
+    "pathLen": 116.62,
+    "reached": true,
+    "pos": {
+      "x": 2.586,
+      "y": -0.124,
+      "z": 102.283
+    },
+    "ms": 21179
+  },
+  "scenes": [
+    {
+      "id": "lane_with_clientB",
+      "desc": "helper lane start: local player (3P, rifle) + client B beside it, fixed camera",
+      "player": {
+        "x": 0.574,
+        "z": 104.05
+      },
+      "cam": {
+        "x": 2.896,
+        "y": 1.945,
+        "z": 110.442,
+        "yaw": 0.17246105741734105,
+        "pitch": -0.16641009977528912
+      },
+      "sweep": null,
+      "source": "helper lane"
+    },
+    {
+      "id": "open_forest",
+      "desc": "open forest eye-level, deterministic ±1.2 rad camera yaw sweep (10 s period) at shot-01 pose",
+      "player": {
+        "x": 64,
+        "z": 4
+      },
+      "cam": {
+        "x": 64,
+        "y": 1.296,
+        "z": 4,
+        "yaw": 2.3765,
+        "pitch": -0.1095
+      },
+      "sweep": {
+        "amplitude": 1.2,
+        "periodSec": 10
+      },
+      "source": "docs/stage08fix/qa_camera_poses.json"
+    },
+    {
+      "id": "service_station",
+      "desc": "poi_service_station forecourt (08A cam06 framing)",
+      "player": {
+        "x": 20.8,
+        "z": -4.4
+      },
+      "cam": {
+        "x": 22.4,
+        "y": 3.04,
+        "z": -0.6,
+        "yaw": 0.6435,
+        "pitch": -0.1489
+      },
+      "sweep": null,
+      "source": "docs/stage08fix/qa_camera_poses.json"
+    },
+    {
+      "id": "forest_camp",
+      "desc": "poi_forest_camp tents + campfire (08A cam07 framing)",
+      "player": {
+        "x": -58.6,
+        "z": 72.2
+      },
+      "cam": {
+        "x": -60.8,
+        "y": 2.95,
+        "z": 74.8,
+        "yaw": -0.635,
+        "pitch": -0.1576
+      },
+      "sweep": null,
+      "source": "docs/stage08fix/qa_camera_poses.json"
+    },
+    {
+      "id": "flower_glade",
+      "desc": "south glade eye-level (shot-03 pose) — ground-cover heavy view",
+      "player": {
+        "x": -14,
+        "z": 61
+      },
+      "cam": {
+        "x": -14,
+        "y": 1.557,
+        "z": 61,
+        "yaw": 0,
+        "pitch": -0.1065
+      },
+      "sweep": null,
+      "source": "docs/stage08fix/qa_camera_poses.json"
+    }
+  ],
+  "bVisibleOnA": null,
+  "charDiagA": null,
+  "table": [
+    {
+      "scene": "lane_with_clientB",
+      "quality": "low",
+      "fps": 598.05,
+      "low1": 122.637,
+      "p95": 5.5,
+      "p99": 21.2,
+      "over16_7": 1.647,
+      "over33_3": 0.558,
+      "draw": 147,
+      "tris": 449110,
+      "heapMB": 69.9
+    },
+    {
+      "scene": "open_forest",
+      "quality": "low",
+      "fps": 563.836,
+      "low1": 336.61,
+      "p95": 2.7,
+      "p99": 3.3,
+      "over16_7": 0,
+      "over33_3": 0,
+      "draw": 180,
+      "tris": 469590,
+      "heapMB": 90.78
+    },
+    {
+      "scene": "service_station",
+      "quality": "low",
+      "fps": 598.764,
+      "low1": 365.297,
+      "p95": 2.3,
+      "p99": 2.6,
+      "over16_7": 0,
+      "over33_3": 0,
+      "draw": 173,
+      "tris": 439274,
+      "heapMB": 75.05
+    },
+    {
+      "scene": "forest_camp",
+      "quality": "low",
+      "fps": 560.411,
+      "low1": 359.689,
+      "p95": 2.3,
+      "p99": 2.6,
+      "over16_7": 0,
+      "over33_3": 0,
+      "draw": 171,
+      "tris": 447734,
+      "heapMB": 94.34
+    },
+    {
+      "scene": "flower_glade",
+      "quality": "low",
+      "fps": 675.516,
+      "low1": 420.354,
+      "p95": 1.9,
+      "p99": 2.2,
+      "over16_7": 0.007,
+      "over33_3": 0,
+      "draw": 137,
+      "tris": 451224,
+      "heapMB": 83.15
+    },
+    {
+      "scene": "lane_with_clientB",
+      "quality": "medium",
+      "fps": 509.924,
+      "low1": 335.724,
+      "p95": 2.8,
+      "p99": 3.5,
+      "over16_7": 0,
+      "over33_3": 0,
+      "draw": 213,
+      "tris": 726207,
+      "heapMB": 90.63
+    },
+    {
+      "scene": "open_forest",
+      "quality": "medium",
+      "fps": 492.408,
+      "low1": 273.783,
+      "p95": 2.8,
+      "p99": 3.3,
+      "over16_7": 0.021,
+      "over33_3": 0,
+      "draw": 199,
+      "tris": 720959,
+      "heapMB": 91.65
+    },
+    {
+      "scene": "service_station",
+      "quality": "medium",
+      "fps": 480.23,
+      "low1": 295.732,
+      "p95": 2.9,
+      "p99": 3.2,
+      "over16_7": 0,
+      "over33_3": 0,
+      "draw": 202,
+      "tris": 693495,
+      "heapMB": 68.73
+    },
+    {
+      "scene": "forest_camp",
+      "quality": "medium",
+      "fps": 481.217,
+      "low1": 299.66,
+      "p95": 2.7,
+      "p99": 3.1,
+      "over16_7": 0,
+      "over33_3": 0,
+      "draw": 212,
+      "tris": 699893,
+      "heapMB": 68.95
+    },
+    {
+      "scene": "flower_glade",
+      "quality": "medium",
+      "fps": 552.4,
+      "low1": 342.065,
+      "p95": 2.9,
+      "p99": 3.4,
+      "over16_7": 0,
+      "over33_3": 0,
+      "draw": 173,
+      "tris": 700602,
+      "heapMB": 88.5
+    }
+  ],
+  "durationSec": 561.825,
+  "errorCapture": {
+    "clientsCaptured": 2,
+    "totals": {
+      "consoleErrors": 0,
+      "pageExceptions": 0,
+      "logErrorsNonNetwork": 0,
+      "logErrorsNetwork": 0,
+      "networkErrors": 0,
+      "networkAborted": 0,
+      "warningsBenign": 9,
+      "warningsOther": 0
+    },
+    "warnings": [
+      {
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+        "benign": true,
+        "count": 9
+      }
+    ],
+    "perClient": [
+      {
+        "client": "A",
+        "consoleErrors": [],
+        "consoleWarnings": 7,
+        "warnings": [
+          {
+            "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+            "count": 7,
+            "benign": true
+          }
+        ],
+        "pageExceptions": [],
+        "logErrors": [],
+        "networkErrors": [],
+        "networkAborted": []
+      },
+      {
+        "client": "B",
+        "consoleErrors": [],
+        "consoleWarnings": 2,
+        "warnings": [
+          {
+            "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+            "count": 2,
+            "benign": true
+          }
+        ],
+        "pageExceptions": [],
+        "logErrors": [],
+        "networkErrors": [],
+        "networkAborted": []
+      }
+    ]
+  },
+  "checks": [
+    {
+      "id": "perf.noConsoleErrors",
+      "status": "PASS",
+      "note": "console error/assert + uncaught exceptions + Log.entryAdded(error, non-network); benign PCFSoftShadowMap warning is warning-only",
+      "details": {
+        "consoleErrors": 0,
+        "pageExceptions": 0,
+        "logErrorsNonNetwork": 0,
+        "logErrorsNetwork": 0,
+        "networkErrors": 0,
+        "networkAborted": 0,
+        "warningsBenign": 9,
+        "warningsOther": 0
+      }
+    },
+    {
+      "id": "perf.noNetworkErrors",
+      "status": "PASS",
+      "note": "HTTP >= 400 + Network.loadingFailed (canceled/ERR_ABORTED during navigation recorded separately, info only)",
+      "details": {
+        "consoleErrors": 0,
+        "pageExceptions": 0,
+        "logErrorsNonNetwork": 0,
+        "logErrorsNetwork": 0,
+        "networkErrors": 0,
+        "networkAborted": 0,
+        "warningsBenign": 9,
+        "warningsOther": 0,
+        "abortedInfoOnly": 0
+      }
+    }
+  ],
+  "summary": {
+    "pass": 2,
+    "fail": 0,
+    "skip": 0,
+    "notAchieved": 0,
+    "notTested": 0,
+    "info": 0
+  }
+}

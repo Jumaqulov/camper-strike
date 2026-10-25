@@ -1,0 +1,1258 @@
+{
+  "meta": {
+    "label": "final",
+    "root": "C:\\Users\\user\\Desktop\\Games\\camper-strike",
+    "phases": [
+      "shots",
+      "video"
+    ],
+    "ports": {
+      "server": 3300,
+      "vite": 5473,
+      "chromeDebug": 9500
+    },
+    "viewport": "1280x720",
+    "dpr": 1,
+    "quality": "medium",
+    "map": "forest_square",
+    "seed": 6501,
+    "timestamp": "2026-10-24T18:33:16.263Z",
+    "command": "node scripts/qa-stage08b-char.mjs --phase=shots,video --label=final --out=docs/stage08b-final-qa",
+    "gitHead": "0c3b8ba",
+    "gitDirty": 6,
+    "environment": {
+      "platform": "win32 10.0.26300 (x64)",
+      "cpuModel": "AMD Ryzen 7 6800H with Radeon Graphics         ",
+      "cpuCores": 16,
+      "totalRamGB": 15.25,
+      "nodeVersion": "v22.14.0",
+      "chromeVersion": "Chrome/156.0.8078.47",
+      "chromeArgs": [
+        "--headless=new",
+        "--remote-debugging-port=9500",
+        "--window-size=1280,720",
+        "--force-device-scale-factor=1",
+        "--disable-gpu-vsync",
+        "--disable-frame-rate-limit",
+        "--disable-background-timer-throttling",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding",
+        "--enable-precise-memory-info",
+        "--autoplay-policy=no-user-gesture-required",
+        "--mute-audio",
+        "--no-first-run",
+        "--no-default-browser-check",
+        "--user-data-dir=C:\\Users\\user\\AppData\\Local\\Temp\\camper_qa08b_final_1792866797962",
+        "about:blank"
+      ],
+      "headless": true,
+      "ffmpeg": "C:\\Users\\user\\AppData\\Local\\ms-playwright\\ffmpeg-1011\\ffmpeg-win64.exe"
+    },
+    "helperWorld": {
+      "ready": true,
+      "gameplayHash": "670a9c21f0565c94",
+      "worldVersion": 2
+    }
+  },
+  "lane": {
+    "start": {
+      "x": 0.574,
+      "y": -0.155,
+      "z": 104.05
+    },
+    "yaw": 0.05,
+    "len": 50.002,
+    "end": {
+      "x": -1.938,
+      "y": -0.112,
+      "z": 54.111
+    },
+    "yRange": 0.092,
+    "maxStepDy": 0.002,
+    "lateral": 0,
+    "closeupClear": 1,
+    "side": 1,
+    "sideClearRatio": 1,
+    "score": 63.905,
+    "evaluated": 4994,
+    "candidates": 285
+  },
+  "ffmpeg": "C:\\Users\\user\\AppData\\Local\\ms-playwright\\ffmpeg-1011\\ffmpeg-win64.exe",
+  "clips": [
+    {
+      "name": "remote_run",
+      "file": "docs/stage08b-final-qa/qa_videos/final_remote_run.webm",
+      "exitCode": 0,
+      "ffmpegError": null,
+      "bytes": 3607413,
+      "outFrames": 180,
+      "outFps": 30,
+      "capturedFrames": 236,
+      "capturedSpanSec": 6.305,
+      "captureFps": 37.428,
+      "uniqueFramesUsed": 122,
+      "duplicatedOutFrames": 58,
+      "droppedCapturedFrames": 108,
+      "captureIntervalMs": {
+        "median": 16.903,
+        "max": 500.605
+      },
+      "samples": [
+        {
+          "tMs": 0,
+          "remotePos": {
+            "x": 89.25690819677855,
+            "y": 0.08063606557298893,
+            "z": -95.42077704919166
+          },
+          "snapSpeed": 6.5,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 402,
+          "remotePos": {
+            "x": 86.68268965511281,
+            "y": 0.12594827586321522,
+            "z": -94.90853448274677
+          },
+          "snapSpeed": 6.5,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 806,
+          "remotePos": {
+            "x": 85.25947394540978,
+            "y": 0.15842431761785594,
+            "z": -94.62602977667501
+          },
+          "snapSpeed": 6.5,
+          "state": "Walk",
+          "timeScale": 1.063
+        },
+        {
+          "tMs": 1218,
+          "remotePos": {
+            "x": 82.66329729728561,
+            "y": 0.22812972973005205,
+            "z": -94.10905945945713
+          },
+          "snapSpeed": 6.5,
+          "state": "Run",
+          "timeScale": 0.986
+        },
+        {
+          "tMs": 1626,
+          "remotePos": {
+            "x": 80.108,
+            "y": 0.31,
+            "z": -93.601
+          },
+          "snapSpeed": 6.5,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 2030,
+          "remotePos": {
+            "x": 77.41194462540271,
+            "y": 0.3917296416939344,
+            "z": -93.0651042345268
+          },
+          "snapSpeed": 6.5,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 2441,
+          "remotePos": {
+            "x": 75.748,
+            "y": 0.431,
+            "z": -92.734
+          },
+          "snapSpeed": 0,
+          "state": "Walk",
+          "timeScale": 0.948
+        },
+        {
+          "tMs": 2846,
+          "remotePos": {
+            "x": 75.748,
+            "y": 0.431,
+            "z": -92.734
+          },
+          "snapSpeed": 0,
+          "state": "Idle",
+          "timeScale": 1
+        },
+        {
+          "tMs": 3254,
+          "remotePos": {
+            "x": 75.748,
+            "y": 0.431,
+            "z": -92.734
+          },
+          "snapSpeed": 0,
+          "state": "Idle",
+          "timeScale": 1
+        },
+        {
+          "tMs": 3658,
+          "remotePos": {
+            "x": 75.748,
+            "y": 0.431,
+            "z": -92.734
+          },
+          "snapSpeed": 3.5,
+          "state": "Idle",
+          "timeScale": 1
+        },
+        {
+          "tMs": 4079,
+          "remotePos": {
+            "x": 73.635,
+            "y": 0.463,
+            "z": -92.314
+          },
+          "snapSpeed": 6.5,
+          "state": "Run",
+          "timeScale": 0.937
+        },
+        {
+          "tMs": 4499,
+          "remotePos": {
+            "x": 71.24401282055528,
+            "y": 0.49391025640962266,
+            "z": -91.83793910257249
+          },
+          "snapSpeed": 6.5,
+          "state": "Run",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 4904,
+          "remotePos": {
+            "x": 68.50664032696405,
+            "y": 0.5389836512263219,
+            "z": -91.29372479563807
+          },
+          "snapSpeed": 6.5,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 5321,
+          "remotePos": {
+            "x": 66.843,
+            "y": 0.56,
+            "z": -90.963
+          },
+          "snapSpeed": 0,
+          "state": "Walk",
+          "timeScale": 0.944
+        },
+        {
+          "tMs": 5723,
+          "remotePos": {
+            "x": 66.843,
+            "y": 0.56,
+            "z": -90.963
+          },
+          "snapSpeed": 0,
+          "state": "Idle",
+          "timeScale": 1
+        },
+        {
+          "tMs": 6125,
+          "remotePos": {
+            "x": 66.843,
+            "y": 0.56,
+            "z": -90.963
+          },
+          "snapSpeed": 0,
+          "state": "Idle",
+          "timeScale": 1
+        }
+      ],
+      "driver": {
+        "i": 0,
+        "n": 1,
+        "done": false,
+        "detours": 0
+      },
+      "stateMode": "Run",
+      "snapSpeedMedian": 6.5
+    },
+    {
+      "name": "walk_3p",
+      "file": "docs/stage08b-final-qa/qa_videos/final_walk_3p.webm",
+      "exitCode": 0,
+      "ffmpegError": null,
+      "bytes": 4887925,
+      "outFrames": 180,
+      "outFps": 30,
+      "capturedFrames": 383,
+      "capturedSpanSec": 6.456,
+      "captureFps": 59.329,
+      "uniqueFramesUsed": 180,
+      "duplicatedOutFrames": 0,
+      "droppedCapturedFrames": 176,
+      "captureIntervalMs": {
+        "median": 16.847,
+        "max": 18.994
+      },
+      "samples": [
+        {
+          "tMs": 0,
+          "pos": {
+            "x": 0.47,
+            "y": -0.147,
+            "z": 101.978
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.995
+        },
+        {
+          "tMs": 401,
+          "pos": {
+            "x": 0.409,
+            "y": -0.134,
+            "z": 100.758
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 804,
+          "pos": {
+            "x": 0.348,
+            "y": -0.124,
+            "z": 99.543
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 1207,
+          "pos": {
+            "x": 0.288,
+            "y": -0.116,
+            "z": 98.341
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 1609,
+          "pos": {
+            "x": 0.228,
+            "y": -0.109,
+            "z": 97.127
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 2013,
+          "pos": {
+            "x": 0.167,
+            "y": -0.103,
+            "z": 95.916
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 2418,
+          "pos": {
+            "x": 0.106,
+            "y": -0.103,
+            "z": 94.702
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 2822,
+          "pos": {
+            "x": 0.046,
+            "y": -0.105,
+            "z": 93.495
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 3226,
+          "pos": {
+            "x": -0.015,
+            "y": -0.111,
+            "z": 92.28
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 3633,
+          "pos": {
+            "x": -0.076,
+            "y": -0.121,
+            "z": 91.062
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 4037,
+          "pos": {
+            "x": -0.136,
+            "y": -0.131,
+            "z": 89.857
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 4441,
+          "pos": {
+            "x": -0.197,
+            "y": -0.145,
+            "z": 88.636
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 4849,
+          "pos": {
+            "x": -0.259,
+            "y": -0.152,
+            "z": 87.41
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 5260,
+          "pos": {
+            "x": -0.32,
+            "y": -0.16,
+            "z": 86.192
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 5666,
+          "pos": {
+            "x": -0.381,
+            "y": -0.16,
+            "z": 84.974
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 6072,
+          "pos": {
+            "x": -0.442,
+            "y": -0.161,
+            "z": 83.75
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        }
+      ],
+      "measuredSpeedMps": 3.006,
+      "startPos": {
+        "x": 0.47,
+        "z": 101.978
+      },
+      "expectedSpeedMps": 3,
+      "stateMode": "Walk",
+      "weapon": "pistol"
+    },
+    {
+      "name": "walk_side",
+      "file": "docs/stage08b-final-qa/qa_videos/final_walk_side.webm",
+      "exitCode": 0,
+      "ffmpegError": null,
+      "bytes": 4822856,
+      "outFrames": 180,
+      "outFps": 30,
+      "capturedFrames": 386,
+      "capturedSpanSec": 6.503,
+      "captureFps": 59.359,
+      "uniqueFramesUsed": 180,
+      "duplicatedOutFrames": 0,
+      "droppedCapturedFrames": 176,
+      "captureIntervalMs": {
+        "median": 16.87,
+        "max": 22.328
+      },
+      "samples": [
+        {
+          "tMs": 0,
+          "pos": {
+            "x": 0.47,
+            "y": -0.146,
+            "z": 101.973
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.995
+        },
+        {
+          "tMs": 401,
+          "pos": {
+            "x": 0.409,
+            "y": -0.134,
+            "z": 100.757
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 809,
+          "pos": {
+            "x": 0.349,
+            "y": -0.125,
+            "z": 99.547
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 1218,
+          "pos": {
+            "x": 0.288,
+            "y": -0.116,
+            "z": 98.342
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 1622,
+          "pos": {
+            "x": 0.227,
+            "y": -0.109,
+            "z": 97.121
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 2028,
+          "pos": {
+            "x": 0.166,
+            "y": -0.103,
+            "z": 95.9
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 2433,
+          "pos": {
+            "x": 0.105,
+            "y": -0.103,
+            "z": 94.679
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 2839,
+          "pos": {
+            "x": 0.044,
+            "y": -0.106,
+            "z": 93.467
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 3247,
+          "pos": {
+            "x": -0.017,
+            "y": -0.111,
+            "z": 92.239
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 3653,
+          "pos": {
+            "x": -0.077,
+            "y": -0.122,
+            "z": 91.031
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 4056,
+          "pos": {
+            "x": -0.138,
+            "y": -0.131,
+            "z": 89.829
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 4464,
+          "pos": {
+            "x": -0.201,
+            "y": -0.146,
+            "z": 88.562
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 4889,
+          "pos": {
+            "x": -0.264,
+            "y": -0.153,
+            "z": 87.299
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 5299,
+          "pos": {
+            "x": -0.325,
+            "y": -0.16,
+            "z": 86.087
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 5705,
+          "pos": {
+            "x": -0.385,
+            "y": -0.161,
+            "z": 84.877
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        },
+        {
+          "tMs": 6120,
+          "pos": {
+            "x": -0.449,
+            "y": -0.161,
+            "z": 83.606
+          },
+          "onGround": true,
+          "state": "Walk",
+          "timeScale": 0.998
+        }
+      ],
+      "measuredSpeedMps": 3.005,
+      "startPos": {
+        "x": 0.47,
+        "z": 101.973
+      },
+      "expectedSpeedMps": 3,
+      "stateMode": "Walk",
+      "weapon": "pistol"
+    },
+    {
+      "name": "run_3p",
+      "file": "docs/stage08b-final-qa/qa_videos/final_run_3p.webm",
+      "exitCode": 0,
+      "ffmpegError": null,
+      "bytes": 5846971,
+      "outFrames": 180,
+      "outFps": 30,
+      "capturedFrames": 386,
+      "capturedSpanSec": 6.487,
+      "captureFps": 59.503,
+      "uniqueFramesUsed": 180,
+      "duplicatedOutFrames": 0,
+      "droppedCapturedFrames": 177,
+      "captureIntervalMs": {
+        "median": 16.779,
+        "max": 24.063
+      },
+      "samples": [
+        {
+          "tMs": 0,
+          "pos": {
+            "x": 0.357,
+            "y": -0.126,
+            "z": 99.707
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 0.996
+        },
+        {
+          "tMs": 403,
+          "pos": {
+            "x": 0.221,
+            "y": -0.108,
+            "z": 96.992
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 809,
+          "pos": {
+            "x": 0.091,
+            "y": -0.102,
+            "z": 94.389
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 1215,
+          "pos": {
+            "x": -0.04,
+            "y": -0.114,
+            "z": 91.771
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 1620,
+          "pos": {
+            "x": -0.172,
+            "y": -0.139,
+            "z": 89.141
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 2040,
+          "pos": {
+            "x": -0.31,
+            "y": -0.16,
+            "z": 86.382
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 2446,
+          "pos": {
+            "x": -0.442,
+            "y": -0.161,
+            "z": 83.745
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 2850,
+          "pos": {
+            "x": -0.575,
+            "y": -0.161,
+            "z": 81.093
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 3258,
+          "pos": {
+            "x": -0.706,
+            "y": -0.17,
+            "z": 78.475
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 3663,
+          "pos": {
+            "x": -0.838,
+            "y": -0.184,
+            "z": 75.842
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 4069,
+          "pos": {
+            "x": -0.969,
+            "y": -0.188,
+            "z": 73.212
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 4475,
+          "pos": {
+            "x": -1.101,
+            "y": -0.167,
+            "z": 70.578
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 4882,
+          "pos": {
+            "x": -1.231,
+            "y": -0.148,
+            "z": 67.972
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 5286,
+          "pos": {
+            "x": -1.362,
+            "y": -0.138,
+            "z": 65.355
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 5698,
+          "pos": {
+            "x": -1.498,
+            "y": -0.14,
+            "z": 62.643
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 6102,
+          "pos": {
+            "x": -1.63,
+            "y": -0.14,
+            "z": 60.016
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        }
+      ],
+      "measuredSpeedMps": 6.513,
+      "startPos": {
+        "x": 0.357,
+        "z": 99.707
+      },
+      "expectedSpeedMps": 6.5,
+      "stateMode": "Run",
+      "weapon": "pistol"
+    },
+    {
+      "name": "run_side",
+      "file": "docs/stage08b-final-qa/qa_videos/final_run_side.webm",
+      "exitCode": 0,
+      "ffmpegError": null,
+      "bytes": 5829214,
+      "outFrames": 180,
+      "outFps": 30,
+      "capturedFrames": 383,
+      "capturedSpanSec": 6.486,
+      "captureFps": 59.054,
+      "uniqueFramesUsed": 180,
+      "duplicatedOutFrames": 0,
+      "droppedCapturedFrames": 174,
+      "captureIntervalMs": {
+        "median": 16.926,
+        "max": 22.883
+      },
+      "samples": [
+        {
+          "tMs": 0,
+          "pos": {
+            "x": 0.357,
+            "y": -0.126,
+            "z": 99.714
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 0.996
+        },
+        {
+          "tMs": 403,
+          "pos": {
+            "x": 0.224,
+            "y": -0.108,
+            "z": 97.05
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 811,
+          "pos": {
+            "x": 0.091,
+            "y": -0.102,
+            "z": 94.405
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 1217,
+          "pos": {
+            "x": -0.037,
+            "y": -0.114,
+            "z": 91.84
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 1624,
+          "pos": {
+            "x": -0.17,
+            "y": -0.139,
+            "z": 89.186
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 2030,
+          "pos": {
+            "x": -0.302,
+            "y": -0.158,
+            "z": 86.544
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 2438,
+          "pos": {
+            "x": -0.435,
+            "y": -0.161,
+            "z": 83.888
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 2842,
+          "pos": {
+            "x": -0.567,
+            "y": -0.161,
+            "z": 81.258
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 3249,
+          "pos": {
+            "x": -0.699,
+            "y": -0.17,
+            "z": 78.619
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 3650,
+          "pos": {
+            "x": -0.83,
+            "y": -0.183,
+            "z": 75.985
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 4056,
+          "pos": {
+            "x": -0.963,
+            "y": -0.188,
+            "z": 73.34
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 4461,
+          "pos": {
+            "x": -1.094,
+            "y": -0.168,
+            "z": 70.711
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 4869,
+          "pos": {
+            "x": -1.227,
+            "y": -0.149,
+            "z": 68.066
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 5275,
+          "pos": {
+            "x": -1.359,
+            "y": -0.139,
+            "z": 65.418
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 5681,
+          "pos": {
+            "x": -1.49,
+            "y": -0.14,
+            "z": 62.803
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        },
+        {
+          "tMs": 6086,
+          "pos": {
+            "x": -1.621,
+            "y": -0.14,
+            "z": 60.18
+          },
+          "onGround": true,
+          "state": "Run",
+          "timeScale": 1
+        }
+      ],
+      "measuredSpeedMps": 6.504,
+      "startPos": {
+        "x": 0.357,
+        "z": 99.714
+      },
+      "expectedSpeedMps": 6.5,
+      "stateMode": "Run",
+      "weapon": "pistol"
+    }
+  ],
+  "notes": [
+    "Local clips use pistol (speedMul 1.0 → 3.0/6.5 m/s); client A runs offline-local (DEV netSim dropRate=1) on the helper lane so placement is identical BEFORE/AFTER. remote_run is server-authoritative (A in a separate pre-offline window, route from its spawn) and its framing depends on the spawn."
+  ],
+  "roomName": "Q8B_video_final_5485",
+  "charHook": true,
+  "remoteRoute": {
+    "from": {
+      "x": 95.818,
+      "z": -96.726
+    },
+    "waypoints": [
+      {
+        "x": 39.656,
+        "z": -85.555
+      }
+    ],
+    "segments": [
+      {
+        "yaw": 1.767,
+        "len": 57.262
+      }
+    ],
+    "totalLen": 57.262
+  },
+  "errorsB": {
+    "consoleErrors": [],
+    "consoleWarnings": 2,
+    "warnings": [
+      {
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+        "count": 2,
+        "benign": true
+      }
+    ],
+    "pageExceptions": [],
+    "logErrors": [],
+    "networkErrors": [],
+    "networkAborted": []
+  },
+  "errorsA": {
+    "consoleErrors": [],
+    "consoleWarnings": 2,
+    "warnings": [
+      {
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+        "count": 2,
+        "benign": true
+      }
+    ],
+    "pageExceptions": [],
+    "logErrors": [],
+    "networkErrors": [],
+    "networkAborted": []
+  },
+  "durationSec": 56.329,
+  "errorCapture": {
+    "clientsCaptured": 2,
+    "totals": {
+      "consoleErrors": 0,
+      "pageExceptions": 0,
+      "logErrorsNonNetwork": 0,
+      "logErrorsNetwork": 0,
+      "networkErrors": 0,
+      "networkAborted": 0,
+      "warningsBenign": 4,
+      "warningsOther": 0
+    },
+    "warnings": [
+      {
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+        "benign": true,
+        "count": 4
+      }
+    ],
+    "perClient": [
+      {
+        "client": "A",
+        "consoleErrors": [],
+        "consoleWarnings": 2,
+        "warnings": [
+          {
+            "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+            "count": 2,
+            "benign": true
+          }
+        ],
+        "pageExceptions": [],
+        "logErrors": [],
+        "networkErrors": [],
+        "networkAborted": []
+      },
+      {
+        "client": "B",
+        "consoleErrors": [],
+        "consoleWarnings": 2,
+        "warnings": [
+          {
+            "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+            "count": 2,
+            "benign": true
+          }
+        ],
+        "pageExceptions": [],
+        "logErrors": [],
+        "networkErrors": [],
+        "networkAborted": []
+      }
+    ]
+  },
+  "checks": [
+    {
+      "id": "video.noConsoleErrors",
+      "status": "PASS",
+      "note": "console error/assert + uncaught exceptions + Log.entryAdded(error, non-network); benign PCFSoftShadowMap warning is warning-only",
+      "details": {
+        "consoleErrors": 0,
+        "pageExceptions": 0,
+        "logErrorsNonNetwork": 0,
+        "logErrorsNetwork": 0,
+        "networkErrors": 0,
+        "networkAborted": 0,
+        "warningsBenign": 4,
+        "warningsOther": 0
+      }
+    },
+    {
+      "id": "video.noNetworkErrors",
+      "status": "PASS",
+      "note": "HTTP >= 400 + Network.loadingFailed (canceled/ERR_ABORTED during navigation recorded separately, info only)",
+      "details": {
+        "consoleErrors": 0,
+        "pageExceptions": 0,
+        "logErrorsNonNetwork": 0,
+        "logErrorsNetwork": 0,
+        "networkErrors": 0,
+        "networkAborted": 0,
+        "warningsBenign": 4,
+        "warningsOther": 0,
+        "abortedInfoOnly": 0
+      }
+    }
+  ],
+  "summary": {
+    "pass": 2,
+    "fail": 0,
+    "skip": 0,
+    "notAchieved": 0,
+    "notTested": 0,
+    "info": 0
+  }
+}

@@ -1,0 +1,2504 @@
+{
+  "meta": {
+    "label": "final",
+    "root": "C:\\Users\\user\\Desktop\\Games\\camper-strike",
+    "phases": [
+      "shots",
+      "video"
+    ],
+    "ports": {
+      "server": 3300,
+      "vite": 5473,
+      "chromeDebug": 9500
+    },
+    "viewport": "1280x720",
+    "dpr": 1,
+    "quality": "medium",
+    "map": "forest_square",
+    "seed": 6501,
+    "timestamp": "2026-10-24T18:33:16.263Z",
+    "command": "node scripts/qa-stage08b-char.mjs --phase=shots,video --label=final --out=docs/stage08b-final-qa",
+    "gitHead": "0c3b8ba",
+    "gitDirty": 6,
+    "environment": {
+      "platform": "win32 10.0.26300 (x64)",
+      "cpuModel": "AMD Ryzen 7 6800H with Radeon Graphics         ",
+      "cpuCores": 16,
+      "totalRamGB": 15.25,
+      "nodeVersion": "v22.14.0",
+      "chromeVersion": "Chrome/156.0.8078.47",
+      "chromeArgs": [
+        "--headless=new",
+        "--remote-debugging-port=9500",
+        "--window-size=1280,720",
+        "--force-device-scale-factor=1",
+        "--disable-gpu-vsync",
+        "--disable-frame-rate-limit",
+        "--disable-background-timer-throttling",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding",
+        "--enable-precise-memory-info",
+        "--autoplay-policy=no-user-gesture-required",
+        "--mute-audio",
+        "--no-first-run",
+        "--no-default-browser-check",
+        "--user-data-dir=C:\\Users\\user\\AppData\\Local\\Temp\\camper_qa08b_final_1792866797962",
+        "about:blank"
+      ],
+      "headless": true,
+      "ffmpeg": "C:\\Users\\user\\AppData\\Local\\ms-playwright\\ffmpeg-1011\\ffmpeg-win64.exe"
+    },
+    "helperWorld": {
+      "ready": true,
+      "gameplayHash": "670a9c21f0565c94",
+      "worldVersion": 2
+    }
+  },
+  "lane": {
+    "start": {
+      "x": 0.574,
+      "y": -0.155,
+      "z": 104.05
+    },
+    "yaw": 0.05,
+    "len": 50.002,
+    "end": {
+      "x": -1.938,
+      "y": -0.112,
+      "z": 54.111
+    },
+    "yRange": 0.092,
+    "maxStepDy": 0.002,
+    "lateral": 0,
+    "closeupClear": 1,
+    "side": 1,
+    "sideClearRatio": 1,
+    "score": 63.905,
+    "evaluated": 4994,
+    "candidates": 285
+  },
+  "shots": [
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_remote_front.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 744609,
+      "kind": "remote",
+      "view": "remote_front",
+      "remoteId": "4I8r8_ew9Y-dWfZlAAAA",
+      "remoteDiag": {
+        "id": "4I8r8_ew9Y-dWfZlAAAA",
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "timeScale": 1,
+        "weapon": "rifle",
+        "muzzleWorld": {
+          "x": -36.28746198181647,
+          "y": 1.2324331297314821,
+          "z": -44.71984458400826
+        },
+        "gripWorld": {
+          "x": -36.04521648442195,
+          "y": 1.076673129731482,
+          "z": -45.79509430337212
+        },
+        "skeletonUuid": "7b45433e-61c1-4af9-ac5f-3b014db20757",
+        "hipsBoneUuid": "6c8451be-00ff-4709-b895-4f01c9b3dc76",
+        "teamMaterialUuid": "13fc9015-e992-4b28-96cd-9e18484d42ea",
+        "teamColorHex": "#2e75e8"
+      },
+      "remoteSeenByB": {
+        "id": "4I8r8_ew9Y-dWfZlAAAA",
+        "name": "QA_Alpha",
+        "pos": {
+          "x": -35.832,
+          "y": -0.138,
+          "z": -46.096
+        },
+        "weapon": "rifle"
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_remote_side.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 745615,
+      "kind": "remote",
+      "view": "remote_side",
+      "remoteId": "4I8r8_ew9Y-dWfZlAAAA",
+      "remoteDiag": {
+        "id": "4I8r8_ew9Y-dWfZlAAAA",
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "timeScale": 1,
+        "weapon": "rifle",
+        "muzzleWorld": {
+          "x": -36.262353534589636,
+          "y": 1.2318318128235424,
+          "z": -44.71536649390364
+        },
+        "gripWorld": {
+          "x": -36.020108037195115,
+          "y": 1.0760718128235423,
+          "z": -45.7906162132675
+        },
+        "skeletonUuid": "7b45433e-61c1-4af9-ac5f-3b014db20757",
+        "hipsBoneUuid": "6c8451be-00ff-4709-b895-4f01c9b3dc76",
+        "teamMaterialUuid": "13fc9015-e992-4b28-96cd-9e18484d42ea",
+        "teamColorHex": "#2e75e8"
+      },
+      "remoteSeenByB": {
+        "id": "4I8r8_ew9Y-dWfZlAAAA",
+        "name": "QA_Alpha",
+        "pos": {
+          "x": -35.832,
+          "y": -0.138,
+          "z": -46.096
+        },
+        "weapon": "rifle"
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_remote_far.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 860058,
+      "kind": "remote",
+      "view": "remote_far",
+      "remoteId": "4I8r8_ew9Y-dWfZlAAAA",
+      "remoteDiag": {
+        "id": "4I8r8_ew9Y-dWfZlAAAA",
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "timeScale": 1,
+        "weapon": "rifle",
+        "muzzleWorld": {
+          "x": -36.290847829138464,
+          "y": 1.2304401817687676,
+          "z": -44.720415647467526
+        },
+        "gripWorld": {
+          "x": -36.04860233174394,
+          "y": 1.0746801817687732,
+          "z": -45.79566536683141
+        },
+        "skeletonUuid": "7b45433e-61c1-4af9-ac5f-3b014db20757",
+        "hipsBoneUuid": "6c8451be-00ff-4709-b895-4f01c9b3dc76",
+        "teamMaterialUuid": "13fc9015-e992-4b28-96cd-9e18484d42ea",
+        "teamColorHex": "#2e75e8"
+      },
+      "remoteSeenByB": {
+        "id": "4I8r8_ew9Y-dWfZlAAAA",
+        "name": "QA_Alpha",
+        "pos": {
+          "x": -35.832,
+          "y": -0.138,
+          "z": -46.096
+        },
+        "weapon": "rifle"
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_3p_idle.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 780414,
+      "kind": "3p_idle",
+      "weapon": "rifle",
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "rifle",
+        "muzzleWorld": {
+          "x": 0.646251205044243,
+          "y": 1.2105378043018729,
+          "z": 102.60154669434654
+        },
+        "gripWorld": {
+          "x": 0.7013382454143846,
+          "y": 1.0547778043018705,
+          "z": 103.70236923135387
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#2e75e8",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      },
+      "transform": {
+        "x": 0.574,
+        "y": -0.15469499999999992,
+        "z": 104.05,
+        "yaw": 0.05,
+        "onGround": true
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_3p_run.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 816398,
+      "kind": "3p_run",
+      "weapon": "rifle",
+      "measuredSpeedMps": 6.035,
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Run",
+        "timeScale": 0.93,
+        "weapon": "rifle",
+        "muzzleWorld": {
+          "x": 0.09990439320260502,
+          "y": 1.0726541461085384,
+          "z": 92.09008144961672
+        },
+        "gripWorld": {
+          "x": 0.1553116647248171,
+          "y": 0.9721758459195589,
+          "z": 93.19730327158989
+        },
+        "weights": {
+          "Idle": 0,
+          "Walk": 0,
+          "Run": 1,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#2e75e8",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_3p_jump.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 858766,
+      "kind": "3p_jump",
+      "weapon": "rifle",
+      "heightAboveGroundAtDiag": 1.27,
+      "onGroundAtDiag": false,
+      "apexY": 1.27,
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "JumpStart",
+        "timeScale": 1,
+        "weapon": "rifle",
+        "muzzleWorld": {
+          "x": 0.632484662823892,
+          "y": 2.337498063869938,
+          "z": 102.59137145208797
+        },
+        "gripWorld": {
+          "x": 0.6878919343461074,
+          "y": 2.237019763680962,
+          "z": 103.69859327406112
+        },
+        "weights": {
+          "Idle": 0,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 1,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#2e75e8",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      },
+      "note": "screenshot taken right after diag sample (~150 ms later); airtime ~0.7 s"
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_3p_jump_sidecam.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 721587,
+      "kind": "3p_jump_sidecam",
+      "weapon": "rifle",
+      "heightAboveGroundAtDiag": 1.267,
+      "onGroundAtDiag": false,
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "JumpStart",
+        "timeScale": 1,
+        "weapon": "rifle",
+        "muzzleWorld": {
+          "x": 0.6325187880165767,
+          "y": 2.3306100168602417,
+          "z": 102.59116911725124
+        },
+        "gripWorld": {
+          "x": 0.6879260595387972,
+          "y": 2.2301317166712695,
+          "z": 103.69839093922442
+        },
+        "weights": {
+          "Idle": 0,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 1,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#2e75e8",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_1p_rifle.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 696293,
+      "kind": "1p",
+      "weapon": "rifle",
+      "team": "blue",
+      "camera": {
+        "x": 0.574,
+        "y": 1.4653050000000003,
+        "z": 104.05,
+        "yaw": 0.05,
+        "pitch": 0,
+        "thirdPerson": false
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": false,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "rifle",
+        "muzzleWorld": {
+          "x": 0.6210727350506571,
+          "y": 1.2158510891157932,
+          "z": 102.60441363841765
+        },
+        "gripWorld": {
+          "x": 0.6761597754208076,
+          "y": 1.0600910891158026,
+          "z": 103.705236175425
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#2e75e8",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_1p_pistol.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 741749,
+      "kind": "1p",
+      "weapon": "pistol",
+      "team": "blue",
+      "camera": {
+        "x": 0.574,
+        "y": 1.4653050000000003,
+        "z": 104.05,
+        "yaw": 0.05,
+        "pitch": 0,
+        "thirdPerson": false
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": false,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "pistol",
+        "muzzleWorld": {
+          "x": 0.6068559168673442,
+          "y": 1.3263035986212233,
+          "z": 103.22486165202243
+        },
+        "gripWorld": {
+          "x": 0.6254601628366657,
+          "y": 1.138863598621229,
+          "z": 103.59663644895186
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#2e75e8",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_1p_shotgun.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 713959,
+      "kind": "1p",
+      "weapon": "shotgun",
+      "team": "blue",
+      "camera": {
+        "x": 0.574,
+        "y": 1.4653050000000003,
+        "z": 104.05,
+        "yaw": 0.05,
+        "pitch": 0,
+        "thirdPerson": false
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": false,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "shotgun",
+        "muzzleWorld": {
+          "x": 0.6138583024135088,
+          "y": 1.1941947826579018,
+          "z": 102.55281835796127
+        },
+        "gripWorld": {
+          "x": 0.6715182704177068,
+          "y": 1.0569147826579042,
+          "z": 103.70505655837373
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#2e75e8",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_1p_sniper.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 679716,
+      "kind": "1p",
+      "weapon": "sniper",
+      "team": "blue",
+      "camera": {
+        "x": 0.574,
+        "y": 1.4653050000000003,
+        "z": 104.05,
+        "yaw": 0.05,
+        "pitch": 0,
+        "thirdPerson": false
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": false,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "sniper",
+        "muzzleWorld": {
+          "x": 0.629270861514738,
+          "y": 1.2424449589739153,
+          "z": 102.25613296283929
+        },
+        "gripWorld": {
+          "x": 0.7016426977854482,
+          "y": 1.0550049589739157,
+          "z": 103.70236328990163
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#2e75e8",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_1p_red_rifle.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 697704,
+      "kind": "1p",
+      "weapon": "rifle",
+      "team": "red",
+      "camera": {
+        "x": 0.574,
+        "y": 1.4653050000000003,
+        "z": 104.05,
+        "yaw": 0.05,
+        "pitch": 0,
+        "thirdPerson": false
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": false,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "rifle",
+        "muzzleWorld": {
+          "x": 0.6453129662482664,
+          "y": 1.2152250652430683,
+          "z": 102.60196542120678
+        },
+        "gripWorld": {
+          "x": 0.7004000066184057,
+          "y": 1.059465065243073,
+          "z": 103.7027879582141
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_1p_red_pistol.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 741168,
+      "kind": "1p",
+      "weapon": "pistol",
+      "team": "red",
+      "camera": {
+        "x": 0.574,
+        "y": 1.4653050000000003,
+        "z": 104.05,
+        "yaw": 0.05,
+        "pitch": 0,
+        "thirdPerson": false
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": false,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "pistol",
+        "muzzleWorld": {
+          "x": 0.577997660925896,
+          "y": 1.3252143458915264,
+          "z": 103.22668173232681
+        },
+        "gripWorld": {
+          "x": 0.5966019068952143,
+          "y": 1.1377743458915317,
+          "z": 103.59845652925625
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_1p_red_shotgun.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 714159,
+      "kind": "1p",
+      "weapon": "shotgun",
+      "team": "red",
+      "camera": {
+        "x": 0.574,
+        "y": 1.4653050000000003,
+        "z": 104.05,
+        "yaw": 0.05,
+        "pitch": 0,
+        "thirdPerson": false
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": false,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "shotgun",
+        "muzzleWorld": {
+          "x": 0.6444834473222116,
+          "y": 1.1928834522285487,
+          "z": 102.550134956311
+        },
+        "gripWorld": {
+          "x": 0.702143415326407,
+          "y": 1.0556034522285531,
+          "z": 103.70237315672344
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_1p_red_sniper.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 679530,
+      "kind": "1p",
+      "weapon": "sniper",
+      "team": "red",
+      "camera": {
+        "x": 0.574,
+        "y": 1.4653050000000003,
+        "z": 104.05,
+        "yaw": 0.05,
+        "pitch": 0,
+        "thirdPerson": false
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": false,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "sniper",
+        "muzzleWorld": {
+          "x": 0.6012183971929256,
+          "y": 1.2418100256230287,
+          "z": 102.25811061875777
+        },
+        "gripWorld": {
+          "x": 0.6735902334636366,
+          "y": 1.05437002562303,
+          "z": 103.7043409458201
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_closeup_unarmed_front.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 617270,
+      "kind": "closeup",
+      "weapon": null,
+      "view": "front",
+      "cam": {
+        "x": 0.464,
+        "y": 0.845,
+        "z": 101.853,
+        "yaw": -3.0915926535897933,
+        "pitch": 0
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": null,
+        "muzzleWorld": {
+          "x": 0,
+          "y": 0.08844,
+          "z": -1.32924
+        },
+        "gripWorld": {
+          "x": 0.9131363532224618,
+          "y": 0.6931919718944887,
+          "z": 103.92361977629501
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_closeup_unarmed_side.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 702646,
+      "kind": "closeup",
+      "weapon": null,
+      "view": "side",
+      "cam": {
+        "x": 2.771,
+        "y": 0.845,
+        "z": 103.94,
+        "yaw": 1.6207963267948957,
+        "pitch": 0
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": null,
+        "muzzleWorld": {
+          "x": 0,
+          "y": 0.08844,
+          "z": -1.32924
+        },
+        "gripWorld": {
+          "x": 0.9132408726619793,
+          "y": 0.6960035843707169,
+          "z": 103.8683150179683
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_closeup_unarmed_back.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 709037,
+      "kind": "closeup",
+      "weapon": null,
+      "view": "back",
+      "cam": {
+        "x": 0.684,
+        "y": 0.845,
+        "z": 106.247,
+        "yaw": 0.05000000000000004,
+        "pitch": 0
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": null,
+        "muzzleWorld": {
+          "x": 0,
+          "y": 0.08844,
+          "z": -1.32924
+        },
+        "gripWorld": {
+          "x": 0.9161979865808044,
+          "y": 0.6778203228537529,
+          "z": 103.89107232704328
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_closeup_rifle_front.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 617195,
+      "kind": "closeup",
+      "weapon": "rifle",
+      "view": "front",
+      "cam": {
+        "x": 0.464,
+        "y": 0.845,
+        "z": 101.853,
+        "yaw": -3.0915926535897933,
+        "pitch": 0
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "rifle",
+        "muzzleWorld": {
+          "x": 0.6465354655544031,
+          "y": 1.2143631825845767,
+          "z": 102.60182381421686
+        },
+        "gripWorld": {
+          "x": 0.7016225059245483,
+          "y": 1.058603182584575,
+          "z": 103.7026463512242
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_closeup_rifle_side.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 690604,
+      "kind": "closeup",
+      "weapon": "rifle",
+      "view": "side",
+      "cam": {
+        "x": 2.771,
+        "y": 0.845,
+        "z": 103.94,
+        "yaw": 1.6207963267948957,
+        "pitch": 0
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "rifle",
+        "muzzleWorld": {
+          "x": 0.6258523170107589,
+          "y": 1.215228775803386,
+          "z": 102.60394183678743
+        },
+        "gripWorld": {
+          "x": 0.680939357380895,
+          "y": 1.0594687758033787,
+          "z": 103.70476437379476
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_closeup_rifle_back.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 711580,
+      "kind": "closeup",
+      "weapon": "rifle",
+      "view": "back",
+      "cam": {
+        "x": 0.684,
+        "y": 0.845,
+        "z": 106.247,
+        "yaw": 0.05000000000000004,
+        "pitch": 0
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "rifle",
+        "muzzleWorld": {
+          "x": 0.624322041063743,
+          "y": 1.210496121494035,
+          "z": 102.60289405132096
+        },
+        "gripWorld": {
+          "x": 0.679409081433883,
+          "y": 1.054736121494033,
+          "z": 103.70371658832826
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_closeup_pistol_front.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 612920,
+      "kind": "closeup",
+      "weapon": "pistol",
+      "view": "front",
+      "cam": {
+        "x": 0.464,
+        "y": 0.845,
+        "z": 101.853,
+        "yaw": -3.0915926535897933,
+        "pitch": 0
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "pistol",
+        "muzzleWorld": {
+          "x": 0.5777935947360003,
+          "y": 1.3245299477407295,
+          "z": 103.22658847544818
+        },
+        "gripWorld": {
+          "x": 0.5963978407053202,
+          "y": 1.1370899477407368,
+          "z": 103.59836327237761
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_closeup_pistol_side.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 695677,
+      "kind": "closeup",
+      "weapon": "pistol",
+      "view": "side",
+      "cam": {
+        "x": 2.771,
+        "y": 0.845,
+        "z": 103.94,
+        "yaw": 1.6207963267948957,
+        "pitch": 0
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "pistol",
+        "muzzleWorld": {
+          "x": 0.6018773286229255,
+          "y": 1.3274931321951167,
+          "z": 103.22521073680882
+        },
+        "gripWorld": {
+          "x": 0.6204815745922473,
+          "y": 1.140053132195122,
+          "z": 103.59698553373826
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_closeup_pistol_back.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 709753,
+      "kind": "closeup",
+      "weapon": "pistol",
+      "view": "back",
+      "cam": {
+        "x": 0.684,
+        "y": 0.845,
+        "z": 106.247,
+        "yaw": 0.05000000000000004,
+        "pitch": 0
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "pistol",
+        "muzzleWorld": {
+          "x": 0.5968878266579167,
+          "y": 1.323400351390117,
+          "z": 103.2251921151383
+        },
+        "gripWorld": {
+          "x": 0.6154920726272392,
+          "y": 1.1359603513901226,
+          "z": 103.59696691206774
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_closeup_shotgun_front.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 619889,
+      "kind": "closeup",
+      "weapon": "shotgun",
+      "view": "front",
+      "cam": {
+        "x": 0.464,
+        "y": 0.845,
+        "z": 101.853,
+        "yaw": -3.0915926535897933,
+        "pitch": 0
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "shotgun",
+        "muzzleWorld": {
+          "x": 0.644298208239622,
+          "y": 1.192616882559741,
+          "z": 102.55012742284416
+        },
+        "gripWorld": {
+          "x": 0.7019581762438195,
+          "y": 1.0553368825597476,
+          "z": 103.70236562325663
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_closeup_shotgun_side.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 693727,
+      "kind": "closeup",
+      "weapon": "shotgun",
+      "view": "side",
+      "cam": {
+        "x": 2.771,
+        "y": 0.845,
+        "z": 103.94,
+        "yaw": 1.6207963267948957,
+        "pitch": 0
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "shotgun",
+        "muzzleWorld": {
+          "x": 0.616570690393226,
+          "y": 1.1970488225994074,
+          "z": 102.55309865106875
+        },
+        "gripWorld": {
+          "x": 0.674230658397418,
+          "y": 1.0597688225994024,
+          "z": 103.70533685148119
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_closeup_shotgun_back.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 711830,
+      "kind": "closeup",
+      "weapon": "shotgun",
+      "view": "back",
+      "cam": {
+        "x": 0.684,
+        "y": 0.845,
+        "z": 106.247,
+        "yaw": 0.05000000000000004,
+        "pitch": 0
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "shotgun",
+        "muzzleWorld": {
+          "x": 0.630609015640234,
+          "y": 1.1952016698930712,
+          "z": 102.55109531047292
+        },
+        "gripWorld": {
+          "x": 0.6882689836444329,
+          "y": 1.0579216698930685,
+          "z": 103.70333351088537
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_closeup_sniper_front.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 619227,
+      "kind": "closeup",
+      "weapon": "sniper",
+      "view": "front",
+      "cam": {
+        "x": 0.464,
+        "y": 0.845,
+        "z": 101.853,
+        "yaw": -3.0915926535897933,
+        "pitch": 0
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "sniper",
+        "muzzleWorld": {
+          "x": 0.6014855911379217,
+          "y": 1.2417323277759031,
+          "z": 102.25806449894594
+        },
+        "gripWorld": {
+          "x": 0.6738574274086381,
+          "y": 1.0542923277759038,
+          "z": 103.70429482600827
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_closeup_sniper_side.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 686184,
+      "kind": "closeup",
+      "weapon": "sniper",
+      "view": "side",
+      "cam": {
+        "x": 2.771,
+        "y": 0.845,
+        "z": 103.94,
+        "yaw": 1.6207963267948957,
+        "pitch": 0
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "sniper",
+        "muzzleWorld": {
+          "x": 0.6289936065300339,
+          "y": 1.2462911290941963,
+          "z": 102.2564516349024
+        },
+        "gripWorld": {
+          "x": 0.7013654428007439,
+          "y": 1.0588511290941895,
+          "z": 103.70268196196473
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_closeup_sniper_back.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 710454,
+      "kind": "closeup",
+      "weapon": "sniper",
+      "view": "back",
+      "cam": {
+        "x": 0.684,
+        "y": 0.845,
+        "z": 106.247,
+        "yaw": 0.05000000000000004,
+        "pitch": 0
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "sniper",
+        "muzzleWorld": {
+          "x": 0.609954775321802,
+          "y": 1.2465190862545237,
+          "z": 102.25836624417663
+        },
+        "gripWorld": {
+          "x": 0.6823266115925077,
+          "y": 1.0590790862545187,
+          "z": 103.70459657123897
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_grip_rifle_leftside.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 627158,
+      "kind": "grip_closeup",
+      "weapon": "rifle",
+      "view": "leftside",
+      "cam": {
+        "x": -0.228,
+        "y": 1.198,
+        "z": 103.33,
+        "yaw": -1.520796326794904,
+        "pitch": -0.08865588186743757
+      },
+      "gripWorld": {
+        "x": 0.6920497331290899,
+        "y": 1.0591989306567813,
+        "z": 103.70321918352187
+      },
+      "muzzleWorld": {
+        "x": 0.636962692758946,
+        "y": 1.2149589306567747,
+        "z": 102.60239664651453
+      },
+      "aimPoint": {
+        "x": 0.6711166577884352,
+        "y": 1.1183877306567789,
+        "z": 103.28490661945908
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "rifle",
+        "muzzleWorld": {
+          "x": 0.6405782076722902,
+          "y": 1.2102060976119766,
+          "z": 102.60203370063756
+        },
+        "gripWorld": {
+          "x": 0.6956652480424319,
+          "y": 1.0544460976119814,
+          "z": 103.70285623764491
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_grip_rifle_threequarter_front.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 639104,
+      "kind": "grip_closeup",
+      "weapon": "rifle",
+      "view": "threequarter_front",
+      "cam": {
+        "x": 0.004,
+        "y": 1.268,
+        "z": 102.681,
+        "yaw": -2.3061944901923415,
+        "pitch": -0.1651502325717303
+      },
+      "gripWorld": {
+        "x": 0.6920497331290899,
+        "y": 1.0591989306567813,
+        "z": 103.70321918352187
+      },
+      "muzzleWorld": {
+        "x": 0.636962692758946,
+        "y": 1.2149589306567747,
+        "z": 102.60239664651453
+      },
+      "aimPoint": {
+        "x": 0.6711166577884352,
+        "y": 1.1183877306567789,
+        "z": 103.28490661945908
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "rifle",
+        "muzzleWorld": {
+          "x": 0.6164979571081001,
+          "y": 1.2120093037326227,
+          "z": 102.60410195631583
+        },
+        "gripWorld": {
+          "x": 0.6715849974782512,
+          "y": 1.056249303732639,
+          "z": 103.70492449332318
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_grip_shotgun_leftside.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 623749,
+      "kind": "grip_closeup",
+      "weapon": "shotgun",
+      "view": "leftside",
+      "cam": {
+        "x": -0.218,
+        "y": 1.188,
+        "z": 103.31,
+        "yaw": -1.520796326794904,
+        "pitch": -0.08865588186743757
+      },
+      "gripWorld": {
+        "x": 0.70237468236165,
+        "y": 1.0561887984280138,
+        "z": 103.70240356537626
+      },
+      "muzzleWorld": {
+        "x": 0.6447147143574534,
+        "y": 1.1934687984280141,
+        "z": 102.5501653649638
+      },
+      "aimPoint": {
+        "x": 0.6804638945200553,
+        "y": 1.108355198428014,
+        "z": 103.26455304921953
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "shotgun",
+        "muzzleWorld": {
+          "x": 0.617710242428633,
+          "y": 1.1973014904386605,
+          "z": 102.55304927770345
+        },
+        "gripWorld": {
+          "x": 0.6753702104328407,
+          "y": 1.0600214904386738,
+          "z": 103.70528747811593
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_grip_shotgun_threequarter_front.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 635312,
+      "kind": "grip_closeup",
+      "weapon": "shotgun",
+      "view": "threequarter_front",
+      "cam": {
+        "x": 0.013,
+        "y": 1.258,
+        "z": 102.661,
+        "yaw": -2.3061944901923415,
+        "pitch": -0.1651502325717303
+      },
+      "gripWorld": {
+        "x": 0.70237468236165,
+        "y": 1.0561887984280138,
+        "z": 103.70240356537626
+      },
+      "muzzleWorld": {
+        "x": 0.6447147143574534,
+        "y": 1.1934687984280141,
+        "z": 102.5501653649638
+      },
+      "aimPoint": {
+        "x": 0.6804638945200553,
+        "y": 1.108355198428014,
+        "z": 103.26455304921953
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "shotgun",
+        "muzzleWorld": {
+          "x": 0.6288105580372647,
+          "y": 1.194515141366805,
+          "z": 102.55115176094044
+        },
+        "gripWorld": {
+          "x": 0.6864705260414602,
+          "y": 1.0572351413668044,
+          "z": 103.7033899613529
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_grip_sniper_leftside.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 595692,
+      "kind": "grip_closeup",
+      "weapon": "sniper",
+      "view": "leftside",
+      "cam": {
+        "x": -0.239,
+        "y": 1.208,
+        "z": 103.199,
+        "yaw": -1.520796326794904,
+        "pitch": -0.08865588186743757
+      },
+      "gripWorld": {
+        "x": 0.6873946836711595,
+        "y": 1.0572658350093715,
+        "z": 103.70392929613048
+      },
+      "muzzleWorld": {
+        "x": 0.6150228474004416,
+        "y": 1.2447058350093616,
+        "z": 102.25769896906812
+      },
+      "aimPoint": {
+        "x": 0.6598933858882867,
+        "y": 1.1284930350093678,
+        "z": 103.15436177184678
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "sniper",
+        "muzzleWorld": {
+          "x": 0.6022969239175374,
+          "y": 1.2415961237600808,
+          "z": 102.25794252031729
+        },
+        "gripWorld": {
+          "x": 0.6746687601882476,
+          "y": 1.0541561237600814,
+          "z": 103.7041728473796
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_grip_sniper_threequarter_front.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 620789,
+      "kind": "grip_closeup",
+      "weapon": "sniper",
+      "view": "threequarter_front",
+      "cam": {
+        "x": -0.008,
+        "y": 1.278,
+        "z": 102.551,
+        "yaw": -2.3061944901923415,
+        "pitch": -0.1651502325717303
+      },
+      "gripWorld": {
+        "x": 0.6873946836711595,
+        "y": 1.0572658350093715,
+        "z": 103.70392929613048
+      },
+      "muzzleWorld": {
+        "x": 0.6150228474004416,
+        "y": 1.2447058350093616,
+        "z": 102.25769896906812
+      },
+      "aimPoint": {
+        "x": 0.6598933858882867,
+        "y": 1.1284930350093678,
+        "z": 103.15436177184678
+      },
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Idle",
+        "timeScale": 1,
+        "weapon": "sniper",
+        "muzzleWorld": {
+          "x": 0.6296106462474639,
+          "y": 1.2456008851806302,
+          "z": 102.2563579966642
+        },
+        "gripWorld": {
+          "x": 0.7019824825181752,
+          "y": 1.0581608851806246,
+          "z": 103.70258832372653
+        },
+        "weights": {
+          "Idle": 1,
+          "Walk": 0,
+          "Run": 0,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_capsule_run_side_png_0.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 764453,
+      "kind": "capsule_overlay",
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Run",
+        "timeScale": 0.93,
+        "weapon": "rifle",
+        "muzzleWorld": {
+          "x": -0.22107862821013693,
+          "y": 1.0114832821652011,
+          "z": 85.71231782753703
+        },
+        "gripWorld": {
+          "x": -0.16567135646072992,
+          "y": 0.9110049818330529,
+          "z": 86.81953964937648
+        },
+        "weights": {
+          "Idle": 0,
+          "Walk": 0,
+          "Run": 1,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      },
+      "collisionDebug": {
+        "feetY": -0.15376535762071683,
+        "terrainY": -0.15376535762071683,
+        "feetAboveTerrain": 0,
+        "slopeDeg": 0.683326366331208,
+        "walkable": true,
+        "onGround": true,
+        "supportId": null,
+        "overlappingIds": [],
+        "nearby": [],
+        "liveMismatch": 137.97617561103542,
+        "ackMismatch": 0.000032000000000143025,
+        "ackSeq": 476,
+        "renderOffset": 0
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_capsule_run_side_png_1.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 769717,
+      "kind": "capsule_overlay",
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Run",
+        "timeScale": 0.93,
+        "weapon": "rifle",
+        "muzzleWorld": {
+          "x": -0.38547432302723533,
+          "y": 1.0297786334705228,
+          "z": 82.33730279561125
+        },
+        "gripWorld": {
+          "x": -0.3300670521063058,
+          "y": 0.9293003335613274,
+          "z": 83.44452461793561
+        },
+        "weights": {
+          "Idle": 0,
+          "Walk": 0,
+          "Run": 1,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      },
+      "collisionDebug": {
+        "feetY": -0.16121862254122776,
+        "terrainY": -0.16121862254122776,
+        "feetAboveTerrain": 0,
+        "slopeDeg": 0.028647887359848277,
+        "walkable": true,
+        "onGround": true,
+        "supportId": null,
+        "overlappingIds": [],
+        "nearby": [],
+        "liveMismatch": 134.67242267109424,
+        "ackMismatch": 0.000032000000000143025,
+        "ackSeq": 476,
+        "renderOffset": 0
+      }
+    },
+    {
+      "file": "docs/stage08b-final-qa/qa_shots/final_capsule_run_side_png_2.png",
+      "width": 1280,
+      "height": 720,
+      "bytes": 759752,
+      "kind": "capsule_overlay",
+      "diag": {
+        "mode": "buddy",
+        "visible": true,
+        "state": "Run",
+        "timeScale": 0.93,
+        "weapon": "rifle",
+        "muzzleWorld": {
+          "x": -0.5619232392503157,
+          "y": 1.0070332333109966,
+          "z": 78.54726909871316
+        },
+        "gripWorld": {
+          "x": -0.5065159677281078,
+          "y": 0.9065549331220086,
+          "z": 79.65449092068631
+        },
+        "weights": {
+          "Idle": 0,
+          "Walk": 0,
+          "Run": 1,
+          "JumpStart": 0,
+          "JumpAir": 0,
+          "Land": 0,
+          "Interact": 0
+        },
+        "skeletonUuid": "f7041857-9ac0-47b3-a0f3-79d8a5bd2912",
+        "teamColorHex": "#e03a30",
+        "asset": {
+          "state": "ready",
+          "liveInstances": 1,
+          "createdInstances": 2,
+          "disposedInstances": 1,
+          "loadMs": 2011,
+          "error": null
+        }
+      },
+      "collisionDebug": {
+        "feetY": -0.160050439581753,
+        "terrainY": -0.160050439581753,
+        "feetAboveTerrain": 0,
+        "slopeDeg": 0.057295760416576934,
+        "walkable": true,
+        "onGround": true,
+        "supportId": null,
+        "overlappingIds": [],
+        "nearby": [],
+        "liveMismatch": 130.96685920007522,
+        "ackMismatch": 0.000032000000000143025,
+        "ackSeq": 476,
+        "renderOffset": 0
+      }
+    }
+  ],
+  "notes": [
+    "remote shots: client B camera override framing client A at its server position (-35.832, -46.096) — spawn position varies per run."
+  ],
+  "roomName": "Q8B_shots_final_9286",
+  "gpu": {
+    "vendor": "Google Inc. (NVIDIA)",
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 3050 Ti Laptop GPU (0x000025A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "world": {
+    "meta": {
+      "mapId": "forest_square",
+      "worldVersion": 2,
+      "publicLayoutSeed": 6501,
+      "gameplayHash": "670a9c21f0565c94"
+    },
+    "gameplayHash": "670a9c21f0565c94",
+    "worldVersion": 2,
+    "roomId": "r1ds8w"
+  },
+  "charHook": true,
+  "onePersonTeams": [
+    "blue",
+    "red"
+  ],
+  "gripCloseups": [
+    {
+      "weapon": "rifle",
+      "view": "leftside",
+      "file": "docs/stage08b-final-qa/qa_shots/final_grip_rifle_leftside.png"
+    },
+    {
+      "weapon": "rifle",
+      "view": "threequarter_front",
+      "file": "docs/stage08b-final-qa/qa_shots/final_grip_rifle_threequarter_front.png"
+    },
+    {
+      "weapon": "shotgun",
+      "view": "leftside",
+      "file": "docs/stage08b-final-qa/qa_shots/final_grip_shotgun_leftside.png"
+    },
+    {
+      "weapon": "shotgun",
+      "view": "threequarter_front",
+      "file": "docs/stage08b-final-qa/qa_shots/final_grip_shotgun_threequarter_front.png"
+    },
+    {
+      "weapon": "sniper",
+      "view": "leftside",
+      "file": "docs/stage08b-final-qa/qa_shots/final_grip_sniper_leftside.png"
+    },
+    {
+      "weapon": "sniper",
+      "view": "threequarter_front",
+      "file": "docs/stage08b-final-qa/qa_shots/final_grip_sniper_threequarter_front.png"
+    }
+  ],
+  "capsule": {
+    "frames": [
+      {
+        "file": "docs/stage08b-final-qa/qa_shots/final_capsule_run_side_burst_00.jpg",
+        "frameIndex": 0,
+        "tSec": 0
+      },
+      {
+        "file": "docs/stage08b-final-qa/qa_shots/final_capsule_run_side_burst_01.jpg",
+        "frameIndex": 5,
+        "tSec": 0.087
+      },
+      {
+        "file": "docs/stage08b-final-qa/qa_shots/final_capsule_run_side_burst_02.jpg",
+        "frameIndex": 11,
+        "tSec": 0.189
+      },
+      {
+        "file": "docs/stage08b-final-qa/qa_shots/final_capsule_run_side_burst_03.jpg",
+        "frameIndex": 16,
+        "tSec": 0.274
+      },
+      {
+        "file": "docs/stage08b-final-qa/qa_shots/final_capsule_run_side_burst_04.jpg",
+        "frameIndex": 21,
+        "tSec": 0.36
+      },
+      {
+        "file": "docs/stage08b-final-qa/qa_shots/final_capsule_run_side_burst_05.jpg",
+        "frameIndex": 27,
+        "tSec": 0.462
+      },
+      {
+        "file": "docs/stage08b-final-qa/qa_shots/final_capsule_run_side_burst_06.jpg",
+        "frameIndex": 32,
+        "tSec": 0.546
+      },
+      {
+        "file": "docs/stage08b-final-qa/qa_shots/final_capsule_run_side_burst_07.jpg",
+        "frameIndex": 37,
+        "tSec": 0.631
+      },
+      {
+        "file": "docs/stage08b-final-qa/qa_shots/final_capsule_run_side_burst_08.jpg",
+        "frameIndex": 42,
+        "tSec": 0.718
+      },
+      {
+        "file": "docs/stage08b-final-qa/qa_shots/final_capsule_run_side_burst_09.jpg",
+        "frameIndex": 48,
+        "tSec": 0.817
+      },
+      {
+        "file": "docs/stage08b-final-qa/qa_shots/final_capsule_run_side_burst_10.jpg",
+        "frameIndex": 53,
+        "tSec": 0.904
+      },
+      {
+        "file": "docs/stage08b-final-qa/qa_shots/final_capsule_run_side_burst_11.jpg",
+        "frameIndex": 58,
+        "tSec": 0.987
+      },
+      {
+        "file": "docs/stage08b-final-qa/qa_shots/final_capsule_run_side_burst_12.jpg",
+        "frameIndex": 64,
+        "tSec": 1.088
+      },
+      {
+        "file": "docs/stage08b-final-qa/qa_shots/final_capsule_run_side_burst_13.jpg",
+        "frameIndex": 69,
+        "tSec": 1.172
+      }
+    ],
+    "overlayOn": true,
+    "burstCapturedFrames": 70,
+    "diagSamples": [
+      {
+        "tMs": 1,
+        "state": "Run",
+        "timeScale": 0.93
+      },
+      {
+        "tMs": 103,
+        "state": "Run",
+        "timeScale": 0.93
+      },
+      {
+        "tMs": 213,
+        "state": "Run",
+        "timeScale": 0.93
+      },
+      {
+        "tMs": 319,
+        "state": "Run",
+        "timeScale": 0.93
+      },
+      {
+        "tMs": 428,
+        "state": "Run",
+        "timeScale": 0.93
+      },
+      {
+        "tMs": 554,
+        "state": "Run",
+        "timeScale": 0.93
+      },
+      {
+        "tMs": 659,
+        "state": "Run",
+        "timeScale": 0.93
+      },
+      {
+        "tMs": 770,
+        "state": "Run",
+        "timeScale": 0.93
+      },
+      {
+        "tMs": 879,
+        "state": "Run",
+        "timeScale": 0.93
+      },
+      {
+        "tMs": 988,
+        "state": "Run",
+        "timeScale": 0.93
+      },
+      {
+        "tMs": 1097,
+        "state": "Run",
+        "timeScale": 0.93
+      }
+    ],
+    "note": "F9 overlay via toggleCollisionDebug(true); side camera 3.0 m, 0.9 m high, following the player each 4 ms; 14 burst JPEG frames evenly spaced over 1.2 s + 3 PNG stills."
+  },
+  "errors": {
+    "consoleErrors": [],
+    "consoleWarnings": 2,
+    "warnings": [
+      {
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+        "count": 2,
+        "benign": true
+      }
+    ],
+    "pageExceptions": [],
+    "logErrors": [],
+    "networkErrors": [],
+    "networkAborted": []
+  },
+  "durationSec": 86.197,
+  "errorCapture": {
+    "clientsCaptured": 2,
+    "totals": {
+      "consoleErrors": 0,
+      "pageExceptions": 0,
+      "logErrorsNonNetwork": 0,
+      "logErrorsNetwork": 0,
+      "networkErrors": 0,
+      "networkAborted": 0,
+      "warningsBenign": 4,
+      "warningsOther": 0
+    },
+    "warnings": [
+      {
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+        "benign": true,
+        "count": 4
+      }
+    ],
+    "perClient": [
+      {
+        "client": "A",
+        "consoleErrors": [],
+        "consoleWarnings": 2,
+        "warnings": [
+          {
+            "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+            "count": 2,
+            "benign": true
+          }
+        ],
+        "pageExceptions": [],
+        "logErrors": [],
+        "networkErrors": [],
+        "networkAborted": []
+      },
+      {
+        "client": "B",
+        "consoleErrors": [],
+        "consoleWarnings": 2,
+        "warnings": [
+          {
+            "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+            "count": 2,
+            "benign": true
+          }
+        ],
+        "pageExceptions": [],
+        "logErrors": [],
+        "networkErrors": [],
+        "networkAborted": []
+      }
+    ]
+  },
+  "checks": [
+    {
+      "id": "shots.noConsoleErrors",
+      "status": "PASS",
+      "note": "console error/assert + uncaught exceptions + Log.entryAdded(error, non-network); benign PCFSoftShadowMap warning is warning-only",
+      "details": {
+        "consoleErrors": 0,
+        "pageExceptions": 0,
+        "logErrorsNonNetwork": 0,
+        "logErrorsNetwork": 0,
+        "networkErrors": 0,
+        "networkAborted": 0,
+        "warningsBenign": 4,
+        "warningsOther": 0
+      }
+    },
+    {
+      "id": "shots.noNetworkErrors",
+      "status": "PASS",
+      "note": "HTTP >= 400 + Network.loadingFailed (canceled/ERR_ABORTED during navigation recorded separately, info only)",
+      "details": {
+        "consoleErrors": 0,
+        "pageExceptions": 0,
+        "logErrorsNonNetwork": 0,
+        "logErrorsNetwork": 0,
+        "networkErrors": 0,
+        "networkAborted": 0,
+        "warningsBenign": 4,
+        "warningsOther": 0,
+        "abortedInfoOnly": 0
+      }
+    }
+  ],
+  "summary": {
+    "pass": 2,
+    "fail": 0,
+    "skip": 0,
+    "notAchieved": 0,
+    "notTested": 0,
+    "info": 0
+  }
+}

@@ -58,6 +58,14 @@ const REPEATS = Number(args.repeats ?? 2);
 const CLIP_SEC = Number(args.clipSec ?? 6);
 const REJOINS = Number(args.rejoins ?? 5);
 const HEADFUL = args.headful === 'true';
+// perf modes: 'uncapped' (diagnostic: --disable-gpu-vsync --disable-frame-rate-limit) | 'vsync' (no such flags = real paced UX)
+const PERF_MODE = String(args.perfMode ?? 'uncapped');
+const QUALITIES = String(args.quality ?? 'medium').split(',');
+const SCENES = String(args.scenes ?? 'lane,open_forest,service_station,forest_camp,flower_glade').split(',');
+const B_FULL_RATE = args.bFullRate === 'true';
+const IGPU = args.igpu === 'true';
+const IGPU_FLAGS = ['--force_low_power_gpu', '--use-angle=d3d11'];
+const PERF_TAG = `${PERF_MODE}-${HEADFUL ? 'headful' : 'headless'}${IGPU ? '-igpu' : ''}`;
 const SEED = 6501;
 const EXPECTED_HASH = '670a9c21f0565c94';
 const EXPECTED_WORLD_VERSION = 2;
@@ -170,17 +178,29 @@ function lookAtCamera(eye, target) {
 // ---------------------------------------------------------------------------------------------
 // CDP session (08FIX style + event listeners for screencast)
 // ---------------------------------------------------------------------------------------------
+// Known benign console warnings (warning-only, never counted as errors)
+const BENIGN_WARNING_PATTERNS = [/PCFSoftShadowMap has been removed/];
+let currentPhase = 'setup';
+const phaseSessions = new Map(); // phase -> Set<CdpSession> (every client ever opened in that phase)
+
 class CdpSession {
   constructor(wsUrl, label) {
     this.ws = new WebSocket(wsUrl);
     this.label = label;
+    this.phase = currentPhase;
     this.seq = 0;
     this.pending = new Map();
     this.listeners = new Map();
-    this.consoleErrors = [];
+    this.consoleErrors = []; // Runtime.consoleAPICalled type error|assert
     this.consoleWarnings = 0;
-    this.pageExceptions = [];
-    this.networkErrors = [];
+    this.warnings = new Map(); // text -> { count, benign }
+    this.pageExceptions = []; // Runtime.exceptionThrown
+    this.logErrors = []; // Log.entryAdded level error
+    this.networkErrors = []; // HTTP status >= 400 + Network.loadingFailed (non-canceled)
+    this.networkAborted = []; // Network.loadingFailed canceled / net::ERR_ABORTED (navigation teardown) — info only
+    this.requestUrls = new Map();
+    if (!phaseSessions.has(currentPhase)) phaseSessions.set(currentPhase, new Set());
+    phaseSessions.get(currentPhase).add(this);
   }
   async connect() {
     await new Promise((resolve, reject) => {
@@ -198,21 +218,55 @@ class CdpSession {
       }
       const ls = msg.method && this.listeners.get(msg.method);
       if (ls) for (const fn of ls) fn(msg.params);
+      const p = msg.params ?? {};
+      const at = new Date().toISOString();
       if (msg.method === 'Runtime.consoleAPICalled') {
-        if (msg.params?.type === 'error') {
-          const text = (msg.params.args ?? []).map((a) => a.value ?? a.description ?? '').join(' ');
-          this.consoleErrors.push({ client: this.label, text: text.slice(0, 600) });
-        } else if (msg.params?.type === 'warning') this.consoleWarnings++;
+        const text = (p.args ?? [])
+          .map((a) => a.value ?? a.description ?? '')
+          .join(' ')
+          .slice(0, 600);
+        if (p.type === 'error' || p.type === 'assert') {
+          const top = p.stackTrace?.callFrames?.[0];
+          this.consoleErrors.push({ phase: currentPhase, client: this.label, type: p.type, text, at, source: top ? `${top.url}:${top.lineNumber + 1}` : null });
+        } else if (p.type === 'warning') {
+          this.consoleWarnings++;
+          const key = text.slice(0, 200);
+          const w = this.warnings.get(key) ?? { count: 0, benign: BENIGN_WARNING_PATTERNS.some((re) => re.test(key)) };
+          w.count++;
+          this.warnings.set(key, w);
+        }
       } else if (msg.method === 'Runtime.exceptionThrown') {
-        const details = JSON.stringify(msg.params?.exceptionDetails ?? 'exception').slice(0, 800);
-        this.pageExceptions.push({ client: this.label, details });
+        const ed = p.exceptionDetails ?? {};
+        this.pageExceptions.push({
+          phase: currentPhase,
+          client: this.label,
+          at,
+          text: String(ed.exception?.description ?? ed.text ?? 'exception').slice(0, 800),
+          url: ed.url ?? null,
+          line: ed.lineNumber ?? null,
+        });
+      } else if (msg.method === 'Log.entryAdded') {
+        const e = p.entry ?? {};
+        if (e.level === 'error')
+          this.logErrors.push({ phase: currentPhase, client: this.label, at, source: e.source, text: String(e.text ?? '').slice(0, 600), url: e.url ?? null });
+      } else if (msg.method === 'Network.requestWillBeSent') {
+        if (p.requestId) this.requestUrls.set(p.requestId, p.request?.url ?? '');
       } else if (msg.method === 'Network.responseReceived') {
-        const status = msg.params?.response?.status ?? 200;
-        const url = msg.params?.response?.url ?? '';
-        if (status >= 400) this.networkErrors.push({ client: this.label, status, url });
+        const status = p.response?.status ?? 200;
+        if (status >= 400) this.networkErrors.push({ phase: currentPhase, client: this.label, at, kind: 'http', status, url: p.response?.url ?? '' });
       } else if (msg.method === 'Network.loadingFailed') {
-        const errText = msg.params?.errorText ?? '';
-        if (errText && errText !== 'net::ERR_ABORTED') this.networkErrors.push({ client: this.label, status: 'FAILED', errorText: errText });
+        const rec = {
+          phase: currentPhase,
+          client: this.label,
+          at,
+          kind: 'loadingFailed',
+          errorText: p.errorText ?? '',
+          canceled: Boolean(p.canceled),
+          type: p.type ?? null,
+          url: this.requestUrls.get(p.requestId) ?? null,
+        };
+        if (p.canceled || p.errorText === 'net::ERR_ABORTED') this.networkAborted.push(rec);
+        else this.networkErrors.push(rec);
       }
     });
   }
@@ -263,7 +317,15 @@ class CdpSession {
     return { file: rel(outPath), width, height, bytes: buf.length };
   }
   errorsSummary() {
-    return { consoleErrors: this.consoleErrors, consoleWarnings: this.consoleWarnings, pageExceptions: this.pageExceptions, networkErrors: this.networkErrors };
+    return {
+      consoleErrors: this.consoleErrors,
+      consoleWarnings: this.consoleWarnings,
+      warnings: [...this.warnings.entries()].map(([text, w]) => ({ text, ...w })),
+      pageExceptions: this.pageExceptions,
+      logErrors: this.logErrors,
+      networkErrors: this.networkErrors,
+      networkAborted: this.networkAborted,
+    };
   }
   close() {
     try {
@@ -307,7 +369,7 @@ const PAGE_INIT_HOOK_SOURCE = `
         (window.__QA_WS__ = window.__QA_WS__ || []).push(this);
         this.addEventListener('message', (ev) => {
           if (typeof ev.data === 'string' && ev.data.startsWith('42[')) {
-            try { const p = JSON.parse(ev.data.slice(2)); if (Array.isArray(p) && p[0] === 'snap') window.__LAST_SNAP__ = p[1]; } catch {}
+            try { const p = JSON.parse(ev.data.slice(2)); if (Array.isArray(p) && p[0] === 'snap') window.__LAST_SNAP__ = p[1]; else if (Array.isArray(p) && p[0] === 'roster') window.__LAST_ROSTER__ = p[1]; } catch {}
           }
         });
       }
@@ -401,8 +463,8 @@ async function startServices() {
     `--remote-debugging-port=${DEBUG_PORT}`,
     '--window-size=1280,720',
     '--force-device-scale-factor=1',
-    '--disable-gpu-vsync',
-    '--disable-frame-rate-limit',
+    ...(PERF_MODE === 'vsync' ? [] : ['--disable-gpu-vsync', '--disable-frame-rate-limit']),
+    ...(IGPU ? IGPU_FLAGS : []),
     '--disable-background-timer-throttling',
     '--disable-backgrounding-occluded-windows',
     '--disable-renderer-backgrounding',
@@ -517,6 +579,7 @@ async function openClient(label) {
   await cdp.send('Page.enable');
   await cdp.send('Runtime.enable');
   await cdp.send('Network.enable');
+  await cdp.send('Log.enable');
   await cdp.send('Emulation.setFocusEmulationEnabled', { enabled: true });
   await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
   await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: PAGE_INIT_HOOK_SOURCE });
@@ -624,6 +687,8 @@ const slimLocal = (d) =>
         muzzleWorld: d.local?.muzzleWorld ?? null,
         gripWorld: d.local?.gripWorld ?? null,
         weights: d.local?.weights ?? null,
+        skeletonUuid: d.local?.skeletonUuid ?? null,
+        teamColorHex: d.local?.teamColorHex ?? null,
         asset: d.asset
           ? {
               state: d.asset.state,
@@ -1035,18 +1100,37 @@ async function phaseShots() {
   );
   await delay(800);
 
-  // 1P view per weapon
-  for (const w of WEAPONS) {
-    await place(w, false);
-    await delay(1300);
-    out.shots.push({
-      ...(await A.screenshot(`1p_${w}`)),
-      kind: '1p',
-      weapon: w,
-      camera: await A.eval(`window.__DEV_GAME_TOOLS__.getCameraState()`),
-      diag: slimLocal(await charDiag(A)),
-    });
+  // 1P view per weapon (Gate-5 viewmodel sleeve colour): once for the current TDM team, then after a server-side
+  // team switch (raw socket.io 'switchTeam' frame, same event the M key emits) for the other team
+  const myTeam = () => A.eval(`(window.__LAST_ROSTER__ ?? []).find((r) => r.name === 'QA_Alpha')?.team ?? null`);
+  out.onePersonTeams = [];
+  for (let pass = 0; pass < 2; pass++) {
+    const team = await myTeam();
+    out.onePersonTeams.push(team);
+    for (const w of WEAPONS) {
+      await place(w, false);
+      await delay(1300);
+      out.shots.push({
+        ...(await A.screenshot(pass === 0 ? `1p_${w}` : `1p_${team ?? 'team2'}_${w}`)),
+        kind: '1p',
+        weapon: w,
+        team,
+        camera: await A.eval(`window.__DEV_GAME_TOOLS__.getCameraState()`),
+        diag: slimLocal(await charDiag(A)),
+      });
+    }
+    if (pass === 0) {
+      const before = team;
+      await A.eval(`(() => { for (const ws of window.__QA_WS__ || []) { try { if (ws.readyState === 1) ws.send('42["switchTeam"]'); } catch {} } })()`);
+      try {
+        await A.waitFor(`((window.__LAST_ROSTER__ ?? []).find((r) => r.name === 'QA_Alpha')?.team ?? null) !== ${JSON.stringify(before)}`, 8000);
+        await delay(800);
+      } catch {
+        out.notes.push(`team switch for the second 1P pass did not happen (team stayed ${before}); second pass repeats the same team`);
+      }
+    }
   }
+  if (out.onePersonTeams[0] === out.onePersonTeams[1]) out.notes.push('1P sleeves captured for one team only');
 
   // close-ups front/side/back @ 2.2 m, camera height 1.0 m, per weapon (+ unarmed)
   const fw = fwdOf(yaw);
@@ -1076,6 +1160,118 @@ async function phaseShots() {
       });
     }
   }
+
+  // ---- Gate-5: long-gun LEFT-hand support grip close-ups (camera ~0.9 m from the hands; side + 3/4 front) ----
+  out.gripCloseups = [];
+  for (const w of ['rifle', 'shotgun', 'sniper']) {
+    await place(w, true);
+    await delay(1500);
+    const d = slimLocal(await charDiag(A));
+    const grip = d?.gripWorld ?? null;
+    const muzzle = d?.muzzleWorld ?? null;
+    if (!grip || !muzzle) {
+      out.gripCloseups.push({ weapon: w, status: 'NOT_ACHIEVED', note: 'gripWorld/muzzleWorld unavailable (hook absent or procedural fallback)', diag: d });
+      continue;
+    }
+    // the support hand sits forward of the grip on the barrel line → aim ~38 % from grip to muzzle
+    const tgt = { x: grip.x + (muzzle.x - grip.x) * 0.38, y: grip.y + (muzzle.y - grip.y) * 0.38, z: grip.z + (muzzle.z - grip.z) * 0.38 };
+    const leftDir = { x: -rt.x, z: -rt.z };
+    const q = { x: fw.x * 0.7071 + leftDir.x * 0.7071, z: fw.z * 0.7071 + leftDir.z * 0.7071 };
+    const gviews = {
+      leftside: { x: tgt.x + leftDir.x * 0.9, y: tgt.y + 0.08, z: tgt.z + leftDir.z * 0.9 },
+      threequarter_front: { x: tgt.x + q.x * 0.9, y: tgt.y + 0.15, z: tgt.z + q.z * 0.9 },
+    };
+    for (const [vn, eye] of Object.entries(gviews)) {
+      const cam = lookAtCamera(eye, tgt);
+      await A.eval(`window.__DEV_CAMERA_OVERRIDE__ = ${JSON.stringify(cam)}`);
+      await delay(700);
+      const info = await A.screenshot(`grip_${w}_${vn}`);
+      const rec = {
+        ...info,
+        kind: 'grip_closeup',
+        weapon: w,
+        view: vn,
+        cam,
+        gripWorld: grip,
+        muzzleWorld: muzzle,
+        aimPoint: tgt,
+        diag: slimLocal(await charDiag(A)),
+      };
+      out.shots.push(rec);
+      out.gripCloseups.push({ weapon: w, view: vn, file: info.file });
+    }
+  }
+
+  // ---- Gate-5: capsule overshoot — local 3P running, side camera, F9 collision overlay ON ----
+  out.capsule = { frames: [] };
+  await place('rifle', true);
+  await delay(900);
+  out.capsule.overlayOn = await A.eval(`window.__DEV_GAME_TOOLS__.toggleCollisionDebug ? window.__DEV_GAME_TOOLS__.toggleCollisionDebug(true) : null`);
+  {
+    const side = lane.side ?? 1;
+    await A.eval(`(() => {
+      const T = window.__DEV_GAME_TOOLS__;
+      if (window.__QA_SIDECAM__) clearInterval(window.__QA_SIDECAM__);
+      const loop = () => {
+        const p = T.getPlayerTransform();
+        const eye = { x: p.x + ${rt.x * 3.0} * ${side}, y: p.y + 0.9, z: p.z + ${rt.z * 3.0} * ${side} };
+        const dx = p.x - eye.x, dy = p.y + 0.8 - eye.y, dz = p.z - eye.z;
+        window.__DEV_CAMERA_OVERRIDE__ = { x: eye.x, y: eye.y, z: eye.z, yaw: Math.atan2(-dx, -dz), pitch: Math.atan2(dy, Math.hypot(dx, dz)) };
+      };
+      loop();
+      window.__QA_SIDECAM__ = setInterval(loop, 4);
+    })()`);
+  }
+  await A.eval(`window.__DEV_GAME_TOOLS__.setSyntheticInput({ fwd: 1, right: 0, jump: false, walk: false, yaw: ${yaw}, pitch: -0.05 })`);
+  await delay(1100);
+  // burst: CDP screencast for 1.2 s (≈2.6 Run cycles of 0.46 s) → 14 evenly spaced frames, so the extreme-stride
+  // phases (feet furthest out) are covered; bone positions are not exposed by the DEV hook, so the extreme frames are
+  // picked visually from the burst (frame index + timestamp recorded)
+  {
+    const frames = [];
+    const handler = (pp) => {
+      frames.push({ ts: pp.metadata?.timestamp ?? Date.now() / 1000, buf: Buffer.from(pp.data, 'base64') });
+      A.send('Page.screencastFrameAck', { sessionId: pp.sessionId }).catch(() => {});
+    };
+    await A.send('Page.bringToFront');
+    A.on('Page.screencastFrame', handler);
+    await A.send('Page.startScreencast', { format: 'jpeg', quality: 92, maxWidth: 1280, maxHeight: 720, everyNthFrame: 1 });
+    const diagSamples = [];
+    const tb = Date.now();
+    while (Date.now() - tb < 1200) {
+      const dd = await charDiag(A);
+      diagSamples.push({ tMs: Date.now() - tb, state: dd?.local?.state ?? null, timeScale: r3(dd?.local?.timeScale) });
+      await delay(100);
+    }
+    await A.send('Page.stopScreencast');
+    A.off('Page.screencastFrame', handler);
+    frames.sort((x, y) => x.ts - y.ts);
+    const n = 14;
+    for (let k = 0; k < n && frames.length; k++) {
+      const idx = Math.min(frames.length - 1, Math.round((k * (frames.length - 1)) / (n - 1)));
+      const fname = `${LABEL}_capsule_run_side_burst_${String(k).padStart(2, '0')}.jpg`;
+      fs.writeFileSync(path.join(SHOT_DIR, fname), frames[idx].buf);
+      out.capsule.frames.push({ file: rel(path.join(SHOT_DIR, fname)), frameIndex: idx, tSec: r3(frames[idx].ts - frames[0].ts) });
+    }
+    out.capsule.burstCapturedFrames = frames.length;
+    out.capsule.diagSamples = diagSamples;
+    log(`  [capsule] ${out.capsule.frames.length} burst frames from ${frames.length} captured (overlay=${out.capsule.overlayOn})`);
+  }
+  for (let k = 0; k < 3; k++) {
+    await delay(97 + k * 71); // de-phased PNG stills at different stride phases
+    out.shots.push({
+      ...(await A.screenshot(`capsule_run_side_png_${k}`)),
+      kind: 'capsule_overlay',
+      diag: slimLocal(await charDiag(A)),
+      collisionDebug: await A.eval(`window.__DEV_GAME_TOOLS__.getCollisionDebugInfo?.() ?? null`),
+    });
+  }
+  await A.eval(
+    `(() => { const T = window.__DEV_GAME_TOOLS__; if (window.__QA_SIDECAM__) { clearInterval(window.__QA_SIDECAM__); window.__QA_SIDECAM__ = null; } T.setSyntheticInput(null); T.toggleCollisionDebug?.(false); })()`,
+  );
+  out.capsule.note =
+    'F9 overlay via toggleCollisionDebug(true); side camera 3.0 m, 0.9 m high, following the player each 4 ms; 14 burst JPEG frames evenly spaced over 1.2 s + 3 PNG stills.';
+
   await A.eval(`(() => { window.__DEV_CAMERA_OVERRIDE__ = null; })()`);
   out.errors = A.errorsSummary();
   await closeClient(A);
@@ -1240,6 +1436,75 @@ async function worldChecks(checks, prefix, A, B, idA, idB) {
   return { a: wa, b: wb };
 }
 
+// team colour contract (mirrors src/client/game/Stickman.ts colorFor/TEAM_COLORS/FFA_PALETTE)
+const TEAM_COLORS = { red: '#e03a30', blue: '#2e75e8' };
+const FFA_PALETTE = ['#e03a30', '#2e75e8', '#38a84c', '#e69224', '#8e44cc', '#1eb0b0', '#d44888', '#78828c', '#dec030', '#3b5c85'];
+function expectedColor(team, id) {
+  if (team === 'red') return TEAM_COLORS.red;
+  if (team === 'blue') return TEAM_COLORS.blue;
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return FFA_PALETTE[Math.abs(h) % FFA_PALETTE.length];
+}
+
+/**
+ * Instance independence on one client: every Camper Buddy model (local + remotes) must own its skeleton, Hips bone
+ * and team-material clone (all uuids unique), and its team colour must match the roster team (TDM red/blue).
+ */
+async function instanceChecks(checks, prefix, cdp, ownName, { strictTeam = true } = {}) {
+  const d = await charDiag(cdp);
+  const roster = await cdp.eval(`window.__LAST_ROSTER__ ?? null`);
+  const tag = `${prefix}.${cdp.label}`;
+  if (!d || d.error) {
+    check(checks, `${tag}.instanceUuidsUnique`, 'SKIP', { diag: d ?? null }, 'getCharacterDiagnostics() hook absent');
+    check(checks, `${tag}.teamColorMatchesTeam`, 'SKIP', {}, 'hook absent');
+    return null;
+  }
+  const localId = roster?.find((r) => r.name === ownName)?.id ?? null;
+  const models = [{ id: localId, who: 'local', ...d.local }, ...(d.remotes ?? []).map((r) => ({ who: 'remote', ...r }))];
+  const rows = models.map((m) => {
+    const team = roster?.find((r) => r.id === m.id)?.team ?? null;
+    const exp = m.id && team ? expectedColor(team, m.id) : null;
+    return {
+      id: m.id,
+      who: m.who,
+      mode: m.mode,
+      team,
+      skeletonUuid: m.skeletonUuid ?? null,
+      hipsBoneUuid: m.hipsBoneUuid ?? null,
+      teamMaterialUuid: m.teamMaterialUuid ?? null,
+      teamColorHex: m.teamColorHex ?? null,
+      expectedColorHex: exp,
+    };
+  });
+  const keys = ['skeletonUuid', 'hipsBoneUuid', 'teamMaterialUuid'];
+  const fieldsPresent = rows.every((r) => keys.every((k) => typeof r[k] === 'string' && r[k].length > 0));
+  const unique = keys.every((k) => new Set(rows.map((r) => r[k])).size === rows.length);
+  const multi = rows.length >= 2;
+  if (models.every((m) => m.skeletonUuid === undefined)) {
+    check(checks, `${tag}.instanceUuidsUnique`, 'SKIP', { rows }, 'diag has no skeletonUuid/hipsBoneUuid/teamMaterialUuid fields on this build');
+  } else {
+    check(
+      checks,
+      `${tag}.instanceUuidsUnique`,
+      fieldsPresent && unique && multi ? 'PASS' : 'FAIL',
+      { models: rows.length, fieldsPresent, unique, rows },
+      multi ? undefined : 'fewer than 2 models visible on this client',
+    );
+  }
+  const colorRows = rows.filter((r) => r.expectedColorHex);
+  const colorOk = colorRows.length === rows.length && colorRows.every((r) => String(r.teamColorHex).toLowerCase() === r.expectedColorHex.toLowerCase());
+  const teams = [...new Set(rows.map((r) => r.team))];
+  check(
+    checks,
+    `${tag}.teamColorMatchesTeam`,
+    colorOk ? 'PASS' : strictTeam ? 'FAIL' : 'INFO',
+    { teams, rows: rows.map((r) => ({ id: r.id, who: r.who, team: r.team, teamColorHex: r.teamColorHex, expected: r.expectedColorHex })) },
+    strictTeam ? undefined : 'non-TDM: colour follows colorFor(team,id) palette — informational',
+  );
+  return rows;
+}
+
 async function sampleRemoteStates(B, idA, ms, every = 100) {
   const states = [];
   const t0 = Date.now();
@@ -1281,6 +1546,7 @@ async function phaseMulti() {
       out.notes.push('getCharacterDiagnostics() hook absent → character-state checks are SKIP (not PASS); weapon sync still checked via getOtherPlayers().');
     await delay(1500);
     out.tdm.world = await worldChecks(checks, 'tdm', A, B, idA, idB);
+    out.tdm.instances = { A: await instanceChecks(checks, 'tdm', A, 'QA_Alpha'), B: await instanceChecks(checks, 'tdm', B, 'QA_Bravo') };
 
     // weapon equip consistency (A equips via DEV setWeapon → input cmd weapon → server snapshot → B)
     const weaponRows = [];
@@ -1311,7 +1577,12 @@ async function phaseMulti() {
       for (let attempt = 1; attempt <= 2; attempt++) {
         const from = await authPos(A);
         const speed = walkGait ? 3.0 : 6.5;
-        const route = await procs.helper.call('runRoute', { from: { x: from.x, z: from.z }, length: speed * (ms / 1000 + 1.6) + 6, maxSegments: 6, walk: walkGait });
+        const route = await procs.helper.call('runRoute', {
+          from: { x: from.x, z: from.z },
+          length: speed * (ms / 1000 + 1.6) + 6,
+          maxSegments: 6,
+          walk: walkGait,
+        });
         await startDriver(A, route.waypoints, { walk: walkGait });
         await delay(900);
         const samples = await sampleRemoteStates(B, idA, ms);
@@ -1323,11 +1594,25 @@ async function phaseMulti() {
         await stopDriver(A);
         await delay(900);
         const med = median(samples.map((q) => q.snapSpeed).filter((v) => v != null)) ?? 0;
-        attempts.push({ attempt, samples, meta: { route, driverAtEnd: drv, from: { x: r3(from.x), z: r3(from.z) }, end: { x: r3(end.x), z: r3(end.z) }, predictionAtEnd: pred, snapSpeedMedian: r3(med) } });
+        attempts.push({
+          attempt,
+          samples,
+          meta: {
+            route,
+            driverAtEnd: drv,
+            from: { x: r3(from.x), z: r3(from.z) },
+            end: { x: r3(end.x), z: r3(end.z) },
+            predictionAtEnd: pred,
+            snapSpeedMedian: r3(med),
+          },
+        });
         if (Math.abs(med - speed) < 0.5) break; // movement window valid; otherwise re-plan once (blocked route / stall) and record both
       }
       const last = attempts[attempts.length - 1];
-      return { samples: last.samples, meta: { attempts: attempts.map((a) => ({ attempt: a.attempt, ...a.meta, ...(a === last ? {} : { samples: a.samples }) })) } };
+      return {
+        samples: last.samples,
+        meta: { attempts: attempts.map((a) => ({ attempt: a.attempt, ...a.meta, ...(a === last ? {} : { samples: a.samples }) })) },
+      };
     };
     const idle = await sampleRemoteStates(B, idA, 1500);
     const walkW = await animWindow(true, 2000);
@@ -1459,6 +1744,10 @@ async function phaseMulti() {
       programGrowth: rejoin.programGrowth_firstToLastLeave,
     });
     out.tdm.rejoin = rejoin;
+    out.tdm.instancesAfterRejoin = {
+      A: await instanceChecks(checks, 'tdm.afterRejoin', A, 'QA_Alpha'),
+      B: await instanceChecks(checks, 'tdm.afterRejoin', B, 'QA_Bravo'),
+    };
     out.tdm.errors = { A: A.errorsSummary(), B: B.errorsSummary() };
     check(checks, 'tdm.noPageExceptions', A.pageExceptions.length + B.pageExceptions.length === 0 ? 'PASS' : 'FAIL', {
       A: A.pageExceptions.slice(0, 5),
@@ -1473,6 +1762,10 @@ async function phaseMulti() {
     ({ A, B, roomName, idA, idB } = await setupPair('ffa', 'ffa'));
     await delay(1200);
     out.ffa = { roomName, idA, idB, world: await worldChecks(checks, 'ffa', A, B, idA, idB) };
+    out.ffa.instances = {
+      A: await instanceChecks(checks, 'ffa', A, 'QA_Alpha', { strictTeam: false }),
+      B: await instanceChecks(checks, 'ffa', B, 'QA_Bravo', { strictTeam: false }),
+    };
     out.ffa.errors = { A: A.errorsSummary(), B: B.errorsSummary() };
     check(checks, 'ffa.noPageExceptions', A.pageExceptions.length + B.pageExceptions.length === 0 ? 'PASS' : 'FAIL', {
       A: A.pageExceptions.slice(0, 5),
@@ -1499,6 +1792,10 @@ async function phaseMulti() {
     const roundId0 = await A.eval(`window.__DEV_GAME_TOOLS__.getSurvivalDiagnostics().match?.roundId ?? null`);
     out.survival.roundIdStart = roundId0;
     out.survival.world = await worldChecks(checks, 'survival', A, B, idA, idB);
+    out.survival.instances = {
+      A: await instanceChecks(checks, 'survival', A, 'QA_Alpha', { strictTeam: false }),
+      B: await instanceChecks(checks, 'survival', B, 'QA_Bravo', { strictTeam: false }),
+    };
 
     // container → pickup → equip
     const loot = await A.eval(`window.__DEV_GAME_TOOLS__.getLootDiagnostics()`);
@@ -1508,7 +1805,7 @@ async function phaseMulti() {
     let lootFlow = { opened: null, picked: null, equipped: null, attempts: [] };
     out.survival.containerCandidates = [];
     const tried = new Set();
-    for (let attempt = 0; attempt < 5 && !lootFlow.equipped; attempt++) {
+    for (let attempt = 0; attempt < 7 && !lootFlow.equipped; attempt++) {
       // re-plan from A's current server position every attempt (containers it already tried are excluded)
       const aNowL = await authPos(A);
       const appr = await procs.helper.call('containerApproach', { from: { x: aNowL.x, z: aNowL.z }, containers: containers.filter((c) => !tried.has(c.id)) });
@@ -1519,7 +1816,50 @@ async function phaseMulti() {
       const drive = await driveTo(A, cand.waypoints, { walk: false, timeoutMs: Math.max(25000, (cand.pathLen / 5) * 1000 + 10000), arriveR: 0.45 });
       await A.eval(`window.__DEV_GAME_TOOLS__.setSyntheticInput({ fwd: 0, right: 0, jump: false, walk: false, yaw: ${cand.faceYaw}, pitch: -0.3 })`);
       await delay(300);
+      // Gate-5 remote Interact evidence: B frames A (camera override at A's interpolated remote position), A in 3P
+      const wantInteractShots = !out.survival.interactEvidence;
+      if (wantInteractShots) {
+        const aRemote = (await otherPlayers(B))?.find((pp) => pp.id === idA)?.pos ?? null;
+        if (aRemote) {
+          const fy = cand.faceYaw;
+          const f = fwdOf(fy);
+          const rr = rightOf(fy);
+          const eyeB = { x: aRemote.x + f.x * 1.2 + rr.x * 2.6, y: aRemote.y + 1.5, z: aRemote.z + f.z * 1.2 + rr.z * 2.6 };
+          await B.eval(
+            `(() => { document.body.classList.add('qa-clean', 'qa-nocross'); window.__DEV_CAMERA_OVERRIDE__ = ${JSON.stringify(lookAtCamera(eyeB, { x: aRemote.x, y: aRemote.y + 0.9, z: aRemote.z }))}; })()`,
+          );
+        }
+        await A.eval(`(() => { document.body.classList.add('qa-clean', 'qa-nocross'); window.__DEV_GAME_TOOLS__.setThirdPerson(true); })()`);
+        await delay(600);
+      }
+      const tOpen = Date.now();
       const ack = await A.eval(`window.__DEV_GAME_TOOLS__.openContainerById(${JSON.stringify(cand.id)}, 'qa08b_open_' + Date.now())`);
+      if (wantInteractShots && ack?.ok) {
+        const ev = { container: cand.id, ackMs: Date.now() - tOpen };
+        const [la, rb] = await Promise.all([charDiag(A), remoteDiag(B, idA)]);
+        ev.atOpen = { tMs: Date.now() - tOpen, aLocalState: la?.local?.state ?? null, bRemoteStateOfA: rb?.state ?? null };
+        ev.bShot = await B.screenshot('interact_remote_view_from_B');
+        ev.afterBShot = { tMs: Date.now() - tOpen, bRemoteStateOfA: (await remoteDiag(B, idA))?.state ?? null };
+        ev.aShot = await A.screenshot('interact_local_A_3p');
+        ev.afterAShot = { tMs: Date.now() - tOpen, aLocalState: (await charDiag(A))?.local?.state ?? null };
+        const aStates = [];
+        const t1 = Date.now();
+        while (Date.now() - t1 < 1300) {
+          const [da, db] = await Promise.all([charDiag(A), remoteDiag(B, idA)]);
+          aStates.push({ tMs: Date.now() - tOpen, a: da?.local?.state ?? null, bOfA: db?.state ?? null });
+          await delay(80);
+        }
+        ev.timeline = aStates;
+        ev.aLocalSawInteract = [ev.atOpen.aLocalState, ev.afterAShot.aLocalState, ...aStates.map((x) => x.a)].includes('Interact');
+        ev.bRemoteSawInteract = [ev.atOpen.bRemoteStateOfA, ev.afterBShot.bRemoteStateOfA, ...aStates.map((x) => x.bOfA)].includes('Interact');
+        out.survival.interactEvidence = ev;
+        await B.eval(`window.__DEV_CAMERA_OVERRIDE__ = null`);
+        log(
+          `  [interact] A local Interact=${ev.aLocalSawInteract} (at open: ${ev.atOpen.aLocalState}), B remote Interact=${ev.bRemoteSawInteract} (at open: ${ev.atOpen.bRemoteStateOfA})`,
+        );
+      } else if (wantInteractShots) {
+        await B.eval(`window.__DEV_CAMERA_OVERRIDE__ = null`);
+      }
       const bDuringOpen = await sampleRemoteStates(B, idA, 900, 150);
       const att = {
         id: cand.id,
@@ -1588,6 +1928,26 @@ async function phaseMulti() {
         bModel: lootFlow.bModelWeapon,
         equipped: lootFlow.equipped,
       });
+    }
+    {
+      const ev = out.survival.interactEvidence;
+      if (!ev) check(checks, 'survival.gate5.localInteract', 'NOT_ACHIEVED', {}, 'no container was opened');
+      else {
+        check(checks, 'survival.gate5.localInteract', !out.charHook ? 'SKIP' : ev.aLocalSawInteract ? 'PASS' : 'FAIL', {
+          atOpen: ev.atOpen,
+          afterAShot: ev.afterAShot,
+          aShot: ev.aShot?.file,
+        });
+        check(
+          checks,
+          'survival.gate5.remoteInteractSeenByB',
+          !out.charHook ? 'SKIP' : ev.bRemoteSawInteract ? 'PASS' : 'INFO',
+          { atOpen: ev.atOpen, afterBShot: ev.afterBShot, bShot: ev.bShot?.file },
+          ev.bRemoteSawInteract
+            ? undefined
+            : 'Interact is triggered only locally (Game.requestOpenContainer → myModel.playInteract()); not replicated to remote models',
+        );
+      }
     }
     if (out.charHook) {
       const seenInteract = lootFlow.attempts.some((a) => a.openOk && a.remoteStatesDuringOpen.includes('Interact'));
@@ -1721,8 +2081,147 @@ async function phaseMulti() {
 // ---------------------------------------------------------------------------------------------
 // PHASE: perf
 // ---------------------------------------------------------------------------------------------
+/** page-side frame-interval recorder on the (uncapped) rAF chain: measures the real presented-frame cadence */
+const FT_START_EXPR = `(() => {
+  const st = { on: true, t: [], last: null };
+  window.__QA_FT__ = st;
+  const loop = (ts) => { if (!st.on) return; if (st.last !== null) st.t.push(ts - st.last); st.last = ts; window.requestAnimationFrame(loop); };
+  window.requestAnimationFrame(loop);
+  return true;
+})()`;
+const FT_STOP_EXPR = `(() => { const st = window.__QA_FT__; if (!st) return []; st.on = false; return st.t; })()`;
+
+function frameIntervalStats(intervals) {
+  const t = intervals.filter((v) => v > 0 && Number.isFinite(v));
+  if (!t.length) return null;
+  const sorted = [...t].sort((a, b) => a - b);
+  const pct = (q) => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))];
+  const total = t.reduce((a, b) => a + b, 0);
+  const worst1 = sorted.slice(Math.floor(sorted.length * 0.99));
+  const worstMean = worst1.reduce((a, b) => a + b, 0) / Math.max(1, worst1.length);
+  const over = (ms) => r3((100 * t.filter((v) => v > ms).length) / t.length);
+  return {
+    frames: t.length,
+    durationSec: r3(total / 1000),
+    achievedFps: r3((t.length / total) * 1000),
+    frameTimeMedianMs: r3(pct(0.5)),
+    frameTimeP95Ms: r3(pct(0.95)),
+    frameTimeP99Ms: r3(pct(0.99)),
+    frameTimeMaxMs: r3(sorted[sorted.length - 1]),
+    fps1PctLow: r3(1000 / worstMean),
+    pctFramesOver16_7ms: over(16.7),
+    pctFramesOver20ms: over(20),
+    pctFramesOver33_3ms: over(33.3),
+  };
+}
+
+function loadBenchScenes() {
+  // the Stage 08-FIX / benchmark-forest fixed-camera scenes (open forest sweep, service station, forest camp, flower glade)
+  const posesPath = path.join(WORKSPACE, 'docs', 'stage08fix', 'qa_camera_poses.json');
+  if (!fs.existsSync(posesPath)) return [];
+  const poses = JSON.parse(fs.readFileSync(posesPath, 'utf8'));
+  return (poses.benchScenes ?? []).map((sc) => ({
+    id: sc.id,
+    desc: sc.desc,
+    player: sc.player,
+    cam: sc.cam,
+    sweep: sc.sweep ?? null,
+    source: 'docs/stage08fix/qa_camera_poses.json',
+  }));
+}
+
+async function benchOnce(A, scene, warmupSec, durationSec) {
+  await A.send('Page.bringToFront');
+  await A.eval(`(() => {
+    const T = window.__DEV_GAME_TOOLS__;
+    if (window.__QA_SWEEP__) { clearInterval(window.__QA_SWEEP__); window.__QA_SWEEP__ = null; }
+    T.setSyntheticInput?.(null);
+    window.__SET_RAF_CAP_FPS__?.(null);
+    T.setThirdPerson(true);
+    T.setPlayerPos(${scene.player.x}, ${scene.player.z}, ${scene.playerYaw ?? scene.cam.yaw}, undefined, 0);
+    const base = ${JSON.stringify(scene.cam)};
+    window.__DEV_CAMERA_OVERRIDE__ = Object.assign({}, base);
+    const sw = ${JSON.stringify(scene.sweep ?? null)};
+    if (sw) {
+      const t0 = performance.now();
+      window.__QA_SWEEP__ = setInterval(() => {
+        const t = (performance.now() - t0) / 1000;
+        window.__DEV_CAMERA_OVERRIDE__ = Object.assign({}, base, { yaw: base.yaw + sw.amplitude * Math.sin((2 * Math.PI * t) / sw.periodSec) });
+      }, 8);
+    }
+  })()`);
+  await delay(warmupSec * 1000);
+  await A.eval(FT_START_EXPR);
+  await A.eval(`window.__DEV_GAME_TOOLS__.startBenchmarkCapture()`);
+  await delay(durationSec * 1000);
+  const res = await A.eval(
+    `(() => { const r = window.__DEV_GAME_TOOLS__.stopBenchmarkCapture(); r.programs = window.__GET_WEBGL_PROGRAMS_COUNT__?.() ?? null; return r; })()`,
+  );
+  const ft = frameIntervalStats(await A.eval(FT_STOP_EXPR));
+  await A.eval(`(() => { if (window.__QA_SWEEP__) { clearInterval(window.__QA_SWEEP__); window.__QA_SWEEP__ = null; } })()`);
+  delete res.culling;
+  return { game: res, rafCadence: ft };
+}
+
+async function runScene(A, scene, quality, extra = {}) {
+  await A.eval(`window.__DEV_GAME_TOOLS__.setQuality(${JSON.stringify(quality)})`);
+  await delay(800);
+  const runs = [];
+  for (let rep = 1; rep <= REPEATS; rep++) {
+    const r = await benchOnce(A, scene, WARMUP_SEC, DURATION_SEC);
+    runs.push({ repeat: rep, ...r });
+    const f = r.rafCadence;
+    log(
+      `  [perf ${PERF_TAG} ${quality} ${scene.id}${extra.tag ?? ''} #${rep}] fps=${f?.achievedFps} 1%low=${f?.fps1PctLow} p95=${f?.frameTimeP95Ms} p99=${f?.frameTimeP99Ms} >16.7=${f?.pctFramesOver16_7ms}% >33.3=${f?.pctFramesOver33_3ms}% | game p50=${r.game.fpsMedian} | draw=${r.game.render?.calls} tris=${r.game.render?.triangles} heap=${r.game.heapUsedMB}MB`,
+    );
+  }
+  const m = (get) => r3(median(runs.map(get).filter((v) => typeof v === 'number')));
+  const last = runs[runs.length - 1];
+  return {
+    scene: scene.id + (extra.tag ?? ''),
+    desc: scene.desc,
+    quality,
+    mode: PERF_TAG,
+    clientBVisible: Boolean(scene.bVisible),
+    clientBRafCapFps: extra.bCap ?? null,
+    achievedFps: m((r) => r.rafCadence?.achievedFps),
+    fps1PctLow: m((r) => r.rafCadence?.fps1PctLow),
+    frameTimeMedianMs: m((r) => r.rafCadence?.frameTimeMedianMs),
+    frameTimeP95Ms: m((r) => r.rafCadence?.frameTimeP95Ms),
+    frameTimeP99Ms: m((r) => r.rafCadence?.frameTimeP99Ms),
+    pctFramesOver16_7ms: m((r) => r.rafCadence?.pctFramesOver16_7ms),
+    pctFramesOver20ms: m((r) => r.rafCadence?.pctFramesOver20ms),
+    pctFramesOver33_3ms: m((r) => r.rafCadence?.pctFramesOver33_3ms),
+    gameBench: {
+      fpsMedian: m((r) => r.game.fpsMedian),
+      fps1PctLow: m((r) => r.game.fps1PctLow),
+      frameTimeP95Ms: m((r) => r.game.frameTimeP95Ms),
+      frameTimeP99Ms: m((r) => r.game.frameTimeP99Ms),
+      gpuTimeMedianMs: m((r) => r.game.gpuTimeMedianMs),
+    },
+    drawCalls: last?.game.render?.calls ?? null,
+    triangles: last?.game.render?.triangles ?? null,
+    geometries: last?.game.render?.geometries ?? null,
+    textures: last?.game.render?.textures ?? null,
+    programs: last?.game.programs ?? null,
+    heapUsedMB: last?.game.heapUsedMB ?? null,
+    runs,
+  };
+}
+
 async function phasePerf() {
-  const out = { notes: [] };
+  const out = {
+    notes: [],
+    mode: PERF_TAG,
+    perfMode: PERF_MODE,
+    headful: HEADFUL,
+    igpu: IGPU,
+    qualities: QUALITIES,
+    warmupSec: WARMUP_SEC,
+    captureSec: DURATION_SEC,
+    repeats: REPEATS,
+    rows: [],
+  };
   const lane = await getLane();
   out.lane = lane;
   const S = lane.start;
@@ -1732,10 +2231,39 @@ async function phasePerf() {
   out.roomName = roomName;
   out.gpu = await gpuInfo(A);
   out.gpuRendererVerbatim = out.gpu?.renderer ?? null;
+  out.gpuMatrix = [
+    { gpu: out.gpuRendererVerbatim, status: IGPU ? 'iGPU attempt' : 'TESTED' },
+    { gpu: 'Intel UHD Graphics 730', status: 'NOT_TESTED', note: 'not present on this machine (RTX 3050 Ti Laptop + AMD Radeon iGPU); never relabelled' },
+  ];
   out.world = await worldInfo(A);
   out.charHook = await hasCharHook(A);
+  if (IGPU && !/AMD|Radeon/i.test(out.gpuRendererVerbatim ?? '')) {
+    out.notes.push(
+      `--igpu requested (Chrome flags ${JSON.stringify(IGPU_FLAGS)}) but WebGL still reports "${out.gpuRendererVerbatim}" → iGPU row SKIPPED (the AMD integrated GPU could not be forced without changing Windows graphics settings).`,
+    );
+    out.igpuSkipped = true;
+    await closeClient(A);
+    await closeClient(B);
+    return out;
+  }
+  // refresh/pacing probe: 3 s of the uncapped rAF cadence before any scene work
+  await A.eval(`window.__SET_RAF_CAP_FPS__?.(null)`);
+  await A.eval(FT_START_EXPR);
+  await delay(3000);
+  out.rafProbe = frameIntervalStats(await A.eval(FT_STOP_EXPR));
+  const med = out.rafProbe?.frameTimeMedianMs;
+  out.vsyncPacing =
+    med == null
+      ? null
+      : Math.abs(med - 16.67) < 0.8
+        ? 'paced at ~60 Hz'
+        : Math.abs(med - 1000 / 144) < 0.5
+          ? 'paced at ~144 Hz'
+          : `not paced (median ${med} ms)`;
+  log(`  rAF probe (${PERF_TAG}): median ${med} ms, ${out.rafProbe?.achievedFps} fps → ${out.vsyncPacing}`);
+
   await B.eval(`(() => { window.__SET_RAF_CAP_FPS__?.(30); window.__DEV_GAME_TOOLS__.setWeapon('rifle'); })()`);
-  // B walks (server-authoritative) to a fixed spot beside the lane start so the scene is the same every run
+  // B walks (server-authoritative) to a fixed spot beside the lane start so the lane scene is the same every run
   const bGoal = { x: r3(S.x + rt.x * 2.4 + fw.x * 1.5), z: r3(S.z + rt.z * 2.4 + fw.z * 1.5) };
   const bFrom = await authPos(B);
   const np = await procs.helper.call('navPath', { from: { x: bFrom.x, z: bFrom.z }, to: bGoal });
@@ -1744,64 +2272,58 @@ async function phasePerf() {
     : { reached: false };
   out.clientB = { goal: bGoal, pathLen: np.len, reached: bDrive.reached, pos: bDrive.pos ?? (await authPos(B)), ms: bDrive.ms };
   if (!bDrive.reached)
-    out.notes.push(
-      `client B did not reach the fixed perf spot (ended at ${JSON.stringify(out.clientB.pos)}); scene still captured with B wherever it is (non-deterministic).`,
-    );
-  // B stays connected (server keeps its idle position, A renders it from snapshots) but renders at 2 fps so its
-  // tab does not steal GPU/CPU time from A inside the same Chrome process during the capture
-  await B.eval(`window.__SET_RAF_CAP_FPS__?.(2)`);
-  out.clientBRafCapFps = 2;
-  // A: pose-locked at the lane start, 3P, fixed camera showing A (and B beside it)
+    out.notes.push(`client B did not reach the fixed perf spot (ended at ${JSON.stringify(out.clientB.pos)}); lane scene captured with B wherever it is.`);
+  // B stays connected (server keeps its idle position, A renders it from snapshots) but renders at 2 fps so its tab
+  // does not steal GPU/CPU time from A inside the same Chrome process (see --bFullRate for the unthrottled stress row)
+  const B_CAP = 2;
+  await B.eval(`window.__SET_RAF_CAP_FPS__?.(${B_CAP})`);
+  await A.eval(`(() => { window.__DEV_GAME_TOOLS__.setWeapon('rifle'); document.body.classList.add('qa-clean', 'qa-nocross'); })()`);
+
   const eye = { x: S.x - fw.x * 6.5 + rt.x * 2.0, y: S.y + 2.1, z: S.z - fw.z * 6.5 + rt.z * 2.0 };
-  const cam = lookAtCamera(eye, { x: S.x + rt.x * 1.2, y: S.y + 1.0, z: S.z + rt.z * 1.2 });
-  out.camera = cam;
-  await A.eval(
-    `(() => { const T = window.__DEV_GAME_TOOLS__; window.__SET_RAF_CAP_FPS__?.(null); T.setQuality('medium'); T.setThirdPerson(true); T.setWeapon('rifle'); T.setPlayerPos(${S.x}, ${S.z}, ${lane.yaw}, undefined, 0); window.__DEV_CAMERA_OVERRIDE__ = ${JSON.stringify(cam)}; document.body.classList.add('qa-clean', 'qa-nocross'); })()`,
-  );
-  await A.send('Page.bringToFront');
-  await delay(1500);
-  out.sceneShot = await A.screenshot('perf_scene');
+  const laneScene = {
+    id: 'lane_with_clientB',
+    desc: 'helper lane start: local player (3P, rifle) + client B beside it, fixed camera',
+    player: { x: S.x, z: S.z },
+    playerYaw: lane.yaw,
+    cam: lookAtCamera(eye, { x: S.x + rt.x * 1.2, y: S.y + 1.0, z: S.z + rt.z * 1.2 }),
+    bVisible: true,
+  };
+  const wanted = new Set(SCENES);
+  const scenes = [laneScene, ...loadBenchScenes()].filter((sc) => wanted.has(sc.id) || (sc === laneScene && wanted.has('lane')));
+  out.scenes = scenes.map((sc) => ({ id: sc.id, desc: sc.desc, player: sc.player, cam: sc.cam, sweep: sc.sweep ?? null, source: sc.source ?? 'helper lane' }));
+  for (const sc of scenes) {
+    await benchOnce(A, sc, 0.2, 0.1);
+    await delay(1500);
+    sc.shot = await A.screenshot(`perf_${PERF_TAG}_${sc.id}`);
+  }
   out.bVisibleOnA = await remoteDiag(A, idB);
   out.charDiagA = slimLocal(await charDiag(A));
-  const runs = [];
-  for (let rep = 1; rep <= REPEATS; rep++) {
-    await A.send('Page.bringToFront');
-    await delay(WARMUP_SEC * 1000);
-    await A.eval(`window.__DEV_GAME_TOOLS__.startBenchmarkCapture()`);
-    await delay(DURATION_SEC * 1000);
-    const res = await A.eval(
-      `(() => { const r = window.__DEV_GAME_TOOLS__.stopBenchmarkCapture(); r.programs = window.__GET_WEBGL_PROGRAMS_COUNT__?.() ?? null; return r; })()`,
-    );
-    delete res.culling;
-    runs.push({ repeat: rep, ...res });
-    log(
-      `  [perf #${rep}] frames=${res.frames} fps p50=${res.fpsMedian} 1%low=${res.fps1PctLow} | FT p50=${res.frameTimeMedianMs} p95=${res.frameTimeP95Ms} p99=${res.frameTimeP99Ms} ms | draw=${res.render?.calls} tris=${res.render?.triangles} | heap=${res.heapUsedMB}MB`,
-    );
+  for (const q of QUALITIES) {
+    for (const sc of scenes) out.rows.push({ ...(await runScene(A, sc, q, { bCap: B_CAP })), shot: sc.shot?.file ?? null });
+    if (B_FULL_RATE) {
+      // stress row: client B NOT throttled (2 full-rate game clients in one Chrome on one GPU)
+      await B.eval(`window.__SET_RAF_CAP_FPS__?.(null)`);
+      out.rows.push({ ...(await runScene(A, laneScene, q, { tag: '+B_fullrate', bCap: null })), stress: '2 full-rate clients in one Chrome/GPU' });
+      await B.eval(`window.__SET_RAF_CAP_FPS__?.(${B_CAP})`);
+    }
   }
-  const m = (k) => r3(median(runs.map((r) => r[k]).filter((v) => typeof v === 'number')));
-  const last = runs[runs.length - 1];
-  out.result = {
-    warmupSeconds: WARMUP_SEC,
-    captureSeconds: DURATION_SEC,
-    repeats: REPEATS,
-    fpsMedian: m('fpsMedian'),
-    fpsMean: m('fpsMean'),
-    fps1PctLow: m('fps1PctLow'),
-    frameTimeMedianMs: m('frameTimeMedianMs'),
-    frameTimeP95Ms: m('frameTimeP95Ms'),
-    frameTimeP99Ms: m('frameTimeP99Ms'),
-    gpuTimeMedianMs: m('gpuTimeMedianMs'),
-    drawCalls: last?.render?.calls ?? null,
-    sceneCalls: last?.render?.sceneCalls ?? null,
-    triangles: last?.render?.triangles ?? null,
-    geometries: last?.render?.geometries ?? null,
-    textures: last?.render?.textures ?? null,
-    programs: last?.programs ?? null,
-    heapUsedMB: last?.heapUsedMB ?? null,
-    heapTotalMB: last?.heapTotalMB ?? null,
-  };
-  out.runs = runs;
-  out.errors = { A: A.errorsSummary(), B: B.errorsSummary() };
+  out.table = out.rows.map((r) => ({
+    scene: r.scene,
+    quality: r.quality,
+    fps: r.achievedFps,
+    low1: r.fps1PctLow,
+    p95: r.frameTimeP95Ms,
+    p99: r.frameTimeP99Ms,
+    over16_7: r.pctFramesOver16_7ms,
+    over33_3: r.pctFramesOver33_3ms,
+    draw: r.drawCalls,
+    tris: r.triangles,
+    heapMB: r.heapUsedMB,
+  }));
+  out.notes.push(
+    'achievedFps / 1% low / p95 / p99 / %>16.7 / %>33.3 come from a page-side rAF interval recorder (presented-frame cadence); gameBench holds the game startBenchmarkCapture() numbers.',
+  );
+  out.notes.push('1% low = 1000 / mean of the slowest 1 % of frame intervals.');
   await A.eval(`window.__DEV_CAMERA_OVERRIDE__ = null`);
   await closeClient(A);
   await closeClient(B);
@@ -1812,6 +2334,34 @@ async function phasePerf() {
 // ---------------------------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------------------------
+function summarizeErrorCapture(phase) {
+  const clients = [...(phaseSessions.get(phase) ?? [])].map((c) => ({ client: c.label, ...c.errorsSummary() }));
+  const sum = (k) => clients.reduce((n, c) => n + c[k].length, 0);
+  const logNet = clients.reduce((n, c) => n + c.logErrors.filter((e) => e.source === 'network').length, 0);
+  const warnings = new Map();
+  for (const c of clients)
+    for (const w of c.warnings) warnings.set(w.text, { text: w.text, benign: w.benign, count: (warnings.get(w.text)?.count ?? 0) + w.count });
+  return {
+    clientsCaptured: clients.length,
+    totals: {
+      consoleErrors: sum('consoleErrors'),
+      pageExceptions: sum('pageExceptions'),
+      logErrorsNonNetwork: sum('logErrors') - logNet,
+      logErrorsNetwork: logNet,
+      networkErrors: sum('networkErrors'),
+      networkAborted: sum('networkAborted'),
+      warningsBenign: [...warnings.values()].filter((w) => w.benign).reduce((n, w) => n + w.count, 0),
+      warningsOther: [...warnings.values()].filter((w) => !w.benign).reduce((n, w) => n + w.count, 0),
+    },
+    warnings: [...warnings.values()],
+    perClient: clients,
+  };
+}
+function summarizeChecks(checks) {
+  const n = (st) => checks.filter((c) => c.status === st).length;
+  return { pass: n('PASS'), fail: n('FAIL'), skip: n('SKIP'), notAchieved: n('NOT_ACHIEVED'), notTested: n('NOT_TESTED'), info: n('INFO') };
+}
+
 async function main() {
   const phases = PHASE === 'all' ? ['shots', 'video', 'multi', 'perf'] : PHASE.split(',');
   for (const p of phases) if (!['shots', 'video', 'multi', 'perf'].includes(p)) throw new Error(`unknown phase ${p}`);
@@ -1849,6 +2399,7 @@ async function main() {
       totalRamGB: Number((os.totalmem() / 1024 ** 3).toFixed(2)),
       nodeVersion: process.version,
       chromeVersion: services.versionInfo.Browser,
+      chromeArgs: services.chromeArgs,
       headless: !HEADFUL,
       ffmpeg: FFMPEG,
     };
@@ -1856,6 +2407,7 @@ async function main() {
     meta.helperWorld = procs.helper.meta;
     for (const p of phases) {
       log(`===== phase ${p} =====`);
+      currentPhase = p;
       const t0 = Date.now();
       try {
         if (p === 'shots') results.shots = await phaseShots();
@@ -1886,7 +2438,31 @@ async function main() {
           openTargets.delete(id);
         }
       }
-      const file = { shots: `qa_shots_${LABEL}.json`, video: `qa_videos_${LABEL}.json`, multi: `qa_multi_${LABEL}.json`, perf: `qa_perf_${LABEL}.json` }[p];
+      // console / network error capture for EVERY client opened in this phase
+      const cap = summarizeErrorCapture(p);
+      results[p].errorCapture = cap;
+      results[p].checks = results[p].checks ?? [];
+      check(
+        results[p].checks,
+        `${p}.noConsoleErrors`,
+        cap.totals.consoleErrors + cap.totals.pageExceptions + cap.totals.logErrorsNonNetwork === 0 ? 'PASS' : 'FAIL',
+        cap.totals,
+        'console error/assert + uncaught exceptions + Log.entryAdded(error, non-network); benign PCFSoftShadowMap warning is warning-only',
+      );
+      check(
+        results[p].checks,
+        `${p}.noNetworkErrors`,
+        cap.totals.networkErrors + cap.totals.logErrorsNetwork === 0 ? 'PASS' : 'FAIL',
+        { ...cap.totals, abortedInfoOnly: cap.totals.networkAborted },
+        'HTTP >= 400 + Network.loadingFailed (canceled/ERR_ABORTED during navigation recorded separately, info only)',
+      );
+      results[p].summary = summarizeChecks(results[p].checks);
+      const file = {
+        shots: `qa_shots_${LABEL}.json`,
+        video: `qa_videos_${LABEL}.json`,
+        multi: `qa_multi_${LABEL}.json`,
+        perf: `qa_perf_${LABEL}_${PERF_TAG}.json`,
+      }[p];
       fs.writeFileSync(path.join(OUT_DIR, file), JSON.stringify({ meta, lane: laneCache, ...results[p] }, null, 2));
       log(`wrote ${rel(path.join(OUT_DIR, file))}`);
     }
