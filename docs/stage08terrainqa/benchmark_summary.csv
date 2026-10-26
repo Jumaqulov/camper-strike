@@ -1,5 +1,0 @@
-scene_id,description,fps_median,fps_p10,fps_1pct_low,frametime_median_ms,frametime_p95_ms,frametime_p99_ms,draw_calls,triangles,heap_mb,active_glb_variants
-open_forest,"Open forest clearing (eye-level 64, 4) with active camera sweep",59.88,59.52,58.82,16.7,16.9,17,103,642858,63.61,17
-service_station,"POI Service Station yard (20.8, -4.4) with yard apron and structure",59.88,59.52,58.82,16.7,16.8,17,191,666250,64.87,17
-forest_camp,"POI Forest Camp tents & clearing (-58.6, 72.2)",59.88,59.52,58.48,16.7,16.9,17.1,168,675977,64.53,17
-winding_road,"Winding road corridor & shoulder (3.05, -87.5)",59.88,59.52,58.48,16.7,16.9,17.1,58,398271,65.01,17

@@ -1,8 +1,0 @@
-scene,warmupSeconds,measurementSeconds,repeats,fpsMean,fpsMedian,fpsP10,fps1PctLow,frameTimeMedianMs,frameTimeP95Ms,frameTimeP99Ms,cullCpuMedianMs,cullCpuP95Ms,gpuTimeMedianMs,calls,triangles,geometries,textures,programs,heapUsedMB,visibleGrass,visibleFlowers,visibleFerns,severeSpike
-open_forest,5,15,2,125.89,161.29,58.14,25.06,6.5,28.8,44.6,0.1,0.2,7.009,119,568467,128,42,30,64.05,767,63,49,true
-open_forest_deep,10,30,3,127.61,178.57,61.73,24.63,5.6,26.3,40.6,0.1,0.2,6.999,133,571215,128,42,30,66.14,767,63,49,
-service_station,5,15,2,108.82,119.05,104.17,28.9,8.4,16.6,34.7,0,0.1,7.792,157,565359,128,47,41,72.11,1117,136,40,true
-service_station_deep,10,30,3,111.45,119.05,104.17,29.15,8.4,16,34.3,0,0.1,7.789,157,565359,128,47,41,70.97,1117,136,40,
-forest_camp,5,15,2,121.26,131.58,112.36,42.74,7.6,11.1,23.5,0,0.1,7.018,164,575440,128,47,41,88.52,1068,91,45,false
-flower_glade,5,15,2,118.15,163.93,68.49,34.97,6.5,15.8,29.4,0,0.1,7.189,139,593099,128,47,41,72.57,914,83,65,true
-flower_glade_deep,10,30,3,121.13,166.67,74.07,35.34,6,15.2,28.3,0,0.1,7.187,139,593099,128,47,41,74.39,914,83,65,

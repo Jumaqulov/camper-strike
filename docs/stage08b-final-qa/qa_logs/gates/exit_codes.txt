@@ -1,4 +1,0 @@
-npm test exit=0
-npm run test:perf exit=0
-npm run typecheck exit=0
-npm run build exit=0

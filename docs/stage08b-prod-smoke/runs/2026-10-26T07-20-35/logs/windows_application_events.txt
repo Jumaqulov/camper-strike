@@ -1,1 +1,0 @@
-(no Application events matching chrome / Application Error / WER since run start)

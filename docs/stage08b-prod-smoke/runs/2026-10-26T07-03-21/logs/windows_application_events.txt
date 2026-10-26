@@ -1,5 +1,0 @@
-TimeCreated      : 26.10.2026 12:05:26
-Id               : 256
-ProviderName     : Chrome
-LevelDisplayName : ��������
-Message          : [23080:21452:1026/120526.726:INFO:chrome\browser\extensions\extension_garbage_collector.cc:212] Garbage collection for extensions on file thread is complete.
