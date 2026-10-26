@@ -64,6 +64,8 @@ import type { ForestSquareWorldDefinition } from '../../shared/forestSquare';
 import { buildForestSquareGroundCover } from '../../shared/groundCover';
 import { createGroundCoverRenderer, type GroundCoverRendererHandle } from './GroundCoverRenderer';
 import { sampleForestSquareRoad } from '../../shared/forestSquareRoads';
+import { getForestSquarePoiSites } from '../../shared/structures/contracts';
+import { setTerrainDetail } from './terrain/TerrainMaterial';
 
 /** O't maydoni zichlik ko'paytiruvchisi (faqat vizual; server/gameplay hash ga ta'sir qilmaydi). */
 const GRASS_FIELD_DENSITY_SCALE = 8;
@@ -761,6 +763,9 @@ export function buildForestSampleScene(
     // Shader shu orqali 2 m li vertex rangiga bog'lanmasdan aniq g'ildirak izlari, qirra va shag'al chizadi.
     const vCount = meshData.positions.length / 3;
     const road = new Float32Array(vCount * 4);
+    // Hovli (POI) ma'lumoti: eng yaqin POI markazigacha normallashgan masofa (1.0 = hovli chekkasi)
+    const yard = new Float32Array(vCount);
+    const sites = getForestSquarePoiSites(world.publicLayoutSeed);
     for (let i = 0; i < vCount; i++) {
       const x = meshData.positions[i * 3]!;
       const z = meshData.positions[i * 3 + 2]!;
@@ -769,8 +774,15 @@ export function buildForestSampleScene(
       road[i * 4 + 1] = s.halfWidth;
       road[i * 4 + 2] = Math.sin(s.tangentYaw);
       road[i * 4 + 3] = Math.cos(s.tangentYaw);
+      let yt = 9;
+      for (const site of sites) {
+        const d = Math.hypot(x - site.center.x, z - site.center.z) / (site.flatRadius + 3.5);
+        if (d < yt) yt = d;
+      }
+      yard[i] = yt;
     }
     terrainGeo.setAttribute('aRoad', new THREE.BufferAttribute(road, 4));
+    terrainGeo.setAttribute('aYard', new THREE.BufferAttribute(yard, 1));
   }
 
   const terrainMat = new THREE.MeshStandardMaterial({
@@ -1737,6 +1749,10 @@ export function buildForestSampleScene(
         batch.mesh.castShadow = batch.baseCastShadow;
       }
     }
+    // Past sifat: soya xaritasi umuman chizilmaydi (integratsiyalangan GPU larda eng qimmat bosqich)
+    // va terrain shaderi yengil rejimga o'tadi (faqat makro qatlam + so'qmoq/hovli).
+    sun.castShadow = q !== 'low';
+    setTerrainDetail(terrainMat, q === 'low' ? 0 : 1);
     const mapSz = q === 'low' ? 1024 : q === 'medium' ? 2048 : 3072;
     if (sun.shadow.mapSize.x !== mapSz) {
       sun.shadow.mapSize.set(mapSz, mapSz);

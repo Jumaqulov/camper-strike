@@ -148,6 +148,8 @@ html, body {
 .settings label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
 .settings label span { color: var(--text); font-weight: 700; }
 .settings input[type='range'] { width: 100%; accent-color: var(--accent); }
+.settings label.check-row { flex-direction: row; align-items: center; gap: 8px; color: var(--text); font-weight: 600; cursor: pointer; }
+.settings label.check-row input[type='checkbox'] { width: 16px; height: 16px; accent-color: var(--accent); margin: 0; }
 .controls-help { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; font-size: 13px; color: var(--muted); margin-bottom: 18px; }
 .controls-help b { color: var(--text); }
 .pause-panel .btn.danger { width: 100%; }

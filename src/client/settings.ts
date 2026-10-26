@@ -7,6 +7,8 @@ export interface GameSettings {
   volume: number;
   fov: number;
   quality: QualityLevel;
+  /** FPS past bo'lsa sifatni avtomatik pasaytirish (kuchsiz / integratsiyalangan GPU lar uchun). */
+  autoQuality: boolean;
 }
 
 export type Settings = GameSettings;
@@ -21,6 +23,7 @@ export function loadSettings(): Settings {
     volume: 0.7,
     fov: 80,
     quality: 'medium',
+    autoQuality: true,
   };
   try {
     const raw = localStorage.getItem(KEY);
@@ -56,6 +59,7 @@ export function loadSettings(): Settings {
         volume,
         fov,
         quality,
+        autoQuality: parsed.autoQuality !== false,
       };
     }
   } catch {
@@ -79,6 +83,7 @@ export function saveSettings(s: Settings): void {
       volume: volVal,
       fov: fovVal,
       quality: qualityVal,
+      autoQuality: s.autoQuality !== false,
     };
     localStorage.setItem(KEY, JSON.stringify(toSave));
   } catch {

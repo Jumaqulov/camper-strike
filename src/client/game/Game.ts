@@ -357,6 +357,13 @@ export class Game {
   /** Lokal qurol almashtirish vaqti: eskirgan inventory:state qurolni orqaga qaytarmasligi uchun. */
   private lastLocalSwitchAt = -99;
   private maxDpr = 2;
+  /** Avtomatik sifat nazorati (kuchsiz GPU): kadr vaqti yig'indisi va ketma-ket "yomon" soniyalar. */
+  private perfAccumMs = 0;
+  private perfFrames = 0;
+  private perfBadSec = 0;
+  private perfGraceUntil = 0;
+  private perfLowRes = false;
+  private perfAutoDone = false;
   private readonly lootPreview: boolean;
   private lootUi: LootUI;
   private inventoryUi: InventoryUI;
@@ -447,6 +454,7 @@ export class Game {
 
     this.world = buildWorld(this.scene, this.worldDef, settings.quality);
     this.applyQualityRendererSettings(settings.quality);
+    this.detectWeakGpu();
     this.fx = new Effects(this.scene);
     this.fx.groundAt = (x, z) => sampleTerrainHeight(this.worldDef.terrain, x, z);
     this.vm = new ViewModel(aspect);
@@ -966,11 +974,99 @@ export class Game {
   }
 
   private applyQualityRendererSettings(q: QualityLevel): void {
-    const maxDpr = q === 'low' ? 1.0 : q === 'medium' ? 1.5 : 2.0;
+    const maxDpr = q === 'low' ? (this.perfLowRes ? 0.8 : 1.0) : q === 'medium' ? 1.5 : 2.0;
     this.maxDpr = maxDpr;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxDpr));
     // PCFSoftShadowMap three r186 da olib tashlangan (konsol ogohlantirishi bilan PCF ga tushardi)
     this.renderer.shadowMap.type = q === 'low' ? THREE.BasicShadowMap : THREE.PCFShadowMap;
+    // Past sifatda soya xaritasi butunlay o'chadi — integratsiyalangan GPU larda eng katta tejamkorlik.
+    const shadows = q !== 'low';
+    if (this.renderer.shadowMap.enabled !== shadows) {
+      this.renderer.shadowMap.enabled = shadows;
+      // Soya o'zgarganda materiallar qayta kompilyatsiya qilinishi kerak (USE_SHADOWMAP define)
+      this.scene.traverse((o) => {
+        const m = (o as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+        if (!m) return;
+        if (Array.isArray(m)) m.forEach((x) => (x.needsUpdate = true));
+        else m.needsUpdate = true;
+      });
+    }
+  }
+
+  /**
+   * Kuchsiz GPU aniqlash: dasturiy renderer (SwiftShader/llvmpipe) bo'lsa darhol past sifat + 0.8 DPR.
+   * Qolgan hollarda avtomatik nazorat (trackPerformance) real FPS bo'yicha qaror qiladi.
+   */
+  private detectWeakGpu(): void {
+    try {
+      const gl = this.renderer.getContext();
+      const ext = gl.getExtension('WEBGL_debug_renderer_info');
+      const name = ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : '';
+      if (/swiftshader|llvmpipe|software|basic render|mesa offscreen/i.test(name)) {
+        this.perfLowRes = true;
+        this.perfAutoDone = true;
+        this.settings.quality = 'low';
+        this.applyQualityRendererSettings('low');
+        this.world.setQuality?.('low');
+        saveSettings(this.settings);
+        const sel = document.getElementById('set-quality') as HTMLSelectElement | null;
+        if (sel) sel.value = 'low';
+      }
+    } catch {
+      /* e'tibor bermaymiz */
+    }
+  }
+
+  /**
+   * Avtomatik sifat: o'yin davomida o'rtacha kadr vaqti 4 soniya davomida 30 ms dan oshsa (<33 FPS),
+   * sifat bir pog'ona pasaytiriladi (yuqori → o'rta → past → past + 0.8 DPR). Hech qachon oshirilmaydi,
+   * foydalanuvchi sozlamasi saqlanadi. Sozlamalardagi "Avtomatik sifat" bilan o'chiriladi.
+   */
+  private trackPerformance(frameMs: number, nowMs: number): void {
+    if (this.perfAutoDone || this.settings.autoQuality === false) return;
+    if (this.perfGraceUntil === 0) this.perfGraceUntil = nowMs + 6000; // yuklanish/kompilyatsiya davri
+    if (nowMs < this.perfGraceUntil || document.hidden || !this.input.locked) {
+      this.perfAccumMs = 0;
+      this.perfFrames = 0;
+      return;
+    }
+    this.perfAccumMs += Math.min(frameMs, 250);
+    this.perfFrames++;
+    if (this.perfAccumMs < 1000) return;
+    const avg = this.perfAccumMs / this.perfFrames;
+    this.perfAccumMs = 0;
+    this.perfFrames = 0;
+    if (avg > 30) this.perfBadSec++;
+    else this.perfBadSec = Math.max(0, this.perfBadSec - 1);
+    if (this.perfBadSec < 4) return;
+    this.perfBadSec = 0;
+    this.perfGraceUntil = nowMs + 4000;
+
+    const q = this.settings.quality;
+    let next: QualityLevel | null = null;
+    if (q === 'high') next = 'medium';
+    else if (q === 'medium') next = 'low';
+    else if (!this.perfLowRes) {
+      this.perfLowRes = true;
+      next = 'low';
+      this.perfAutoDone = true;
+    } else {
+      this.perfAutoDone = true;
+      return;
+    }
+    this.settings.quality = next;
+    this.applyQualityRendererSettings(next);
+    this.world.setQuality?.(next);
+    saveSettings(this.settings);
+    const sel = document.getElementById('set-quality') as HTMLSelectElement | null;
+    if (sel) sel.value = next;
+    const label = next === 'medium' ? "O'rta" : this.perfLowRes ? 'Past + kam piksel' : 'Past';
+    this.hud.chat({
+      name: '',
+      team: 'none',
+      system: true,
+      text: `FPS past (${Math.round(1000 / avg)}): grafika sifati avtomatik "${label}" ga o'tkazildi (Sozlamalar → Avtomatik sifat)`,
+    });
   }
 
   // ================= Tarmoq =================
@@ -1647,8 +1743,20 @@ export class Game {
       this.dom(qualityEl, 'change', () => {
         const q = (qualityEl.value === 'low' || qualityEl.value === 'high' ? qualityEl.value : 'medium') as QualityLevel;
         this.settings.quality = q;
+        this.perfLowRes = false;
+        this.perfAutoDone = false;
+        this.perfBadSec = 0;
         this.applyQualityRendererSettings(q);
         this.world.setQuality?.(q);
+        saveSettings(this.settings);
+      });
+    }
+    const autoQ = document.getElementById('set-auto-quality') as HTMLInputElement | null;
+    if (autoQ) {
+      autoQ.checked = this.settings.autoQuality !== false;
+      this.dom(autoQ, 'change', () => {
+        this.settings.autoQuality = autoQ.checked;
+        this.perfBadSec = 0;
         saveSettings(this.settings);
       });
     }
@@ -1708,6 +1816,7 @@ export class Game {
     const rawDt = rawDtMs / 1000;
     const dt = Math.min(0.05, rawDt);
     this.last = now;
+    this.trackPerformance(rawDtMs, now);
     if (import.meta.env.DEV) {
       if (this.devElapsed < 0) {
         this.devElapsed = Math.min(0, this.devElapsed + rawDt);

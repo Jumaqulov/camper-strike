@@ -55,6 +55,9 @@ export function createEnhancedTerrainMaterial(
 
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uTerrainSeed = { value: seed | 0 };
+    // 1 = to'liq (mezo/mikro qatlamlar), 0 = yengil (past sifat / kuchsiz GPU)
+    shader.uniforms.uTerrainDetail = { value: (mat.userData.terrainDetail as number | undefined) ?? 1 };
+    mat.userData.terrainUniforms = shader.uniforms;
 
     // 1. Pass world coordinates from vertex shader
     shader.vertexShader = shader.vertexShader.replace(
@@ -67,6 +70,9 @@ varying vec3 vWorldPosition;
 // So'qmoq ma'lumoti: (markazgacha masofa, yarim kenglik, tangens x, tangens z); yo'q bo'lsa 0 (yo'lsiz)
 attribute vec4 aRoad;
 varying vec4 vRoad;
+// Hovli ma'lumoti: eng yaqin POI markazigacha normallashgan masofa (1.0 = hovli chekkasi); yo'q bo'lsa 0
+attribute float aYard;
+varying float vYard;
 `,
     );
 
@@ -78,6 +84,7 @@ varying vec4 vRoad;
 vWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;
 #endif
 vRoad = aRoad;
+vYard = aYard;
 `,
     );
 
@@ -90,7 +97,9 @@ vRoad = aRoad;
 varying vec3 vWorldPosition;
 #endif
 varying vec4 vRoad;
+varying float vYard;
 uniform float uTerrainSeed;
+uniform float uTerrainDetail;
 
 // Lightweight deterministic pseudo-random hash (pure arithmetic, zero loops)
 float terrainHash21(vec2 p, float s) {
@@ -182,9 +191,12 @@ float terrainNoise2D(vec2 p, float s) {
   col = mix(col, grassMacroCol, grassMask);
 
   // =========================================================================
-  // MEZO LAYER (0.5m - 3m): Velvet moss patches, damp earth & pine speckles
-  // Breaks up the 2-meter vertex polygon boundaries with soft organic forms
+  // MEZO + MICRO LAYERS — faqat to'liq sifatda (uTerrainDetail = 1). Past sifatda
+  // ushbu ~12 ta shovqin namunasi o'tkazib yuboriladi: integratsiyalangan GPU larda
+  // butun ekranni qoplaydigan terrain uchun eng katta tejamkorlik.
   // =========================================================================
+  float earthPeeks = 0.0;
+  if (uTerrainDetail > 0.5) {
   float nMezoA = terrainNoise2D(wPos * 0.68, uTerrainSeed + 127.0);   // ~1.47m scale
   float nMezoB = terrainNoise2D(wPos * 1.55, uTerrainSeed + 151.0);   // ~0.65m scale
   float velvet = nMezoA * 0.65 + nMezoB * 0.35;
@@ -201,7 +213,7 @@ float terrainNoise2D(vec2 p, float s) {
   float nEarthB = terrainNoise2D(wPos * 2.20 + vec2(-21.5, 53.2), uTerrainSeed + 183.0);
   float earthNoise = nEarthA * 0.68 + nEarthB * 0.32;
   // Rare, soft loam peeks only in shaded humus zones (meadows stay green)
-  float earthPeeks = smoothstep(0.56, 0.80, earthNoise) * grassMask * (0.25 + 0.75 * humusFactor) * (1.0 - gladeFactor * 0.50);
+  earthPeeks = smoothstep(0.56, 0.80, earthNoise) * grassMask * (0.25 + 0.75 * humusFactor) * (1.0 - gladeFactor * 0.50);
   vec3 dampLoamCol = vec3(0.190, 0.130, 0.070);
   col = mix(col, dampLoamCol, earthPeeks * 0.55);
 
@@ -240,11 +252,12 @@ float terrainNoise2D(vec2 p, float s) {
   float pebbleHash = terrainHash21(pCell, uTerrainSeed + 59.0);
   float pebbleDist = length(pFrac);
   float isPebble = (1.0 - smoothstep(0.14, 0.24, pebbleDist)) * step(0.65, pebbleHash);
-  // Pebble flecks only on rock and bare loam — paths get their own finer gravel below
-  float pebbleLuma = isPebble * (pebbleHash - 0.5) * 0.20 * (dirtMask * 0.30 + rockMask * 0.95 + earthPeeks * 0.80);
+  // Pebble flecks only on rock and bare loam — paths and yards get their own finer gravel below
+  float pebbleLuma = isPebble * (pebbleHash - 0.5) * 0.20 * (rockMask * 0.95 + earthPeeks * 0.80);
 
-  col += vec3(soilGrit) * (dirtMask * 0.90 + grassMask * 0.45 + rockMask * 0.95);
+  col += vec3(soilGrit) * (dirtMask * 0.45 + grassMask * 0.45 + rockMask * 0.95);
   col += vec3(pebbleLuma);
+  } // uTerrainDetail
 
   // =========================================================================
   // DIRT PATH (attribute-driven, crisp): compacted tan earth, twin wheel ruts, dusty crown,
@@ -295,12 +308,36 @@ float terrainNoise2D(vec2 p, float s) {
   vec3 trampled = mix(col, vec3(0.335, 0.300, 0.150), 0.55);
   col = mix(col, trampled, pathShoulder * 0.55 * shoulderNoise);
 
-  // POI courtyards (vertex-colour dirt that is not the path): dust variation + the same fine grit
-  float yardMask = dirtMask * (1.0 - pathBed) * (1.0 - pathShoulder * 0.5);
-  float yardNoise = terrainNoise2D(wPos * 0.88 + vec2(11.2, -14.7), uTerrainSeed + 211.0);
-  vec3 yardDust = col * (0.90 + 0.22 * yardNoise) + vec3(0.020, 0.016, 0.010);
-  col = mix(col, yardDust, yardMask * 0.80);
-  col += vec3((gritHash - 0.45) * 0.08 * gritDot * yardMask);
+  // =========================================================================
+  // POI COURTYARD (attribute-driven): a trodden camp ground with a crisp, organic edge.
+  // Inside: compacted tan earth with darker damp patches, foot-trampled streaks and fine grit.
+  // Outside the crisp edge the old blurry vertex-colour apron is pushed back to meadow green,
+  // with a thin trampled dry-grass ring in between — no more big muddy blob around the cabins.
+  // =========================================================================
+  float hasYard = step(0.001, vYard);
+  float yardJit = (terrainNoise2D(wPos * 0.33 + vec2(-9.7, 4.2), uTerrainSeed + 283.0) - 0.5) * 0.26
+                + edgeJit * 0.05;
+  float yj = vYard + yardJit;
+  float yardIn = (1.0 - smoothstep(0.96, 1.06, yj)) * hasYard * (1.0 - pathBed);
+  float yardRing = (1.0 - smoothstep(1.06, 1.30, yj)) * (1.0 - yardIn) * hasYard * (1.0 - pathBed);
+  float apron = (1.0 - smoothstep(1.30, 2.10, yj)) * (1.0 - yardIn) * (1.0 - yardRing) * hasYard;
+
+  float yardMacro = terrainNoise2D(wPos * 0.21 + vec2(17.3, -5.9), uTerrainSeed + 287.0);
+  float yardDamp = smoothstep(0.58, 0.82, terrainNoise2D(wPos * 0.55 + vec2(-3.3, 12.1), uTerrainSeed + 291.0));
+  float yardTrample = terrainNoise2D(vec2(wPos.x * 1.9, wPos.y * 0.45) + vec2(2.0, 9.0), uTerrainSeed + 293.0);
+  vec3 yardBase = mix(vec3(0.330, 0.250, 0.155), vec3(0.405, 0.315, 0.200), yardMacro);
+  yardBase *= 0.94 + 0.12 * yardTrample;
+  yardBase = mix(yardBase, yardBase * vec3(0.74, 0.70, 0.66), yardDamp * 0.7);
+  yardBase += vec3((gritHash - 0.45) * 0.09 * gritDot);
+  col = mix(col, yardBase, yardIn);
+
+  // Trampled dry grass ring just outside the courtyard
+  vec3 yardTrampled = mix(col, vec3(0.335, 0.300, 0.150), 0.5);
+  col = mix(col, yardTrampled, yardRing * 0.6 * shoulderNoise);
+
+  // Beyond the ring: restore meadow green where the vertex colours still carry the old dirt apron
+  vec3 meadowGreen = vec3(0.158, 0.272, 0.090) * (0.86 + 0.28 * macroNoise);
+  col = mix(col, meadowGreen, apron * dirtMask * 0.85);
 
   // =========================================================================
   // STEEP ROCK CRAGS: Slate grey stone with subtle moss runoffs
@@ -356,4 +393,11 @@ float terrainNoise2D(vec2 p, float s) {
   };
 
   return mat;
+}
+
+/** Terrain shader tafsilot darajasi: 1 = to'liq, 0 = yengil (past sifat). Qayta kompilyatsiyasiz. */
+export function setTerrainDetail(mat: THREE.MeshStandardMaterial, level: 0 | 1): void {
+  mat.userData.terrainDetail = level;
+  const uniforms = mat.userData.terrainUniforms as { uTerrainDetail?: { value: number } } | undefined;
+  if (uniforms?.uTerrainDetail) uniforms.uTerrainDetail.value = level;
 }

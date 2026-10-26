@@ -69,7 +69,7 @@ export interface GrassQualityPreset {
 export const GRASS_QUALITY_PRESETS: Record<QualityLevel, GrassQualityPreset> = {
   high: { density: 1.0, grassDist: 75, flowerDist: 65, fernDist: 80, wind: 1.0, receiveShadow: true },
   medium: { density: 0.8, grassDist: 55, flowerDist: 48, fernDist: 60, wind: 0.7, receiveShadow: false },
-  low: { density: 0.4, grassDist: 35, flowerDist: 30, fernDist: 40, wind: 0.0, receiveShadow: false },
+  low: { density: 0.3, grassDist: 30, flowerDist: 26, fernDist: 34, wind: 0.0, receiveShadow: false },
 };
 
 function presetDist(p: GrassQualityPreset, cat: GrassCategory): number {
