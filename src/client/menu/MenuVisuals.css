@@ -992,6 +992,29 @@
   font-size: 14px;
   text-shadow: none;
   z-index: 1;
+  /* Bir rangli SVG belgi: krem "bo'yoq" rangida, emoji o'rniga */
+  color: #fff0c8;
+}
+
+.btn.big .btn-icon svg,
+.btn.primary .btn-icon svg,
+.btn.secondary .btn-icon svg,
+.btn.danger .btn-icon svg,
+#btn-quick-play .btn-icon svg,
+.featured-play-btn .btn-icon svg {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+  display: block;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.6));
+}
+
+/* Sariq (O'YNASH) taxtada tamg'a to'qroq, belgi oltin-sariq */
+.btn.primary .btn-icon,
+#btn-enter .btn-icon {
+  background: radial-gradient(circle at 50% 45%, rgba(42, 26, 5, 0.92), rgba(42, 26, 5, 0.78) 70%, rgba(20, 12, 2, 0.95) 100%);
+  border-color: rgba(20, 12, 2, 0.8);
+  color: #ffd94f;
 }
 
 /* Mayda tugmalar (ismni o'zgartirish, yangilash): kichik yog'och yorliq */
