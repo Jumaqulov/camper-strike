@@ -742,6 +742,328 @@
 }
 
 /* ==========================================================================
+   7b. GAME-STYLE BUTTONS (asosiy menyu + lobbi)
+   Haqiqiy o'yin menyusi hissi: qalin display shrift, 3D "bosiladigan" pastki qirra,
+   chap tomonda yorqin aksent chizig'i, yaltiroq ustki yorug'lik va hover'da nur o'tishi.
+   Orqa fon va joylashuvga tegilmaydi — faqat tugmalarning ko'rinishi.
+   ========================================================================== */
+.btn.big,
+.btn.primary,
+.btn.secondary,
+.btn.danger,
+#btn-enter,
+#btn-open-rooms,
+#btn-open-settings,
+#btn-quick-play,
+.featured-play-btn {
+  --gb-top: #fde68a;
+  --gb-mid: #f59e0b;
+  --gb-bottom: #c2410c;
+  --gb-edge: #7c2d12;
+  --gb-ink: #2a1500;
+  --gb-accent: #fff7cc;
+  --gb-glow: rgba(251, 191, 36, 0.55);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  font-family: 'Bahnschrift', 'Segoe UI Black', 'Arial Black', Impact, 'Segoe UI', sans-serif;
+  font-weight: 900;
+  font-stretch: condensed;
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+  line-height: 1.1;
+  color: var(--gb-ink);
+  border: 1px solid rgba(0, 0, 0, 0.55);
+  border-radius: 7px;
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.045) 0 6px, rgba(0, 0, 0, 0) 6px 14px),
+    linear-gradient(180deg, var(--gb-top) 0%, var(--gb-mid) 48%, var(--gb-bottom) 100%);
+  box-shadow:
+    0 4px 0 var(--gb-edge),
+    0 5px 0 rgba(0, 0, 0, 0.55),
+    0 10px 22px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: transform 0.1s ease-out, box-shadow 0.12s ease-out, filter 0.15s ease-out;
+}
+
+/* Chap aksent chizig'i */
+.btn.big::before,
+.btn.primary::before,
+.btn.secondary::before,
+.btn.danger::before,
+#btn-enter::before,
+#btn-open-rooms::before,
+#btn-open-settings::before,
+#btn-quick-play::before,
+.featured-play-btn::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: linear-gradient(180deg, var(--gb-accent), rgba(255, 255, 255, 0.25));
+  box-shadow: 0 0 10px var(--gb-glow);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Hover'da o'tib ketadigan yorug'lik (sheen) */
+.btn.big::after,
+.btn.primary::after,
+.btn.secondary::after,
+.btn.danger::after,
+#btn-enter::after,
+#btn-open-rooms::after,
+#btn-open-settings::after,
+#btn-quick-play::after,
+.featured-play-btn::after {
+  content: '';
+  position: absolute;
+  top: -40%;
+  bottom: -40%;
+  left: -70%;
+  width: 45%;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0) 100%);
+  transform: skewX(-22deg);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.btn.big:hover::after,
+.btn.primary:hover::after,
+.btn.secondary:hover::after,
+.btn.danger:hover::after,
+#btn-enter:hover::after,
+#btn-open-rooms:hover::after,
+#btn-open-settings:hover::after,
+#btn-quick-play:hover::after,
+.featured-play-btn:hover::after {
+  opacity: 1;
+  animation: gb-sheen 0.7s ease-out forwards;
+}
+
+@keyframes gb-sheen {
+  from { left: -70%; }
+  to { left: 130%; }
+}
+
+.btn.big:hover,
+.btn.primary:hover,
+.btn.secondary:hover,
+.btn.danger:hover,
+#btn-enter:hover,
+#btn-open-rooms:hover,
+#btn-open-settings:hover,
+#btn-quick-play:hover,
+.featured-play-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08) saturate(1.08);
+  box-shadow:
+    0 6px 0 var(--gb-edge),
+    0 7px 0 rgba(0, 0, 0, 0.55),
+    0 14px 28px rgba(0, 0, 0, 0.55),
+    0 0 22px var(--gb-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+}
+
+/* Bosilganda "ichiga kiradi" */
+.btn.big:active,
+.btn.primary:active,
+.btn.secondary:active,
+.btn.danger:active,
+#btn-enter:active,
+#btn-open-rooms:active,
+#btn-open-settings:active,
+#btn-quick-play:active,
+.featured-play-btn:active {
+  transform: translateY(3px) scale(0.995);
+  filter: brightness(0.96);
+  box-shadow:
+    0 1px 0 var(--gb-edge),
+    0 2px 0 rgba(0, 0, 0, 0.55),
+    0 4px 10px rgba(0, 0, 0, 0.45),
+    inset 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.btn.big:focus-visible,
+.btn.primary:focus-visible,
+.btn.secondary:focus-visible,
+.btn.danger:focus-visible,
+#btn-enter:focus-visible,
+#btn-open-rooms:focus-visible,
+#btn-open-settings:focus-visible,
+#btn-quick-play:focus-visible,
+.featured-play-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.85),
+    0 0 0 6px var(--gb-glow),
+    0 4px 0 var(--gb-edge),
+    0 10px 22px rgba(0, 0, 0, 0.5);
+}
+
+/* --- Ikkilamchi (XONALAR, SOZLAMALAR, orqaga): qorong'i o'rmon yog'ochi, amber qirra --- */
+.btn.secondary,
+#btn-open-rooms,
+#btn-open-settings {
+  --gb-top: #4a6b50;
+  --gb-mid: #2b4733;
+  --gb-bottom: #16281c;
+  --gb-edge: #070f0a;
+  --gb-ink: #fff4d6;
+  --gb-accent: #fbbf24;
+  --gb-glow: rgba(245, 158, 11, 0.45);
+  color: var(--gb-ink);
+  border-color: rgba(0, 0, 0, 0.65);
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.8);
+}
+
+.btn.secondary:hover,
+#btn-open-rooms:hover,
+#btn-open-settings:hover {
+  color: #ffffff;
+  --gb-top: #5d8464;
+  --gb-mid: #35593f;
+  --gb-bottom: #1b3222;
+}
+
+/* --- Xavfli (chiqish) --- */
+.btn.danger {
+  --gb-top: #fca5a5;
+  --gb-mid: #dc2626;
+  --gb-bottom: #7f1d1d;
+  --gb-edge: #450a0a;
+  --gb-ink: #fff1f1;
+  --gb-accent: #fee2e2;
+  --gb-glow: rgba(239, 68, 68, 0.5);
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.7);
+}
+
+/* --- Tezkor start: yashil "GO" tugmasi --- */
+#btn-quick-play,
+.featured-play-btn {
+  --gb-top: #86efac;
+  --gb-mid: #16a34a;
+  --gb-bottom: #14532d;
+  --gb-edge: #052e16;
+  --gb-ink: #f0fff4;
+  --gb-accent: #d9ffe4;
+  --gb-glow: rgba(74, 222, 128, 0.55);
+  color: var(--gb-ink);
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.6);
+}
+
+/* Ikonka: tugma ichidagi qorong'i dumaloq nishon */
+.btn.big .btn-icon,
+.btn.primary .btn-icon,
+.btn.secondary .btn-icon,
+.btn.danger .btn-icon,
+#btn-quick-play .btn-icon,
+.featured-play-btn .btn-icon {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.2);
+  font-size: 14px;
+  text-shadow: none;
+  z-index: 1;
+}
+
+/* Asosiy O'YNASH tugmasi: eng katta, pulsli nur */
+#btn-enter,
+.btn-nav-play {
+  font-size: 17px;
+  letter-spacing: 2px;
+  animation: gb-pulse 2.6s ease-in-out infinite;
+}
+
+#btn-enter:hover,
+#btn-enter:active,
+.btn-nav-play:hover,
+.btn-nav-play:active {
+  animation: none;
+}
+
+@keyframes gb-pulse {
+  0%, 100% {
+    box-shadow:
+      0 4px 0 var(--gb-edge),
+      0 5px 0 rgba(0, 0, 0, 0.55),
+      0 10px 22px rgba(0, 0, 0, 0.5),
+      0 0 0 rgba(251, 191, 36, 0),
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+  }
+  50% {
+    box-shadow:
+      0 4px 0 var(--gb-edge),
+      0 5px 0 rgba(0, 0, 0, 0.55),
+      0 10px 22px rgba(0, 0, 0, 0.5),
+      0 0 24px rgba(251, 191, 36, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.18);
+  }
+}
+
+/* Mayda tugmalar (ismni o'zgartirish, yangilash): bevelli pill */
+.btn.tiny,
+.btn-edit-name {
+  font-family: 'Bahnschrift', 'Segoe UI Black', 'Arial Black', 'Segoe UI', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #fde68a;
+  background: linear-gradient(180deg, rgba(74, 107, 80, 0.9), rgba(22, 40, 28, 0.95));
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  box-shadow: 0 2px 0 #070f0a, 0 4px 8px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: transform 0.1s ease-out, box-shadow 0.12s ease-out, filter 0.15s ease-out;
+}
+
+.btn.tiny:hover,
+.btn-edit-name:hover {
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.55), rgba(180, 83, 9, 0.75));
+  color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.6);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 0 #070f0a, 0 6px 12px rgba(0, 0, 0, 0.45), 0 0 10px rgba(251, 191, 36, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.btn.tiny:active,
+.btn-edit-name:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 #070f0a, 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #btn-enter,
+  .btn-nav-play {
+    animation: none;
+  }
+  .btn.big:hover::after,
+  .btn.primary:hover::after,
+  .btn.secondary:hover::after,
+  .btn.danger:hover::after,
+  #btn-enter:hover::after,
+  #btn-open-rooms:hover::after,
+  #btn-open-settings:hover::after,
+  #btn-quick-play:hover::after,
+  .featured-play-btn:hover::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
    8. FORM INPUTS & LABELS
    ========================================================================== */
 .field {
