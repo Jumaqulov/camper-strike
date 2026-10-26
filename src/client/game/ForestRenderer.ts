@@ -63,9 +63,10 @@ import type { WorldHandles } from './World';
 import type { ForestSquareWorldDefinition } from '../../shared/forestSquare';
 import { buildForestSquareGroundCover } from '../../shared/groundCover';
 import { createGroundCoverRenderer, type GroundCoverRendererHandle } from './GroundCoverRenderer';
+import { sampleForestSquareRoad } from '../../shared/forestSquareRoads';
 
 /** O't maydoni zichlik ko'paytiruvchisi (faqat vizual; server/gameplay hash ga ta'sir qilmaydi). */
-const GRASS_FIELD_DENSITY_SCALE = 6;
+const GRASS_FIELD_DENSITY_SCALE = 8;
 import { createEnhancedTerrainMaterial } from './terrain/TerrainMaterial';
 import { buildAnnularSkirtGeometry } from './terrain/skirtGeometry';
 import { preloadGrassAssets, onGrassAssetsReady } from './grass/GrassAssetRegistry';
@@ -755,6 +756,22 @@ export function buildForestSampleScene(
   terrainGeo.setAttribute('color', new THREE.BufferAttribute(meshData.colors, 3));
   terrainGeo.setAttribute('uv', new THREE.BufferAttribute(meshData.uvs, 2));
   terrainGeo.setIndex(new THREE.BufferAttribute(meshData.indices, 1));
+  if (isForestSquare) {
+    // So'qmoq ma'lumoti har bir vertex uchun: (markazgacha masofa, yarim kenglik, tangens x, tangens z).
+    // Shader shu orqali 2 m li vertex rangiga bog'lanmasdan aniq g'ildirak izlari, qirra va shag'al chizadi.
+    const vCount = meshData.positions.length / 3;
+    const road = new Float32Array(vCount * 4);
+    for (let i = 0; i < vCount; i++) {
+      const x = meshData.positions[i * 3]!;
+      const z = meshData.positions[i * 3 + 2]!;
+      const s = sampleForestSquareRoad(x, z, world.publicLayoutSeed);
+      road[i * 4] = s.dist;
+      road[i * 4 + 1] = s.halfWidth;
+      road[i * 4 + 2] = Math.sin(s.tangentYaw);
+      road[i * 4 + 3] = Math.cos(s.tangentYaw);
+    }
+    terrainGeo.setAttribute('aRoad', new THREE.BufferAttribute(road, 4));
+  }
 
   const terrainMat = new THREE.MeshStandardMaterial({
     vertexColors: true,

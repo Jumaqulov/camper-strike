@@ -81,10 +81,10 @@ function presetDist(p: GrassQualityPreset, cat: GrassCategory): number {
  * undan keyin ulush chiziqli kamayib `LOD_FAR_FRACTION` gacha tushadi (maydon 5x zich bo'lgani
  * uchun uzoqdagi 0.22 ulush ham avvalgi asosiy zichlikdan kam emas).
  */
-const LOD_FULL_DIST = 18;
+const LOD_FULL_DIST = 16;
 const LOD_FULL_DIST2 = LOD_FULL_DIST * LOD_FULL_DIST;
-const LOD_FALLOFF_INV = 1 / 22; // 18 m → 40 m oralig'ida 1.0 → 0.0 (floor bilan 0.22)
-const LOD_FAR_FRACTION = 0.22;
+const LOD_FALLOFF_INV = 1 / 22; // 16 m → 38 m oralig'ida 1.0 → 0.0 (floor bilan 0.16)
+const LOD_FAR_FRACTION = 0.16;
 
 interface VariantBatch {
   variantId: GrassVariantId;

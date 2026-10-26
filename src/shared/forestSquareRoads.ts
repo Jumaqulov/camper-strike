@@ -8,6 +8,8 @@ export interface ForestSquareRoadSample {
   shoulderBlend: number;
   nearestSegmentId: string;
   tangentYaw: number;
+  /** Eng yaqin yo'l segmentining yarim kengligi (metr). */
+  halfWidth: number;
 }
 
 export interface ForestSquareRoadPolyline {
@@ -358,6 +360,7 @@ export function sampleForestSquareRoad(
       shoulderBlend: 0,
       nearestSegmentId: bestSeg.polyId,
       tangentYaw: bestSeg.tangentYaw,
+      halfWidth: hw,
     };
   }
 
@@ -372,5 +375,6 @@ export function sampleForestSquareRoad(
     shoulderBlend,
     nearestSegmentId: bestSeg.polyId,
     tangentYaw: bestSeg.tangentYaw,
+    halfWidth: hw,
   };
 }

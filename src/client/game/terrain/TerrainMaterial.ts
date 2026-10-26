@@ -64,6 +64,9 @@ export function createEnhancedTerrainMaterial(
 #ifndef USE_TRANSMISSION
 varying vec3 vWorldPosition;
 #endif
+// So'qmoq ma'lumoti: (markazgacha masofa, yarim kenglik, tangens x, tangens z); yo'q bo'lsa 0 (yo'lsiz)
+attribute vec4 aRoad;
+varying vec4 vRoad;
 `,
     );
 
@@ -74,6 +77,7 @@ varying vec3 vWorldPosition;
 #ifndef USE_TRANSMISSION
 vWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;
 #endif
+vRoad = aRoad;
 `,
     );
 
@@ -85,6 +89,7 @@ vWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;
 #ifndef USE_TRANSMISSION
 varying vec3 vWorldPosition;
 #endif
+varying vec4 vRoad;
 uniform float uTerrainSeed;
 
 // Lightweight deterministic pseudo-random hash (pure arithmetic, zero loops)
@@ -235,25 +240,67 @@ float terrainNoise2D(vec2 p, float s) {
   float pebbleHash = terrainHash21(pCell, uTerrainSeed + 59.0);
   float pebbleDist = length(pFrac);
   float isPebble = (1.0 - smoothstep(0.14, 0.24, pebbleDist)) * step(0.65, pebbleHash);
-  // Pebble flecks only where there is bare ground (dirt roads, yards, rock, loam) — no white dots on grass
-  float pebbleLuma = isPebble * (pebbleHash - 0.5) * 0.20 * (dirtMask * 1.25 + rockMask * 0.95 + earthPeeks * 0.80);
+  // Pebble flecks only on rock and bare loam — paths get their own finer gravel below
+  float pebbleLuma = isPebble * (pebbleHash - 0.5) * 0.20 * (dirtMask * 0.30 + rockMask * 0.95 + earthPeeks * 0.80);
 
-  col += vec3(soilGrit) * (dirtMask * 1.30 + grassMask * 0.45 + rockMask * 0.95);
+  col += vec3(soilGrit) * (dirtMask * 0.90 + grassMask * 0.45 + rockMask * 0.95);
   col += vec3(pebbleLuma);
 
   // =========================================================================
-  // DIRT ROADS & POI COURTYARDS: Tire ruts, dust, grit and dry edge dusting
+  // DIRT PATH (attribute-driven, crisp): compacted tan earth, twin wheel ruts, dusty crown,
+  // streaks along the travel direction, fine gravel, damp seam and a trampled dry-grass shoulder
   // =========================================================================
-  float roadNoise = terrainNoise2D(wPos * 0.88 + vec2(11.2, -14.7), uTerrainSeed + 211.0);
-  vec3 roadDust = col + vec3(0.032, 0.026, 0.016);
-  vec3 roadRut = col * vec3(0.85, 0.83, 0.80) - vec3(0.018, 0.014, 0.012);
-  vec3 roadPolished = mix(roadRut, roadDust, smoothstep(0.36, 0.64, roadNoise));
-  col = mix(col, roadPolished, dirtMask * 0.82);
+  float rdDist = vRoad.x;
+  float rdHw = max(vRoad.y, 0.9);
+  float hasRoad = step(0.5, vRoad.y);
+  vec2 rdT = normalize(vRoad.zw + vec2(0.0, 1e-4));
+  vec2 rdN = vec2(-rdT.y, rdT.x);
+  float along = dot(wPos, rdT);
+  float across = dot(wPos, rdN);
 
-  // Dry edge dusting where dirt road feathers into surrounding grass
-  float roadEdge = smoothstep(0.08, 0.42, dirtMask) * (1.0 - smoothstep(0.52, 0.88, dirtMask));
-  vec3 dryEdgeDust = vec3(0.240, 0.210, 0.125);
-  col = mix(col, dryEdgeDust, roadEdge * 0.40);
+  float edgeJit = (terrainNoise2D(wPos * 0.85 + vec2(5.3, -8.1), uTerrainSeed + 251.0) - 0.5) * 0.9
+                + (terrainNoise2D(wPos * 2.6, uTerrainSeed + 257.0) - 0.5) * 0.35;
+  float dj = rdDist + edgeJit;
+  float pathBed = (1.0 - smoothstep(rdHw - 0.30, rdHw + 0.40, dj)) * hasRoad;
+  float pathShoulder = (1.0 - smoothstep(rdHw + 0.20, rdHw + 2.4, dj)) * (1.0 - pathBed) * hasRoad;
+
+  // Base compacted earth: warm tan with wet/dry patches along the path
+  float wearMacro = terrainNoise2D(vec2(along * 0.09, across * 0.35) + vec2(3.1, 7.7), uTerrainSeed + 263.0);
+  vec3 bedBase = mix(vec3(0.300, 0.222, 0.135), vec3(0.392, 0.300, 0.185), wearMacro);
+  // Streaks along the travel direction (dragged soil, foot traffic)
+  float streak = terrainNoise2D(vec2(along * 0.55, across * 4.5), uTerrainSeed + 269.0);
+  bedBase *= 0.92 + 0.16 * streak;
+  // Twin wheel ruts ~1 m either side of the centreline: compacted, damp, darker
+  float rutCenter = min(1.05, rdHw * 0.62);
+  float rutProfile = exp(-pow((rdDist - rutCenter) / 0.26, 2.0));
+  float rutWobble = 0.85 + 0.30 * terrainNoise2D(vec2(along * 0.30, 0.0), uTerrainSeed + 271.0);
+  float rut = rutProfile * rutWobble * smoothstep(0.6, 1.0, pathBed);
+  vec3 rutCol = bedBase * vec3(0.70, 0.68, 0.66);
+  // Dusty crown between the ruts
+  float crown = (1.0 - smoothstep(0.0, 0.55, rdDist)) * pathBed;
+  vec3 crownCol = bedBase * vec3(1.10, 1.08, 1.04);
+  vec3 pathCol = mix(bedBase, rutCol, rut);
+  pathCol = mix(pathCol, crownCol, crown * 0.55);
+  // Fine gravel grit (~0.11 m cells, low contrast)
+  vec2 uvGrit = wPos * 9.0;
+  float gritHash = terrainHash21(floor(uvGrit), uTerrainSeed + 277.0);
+  float gritDot = (1.0 - smoothstep(0.18, 0.30, length(fract(uvGrit) - 0.5))) * step(0.72, gritHash);
+  pathCol += vec3((gritHash - 0.45) * 0.10 * gritDot);
+  // Damp dark seam where the bed meets the grass
+  float seam = smoothstep(rdHw - 0.55, rdHw - 0.05, dj) * (1.0 - smoothstep(rdHw + 0.05, rdHw + 0.55, dj));
+  pathCol = mix(pathCol, pathCol * vec3(0.78, 0.74, 0.70), seam * 0.6);
+  col = mix(col, pathCol, pathBed);
+  // Trampled dry-grass shoulder feathering into the meadow
+  float shoulderNoise = 0.6 + 0.4 * terrainNoise2D(wPos * 1.7, uTerrainSeed + 281.0);
+  vec3 trampled = mix(col, vec3(0.335, 0.300, 0.150), 0.55);
+  col = mix(col, trampled, pathShoulder * 0.55 * shoulderNoise);
+
+  // POI courtyards (vertex-colour dirt that is not the path): dust variation + the same fine grit
+  float yardMask = dirtMask * (1.0 - pathBed) * (1.0 - pathShoulder * 0.5);
+  float yardNoise = terrainNoise2D(wPos * 0.88 + vec2(11.2, -14.7), uTerrainSeed + 211.0);
+  vec3 yardDust = col * (0.90 + 0.22 * yardNoise) + vec3(0.020, 0.016, 0.010);
+  col = mix(col, yardDust, yardMask * 0.80);
+  col += vec3((gritHash - 0.45) * 0.08 * gritDot * yardMask);
 
   // =========================================================================
   // STEEP ROCK CRAGS: Slate grey stone with subtle moss runoffs

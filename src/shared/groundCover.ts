@@ -718,15 +718,16 @@ export function buildGroundCoverField(
           const glade = smoothstep(2.2, 6.0, tq[0]!);
           const open = Math.max(clearing, yard);
           const shade = Math.min(1, tq[1]! / 3.5) * (1 - 0.65 * open);
-          // Road: no cover on the walking strip, thin on the dirt, lush verge 1.2–5 m.
-          const roadMul = 0.40 + 0.60 * smoothstep(GROUND_COVER_ROAD_STRIP, 2.2, rd);
-          const verge = 1 - smoothstep(0, 1.1, Math.abs(rd - 2.8) - 0.9);
+          // Road: no cover on the walking strip, almost bare on the trampled dirt, lush verge 1.5–5 m.
+          const roadMul = 0.12 + 0.88 * smoothstep(GROUND_COVER_ROAD_STRIP, 3.0, rd);
+          const verge = 1 - smoothstep(0, 1.1, Math.abs(rd - 3.2) - 0.9);
 
-          // Patchy: lush meadows vs. sparse forest floor (never fully bare: floor 0.14).
-          // Walkable open ground (glades, POI yards, road verges) gets the most.
-          let density = (0.26 + 0.74 * (0.35 * lush + 0.65 * lush * lush)) * (1 - 0.45 * shade);
-          density += 0.55 * clearing + 0.45 * yard + 0.38 * verge + 0.32 * glade;
-          density = Math.min(1.35, density) * roadMul * borderTaper;
+          // Thick meadow everywhere (floor 0.5), only mildly thinner under dense tree shade.
+          // Walkable open ground (glades, road verges) gets the most; POI yards (in front of the
+          // cabins) are trodden bare so loot/doors stay readable.
+          let density = (0.50 + 0.50 * (0.35 * lush + 0.65 * lush * lush)) * (1 - 0.22 * shade);
+          density += 0.45 * clearing + 0.38 * verge + 0.32 * glade;
+          density = Math.min(1.35, density) * roadMul * borderTaper * (1 - 0.85 * yard);
           if (accept * 1.35 >= density) continue;
 
           // Shady forest floor: some clumps become small ferns instead of grass.
