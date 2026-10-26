@@ -67,7 +67,9 @@ export class AudioSys {
     if (!c) return null;
     if (!pos) return this.master;
     const p = c.createPanner();
-    p.panningModel = 'HRTF';
+    // Har bir otish/qadam uchun yangi panner yaratiladi; HRTF konvolyutsiyasi katta janglarda juda qimmat
+    // (sekundiga o'nlab tugun) — equalpower deyarli bir xil fazoviy his beradi va CPU ni band qilmaydi.
+    p.panningModel = 'equalpower';
     p.distanceModel = 'inverse';
     p.refDistance = 4;
     p.maxDistance = 250;
@@ -97,7 +99,10 @@ export class AudioSys {
     g.gain.exponentialRampToValueAtTime(gain, t0 + attack);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     src.connect(f).connect(g).connect(d);
-    src.start(t0, Math.random() * 1.5);
+    // Shovqin buferi 2 s: boshlanish ofseti shunday tanlanadiki, tovush davomiyligi (dur) buferga sig'sin,
+    // aks holda uzun dumli ovozlar (portlash, snayper) bufer tugashi bilan kesilib qolardi.
+    const maxOffset = Math.max(0, src.buffer!.duration - dur - 0.05);
+    src.start(t0, Math.random() * maxOffset);
     src.stop(t0 + dur + 0.05);
   }
 

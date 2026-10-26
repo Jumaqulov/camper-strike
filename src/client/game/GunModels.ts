@@ -40,6 +40,14 @@ const scopeLens = new THREE.MeshStandardMaterial({
   emissive: '#0d7a6b',
   emissiveIntensity: 0.85,
 });
+// Modul darajasidagi materiallar barcha procedural qurollar/granatalar/gilzalar o'rtasida umumiy —
+// tushgan qurol yoki granata sahnadan olib tashlanganda dispose qilinmasligi kerak.
+for (const m of [
+  receiverDark, receiverSteel, barrelSteel, chromeMat, brassMat, walnutMat, walnutDark,
+  polymerBlack, oliveChassis, shellRed, sightRed, sightGreen, scopeLens,
+]) {
+  m.userData.sharedAsset = true;
+}
 
 export interface GunModel {
   group: THREE.Group;

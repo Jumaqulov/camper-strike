@@ -42,7 +42,7 @@ class ParticlePool {
     this.maxLife[i] = life;
   }
 
-  update(dt: number) {
+  update(dt: number, groundAt?: (x: number, z: number) => number) {
     for (let i = 0; i < this.count; i++) {
       this.life[i] -= dt;
       if (this.life[i] <= 0) {
@@ -63,8 +63,10 @@ class ParticlePool {
       this.pos[j] += this.vel[j] * dt;
       this.pos[j + 1] += this.vel[j + 1] * dt;
       this.pos[j + 2] += this.vel[j + 2] * dt;
-      if (this.pos[j + 1] < 0.02) {
-        this.pos[j + 1] = 0.02;
+      // Yer sathi relyefli xaritalarda (forest_square) y=0 emas — haqiqiy balandlikni olamiz
+      const floorY = (groundAt ? groundAt(this.pos[j], this.pos[j + 2]) : 0) + 0.02;
+      if (this.pos[j + 1] < floorY) {
+        this.pos[j + 1] = floorY;
         this.vel[j] *= 0.5;
         this.vel[j + 1] *= -0.3;
         this.vel[j + 2] *= 0.5;
@@ -131,6 +133,8 @@ export class Effects {
   private fireGeo = new THREE.SphereGeometry(1, 16, 12);
   private boomLight: THREE.PointLight;
   private boomT = 0;
+  /** Xarita relyefi balandligi (x, z) → y. Berilmasa yer y=0 deb olinadi (dust_arena). */
+  groundAt: ((x: number, z: number) => number) | null = null;
 
   constructor(private scene: THREE.Scene) {
     const dot = radialTexture('rgba(255,255,255,1)', 'rgba(255,255,255,0)');
@@ -353,9 +357,10 @@ export class Effects {
   }
 
   update(dt: number): void {
-    this.sparks.update(dt);
-    this.blood.update(dt);
-    this.debris.update(dt);
+    const groundAt = this.groundAt ?? undefined;
+    this.sparks.update(dt, groundAt);
+    this.blood.update(dt, groundAt);
+    this.debris.update(dt, groundAt);
 
     for (let i = this.tracers.length - 1; i >= 0; i--) {
       const t = this.tracers[i];
@@ -408,8 +413,9 @@ export class Effects {
       sh.mesh.rotation.x += sh.rotVel.x * dt;
       sh.mesh.rotation.y += sh.rotVel.y * dt;
       sh.mesh.rotation.z += sh.rotVel.z * dt;
-      if (sh.mesh.position.y < 0.025) {
-        sh.mesh.position.y = 0.025;
+      const shellFloor = (groundAt ? groundAt(sh.mesh.position.x, sh.mesh.position.z) : 0) + 0.025;
+      if (sh.mesh.position.y < shellFloor) {
+        sh.mesh.position.y = shellFloor;
         sh.vel.y = -sh.vel.y * 0.42;
         sh.vel.x *= 0.62;
         sh.vel.z *= 0.62;

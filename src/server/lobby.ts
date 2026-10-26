@@ -160,7 +160,7 @@ export class Lobby {
     socket.on('input', (msg: PlayerInputCmd | PlayerInputBatchMsg) => room?.onInput(socket.id, msg));
     socket.on('state', (s: ClientState) => room?.onState(socket.id, s));
     socket.on('shoot', (m: ShootMsg) => room?.onShoot(socket.id, m));
-    socket.on('reload', () => room?.onReload(socket.id));
+    socket.on('reload', (data?: { weapon?: unknown }) => room?.onReload(socket.id, data));
     socket.on('grenade', (d: { dir: { x: number; y: number; z: number } }) => room?.onGrenade(socket.id, d));
     socket.on('container:open', (req: ContainerOpenReq, ack?: Ack<ContainerOpenAck>) =>
       room?.onContainerOpen(socket.id, req, ack),

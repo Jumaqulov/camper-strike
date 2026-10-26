@@ -124,6 +124,9 @@ const stylizedMaterials: Record<string, THREE.MeshStandardMaterial> = {
   }),
 };
 
+// Barcha stilizatsiyalangan materiallar umumiy kesh: tushgan qurol/granata o'chganda dispose qilinmasin
+for (const m of Object.values(stylizedMaterials)) m.userData.sharedAsset = true;
+
 const fallbackCustomMaterials = new Map<string, THREE.MeshStandardMaterial>();
 
 function resolveStylizedMaterial(rawMat: THREE.Material | undefined): THREE.MeshStandardMaterial {
@@ -147,6 +150,7 @@ function resolveStylizedMaterial(rawMat: THREE.Material | undefined): THREE.Mesh
     metalness: std ? Math.min(0.42, std.metalness * 0.55) : 0.25,
     roughness: std ? THREE.MathUtils.clamp(std.roughness, 0.38, 0.82) : 0.55,
   });
+  created.userData.sharedAsset = true;
   fallbackCustomMaterials.set(cacheKey, created);
   return created;
 }
@@ -287,6 +291,8 @@ function mergeGeometriesSimple(geometries: THREE.BufferGeometry[]): THREE.Buffer
   merged.setIndex(new THREE.BufferAttribute(indices, 1));
   merged.computeBoundingBox();
   merged.computeBoundingSphere();
+  // Keshdagi umumiy geometriya: tushgan qurol/granata o'chganda dispose qilinmasligi kerak
+  merged.userData.sharedAsset = true;
   return merged;
 }
 

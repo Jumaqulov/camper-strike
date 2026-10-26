@@ -24,6 +24,8 @@ export interface MovementAuthorityStats {
   rejectedLegacyState: number;
   starvationSteps: number;
   speedhackClampedSec: number;
+  /** Tarmoq uzilishidan keyin seq oralig'i qayta sinxronlangan holatlar soni. */
+  stallResyncs: number;
 }
 
 const INITIAL_SIM_CREDIT_SEC = 0.16;
@@ -31,6 +33,9 @@ const MAX_SIM_CREDIT_SEC = 0.24;
 const SIM_CREDIT_REPLENISH_RATE = 1.05;
 const STARVATION_GRACE_SEC = 0.065;
 const MAX_BUFFERED_QUEUE_SIM_SEC = 0.1;
+/** Server tick'i shu vaqtdan uzoqroq kechiksa (GC, taymer stall), yetib olish uchun qo'shimcha budjet beriladi. */
+const SERVER_STALL_THRESHOLD_SEC = 0.1;
+const MAX_SERVER_STALL_CATCHUP_SEC = 0.5;
 
 /**
  * Per-player server-side movement authority.
@@ -56,6 +61,7 @@ export class PlayerMovementAuthority {
     rejectedLegacyState: 0,
     starvationSteps: 0,
     speedhackClampedSec: 0,
+    stallResyncs: 0,
   };
 
   resetForSpawn(spawnId: number): void {
@@ -174,9 +180,18 @@ export class PlayerMovementAuthority {
       }
 
       if (cmd.seq > this.lastQueuedSeq + MAX_INPUT_QUEUE_SIZE) {
-        this.stats.rejectedOutOfOrder++;
-        rejected++;
-        continue;
+        // Tarmoq uzilishi (burst) dan keyin navbat to'lib, lastQueuedSeq orqada qolib ketgan bo'lishi mumkin.
+        // Navbat to'liq bo'shagan bo'lsa, eski kirishlarni yo'qotilgan deb hisoblab, yangi seq ga qayta sinxronlanamiz —
+        // aks holda o'yinchi shu hayot davomida abadiy muzlab qoladi.
+        if (this.queue.length === 0 && cmd.seq > this.lastProcessedSeq) {
+          this.stats.stallResyncs++;
+          this.lastQueuedSeq = cmd.seq - 1;
+          this.lastProcessedSeq = Math.max(this.lastProcessedSeq, cmd.seq - 1);
+        } else {
+          this.stats.rejectedOutOfOrder++;
+          rejected++;
+          continue;
+        }
       }
 
       if (this.queue.length >= MAX_INPUT_QUEUE_SIZE) {
@@ -205,16 +220,23 @@ export class PlayerMovementAuthority {
     serverDt: number,
     world: WorldDefinition,
     canEquipWeapon?: (w: WeaponId | null) => boolean,
+    /** Haqiqiy o'tgan server vaqti (clamp qilinmagan). Server stall'dan keyin yetib olish budjeti uchun. */
+    rawElapsedSec: number = serverDt,
   ): number {
     const safeServerDt = clamp(serverDt, 0.001, 0.1);
+    // Server o'zi kechikkan bo'lsa (GC pauza, Windows taymer stall), halol klientning to'planib qolgan
+    // kirishlari "speedhack" deb tashlanmasligi uchun kechikish miqdoricha qo'shimcha budjet beramiz.
+    const stallCatchup = Number.isFinite(rawElapsedSec)
+      ? clamp(rawElapsedSec - SERVER_STALL_THRESHOLD_SEC, 0, MAX_SERVER_STALL_CATCHUP_SEC)
+      : 0;
     this.simTimeCreditSec = Math.min(
-      MAX_SIM_CREDIT_SEC,
-      this.simTimeCreditSec + safeServerDt * SIM_CREDIT_REPLENISH_RATE,
+      MAX_SIM_CREDIT_SEC + stallCatchup,
+      this.simTimeCreditSec + Math.max(safeServerDt, Math.min(rawElapsedSec || 0, MAX_SERVER_STALL_CATCHUP_SEC)) * SIM_CREDIT_REPLENISH_RATE,
     );
 
     let simTimeUsedThisTick = 0;
     let processedThisTick = 0;
-    const maxTickBudget = Math.min(this.simTimeCreditSec, MAX_SIM_TIME_PER_TICK);
+    const maxTickBudget = Math.min(this.simTimeCreditSec, MAX_SIM_TIME_PER_TICK + stallCatchup);
 
     while (this.queue.length > 0) {
       const cmd = this.queue[0];

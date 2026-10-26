@@ -58,6 +58,9 @@ export interface ServerPlayer extends Body {
   ammo: AmmoState;
   reloadUntil: number;
   reloadWeapon: WeaponId | null;
+  /** Klient hali ishlanmagan qurol almashtirish kirishi bilan birga yuborgan reload so'rovi (shu qurol uchun). */
+  pendingReloadWeapon: WeaponId | null;
+  pendingReloadUntil: number;
   lastShot: number;
   grenades: number;
   lastGrenade: number;
@@ -277,6 +280,7 @@ export class Room {
       weapon: startUnarmed ? null : 'rifle',
       ammo: startUnarmed ? emptyAmmo() : fullAmmo(),
       reloadUntil: 0, reloadWeapon: null, lastShot: 0,
+      pendingReloadWeapon: null, pendingReloadUntil: 0,
       switchUntil: 0,
       grenades: startUnarmed ? 0 : GRENADES_PER_LIFE,
       lastGrenade: 0,
@@ -488,6 +492,10 @@ export class Room {
     p.authority.resetForSpawn(p.spawnId);
     p.spawnTime = this.now();
     resetServerWeaponSwitchState(p);
+    // O'lim paytida boshlangan reload yangi hayotga o'tmasin (aks holda shu qurol bilan otib bo'lmaydi)
+    p.reloadWeapon = null;
+    p.reloadUntil = 0;
+    p.pendingReloadWeapon = null;
     if (p.isBot) {
       p.weapon = 'rifle';
       p.ammo = fullAmmo();
@@ -676,9 +684,42 @@ export class Room {
     return true;
   }
 
-  onReload(id: string): void {
+  onReload(id: string, data?: { weapon?: unknown } | unknown): void {
     const p = this.players.get(id);
-    if (p) this.startReload(p);
+    if (!p) return;
+    const reqWeapon = (data as { weapon?: unknown } | undefined)?.weapon;
+    if (isWeaponId(reqWeapon) && reqWeapon !== p.weapon) {
+      // Klient qurolni almashtirib darhol R bosgan: almashtirish kirishi hali navbatda (keyingi tickda ishlanadi).
+      // Eski qurolni o'qlab qo'ymaslik uchun reload'ni almashtirish ishlangandan keyinga kechiktiramiz.
+      const queue = p.authority.queue;
+      const switchQueued = queue.some((c) => c.weapon === reqWeapon);
+      if (switchQueued) {
+        p.pendingReloadWeapon = reqWeapon;
+        p.pendingReloadUntil = this.now() + 0.5;
+      }
+      return;
+    }
+    this.startReload(p);
+  }
+
+  /** Inson o'yinchining navbatdagi kirishlarini avtoritativ tarzda ishlaydi (qurol almashtirish + kechiktirilgan reload bilan). */
+  private stepHumanAuthority(p: ServerPlayer, dt: number, rawDt: number, t: number): void {
+    const prevW = p.weapon;
+    p.authority.stepAuthoritativeTick(p, dt, this.world, (w) => this.loot.canPlayerUseWeapon(p.id, w), rawDt);
+    if (p.weapon !== prevW) {
+      const nextW = p.weapon;
+      p.weapon = prevW;
+      applyAuthoritativeWeaponSwitch(p, nextW, t, { fromAutoPickup: false });
+      this.loot.syncPlayerFromServerPlayer(p.id, p);
+    }
+    if (p.pendingReloadWeapon) {
+      if (p.weapon === p.pendingReloadWeapon) {
+        p.pendingReloadWeapon = null;
+        this.startReload(p);
+      } else if (t >= p.pendingReloadUntil) {
+        p.pendingReloadWeapon = null;
+      }
+    }
   }
 
   startReload(p: ServerPlayer): void {
@@ -1255,6 +1296,8 @@ export class Room {
     // Haqiqiy o'tgan vaqtni ishlatamiz: kechikishdan keyingi yetib olish tick'lari (~4 ms oraliq)
     // har biriga 1/30 s berilsa, vaqt ikki marta sanalardi (botlar/granatalar tezlashardi).
     const dt = rawDt <= 0 ? 1 / TICK_RATE : Math.min(0.1, rawDt);
+    // Yetib olish budjeti uchun haqiqiy kechikish (stall) ni ham saqlaymiz
+    const rawElapsed = rawDt <= 0 ? dt : rawDt;
     this.lastTick = t;
     this.serverTick++;
 
@@ -1266,14 +1309,7 @@ export class Room {
       }
       for (const p of this.players.values()) {
         if (!p.isBot && p.alive && p.ready && this.survival.canPlayerMove(p.id)) {
-          const prevW = p.weapon;
-          p.authority.stepAuthoritativeTick(p, dt, this.world, (w) => this.loot.canPlayerUseWeapon(p.id, w));
-          if (p.weapon !== prevW) {
-            const nextW = p.weapon;
-            p.weapon = prevW;
-            applyAuthoritativeWeaponSwitch(p, nextW, t, { fromAutoPickup: false });
-            this.loot.syncPlayerFromServerPlayer(p.id, p);
-          }
+          this.stepHumanAuthority(p, dt, rawElapsed, t);
         }
       }
       if (this.survival.getPhase() === 'playing') {
@@ -1296,16 +1332,7 @@ export class Room {
         if (!p.alive && p.ready && t >= p.respawnAt) this.spawn(p);
       }
       for (const p of this.players.values()) {
-        if (!p.isBot && p.alive && p.ready) {
-          const prevW = p.weapon;
-          p.authority.stepAuthoritativeTick(p, dt, this.world, (w) => this.loot.canPlayerUseWeapon(p.id, w));
-          if (p.weapon !== prevW) {
-            const nextW = p.weapon;
-            p.weapon = prevW;
-            applyAuthoritativeWeaponSwitch(p, nextW, t, { fromAutoPickup: false });
-            this.loot.syncPlayerFromServerPlayer(p.id, p);
-          }
-        }
+        if (!p.isBot && p.alive && p.ready) this.stepHumanAuthority(p, dt, rawElapsed, t);
       }
       for (const p of this.players.values()) if (p.brain && p.alive) p.brain.update(dt, t);
       this.updateGrenades(dt, t);
@@ -1314,16 +1341,7 @@ export class Room {
       this.restartMatch();
     } else {
       for (const p of this.players.values()) {
-        if (!p.isBot && p.alive && p.ready) {
-          const prevW = p.weapon;
-          p.authority.stepAuthoritativeTick(p, dt, this.world, (w) => this.loot.canPlayerUseWeapon(p.id, w));
-          if (p.weapon !== prevW) {
-            const nextW = p.weapon;
-            p.weapon = prevW;
-            applyAuthoritativeWeaponSwitch(p, nextW, t, { fromAutoPickup: false });
-            this.loot.syncPlayerFromServerPlayer(p.id, p);
-          }
-        }
+        if (!p.isBot && p.alive && p.ready) this.stepHumanAuthority(p, dt, rawElapsed, t);
       }
       for (const p of this.players.values()) if (p.brain && p.alive) p.brain.update(dt, t);
     }

@@ -362,6 +362,8 @@ export class Game {
   private inventorySnap: PlayerInventorySnap | null = null;
   private lootReqSeq = 0;
   private lastPhase = 'playing';
+  /** Survival `ended` fazasida server harakatni qabul qilmaydi — klient ham bashorat qilmasligi kerak. */
+  private movementFrozen = false;
   private sbNext = 0;
   private sbShown = false;
   private netHandlers: [string, AnyFn][] = [];
@@ -440,6 +442,7 @@ export class Game {
     this.world = buildWorld(this.scene, this.worldDef, settings.quality);
     this.applyQualityRendererSettings(settings.quality);
     this.fx = new Effects(this.scene);
+    this.fx.groundAt = (x, z) => sampleTerrainHeight(this.worldDef.terrain, x, z);
     this.vm = new ViewModel(aspect);
     this.myModel = new Stickman(colorFor('red', this.myId));
     const initialWeapon: WeaponId | null = this.lootPreview ? null : 'rifle';
@@ -1721,13 +1724,20 @@ export class Game {
       if (inp.justPressed('KeyV')) this.thirdPerson = !this.thirdPerson;
     }
 
-    if (me.alive) {
+    // Forest Survival: raund tugagach server kirishlarni rad etadi (canPlayerMove=false). Klient ham harakatni
+    // to'xtatishi kerak, aks holda bashorat serverdan uzoqlashib "ko'rinmas devor" / rubber-band paydo bo'ladi.
+    const frozen = me.alive && this.isSurvival && this.match?.phase === 'ended';
+    if (frozen !== this.movementFrozen) {
+      this.movementFrozen = frozen;
+      if (frozen) me.prediction.clear();
+    }
+
+    if (me.alive && !frozen) {
       if (active) {
         const zoomK = me.scoped ? WEAPONS.sniper.zoomFov! / this.fov : 1;
         const k = 0.0022 * this.settings.sens * zoomK;
         me.yaw -= inp.mouseDX * k;
         me.pitch = clamp(me.pitch - inp.mouseDY * k, -1.55, 1.55);
-        this.handleWeapons(t);
       }
       if (import.meta.env.DEV && this.devSyntheticInput) {
         if (this.devSyntheticInput.yaw !== undefined) me.yaw = this.devSyntheticInput.yaw;
@@ -1744,6 +1754,9 @@ export class Game {
       if (!(import.meta.env.DEV && window.__DEV_PLAYER_POSE_LOCK__)) {
         me.move(dt, fwd, right, jump, walk);
       }
+      // Qurol mantiqi harakat kirishi yozilgandan KEYIN: otish paytida server joriy kadr yaw/pitch ini ko'rsin
+      // (aks holda tez "flick" otishlar aim-cone tekshiruvidan o'tmay rad etiladi).
+      if (active) this.handleWeapons(t);
       if (!wasGround && me.body.onGround && vyBefore < -6) this.audio.land(Math.min(0.6, -vyBefore / 30));
       if (me.body.onGround && me.speedH() > WALK_SPEED + 0.5) {
         this.stepTimer -= dt;
@@ -1775,7 +1788,7 @@ export class Game {
     this.sendAcc += dt;
     if (this.sendAcc >= SEND_INTERVAL) {
       this.sendAcc %= SEND_INTERVAL;
-      if (me.alive) this.sendInput();
+      if (me.alive && !frozen) this.sendInput();
     }
 
     this.updateLootInteraction();
@@ -1931,6 +1944,10 @@ export class Game {
     WEAPON_SLOTS.forEach((_w, i) => {
       if (inp.justPressed('Digit' + (i + 1))) slot = i;
     });
+    // Stage 06: ochiq konteyner paneli ko'rsatilayotganda [1]-[4] tugmalari panelda yozilganidek buyumni oladi
+    if (slot >= 0 && !notPlaying && this.lootUi.getActiveContainerId() && this.lootUi.triggerSlotPickup(slot)) {
+      return;
+    }
     if (inp.wheel !== 0) {
       const owned = WEAPON_SLOTS.filter((w) => me.ownsWeapon(w));
       if (owned.length > 0) {
@@ -2003,7 +2020,10 @@ export class Game {
   private beginReloadFx() {
     if (!this.me.weapon) return;
     const def = WEAPONS[this.me.weapon];
-    this.socket.emit('reload');
+    // Avval navbatdagi kirishlarni (jumladan qurol almashtirishni) yuboramiz, so'ng qaysi qurol o'qlanayotganini aniq aytamiz —
+    // aks holda server hali eski qurolni ushlab turgan bo'lib, noto'g'ri qurolni o'qlab qo'yadi.
+    this.sendInput();
+    this.socket.emit('reload', { weapon: this.me.weapon });
     this.vm.startReload(def.reloadTime);
     this.audio.reload(def.reloadTime);
   }
