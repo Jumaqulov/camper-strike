@@ -1897,11 +1897,13 @@ export class Game {
       // (aks holda tez "flick" otishlar aim-cone tekshiruvidan o'tmay rad etiladi).
       if (active) this.handleWeapons(t);
       if (!wasGround && me.body.onGround && vyBefore < -6) this.audio.land(Math.min(0.6, -vyBefore / 30));
-      if (me.body.onGround && me.speedH() > WALK_SPEED + 0.5) {
+      if (me.body.onGround && me.speedH() > 1.0) {
         this.stepTimer -= dt;
         if (this.stepTimer <= 0) {
-          this.stepTimer = 0.36;
-          this.audio.footstep(undefined, 0.16);
+          // Sprintda qadamlar tezroq va balandroq, yurishda sekinroq va yumshoqroq
+          const sprinting = me.speedH() > WALK_SPEED + 0.6;
+          this.stepTimer = sprinting ? 0.30 : 0.44;
+          this.audio.footstep(undefined, sprinting ? 0.18 : 0.11);
         }
       } else {
         this.stepTimer = 0.12;
@@ -2265,11 +2267,12 @@ export class Game {
       m.setWeapon(src.weapon);
       m.update(dt, { speed: rem.speed, onGround: src.onGround, pitch: rem.pitch, alive: src.alive, reloading: src.reloading });
       m.updateNameTagDistance(distToCam, src.alive);
-      if (src.alive && src.onGround && rem.speed > WALK_SPEED + 0.5) {
+      if (src.alive && src.onGround && rem.speed > 1.0) {
         rem.stepTimer -= dt;
         if (rem.stepTimer <= 0) {
-          rem.stepTimer = 0.36;
-          this.audio.footstep({ x: rem.pos.x, y: rem.pos.y, z: rem.pos.z }, 0.55);
+          const sprinting = rem.speed > WALK_SPEED + 0.6;
+          rem.stepTimer = sprinting ? 0.30 : 0.44;
+          this.audio.footstep({ x: rem.pos.x, y: rem.pos.y, z: rem.pos.z }, sprinting ? 0.6 : 0.38);
         }
       }
     }

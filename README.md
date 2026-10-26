@@ -94,7 +94,7 @@ npm run build       # Production uchun dist/ papkasiga yig'ish
 | `O'ng tugma (RMB)` | Snayper optik pritseli (`Zoom`) |
 | `V` | **3-shaxs / 1-shaxs kamerasini almashtirish** |
 | `Space` | Sakrash |
-| `Shift` | Sekin (tovushsiz) yurish |
+| `Shift` | Sprint (oldinga tez yugurish; yon va orqaga yurish sekinroq) |
 | `R` | Qayta o'qlash (`Reload`) |
 | `1–4`, `G'ildirak`, `Q` | Qurol almashtirish (`Q` — oldingi qurol) |
 | `G` | Granata uloqtirish |

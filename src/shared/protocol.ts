@@ -228,7 +228,7 @@ export interface PlayerInputCmd {
   moveRight: number;
   /** Jump key state. */
   jump: boolean;
-  /** Walk modifier key state (Shift). */
+  /** Shift modifier state = SPRINT (oldinga tez yugurish). Protokol mosligi uchun maydon nomi `walk` saqlangan. */
   walk: boolean;
   /** Sniper scope state (reduces move speed when weapon === 'sniper'). */
   scoped: boolean;

@@ -1,4 +1,4 @@
-import { RUN_SPEED, WALK_SPEED } from './constants';
+import { BACKPEDAL_SPEED_MUL, RUN_SPEED, SPRINT_MIN_FORWARD, STRAFE_SPEED_MUL, WALK_SPEED } from './constants';
 import { clamp } from './math';
 import { applyWorldMovement, type Body, type WorldMovementOptions } from './physics';
 import type { PlayerInputCmd } from './protocol';
@@ -205,17 +205,21 @@ export function computeWishVelocity(
   cmd: Pick<PlayerInputCmd, 'moveForward' | 'moveRight' | 'walk' | 'scoped' | 'weapon' | 'yaw'>,
 ): { wx: number; wz: number; maxSpeed: number } {
   const speedMul = cmd.weapon ? (WEAPONS[cmd.weapon]?.speedMul ?? 1) : UNARMED_SPEED_MUL;
-  const maxSpeed =
-    (cmd.walk ? WALK_SPEED : RUN_SPEED) *
-    speedMul *
-    (cmd.scoped && cmd.weapon === 'sniper' ? 0.55 : 1);
+  const scopedMul = cmd.scoped && cmd.weapon === 'sniper' ? 0.55 : 1;
 
   const fwd = clamp(cmd.moveForward, -1, 1);
   const right = clamp(cmd.moveRight, -1, 1);
   const inputMag = Math.min(1, Math.hypot(fwd, right));
   if (inputMag <= 0) {
-    return { wx: 0, wz: 0, maxSpeed };
+    return { wx: 0, wz: 0, maxSpeed: WALK_SPEED * speedMul * scopedMul };
   }
+
+  // Yo'nalishga bog'liq tezlik: oldinga 1.0, yon tomonga STRAFE, orqaga BACKPEDAL (diagonal — oraliq).
+  const f = fwd / Math.hypot(fwd, right); // -1 (orqaga) .. +1 (oldinga)
+  const dirMul = f >= 0 ? STRAFE_SPEED_MUL + (1 - STRAFE_SPEED_MUL) * f : STRAFE_SPEED_MUL + (BACKPEDAL_SPEED_MUL - STRAFE_SPEED_MUL) * -f;
+  // Sprint (Shift) faqat asosan oldinga harakatda; orqaga/yon sprint yo'q.
+  const sprinting = cmd.walk && f > SPRINT_MIN_FORWARD;
+  const maxSpeed = (sprinting ? RUN_SPEED : WALK_SPEED) * dirMul * speedMul * scopedMul;
 
   const s = Math.sin(cmd.yaw);
   const c = Math.cos(cmd.yaw);

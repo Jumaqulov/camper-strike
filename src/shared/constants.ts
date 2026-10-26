@@ -13,8 +13,16 @@ export const STEP_HEIGHT = 0.55;
 // Harakat
 export const GRAVITY = 22;
 export const JUMP_SPEED = 7.6;
+/** Sprint (Shift bosilganda, asosan oldinga) tezligi, m/s. */
 export const RUN_SPEED = 6.5;
-export const WALK_SPEED = 3.0;
+/** Oddiy yurish (Shift'siz) tezligi, m/s. */
+export const WALK_SPEED = 4.2;
+/** Yon tomonga (A/D) yurish tezligi oldinga nisbatan. */
+export const STRAFE_SPEED_MUL = 0.82;
+/** Orqaga (S) yurish tezligi oldinga nisbatan. */
+export const BACKPEDAL_SPEED_MUL = 0.68;
+/** Sprint faqat harakat yo'nalishining oldinga ulushi shu qiymatdan katta bo'lsa ishlaydi. */
+export const SPRINT_MIN_FORWARD = 0.3;
 export const GROUND_ACCEL = 70;
 export const AIR_ACCEL = 14;
 
