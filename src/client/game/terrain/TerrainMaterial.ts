@@ -166,11 +166,13 @@ float terrainNoise2D(vec2 p, float s) {
   float strawFactor = smoothstep(0.50, 0.76, nStrawMacro) * riseFactor;
   vec3 strawCol = vec3(0.260, 0.250, 0.125);
 
-  vec3 grassMacroCol = col;
-  grassMacroCol = mix(grassMacroCol, sunlitGlade, gladeFactor * 0.80);
-  grassMacroCol = mix(grassMacroCol, dampMoss, hollowFactor * 0.75);
-  grassMacroCol = mix(grassMacroCol, humusCol, humusFactor * 0.70);
-  grassMacroCol = mix(grassMacroCol, strawCol, strawFactor * 0.45);
+  // Lush meadow base: a touch more saturated green so the grass blades above read as one carpet
+  vec3 lushBase = col * vec3(0.90, 1.12, 0.80) + vec3(-0.010, 0.022, -0.010);
+  vec3 grassMacroCol = mix(col, lushBase, 0.65);
+  grassMacroCol = mix(grassMacroCol, sunlitGlade, gladeFactor * 0.70);
+  grassMacroCol = mix(grassMacroCol, dampMoss, hollowFactor * 0.70);
+  grassMacroCol = mix(grassMacroCol, humusCol, humusFactor * 0.38);
+  grassMacroCol = mix(grassMacroCol, strawCol, strawFactor * 0.28);
 
   col = mix(col, grassMacroCol, grassMask);
 
@@ -193,9 +195,10 @@ float terrainNoise2D(vec2 p, float s) {
   float nEarthA = terrainNoise2D(wPos * 0.92 + vec2(37.1, -19.4), uTerrainSeed + 179.0);
   float nEarthB = terrainNoise2D(wPos * 2.20 + vec2(-21.5, 53.2), uTerrainSeed + 183.0);
   float earthNoise = nEarthA * 0.68 + nEarthB * 0.32;
-  float earthPeeks = smoothstep(0.42, 0.72, earthNoise) * grassMask * (1.0 - gladeFactor * 0.30);
+  // Rare, soft loam peeks only in shaded humus zones (meadows stay green)
+  float earthPeeks = smoothstep(0.56, 0.80, earthNoise) * grassMask * (0.25 + 0.75 * humusFactor) * (1.0 - gladeFactor * 0.50);
   vec3 dampLoamCol = vec3(0.190, 0.130, 0.070);
-  col = mix(col, dampLoamCol, earthPeeks * 0.85);
+  col = mix(col, dampLoamCol, earthPeeks * 0.55);
 
   // Pine needle speckling & clusters (~0.2m individual needles within mezo clusters)
   float needleCluster = terrainNoise2D(wPos * 0.40 + vec2(-51.0, 29.0), uTerrainSeed + 193.0);
@@ -212,8 +215,10 @@ float terrainNoise2D(vec2 p, float s) {
   float needleThreshold = mix(0.74, 0.40, needleClusterDense);
   float needleMask = step(distPerp, 0.12) * step(distAlong, 0.42) * step(needleThreshold, needleHash);
   needleMask *= (1.0 - rockMask * 0.90);
+  // Needles belong under the trees (humus zones) and on bare dirt, not scattered over open meadows
+  needleMask *= clamp(0.15 + 0.85 * humusFactor + dirtMask * 0.6, 0.0, 1.0);
   vec3 needleColor = vec3(0.245, 0.148, 0.068) + (needleHash - 0.5) * 0.042;
-  col = mix(col, needleColor, needleMask * 0.85);
+  col = mix(col, needleColor, needleMask * 0.70);
 
   // =========================================================================
   // MICRO LAYER (0.1m - 0.5m): Subtle fine soil grit and pebble flecks
@@ -230,9 +235,10 @@ float terrainNoise2D(vec2 p, float s) {
   float pebbleHash = terrainHash21(pCell, uTerrainSeed + 59.0);
   float pebbleDist = length(pFrac);
   float isPebble = (1.0 - smoothstep(0.14, 0.24, pebbleDist)) * step(0.65, pebbleHash);
-  float pebbleLuma = isPebble * (pebbleHash - 0.5) * 0.22 * (dirtMask * 1.35 + rockMask * 0.95 + earthPeeks * 0.95 + 0.30);
+  // Pebble flecks only where there is bare ground (dirt roads, yards, rock, loam) — no white dots on grass
+  float pebbleLuma = isPebble * (pebbleHash - 0.5) * 0.20 * (dirtMask * 1.25 + rockMask * 0.95 + earthPeeks * 0.80);
 
-  col += vec3(soilGrit) * (dirtMask * 1.30 + grassMask * 0.90 + rockMask * 0.95);
+  col += vec3(soilGrit) * (dirtMask * 1.30 + grassMask * 0.45 + rockMask * 0.95);
   col += vec3(pebbleLuma);
 
   // =========================================================================

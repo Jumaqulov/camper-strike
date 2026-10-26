@@ -68,13 +68,23 @@ export interface GrassQualityPreset {
 /** Quality presets matching Stage 08 requirements. */
 export const GRASS_QUALITY_PRESETS: Record<QualityLevel, GrassQualityPreset> = {
   high: { density: 1.0, grassDist: 75, flowerDist: 65, fernDist: 80, wind: 1.0, receiveShadow: true },
-  medium: { density: 0.65, grassDist: 55, flowerDist: 48, fernDist: 60, wind: 0.7, receiveShadow: false },
-  low: { density: 0.35, grassDist: 35, flowerDist: 30, fernDist: 40, wind: 0.0, receiveShadow: false },
+  medium: { density: 0.8, grassDist: 55, flowerDist: 48, fernDist: 60, wind: 0.7, receiveShadow: false },
+  low: { density: 0.4, grassDist: 35, flowerDist: 30, fernDist: 40, wind: 0.0, receiveShadow: false },
 };
 
 function presetDist(p: GrassQualityPreset, cat: GrassCategory): number {
   return cat === 'grass' ? p.grassDist : cat === 'flower' ? p.flowerDist : p.fernDist;
 }
+
+/**
+ * Masofaviy LOD: o'yinchi atrofidagi `LOD_FULL_DIST` metr ichida barcha o'tlar ko'rsatiladi,
+ * undan keyin ulush chiziqli kamayib `LOD_FAR_FRACTION` gacha tushadi (maydon 5x zich bo'lgani
+ * uchun uzoqdagi 0.22 ulush ham avvalgi asosiy zichlikdan kam emas).
+ */
+const LOD_FULL_DIST = 18;
+const LOD_FULL_DIST2 = LOD_FULL_DIST * LOD_FULL_DIST;
+const LOD_FALLOFF_INV = 1 / 22; // 18 m → 40 m oralig'ida 1.0 → 0.0 (floor bilan 0.22)
+const LOD_FAR_FRACTION = 0.22;
 
 interface VariantBatch {
   variantId: GrassVariantId;
@@ -446,8 +456,8 @@ export function createGrassRenderer(
         const start = b.chunkStart[ci];
         let out = b.visible;
 
-        if (far2 <= d2) {
-          // Whole chunk within draw radius: bulk copy slice
+        if (far2 <= d2 && far2 <= LOD_FULL_DIST2) {
+          // Whole chunk within draw radius AND inside the full-density ring: bulk copy slice
           const s16 = start * 16;
           const e16 = (start + take) * 16;
           let o16 = out * 16;
@@ -460,12 +470,24 @@ export function createGrassRenderer(
 
           out += take;
         } else {
-          // Boundary chunk: per-instance circular radius test
+          // Boundary / mid-distance chunk: per-instance radius test + distance LOD.
+          // Instances inside a chunk are a shuffled uniform sample, so "rank < fraction(distance)"
+          // thins the meadow smoothly with distance (dense around the player, sparse far away)
+          // without popping whole chunks.
+          const invN = 1 / n;
           for (let i = start; i < start + take; i++) {
             const m = i * 16;
             const ix = src[m + 12]! - cx;
             const iz = src[m + 14]! - cz;
-            if (ix * ix + iz * iz > d2) continue;
+            const id2 = ix * ix + iz * iz;
+            if (id2 > d2) continue;
+            if (id2 > LOD_FULL_DIST2) {
+              const rank = (i - start) * invN;
+              const dist = Math.sqrt(id2);
+              let frac = 1 - (dist - LOD_FULL_DIST) * LOD_FALLOFF_INV;
+              if (frac < LOD_FAR_FRACTION) frac = LOD_FAR_FRACTION;
+              if (rank >= frac) continue;
+            }
 
             let o16 = out * 16;
             for (let j = m; j < m + 16; j++) dst[o16++] = src[j]!;

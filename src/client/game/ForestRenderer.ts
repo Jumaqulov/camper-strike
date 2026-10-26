@@ -63,6 +63,9 @@ import type { WorldHandles } from './World';
 import type { ForestSquareWorldDefinition } from '../../shared/forestSquare';
 import { buildForestSquareGroundCover } from '../../shared/groundCover';
 import { createGroundCoverRenderer, type GroundCoverRendererHandle } from './GroundCoverRenderer';
+
+/** O't maydoni zichlik ko'paytiruvchisi (faqat vizual; server/gameplay hash ga ta'sir qilmaydi). */
+const GRASS_FIELD_DENSITY_SCALE = 6;
 import { createEnhancedTerrainMaterial } from './terrain/TerrainMaterial';
 import { buildAnnularSkirtGeometry } from './terrain/skirtGeometry';
 import { preloadGrassAssets, onGrassAssetsReady } from './grass/GrassAssetRegistry';
@@ -1344,7 +1347,9 @@ export function buildForestSampleScene(
   let groundCover: GroundCoverRendererHandle | null = null;
   if (isForestSquare && 'roadNetwork' in world) {
     try {
-      const field = buildForestSquareGroundCover(world as ForestSquareWorldDefinition);
+      // Qalin maysazor: asosiy kalibrlangan zichlikdan 5 barobar ko'p nomzod; renderer o'yinchi atrofida
+      // to'liq, uzoqda masofaga qarab siyraklashtirib ko'rsatadi (uchburchak byudjeti saqlanadi).
+      const field = buildForestSquareGroundCover(world as ForestSquareWorldDefinition, GRASS_FIELD_DENSITY_SCALE);
       groundCover = createGroundCoverRenderer(field, initialQuality, world.publicLayoutSeed);
       scene.add(groundCover.group);
     } catch (err) {

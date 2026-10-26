@@ -952,11 +952,15 @@ export function getForestSquareGroundCoverInput(
   };
 }
 
-export function buildForestSquareGroundCover(world: ForestSquareWorldDefinition): GroundCoverField {
-  const key = `${world.publicLayoutSeed}:${world.gameplayHash}`;
+export function buildForestSquareGroundCover(
+  world: ForestSquareWorldDefinition,
+  /** Klient zichlik ko'paytiruvchisi (renderer masofaga qarab siyraklashtiradi); 1 = kalibrlangan asosiy zichlik. */
+  densityScale = 1,
+): GroundCoverField {
+  const key = `${world.publicLayoutSeed}:${world.gameplayHash}:${densityScale}`;
   const cached = groundCoverCache.get(key);
   if (cached) return cached;
-  const field = buildGroundCoverField(getForestSquareGroundCoverInput(world));
+  const field = buildGroundCoverField(getForestSquareGroundCoverInput(world), { densityScale });
   if (groundCoverCache.size >= 4) {
     const oldest = groundCoverCache.keys().next().value;
     if (oldest !== undefined) groundCoverCache.delete(oldest);
