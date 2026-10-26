@@ -1,0 +1,68 @@
+[06:19:40.630]   [check] prod.apiInfo(same port)                          PASS — {"ips":["192.168.0.8","192.168.184.1"],"port":3600}
+[06:19:40.630]   [check] prod.index.html(dist bundle, no @vite/client)    PASS
+[06:19:40.630]   [check] prod.characterGlb.served                         PASS — 200 610972 B
+[06:19:40.630]   [check] prod.noViteDevEndpoint                           PASS — /@vite/client → 404
+[06:19:41.316] == TDM (2 clients) ==
+[06:19:42.052]   [focus] A tdm.lobbyA #1 VALID 598 ms
+[06:19:42.674]   [focus] B tdm.lobbyB #1 VALID 542 ms
+[06:19:46.254]   [focus] A tdm.create #1 VALID 2798 ms
+[06:19:48.751]   [focus] B tdm.join #1 VALID (warn: physical OS input during interval (user mouse/keyboard)) 2324 ms
+[06:19:53.756]   [check] tdm.welcome.received                             PASS
+[06:19:53.756]   [check] tdm.sameRoomId                                   PASS — r1sjh6 / r1sjh6
+[06:19:53.756]   [check] tdm.gameplayHash                                 PASS — 670a9c21f0565c94 / 670a9c21f0565c94
+[06:19:53.756]   [check] tdm.worldVersion                                 PASS — 2 / 2
+[06:19:53.756]   [check] tdm.seeEachOther(snapshots)                      PASS
+[06:19:53.757]   [check] tdm.devHooksAbsent.A                             INFO — {"tools":"undefined","cam":"undefined","lock":"undefined","devStats":"false"}
+[06:19:54.625]   look calibration B: -0.0022009265358979326 rad/px (yaw -2.892 → 2.951)
+[06:19:55.113]   [focus] B tdm.B.lock+calibrate #1 VALID 1204 ms
+[06:19:55.285]   [focus] A tdm.A.lock #1 VALID 0 ms
+[06:19:55.286]   [check] tdm.pointerLock(real click, foreground window)   PASS — A=1 urinish, B=1 urinish
+[06:19:55.286]   [check] tdm.mouseLook(real mousemove)                    PASS — rad/px=-0.0022009265358979326
+[06:19:57.717]   open lane A yaw=-3.14 free≈0.0 m
+[06:19:58.834]   [shot] docs/stage08b-prod-smoke/_debug/shots/prod_tdm_A_3p_run.png
+[06:20:00.418]   [focus] A tdm.run #1 VALID 5122 ms
+[06:20:00.418]   [check] tdm.run≈6.5 m/s (B sees A, server snap)          PASS — 6.05 m/s
+[06:20:00.429]   open lane A yaw=-3.14 free≈0.0 m
+[06:20:01.530]   [shot] docs/stage08b-prod-smoke/_debug/shots/prod_tdm_A_3p_walk.png
+[06:20:03.119]   [focus] A tdm.walk #1 VALID 2692 ms
+[06:20:03.119]   [check] tdm.walk≈3.0 m/s (B sees A, server snap)         PASS — 2.79 m/s
+[06:20:04.534]   [shot] docs/stage08b-prod-smoke/_debug/shots/prod_tdm_A_3p_jump.png
+[06:20:05.035]   [focus] A tdm.jump #1 VALID 1903 ms
+[06:20:05.035]   [check] tdm.jump (B sees A airborne)                     PASS
+[06:20:05.323]   [shot] docs/stage08b-prod-smoke/_debug/shots/prod_tdm_A_3p_idle.png
+[06:20:06.072]   [shot] docs/stage08b-prod-smoke/_debug/shots/prod_tdm_A_1p_idle.png
+[06:20:06.991]   [shot] docs/stage08b-prod-smoke/_debug/shots/prod_tdm_A_1p_run.png
+[06:20:07.439]   [focus] A tdm.A.1p3p #1 VALID 2393 ms
+[06:20:07.439]   [check] tdm.A.ownView.1p3p.shots                         PASS
+[06:20:08.729]   [shot] docs/stage08b-prod-smoke/_debug/shots/prod_tdm_A_3p_rifle.png
+[06:20:09.434]   [shot] docs/stage08b-prod-smoke/_debug/shots/prod_tdm_A_1p_rifle.png
+[06:20:11.140]   [shot] docs/stage08b-prod-smoke/_debug/shots/prod_tdm_A_3p_pistol.png
+[06:20:11.854]   [shot] docs/stage08b-prod-smoke/_debug/shots/prod_tdm_A_1p_pistol.png
+[06:20:13.556]   [shot] docs/stage08b-prod-smoke/_debug/shots/prod_tdm_A_3p_shotgun.png
+[06:20:14.266]   [shot] docs/stage08b-prod-smoke/_debug/shots/prod_tdm_A_1p_shotgun.png
+[06:20:15.971]   [shot] docs/stage08b-prod-smoke/_debug/shots/prod_tdm_A_3p_sniper.png
+[06:20:16.690]   [shot] docs/stage08b-prod-smoke/_debug/shots/prod_tdm_A_1p_sniper.png
+[06:20:17.790]   [focus] A tdm.weapons #1 VALID 10341 ms
+[06:20:17.791]   [check] tdm.4weapons (B sees A weapon via snap)          PASS — {"rifle":"rifle","pistol":"pistol","shotgun":"shotgun","sniper":"sniper"}
+[06:20:33.274] leave A Error: A: element not clickable: #btn-leave
+[06:20:33.752]   [check] prod.devHooksAbsent.A                            PASS — {"tools":"undefined","cam":"undefined","lock":"undefined","devStats":"false"}
+[06:20:33.753]   [check] prod.devHooksAbsent.B                            PASS — {"tools":"undefined","cam":"undefined","lock":"undefined","devStats":"false"}
+[06:20:33.754]   [check] prod.noConsoleErrors.A                           PASS — 0 console, 0 exceptions, 0 log errors
+[06:20:33.754]   [check] prod.noNetworkErrors.A                           PASS — 0
+[06:20:33.754]   [check] prod.websocket.A                                 PASS — ws://127.0.0.1:3600/socket.io/?EIO=4&transport=websocket
+[06:20:33.754]   [check] prod.asset.camperBuddyGlb.A                      PASS — [{"url":"/models/characters/camper_buddy_balanced_rigged.glb","status":200,"fromCache":false,"bytes":611286}]
+[06:20:33.754]   [check] prod.asset.allGlbOk.A                            PASS — 82 responses, 54 distinct GLB
+[06:20:33.754]   [check] prod.webgl.noContextLost.A                       PASS — contextlost=0
+[06:20:33.754]   [check] prod.webgl.noGlErrors.A                          FAIL — 1 GL warnings
+[06:20:33.754]   [check] prod.webgl.hardwareRenderer.A                    PASS — ANGLE (Intel, Intel(R) UHD Graphics 730 (0x0000A782) Direct3D11 vs_5_0 ps_5_0, D3D11)
+[06:20:33.754]   [check] prod.noConsoleErrors.B                           PASS — 0 console, 0 exceptions, 0 log errors
+[06:20:33.754]   [check] prod.noNetworkErrors.B                           PASS — 0
+[06:20:33.754]   [check] prod.websocket.B                                 PASS — ws://127.0.0.1:3600/socket.io/?EIO=4&transport=websocket
+[06:20:33.754]   [check] prod.asset.camperBuddyGlb.B                      PASS — [{"url":"/models/characters/camper_buddy_balanced_rigged.glb","status":200,"fromCache":false,"bytes":611286}]
+[06:20:33.754]   [check] prod.asset.allGlbOk.B                            PASS — 99 responses, 54 distinct GLB
+[06:20:33.754]   [check] prod.webgl.noContextLost.B                       PASS — contextlost=0
+[06:20:33.755]   [check] prod.webgl.noGlErrors.B                          FAIL — 1 GL warnings
+[06:20:33.755]   [check] prod.webgl.hardwareRenderer.B                    PASS — ANGLE (Intel, Intel(R) UHD Graphics 730 (0x0000A782) Direct3D11 vs_5_0 ps_5_0, D3D11)
+[06:20:33.755] SUMMARY {"PASS":32,"INFO":1,"FAIL":2} focus intervals valid 11/11
+[06:20:34.489]   !! A: CDP connection closed
+[06:20:34.489]   !! B: CDP connection closed

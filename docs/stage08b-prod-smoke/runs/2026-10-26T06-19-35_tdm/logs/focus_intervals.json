@@ -1,0 +1,559 @@
+[
+ {
+  "client": "A",
+  "id": "tdm.lobbyA",
+  "attempt": 1,
+  "t0": 1792995581452,
+  "t1": 1792995582050,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792995581485,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792995581751,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792995581799,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792995581902,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792995581967,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 23532,
+    "lastInput": 4259203,
+    "tick": 4259234
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 23532,
+    "lastInput": 4259203,
+    "tick": 4259843
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "tdm.lobbyB",
+  "attempt": 1,
+  "t0": 1792995582072,
+  "t1": 1792995582614,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792995582101,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792995582335,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792995582380,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792995582485,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792995582534,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 2332,
+    "lastInput": 4259843,
+    "tick": 4259859
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 2332,
+    "lastInput": 4259843,
+    "tick": 4260406
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "tdm.create",
+  "attempt": 1,
+  "t0": 1792995582698,
+  "t1": 1792995585496,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792995582767,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792995583050,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792995583134,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792995583418,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792995583467,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792995583551,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792995583635,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 23532,
+    "lastInput": 4260484,
+    "tick": 4260484
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": true
+   },
+   "os": {
+    "fgPid": 23532,
+    "lastInput": 4260484,
+    "tick": 4263421
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "tdm.join",
+  "attempt": 1,
+  "t0": 1792995586271,
+  "t1": 1792995588595,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792995586285,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792995586841,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [
+   "physical OS input during interval (user mouse/keyboard)"
+  ],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 2332,
+    "lastInput": 4264046,
+    "tick": 4264062
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": true
+   },
+   "os": {
+    "fgPid": 2332,
+    "lastInput": 4265406,
+    "tick": 4266531
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "tdm.B.lock+calibrate",
+  "attempt": 1,
+  "t0": 1792995593907,
+  "t1": 1792995595111,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 2332,
+    "lastInput": 4271562,
+    "tick": 4271703
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 2332,
+    "lastInput": 4271562,
+    "tick": 4272906
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "tdm.A.lock",
+  "attempt": 1,
+  "t0": 1792995595284,
+  "t1": 1792995595284,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 23532,
+    "lastInput": 4272906,
+    "tick": 4273078
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 23532,
+    "lastInput": 4272906,
+    "tick": 4273078
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "tdm.run",
+  "attempt": 1,
+  "t0": 1792995595295,
+  "t1": 1792995600417,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 23532,
+    "lastInput": 4273078,
+    "tick": 4273078
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 23532,
+    "lastInput": 4273078,
+    "tick": 4278203
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "tdm.walk",
+  "attempt": 1,
+  "t0": 1792995600426,
+  "t1": 1792995603118,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 23532,
+    "lastInput": 4278218,
+    "tick": 4278218
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 23532,
+    "lastInput": 4278218,
+    "tick": 4280906
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "tdm.jump",
+  "attempt": 1,
+  "t0": 1792995603131,
+  "t1": 1792995605034,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 23532,
+    "lastInput": 4280921,
+    "tick": 4280921
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 23532,
+    "lastInput": 4280921,
+    "tick": 4282828
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "tdm.A.1p3p",
+  "attempt": 1,
+  "t0": 1792995605044,
+  "t1": 1792995607437,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 23532,
+    "lastInput": 4282828,
+    "tick": 4282828
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 23532,
+    "lastInput": 4282828,
+    "tick": 4285234
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "tdm.weapons",
+  "attempt": 1,
+  "t0": 1792995607448,
+  "t1": 1792995617789,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 23532,
+    "lastInput": 4285234,
+    "tick": 4285234
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 23532,
+    "lastInput": 4285234,
+    "tick": 4295578
+   }
+  }
+ }
+]

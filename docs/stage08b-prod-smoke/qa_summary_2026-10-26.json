@@ -1,0 +1,316 @@
+{
+  "stage": "08B-PRODUCTION-SMOKE",
+  "date": "2026-10-26",
+  "host": {
+    "cpu": "Intel(R) Core(TM) i5-14400",
+    "cores": 16,
+    "ramGB": 32,
+    "platform": "win32 10.0.26300"
+  },
+  "gpu": "Intel(R) UHD Graphics 730 (ANGLE D3D11)",
+  "display": "2x 1920x1080 @ 60 Hz",
+  "chrome": "155.0.8059.86",
+  "build": {
+    "bundle": "dist/assets/index-K39zGHOx.js",
+    "glbCount": 54,
+    "camperBuddyGlb": {
+      "sha256": "a898d979d5449a06da66e1b7208cb3a9571d8eed0d3dcbbf77842b3acf9be379",
+      "bytes": 610972
+    }
+  },
+  "gates": {
+    "npmTest": "PASS 262/262",
+    "testPerf": "PASS cold 103.8 ms, warm median 86.0 ms",
+    "typecheck": "PASS",
+    "build": "PASS",
+    "logs": "logs/gates_2026-10-26/"
+  },
+  "runs": {
+    "R1": {
+      "dir": "runs/2026-10-26T06-19-35_tdm",
+      "startedAt": "2026-10-26T06:19:35.312Z",
+      "summary": {
+        "PASS": 32,
+        "INFO": 1,
+        "FAIL": 2
+      },
+      "focus": {
+        "intervals": 11,
+        "valid": 11,
+        "physicalInputWarnings": 1
+      }
+    },
+    "R2": {
+      "dir": "runs/2026-10-26T06-40-08_partial",
+      "startedAt": "2026-10-26T06:40:08.255Z",
+      "summary": {
+        "PASS": 32,
+        "INFO": 3,
+        "FAIL": 1
+      },
+      "fatal": "A window closed (CDP closed) after TDM part",
+      "focus": {
+        "intervals": 11,
+        "valid": 11,
+        "physicalInputWarnings": 1
+      }
+    }
+  },
+  "requirements": [
+    {
+      "id": "1.tdm.twoClientsOneRoom",
+      "status": "PASS",
+      "evidence": {
+        "sameRoomId": {
+          "R1": "PASS",
+          "R2": "PASS"
+        },
+        "gameplayHash": {
+          "R1": "PASS",
+          "R2": "PASS"
+        },
+        "worldVersion": {
+          "R1": "PASS",
+          "R2": "PASS"
+        },
+        "seeEachOther": {
+          "R1": "PASS",
+          "R2": "PASS"
+        },
+        "pointerLock": {
+          "R1": "PASS",
+          "R2": "PASS"
+        },
+        "mouseLook": {
+          "R1": "PASS",
+          "R2": "PASS"
+        }
+      }
+    },
+    {
+      "id": "1.ffa.twoClientsOneRoom",
+      "status": "NOT_TESTED",
+      "reason": "executed in runs whose artifacts were deleted by the next run; no evidence kept"
+    },
+    {
+      "id": "2.forestSurvival",
+      "status": "NOT_TESTED",
+      "reason": "executed in runs whose artifacts were deleted by the next run; no evidence kept",
+      "items": [
+        "containerOpen",
+        "lootPickup",
+        "inventory",
+        "equip",
+        "spectator",
+        "roundReset"
+      ]
+    },
+    {
+      "id": "3.camperBuddy.ownClient.idleWalkRunJump.3p",
+      "status": "PASS",
+      "evidence": [
+        "shots/prod_tdm_A_3p_idle.png",
+        "shots/prod_tdm_A_3p_walk.png",
+        "shots/prod_tdm_A_3p_run.png",
+        "shots/prod_tdm_A_3p_jump.png"
+      ]
+    },
+    {
+      "id": "3.camperBuddy.ownClient.4weapons.1p3p",
+      "status": "PASS",
+      "evidence": [
+        "shots/prod_tdm_A_1p_rifle.png",
+        "shots/prod_tdm_A_3p_rifle.png",
+        "shots/prod_tdm_A_1p_pistol.png",
+        "shots/prod_tdm_A_3p_pistol.png",
+        "shots/prod_tdm_A_1p_shotgun.png",
+        "shots/prod_tdm_A_3p_shotgun.png",
+        "shots/prod_tdm_A_1p_sniper.png",
+        "shots/prod_tdm_A_3p_sniper.png"
+      ]
+    },
+    {
+      "id": "3.camperBuddy.remoteState.run",
+      "status": "PASS",
+      "value": "6.05 m/s",
+      "checks": {
+        "R1": "PASS",
+        "R2": "PASS"
+      }
+    },
+    {
+      "id": "3.camperBuddy.remoteState.walk",
+      "status": "PASS",
+      "value": "2.79 m/s",
+      "checks": {
+        "R1": "PASS",
+        "R2": "PASS"
+      }
+    },
+    {
+      "id": "3.camperBuddy.remoteState.jump",
+      "status": "PASS",
+      "checks": {
+        "R1": "PASS",
+        "R2": "PASS"
+      }
+    },
+    {
+      "id": "3.camperBuddy.remoteState.4weapons",
+      "status": "PASS",
+      "checks": {
+        "R1": "PASS",
+        "R2": "PASS"
+      }
+    },
+    {
+      "id": "3.camperBuddy.remoteRender.onB",
+      "status": "NOT_TESTED",
+      "reason": "handover captures were taken in runs whose artifacts were deleted; no evidence kept"
+    },
+    {
+      "id": "4.vsync.uhd730.1280x720.medium",
+      "status": "NOT_TESTED",
+      "reason": "no completed, kept measurement"
+    },
+    {
+      "id": "4.vsync.uhd730.1280x720.low",
+      "status": "NOT_TESTED",
+      "reason": "never completed"
+    },
+    {
+      "id": "5.console",
+      "status": "PASS",
+      "checks": {
+        "A": {
+          "R1": "PASS",
+          "R2": "PASS"
+        },
+        "B": {
+          "R1": "PASS",
+          "R2": "PASS"
+        }
+      }
+    },
+    {
+      "id": "5.network",
+      "status": "PASS",
+      "checks": {
+        "A": {
+          "R1": "PASS",
+          "R2": "PASS"
+        },
+        "B": {
+          "R1": "PASS",
+          "R2": "PASS"
+        },
+        "wsA": {
+          "R1": "PASS",
+          "R2": "PASS"
+        },
+        "wsB": {
+          "R1": "PASS",
+          "R2": "PASS"
+        }
+      }
+    },
+    {
+      "id": "5.webgl.contextLost",
+      "status": "PASS",
+      "checks": {
+        "A": {
+          "R1": "PASS",
+          "R2": "PASS"
+        },
+        "B": {
+          "R1": "PASS",
+          "R2": "PASS"
+        }
+      }
+    },
+    {
+      "id": "5.webgl.glErrors",
+      "status": "PASS",
+      "checks": {
+        "A": {
+          "R1": "FAIL",
+          "R2": "PASS"
+        },
+        "B": {
+          "R1": "FAIL",
+          "R2": "PASS"
+        }
+      },
+      "note": "R1 FAIL = classifier counted the three.js PCFSoftShadowMap deprecation notice; classifier narrowed, R2 = 0 GL errors"
+    },
+    {
+      "id": "5.webgl.hardwareRenderer",
+      "status": "PASS",
+      "value": "ANGLE (Intel, Intel(R) UHD Graphics 730 (0x0000A782) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+    },
+    {
+      "id": "5.webgl.threeDeprecation",
+      "status": "INFO",
+      "value": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+    },
+    {
+      "id": "5.assets.camperBuddyGlb",
+      "status": "PASS",
+      "checks": {
+        "A": {
+          "R1": "PASS",
+          "R2": "PASS"
+        },
+        "B": {
+          "R1": "PASS",
+          "R2": "PASS"
+        }
+      }
+    },
+    {
+      "id": "5.assets.allGlb",
+      "status": "PASS",
+      "checks": {
+        "A": {
+          "R1": "PASS",
+          "R2": "PASS"
+        },
+        "B": {
+          "R1": "PASS",
+          "R2": "PASS"
+        }
+      },
+      "value": "54 distinct GLB, all 200/304"
+    },
+    {
+      "id": "5.productionMode",
+      "status": "PASS",
+      "checks": {
+        "index": {
+          "R1": "PASS",
+          "R2": "PASS"
+        },
+        "noVite": {
+          "R1": "PASS",
+          "R2": "PASS"
+        },
+        "devHooksA": {
+          "R1": "PASS",
+          "R2": null
+        },
+        "devHooksB": {
+          "R1": "PASS",
+          "R2": null
+        }
+      }
+    }
+  ],
+  "policy": "PASS only from a kept, focus-valid measurement; focus-lost or unfinished = NOT_TESTED",
+  "gameCodeChanged": false,
+  "stage08cStarted": false,
+  "totals": {
+    "PASS": 15,
+    "NOT_TESTED": 5,
+    "INFO": 1
+  }
+}
