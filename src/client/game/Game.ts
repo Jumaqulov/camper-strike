@@ -501,6 +501,7 @@ export class Game {
 
     this.hud.reset();
     this.hud.show(true);
+    this.hud.setLayout(this.isSurvival, this.lootPreview);
     this.hud.setTeamBadge('none', this.mode);
     $('pause-room-name').textContent = welcome.room.name;
     $('top-bar').querySelectorAll('.score').forEach((e) => ((e as HTMLElement).className = 'score ' + e.id.replace('score-', '')));
@@ -2491,6 +2492,7 @@ export class Game {
     this.hud.reset();
     this.hud.scoreboard(false, [], this.mode, this.myId, null, new Set());
     this.hud.show(false);
+    this.hud.setLayout(false, false);
     $('pause-menu').classList.add('hidden');
     for (const rem of this.remotes.values()) rem.model.dispose();
     for (const [, mesh] of this.grenadeMeshes) {

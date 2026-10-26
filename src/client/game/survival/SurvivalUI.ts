@@ -76,41 +76,66 @@ function injectSurvivalUIStyles(): void {
       display: none !important;
     }
 
-    /* 1. Top Pill below #top-bar */
+    /* 1. Yagona yuqori status paneli (TDM top-bar survival'da yashirin) */
     #stage07-top-pill {
       position: absolute;
-      top: 66px;
+      top: 14px;
       left: 50%;
       transform: translateX(-50%);
       display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 6px 16px;
-      border-radius: 999px;
-      background: rgba(16, 22, 18, 0.9);
-      border: 1.5px solid rgba(255, 196, 68, 0.68);
+      align-items: stretch;
+      gap: 0;
+      padding: 0;
+      border-radius: 10px;
+      background: rgba(36, 26, 16, 0.84);
+      border: 2px solid rgba(217, 155, 82, 0.6);
       color: #fff8e7;
-      font-size: 12px;
+      font-family: 'Bahnschrift', 'Segoe UI', 'Roboto', system-ui, sans-serif;
+      font-size: 13px;
       font-weight: 800;
-      letter-spacing: 0.4px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.52);
+      letter-spacing: 0.6px;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
       white-space: nowrap;
+      overflow: hidden;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    }
+
+    #stage07-top-pill > span {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    #stage07-top-pill > span:last-child {
+      border-right: 0;
     }
 
     .s07-pill-round {
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: rgba(255, 196, 68, 0.2);
+      background: rgba(255, 196, 68, 0.16);
       color: #ffd166;
       font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .s07-pill-time {
+      font-size: 20px;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      color: #fff8e7;
+      min-width: 64px;
+      justify-content: center;
+    }
+
+    .s07-pill-time.urgent {
+      color: #fcd34d;
     }
 
     .s07-pill-phase {
-      padding: 2px 9px;
-      border-radius: 999px;
       font-size: 11px;
       font-weight: 900;
       text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     .s07-pill-phase.phase-waiting {
@@ -138,41 +163,43 @@ function injectSurvivalUIStyles(): void {
       font-variant-numeric: tabular-nums;
     }
 
-    /* 2. Pre-Round Banner (waiting & countdown) */
+    /* 2. Raund oldi eslatmasi (ixcham, status paneli ostida) */
     #stage07-preround-banner {
       position: absolute;
-      top: 112px;
+      top: 64px;
       left: 50%;
       transform: translateX(-50%);
-      width: min(560px, 92vw);
-      padding: 12px 20px;
-      border-radius: 14px;
-      background: linear-gradient(180deg, rgba(20, 28, 22, 0.93), rgba(14, 20, 16, 0.93));
-      border: 2px solid rgba(255, 196, 68, 0.72);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+      width: min(480px, 90vw);
+      padding: 7px 14px;
+      border-radius: 9px;
+      background: rgba(36, 26, 16, 0.78);
+      border: 1.5px solid rgba(217, 155, 82, 0.5);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
       text-align: center;
       color: #fff8e7;
+      font-family: 'Bahnschrift', 'Segoe UI', 'Roboto', system-ui, sans-serif;
     }
 
     #stage07-preround-banner.phase-countdown {
-      border-color: #fbbf24;
-      background: linear-gradient(180deg, rgba(44, 28, 12, 0.94), rgba(24, 16, 8, 0.94));
+      border-color: rgba(251, 191, 36, 0.85);
     }
 
     .s07-preround-title {
-      font-size: 16px;
+      font-size: 13px;
       font-weight: 900;
       color: #ffd166;
-      letter-spacing: 0.4px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
     }
 
     .s07-preround-sub {
-      margin-top: 5px;
-      font-size: 12.5px;
-      font-weight: 700;
-      color: #e2e8f0;
-      line-height: 1.35;
+      margin-top: 2px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #e8dcc4;
+      line-height: 1.3;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
     }
 
     /* 3. Spectator Panel */
@@ -516,8 +543,18 @@ export class SurvivalUI {
     this.topStatusText = `RAUND #${snap.roundId} · ${phaseLabel} · ${countLabel}`;
 
     if (this.topPillEl) {
+      // Vaqt segmenti: countdown/ended — soniya, playing — mm:ss, waiting — ko'rsatilmaydi
+      let timeHtml = '';
+      if (snap.phase === 'countdown' || snap.phase === 'ended') {
+        timeHtml = `<span class="s07-pill-time${snap.timeLeft <= 5 ? ' urgent' : ''}">${snap.timeLeft}s</span>`;
+      } else if (snap.phase === 'playing') {
+        const mm = Math.floor(snap.timeLeft / 60);
+        const ss = String(Math.max(0, snap.timeLeft % 60)).padStart(2, '0');
+        timeHtml = `<span class="s07-pill-time${snap.timeLeft <= 30 ? ' urgent' : ''}">${mm}:${ss}</span>`;
+      }
       this.topPillEl.innerHTML = `
-        <span class="s07-pill-round">RAUND #${snap.roundId}</span>
+        <span class="s07-pill-round">Raund ${snap.roundId}</span>
+        ${timeHtml}
         <span class="s07-pill-phase phase-${esc(snap.phase)}">${esc(phaseLabel)}</span>
         <span class="s07-pill-count">${esc(countLabel)}</span>
       `;
@@ -527,12 +564,12 @@ export class SurvivalUI {
     if (snap.phase === 'waiting' || snap.phase === 'countdown') {
       const title =
         snap.phase === 'waiting'
-          ? `⏳ FOREST SURVIVAL — O'YINCHILAR KUTILMOQDA (${snap.readyCount}/${snap.minPlayers})`
-          : `🚀 RAUND BOSHLANISHIGA: ${snap.timeLeft} SONIYA`;
+          ? `O'yinchilar kutilmoqda · ${snap.readyCount}/${snap.minPlayers}`
+          : `Raund boshlanmoqda`;
       const subtitle =
         snap.phase === 'waiting'
-          ? `Kamida ${snap.minPlayers} ta o'yinchi tayyor bo'lganda 10 soniyalik hisob boshlanadi. Hamma qurolsiz boshlaydi!`
-          : `Tayyorlaning! Konteynerlarni [E] bilan ochib qurol va o'q-dori toping — oxirgi tirik qolgan g'olib bo'ladi!`;
+          ? `Kamida ${snap.minPlayers} o'yinchi kerak · hamma qurolsiz boshlaydi`
+          : `Konteynerlarni [E] bilan oching · oxirgi tirik qolgan g'olib`;
 
       this.preRoundBannerText = `${title} — ${subtitle}`;
       if (this.preRoundBannerEl) {

@@ -63,32 +63,38 @@ function injectInventoryUIStyles(): void {
       user-select: none;
     }
 
+    #stage06-inventory-hud,
+    #stage06-inventory-hud button {
+      font-family: 'Bahnschrift', 'Segoe UI', 'Roboto', system-ui, sans-serif;
+    }
+
+    /* Qurolsiz eslatma: panel ustida kichik, ramkasiz satr */
     #stage06-unarmed-banner {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 6px 14px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, rgba(62, 34, 12, 0.92), rgba(40, 24, 12, 0.92));
-      border: 1.5px solid rgba(255, 186, 56, 0.78);
-      color: #ffe8b0;
-      font-size: 12px;
+      gap: 6px;
+      padding: 2px 10px;
+      border-radius: 6px;
+      background: rgba(36, 26, 16, 0.6);
+      color: #ffd166;
+      font-size: 11px;
       font-weight: 800;
-      letter-spacing: 0.35px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
       white-space: nowrap;
     }
 
+    /* Inventar paneli: HUD panellari bilan bir xil to'q yog'och/shisha ko'rinish */
     #stage06-inventory-strip {
       display: flex;
       align-items: stretch;
-      gap: 6px;
-      padding: 6px 8px;
+      gap: 5px;
+      padding: 5px 6px;
       border-radius: 12px;
-      background: rgba(16, 20, 26, 0.88);
-      border: 1.5px solid rgba(217, 155, 82, 0.52);
-      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55);
+      background: rgba(36, 26, 16, 0.8);
+      border: 2px solid rgba(217, 155, 82, 0.55);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
       backdrop-filter: blur(6px);
       pointer-events: auto;
     }
@@ -96,28 +102,29 @@ function injectInventoryUIStyles(): void {
     .s06-inv-weapons {
       display: flex;
       align-items: stretch;
-      gap: 5px;
+      gap: 4px;
     }
 
     .s06-inv-slot {
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      min-width: 104px;
-      padding: 5px 8px;
+      justify-content: center;
+      gap: 1px;
+      min-width: 78px;
+      padding: 3px 7px 3px 6px;
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #cbd5e1;
+      color: #d8ccb4;
       cursor: pointer;
       transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
       text-align: left;
     }
 
     .s06-inv-slot.locked {
-      opacity: 0.48;
+      opacity: 0.42;
       cursor: not-allowed;
-      background: rgba(15, 18, 24, 0.6);
+      background: rgba(0, 0, 0, 0.25);
       border-style: dashed;
     }
 
@@ -127,18 +134,19 @@ function injectInventoryUIStyles(): void {
     }
 
     .s06-inv-slot.equipped {
-      background: linear-gradient(180deg, rgba(255, 196, 56, 0.28), rgba(230, 140, 14, 0.22));
-      border: 1.5px solid #ffd166;
-      color: #fff9eb;
-      box-shadow: 0 0 12px rgba(255, 184, 36, 0.28);
-      transform: translateY(-1px);
+      background: linear-gradient(180deg, #ffca4b, #e8920c);
+      border: 1px solid #fff2b2;
+      color: #1b1200;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+      transform: translateY(-2px);
+      text-shadow: none;
     }
 
     .s06-slot-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 4px;
+      gap: 6px;
       font-size: 11px;
       font-weight: 800;
     }
@@ -147,48 +155,59 @@ function injectInventoryUIStyles(): void {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 1px 5px;
+      min-width: 16px;
+      padding: 0 4px;
       border-radius: 4px;
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(0, 0, 0, 0.35);
       color: #ffd166;
       font-size: 10px;
       font-weight: 900;
+      line-height: 15px;
     }
 
     .s06-inv-slot.equipped .s06-slot-key {
-      background: #ffd166;
-      color: #1b1200;
+      background: rgba(0, 0, 0, 0.55);
+      color: #ffd166;
     }
 
     .s06-slot-state {
       font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 0.3px;
-      color: #94a3b8;
+      font-weight: 900;
+      letter-spacing: 0.6px;
+      color: #9a8f7a;
+      text-transform: uppercase;
     }
 
     .s06-inv-slot.equipped .s06-slot-state {
-      color: #ffd166;
+      color: #3a2400;
     }
 
     .s06-slot-name {
-      font-size: 12px;
-      font-weight: 800;
-      color: #f1f5f9;
-      margin-top: 2px;
+      font-size: 11px;
+      font-weight: 900;
+      color: #fff4dc;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
       white-space: nowrap;
     }
 
+    .s06-inv-slot.equipped .s06-slot-name {
+      color: #1b1200;
+    }
+
     .s06-slot-sub {
-      font-size: 10px;
+      font-size: 10.5px;
       font-weight: 700;
-      color: #94a3b8;
-      margin-top: 1px;
+      color: #9a8f7a;
       font-variant-numeric: tabular-nums;
     }
 
     .s06-inv-slot.owned .s06-slot-sub {
-      color: #d8e2ef;
+      color: #e8dcc4;
+    }
+
+    .s06-inv-slot.equipped .s06-slot-sub {
+      color: #3a2400;
     }
 
     .s06-inv-divider {
@@ -200,7 +219,7 @@ function injectInventoryUIStyles(): void {
     .s06-inv-utils {
       display: flex;
       align-items: stretch;
-      gap: 5px;
+      gap: 4px;
     }
 
     .s06-util-btn {
@@ -208,21 +227,22 @@ function injectInventoryUIStyles(): void {
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      gap: 2px;
-      padding: 4px 9px;
+      gap: 1px;
+      padding: 3px 7px;
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      color: #e2e8f0;
-      font-size: 11px;
-      font-weight: 800;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff4dc;
+      font-size: 10.5px;
+      font-weight: 900;
+      letter-spacing: 0.3px;
       cursor: pointer;
       transition: background 0.12s ease, border-color 0.12s ease;
       white-space: nowrap;
     }
 
     .s06-util-btn:hover {
-      background: rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.12);
       border-color: rgba(255, 209, 102, 0.55);
     }
 
@@ -234,14 +254,27 @@ function injectInventoryUIStyles(): void {
 
     .s06-util-btn.unarm-btn.active {
       border-color: #ffd166;
-      background: rgba(255, 196, 56, 0.22);
+      background: rgba(255, 196, 56, 0.2);
       color: #fff7db;
     }
 
     .s06-util-sub {
       font-size: 10px;
       font-weight: 700;
-      color: #94a3b8;
+      color: #9a8f7a;
+    }
+
+    .s06-util-key {
+      display: inline-block;
+      min-width: 14px;
+      padding: 0 4px;
+      margin-left: 4px;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.35);
+      color: #ffd166;
+      font-size: 10px;
+      line-height: 15px;
+      text-align: center;
     }
   `;
   document.head.appendChild(style);
@@ -374,8 +407,8 @@ export class InventoryUI {
         this.bannerEl.className = '';
         this.bannerEl.textContent =
           s.ownedWeapons.length === 0
-            ? "✋ QUROLSIZ HOLAT — Konteynerlarni [E] bilan ochib qurol va o'q-dori toping!"
-            : "✋ QO'LLAR BO'SH — Qurol tanlash uchun [1–4] bosing";
+            ? "Qurolsiz — konteynerlarni [E] bilan oching"
+            : "Qo'llar bo'sh — [1–4] qurol tanlang";
       } else {
         this.bannerEl.className = 'hidden';
         this.bannerEl.textContent = '';
@@ -391,16 +424,15 @@ export class InventoryUI {
       const ammo = s.ammo[w] ?? { mag: 0, reserve: 0 };
 
       const stateClass = isEquipped ? 'owned equipped' : isOwned ? 'owned' : 'locked';
-      const stateLabel = isEquipped ? "★ QO'LDA" : isOwned ? 'TAYYOR' : '🔒 Topilmagan';
-      const subLabel = isOwned ? `${ammo.mag} / ${ammo.reserve} o'q` : '🔒 Topilmagan';
+      const stateLabel = isEquipped ? "Qo'lda" : isOwned ? 'Tayyor' : 'Yo’q';
+      const subLabel = isOwned ? `${ammo.mag} / ${ammo.reserve}` : 'Topilmagan';
 
       return `
         <button type="button" class="s06-inv-slot ${stateClass}" data-weapon="${escapeHtml(w)}" ${!isOwned ? 'disabled' : ''}>
           <div class="s06-slot-top">
-            <span class="s06-slot-key">${idx + 1}</span>
+            <span class="s06-slot-name"><span class="s06-slot-key">${idx + 1}</span> ${escapeHtml(def.name)}</span>
             <span class="s06-slot-state">${escapeHtml(stateLabel)}</span>
           </div>
-          <div class="s06-slot-name">${idx + 1}: ${escapeHtml(def.name)}</div>
           <div class="s06-slot-sub">${escapeHtml(subLabel)}</div>
         </button>
       `;
@@ -417,15 +449,15 @@ export class InventoryUI {
       <div class="s06-inv-divider"></div>
       <div class="s06-inv-utils">
         <button type="button" class="s06-util-btn medkit-btn ${s.medkits > 0 ? 'has-medkit' : ''}" data-action="medkit">
-          <span>🩹 Aptechka [H]: ×${s.medkits}/${maxMedkits}</span>
-          <span class="s06-util-sub">${s.medkits > 0 ? '+45 HP tiklash' : "Yo'q"}</span>
+          <span>Aptechka ×${s.medkits}/${maxMedkits}<span class="s06-util-key">H</span></span>
+          <span class="s06-util-sub">${s.medkits > 0 ? '+45 HP' : "Yo'q"}</span>
         </button>
         <div class="s06-util-btn" style="cursor: default;">
-          <span>💣 Granata [G]: ×${s.grenades}/${maxGrenades}</span>
-          <span class="s06-util-sub">Uloqtirish</span>
+          <span>Granata ×${s.grenades}/${maxGrenades}<span class="s06-util-key">G</span></span>
+          <span class="s06-util-sub">${s.grenades > 0 ? 'Uloqtirish' : "Yo'q"}</span>
         </div>
         <button type="button" class="s06-util-btn unarm-btn ${isHandsEmpty ? 'active' : ''}" data-action="unarm">
-          <span>[0] Bo'sh qo'l</span>
+          <span>Bo'sh qo'l<span class="s06-util-key">0</span></span>
           <span class="s06-util-sub">${isHandsEmpty ? 'Faol' : 'Qurolni yechish'}</span>
         </button>
       </div>

@@ -153,7 +153,18 @@ html, body {
 .pause-panel .btn.danger { width: 100%; }
 
 /* ---------- HUD ---------- */
-#hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; font-weight: 700; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
+#hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; font-weight: 700; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); font-family: 'Bahnschrift', 'Segoe UI', 'Roboto', system-ui, sans-serif; }
+/* Survival: yuqoridagi status panelini SurvivalUI chizadi — TDM hisob/taymer paneli takror bo'lmasin */
+#hud.survival #top-bar { display: none; }
+/* Loot rejimi: qurol slotlari va granata soni pastdagi inventar panelida bor — o'ng paneldan olib tashlaymiz */
+#hud.loot #weapon-slots, #hud.loot #grenades { display: none; }
+#hud.loot #hud-ammo { min-width: 180px; }
+#hud.loot #weapon-name { font-size: 14px; }
+/* Loot rejimida pastki markaziy inventar paneliga joy bo'lsin: chap/o'ng panellar ixcham */
+#hud.loot #hud-health { width: 200px; }
+#hud.loot .rv-tag { display: none; }
+#hud.loot .hp-row { font-size: 30px; }
+#hud.loot .ammo-row { font-size: 34px; }
 
 #crosshair { position: absolute; left: 50%; top: 50%; width: 0; height: 0; --gap: 6px; }
 #crosshair .ch { position: absolute; background: #7dff6b; box-shadow: 0 0 2px #000; }

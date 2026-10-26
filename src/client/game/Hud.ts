@@ -179,7 +179,7 @@ export class Hud {
     this.lastAmmoKey = key;
 
     if (!weapon) {
-      $('weapon-name').innerHTML = `<span>✋ Qurol yo'q (Bo'sh qo'l)</span>`;
+      $('weapon-name').innerHTML = `<span>✋ Bo'sh qo'l</span>`;
       $('ammo-mag').textContent = '—';
       $('ammo-mag').classList.remove('low');
       $('ammo-reserve').textContent = '—';
@@ -311,12 +311,24 @@ export class Hud {
     void myTeam;
   }
 
+  /** HUD joylashuv rejimi: survival'da TDM yuqori paneli va jamoa nishoni yashirinadi, loot rejimida takroriy slotlar olinadi. */
+  setLayout(survival: boolean, lootMode: boolean): void {
+    const hud = $('hud');
+    hud.classList.toggle('survival', survival);
+    hud.classList.toggle('loot', lootMode);
+  }
+
   setTeamBadge(team: Team, mode: GameMode): void {
     const b = $('team-badge');
     if (mode === 'forest_survival') {
-      b.textContent = '🌲 FOREST SURVIVAL';
+      // Survival'da yuqoridagi status paneli rejimni ko'rsatadi — pastdagi takroriy nishon kerak emas
+      b.textContent = '';
       b.className = 't-none';
-    } else if (mode === 'ffa') {
+      b.style.display = 'none';
+      return;
+    }
+    b.style.display = '';
+    if (mode === 'ffa') {
       b.textContent = 'HAMMA HAMMAGA QARSHI';
       b.className = 't-none';
     } else {
