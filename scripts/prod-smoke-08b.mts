@@ -26,7 +26,7 @@
  * Usage: npx tsx scripts/prod-smoke-08b.mts [--port=3600] [--out=docs/stage08b-prod-smoke/runs]  (→ <out>/<UTC timestamp>/)
  *        [--parts=tdm,buddy,ffa,survival,vsync] [--vsyncSec=20] [--attempts=3]
  */
-import { execSync, spawn, type ChildProcess } from 'node:child_process';
+import { execSync, spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -34,6 +34,7 @@ import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
 import { createWorldDefinition } from '../src/shared/world';
 import { NavGraph } from '../src/server/navgraph';
+import { raycastWorld } from '../src/shared/physics';
 import { FOCUS_MONITOR_SRC, OsFocus, judgeInterval, type IntervalRecord } from './qa-lib/focus-guard.mts';
 
 const args = Object.fromEntries(
@@ -75,6 +76,43 @@ const ok = (c: boolean): Status => (c ? 'PASS' : 'FAIL');
 // ------------------------------------------------------------------------------------------
 const procs: ChildProcess[] = [];
 const tmpDirs: string[] = [];
+const chromeProcs: { label: string; userDir: string; pid?: number }[] = [];
+const chromeExits: Record<string, unknown>[] = [];
+let shuttingDown = false;
+const closedOnPurpose = new Set<string>();
+const RUN_START = new Date();
+/** keep Chrome's own evidence (debug log, Crashpad reports) + Windows Application events before temp profiles are removed */
+function collectChromeEvidence() {
+  const out: Record<string, unknown> = { exits: chromeExits, profiles: [] as unknown[] };
+  for (const c of chromeProcs) {
+    const rec: Record<string, unknown> = { label: c.label, pid: c.pid };
+    const dbg = path.join(c.userDir, 'chrome_debug.log');
+    if (fs.existsSync(dbg)) {
+      const dst = path.join(LOGS, `chrome_debug_${c.label}.log`);
+      fs.copyFileSync(dbg, dst);
+      rec.chromeDebugLog = rel(dst);
+      rec.chromeDebugLogErrors = fs.readFileSync(dbg, 'utf8').split(/\r?\n/).filter((l) => /:ERROR:|:FATAL:|crash/i.test(l)).slice(-40);
+    }
+    const reports = path.join(c.userDir, 'Crashpad', 'reports');
+    const dumps = fs.existsSync(reports) ? fs.readdirSync(reports) : [];
+    rec.crashpadReports = dumps;
+    for (const d of dumps) {
+      fs.mkdirSync(path.join(LOGS, 'crashpad'), { recursive: true });
+      fs.copyFileSync(path.join(reports, d), path.join(LOGS, 'crashpad', `${c.label}_${d}`));
+    }
+    (out.profiles as unknown[]).push(rec);
+  }
+  try {
+    const ps = `Get-WinEvent -FilterHashtable @{LogName='Application'; StartTime=[datetime]'${RUN_START.toISOString()}'} -ErrorAction SilentlyContinue | Where-Object { $_.Message -match 'chrome' -or $_.ProviderName -match 'Application Error|Windows Error Reporting' } | Select-Object TimeCreated, Id, ProviderName, LevelDisplayName, Message | Format-List | Out-String -Width 220`;
+    const r = spawnSync('powershell', ['-NoProfile', '-Command', ps], { encoding: 'utf8', timeout: 60000 });
+    const txt = (r.stdout || '').trim();
+    fs.writeFileSync(path.join(LOGS, 'windows_application_events.txt'), txt || '(no Application events matching chrome / Application Error / WER since run start)\n');
+    out.windowsApplicationEvents = txt ? txt.split(/\r?\n\r?\n/).filter(Boolean).length : 0;
+  } catch (e) {
+    out.windowsApplicationEvents = `query failed: ${String(e).slice(0, 120)}`;
+  }
+  return out;
+}
 function killTree(pid?: number) {
   if (!pid) return;
   try {
@@ -153,6 +191,9 @@ class Cdp {
     });
     this.ws.addEventListener('close', () => {
       this.closed = true;
+      const at = Date.now();
+      this.lifecycle.push({ type: 'cdp-ws-close', at: new Date(at).toISOString() });
+      osf.query().then((q) => this.lifecycle.push({ type: 'os-at-close', fgPid: q.fgPid, msAfterClose: Date.now() - at, idleMs: q.tick - q.lastInput })).catch(() => undefined);
       for (const p of this.pending.values()) p.rej(new Error(`${this.label}: CDP connection closed (window closed?)`));
       this.pending.clear();
       log(`  !! ${this.label}: CDP connection closed`);
@@ -169,6 +210,10 @@ class Cdp {
       const p = m.params ?? {};
       for (const fn of this.listeners.get(m.method) ?? []) fn(p);
       const at = new Date().toISOString();
+      if (m.method === 'Inspector.detached' || m.method === 'Inspector.targetCrashed' || m.method === 'Inspector.targetReloadedAfterCrash') {
+        this.lifecycle.push({ type: m.method, at, reason: p.reason ?? null });
+        log(`  !! ${this.label}: ${m.method} ${p.reason ?? ''}`);
+      }
       if (m.method === 'Runtime.consoleAPICalled') {
         const text = (p.args ?? []).map((a: any) => a.value ?? a.description ?? '').join(' ').slice(0, 500);
         if (p.type === 'error' || p.type === 'assert') this.consoleErrors.push({ at, text });
@@ -207,6 +252,8 @@ class Cdp {
     return () => this.listeners.get(method)!.delete(fn);
   }
   closed = false;
+  /** browser/target lifecycle evidence: why a window disappeared (Inspector reason, close time, OS foreground) */
+  lifecycle: Record<string, unknown>[] = [];
   /** every CDP call has a deadline: a closed window or a stuck renderer must fail the step, not hang the run */
   send(method: string, params: Record<string, unknown> = {}, timeoutMs = 30000): Promise<any> {
     if (this.closed) return Promise.reject(new Error(`${this.label}: CDP closed (${method})`));
@@ -265,6 +312,10 @@ async function openChrome(label: string, debugPort: number, x: number, y: number
       '--disable-backgrounding-occluded-windows',
       '--disable-renderer-backgrounding',
       '--autoplay-policy=no-user-gesture-required',
+      // Chrome's own log (kept with the run) to diagnose a disappearing window
+      '--enable-logging',
+      '--v=0',
+      `--log-file=${path.join(userDir, 'chrome_debug.log')}`,
       `--window-position=${x},${y}`,
       '--window-size=1280,800',
       // app window: no omnibox, so browser focus lands in the page and pointer lock can be granted
@@ -273,6 +324,13 @@ async function openChrome(label: string, debugPort: number, x: number, y: number
     { stdio: 'ignore' },
   );
   procs.push(proc);
+  chromeProcs.push({ label, userDir, pid: proc.pid });
+  proc.on('exit', (code, signal) => {
+    const expected = shuttingDown || closedOnPurpose.has(label);
+    const rec = { label, pid: proc.pid, code, signal, at: new Date().toISOString(), expected };
+    chromeExits.push(rec);
+    log(`  !! Chrome ${label} process exit code=${code} signal=${signal}${expected ? ' (closed by harness)' : ' UNEXPECTED'}`);
+  });
   let target: any = null;
   const t0 = Date.now();
   while (!target && Date.now() - t0 < 30000) {
@@ -287,7 +345,7 @@ async function openChrome(label: string, debugPort: number, x: number, y: number
   if (!target) throw new Error(`${label}: chrome target not found`);
   const cdp = new Cdp(target.webSocketDebuggerUrl, label);
   await cdp.connect();
-  for (const d of ['Page', 'Runtime', 'Network', 'Log']) await cdp.send(`${d}.enable`);
+  for (const d of ['Page', 'Runtime', 'Network', 'Log', 'Inspector']) await cdp.send(`${d}.enable`);
   await cdp.send('Page.addScriptToEvaluateOnNewDocument', { source: FOCUS_MONITOR_SRC });
   const c: Client = {
     label, port: debugPort, cdp, proc, frames: [], wsUrls: [], lastSnap: null, snapHist: [], lastLoot: null, inventory: null, roster: [], match: null, myId: null, welcome: null,
@@ -328,6 +386,7 @@ async function openChrome(label: string, debugPort: number, x: number, y: number
   return c;
 }
 function closeClient(c: Client) {
+  closedOnPurpose.add(c.label);
   snapshotClient(c);
   liveClients.splice(liveClients.indexOf(c), 1);
   c.cdp.ws.close();
@@ -689,8 +748,19 @@ async function faceYaw(c: Client, target: number) {
   }
   return Math.abs(wrap(target - (me(c)?.yaw ?? 0))) < 0.08;
 }
-/** free straight distance along `yaw` from p (nav path stays on the straight line) */
+/** free straight distance along `yaw` from p: shared world raycast at knee and chest height (capsule edges too) */
 function laneFree(p: { x: number; y: number; z: number }, yaw: number, len = 14) {
+  const dir = { x: -Math.sin(yaw), y: 0, z: -Math.cos(yaw) };
+  const side = { x: -dir.z, z: dir.x };
+  let free = len;
+  for (const h of [0.4, 1.2]) for (const o of [-0.35, 0, 0.35]) {
+    const hit = raycastWorld(world, { x: p.x + side.x * o, y: p.y + h, z: p.z + side.z * o }, dir, len);
+    if (hit) free = Math.min(free, hit.t);
+  }
+  return free;
+}
+/** previous NavGraph-based lane test (kept for reference; it returned 0 for every heading on forest_square) */
+function laneFreeNav(p: { x: number; y: number; z: number }, yaw: number, len = 14) {
   const path0 = nav.findPath({ x: p.x, y: p.y, z: p.z }, { x: p.x - Math.sin(yaw) * len, y: p.y, z: p.z - Math.cos(yaw) * len });
   const straight = path0.length >= 2 && path0.every((q: { x: number; z: number }) => Math.abs((q.x - p.x) * Math.cos(yaw) - (q.z - p.z) * -Math.sin(yaw)) < 1.2);
   return straight ? Math.hypot(path0[path0.length - 1].x - p.x, path0[path0.length - 1].z - p.z) : 0;
@@ -762,19 +832,53 @@ interface HandoverSpec {
   expect: (p: any) => boolean;
   describe: (p: any) => string;
 }
+/** pitch (rad, + = up; Game.ts: pitch -= mouseDY*k, same k as yaw) from B's eye to the middle of A's body */
+const EYE_HEIGHT = 1.62;
+const BODY_MID = 0.9;
+function wantPitch(b: { x: number; y: number; z: number }, a: { x: number; y: number; z: number }) {
+  return Math.atan2(a.y + BODY_MID - (b.y + EYE_HEIGHT), Math.max(0.5, Math.hypot(a.x - b.x, a.z - b.z)));
+}
+async function facePitch(c: Client, target: number) {
+  for (let i = 0; i < 5; i++) {
+    const p = me(c)?.pitch;
+    if (typeof p !== 'number' || !radPerPx) return false;
+    const d = target - p;
+    if (Math.abs(d) < 0.04) return true;
+    // Δpitch per +1 px of mouse Y equals Δyaw per +1 px of mouse X (both −k), i.e. radPerPx
+    await look(c, 0, d / radPerPx);
+    await delay(250);
+  }
+  return Math.abs(target - (me(c)?.pitch ?? 9)) < 0.06;
+}
+/** aim the observer camera at the actor: yaw AND pitch (a frame that looks at the sky shows nothing) */
 async function aimAt(observer: Client, actor: Client) {
   const a = other(observer, actor.myId);
   const b = me(observer);
   if (!a || !b) return false;
-  return faceYaw(observer, yawTo(b, a));
+  const yawOk = await faceYaw(observer, yawTo(b, a));
+  const pitchOk = await facePitch(observer, wantPitch(b, a));
+  return yawOk && pitchOk;
+}
+/** clear line of sight from B's eye to A's legs/chest/head, using the shared world raycast (same as server LOS) */
+function losClear(b: { x: number; y: number; z: number }, a: { x: number; y: number; z: number }) {
+  const eye = { x: b.x, y: b.y + EYE_HEIGHT, z: b.z };
+  for (const h of [0.5, 1.0, 1.5]) {
+    const d = { x: a.x - eye.x, y: a.y + h - eye.y, z: a.z - eye.z };
+    const L = Math.hypot(d.x, d.y, d.z);
+    if (L < 0.5) continue;
+    if (raycastWorld(world, eye, { x: d.x / L, y: d.y / L, z: d.z / L }, L - 0.3)) return false;
+  }
+  return true;
 }
 function inView(observer: Client, actorId: string | null, t: number) {
   const a = snapAt(observer, actorId, t);
   const b = snapAt(observer, observer.myId, t);
-  if (!a || !b) return { ok: false, bearing: null as number | null, dist: null as number | null };
+  if (!a || !b) return { ok: false, bearing: null as number | null, pitchErr: null as number | null, dist: null as number | null, los: false };
   const bearing = wrap(yawTo(b, a) - b.yaw);
+  const pitchErr = (b.pitch ?? 0) - wantPitch(b, a);
   const dist = Math.hypot(a.x - b.x, a.z - b.z);
-  return { ok: Math.abs(bearing) < 0.6 && dist < 45, bearing, dist };
+  const los = losClear(b, a);
+  return { ok: Math.abs(bearing) < 0.6 && Math.abs(pitchErr) < 0.25 && dist < 45 && los, bearing, pitchErr, dist, los };
 }
 async function handoverCapture(actor: Client, observer: Client, spec: HandoverSpec) {
   const tries: unknown[] = [];
@@ -914,6 +1018,7 @@ async function partTdm(A: Client, B: Client) {
   gcheck('tdm.jump (B sees A airborne)', jump, jump.value === true);
   // own 1P / 3P evidence
   const own = await guarded(A, 'tdm.A.1p3p', async () => {
+    await facePitch(A, -0.08);
     evidence.tdm_A_3p_idle = await shot(A, 'tdm_A_3p_idle');
     await setThirdPerson(A, false);
     evidence.tdm_A_1p_idle = await shot(A, 'tdm_A_1p_idle');
@@ -929,6 +1034,7 @@ async function partTdm(A: Client, B: Client) {
   const weaponKeys: [string, string][] = [['Digit1', 'rifle'], ['Digit2', 'pistol'], ['Digit3', 'shotgun'], ['Digit4', 'sniper']];
   const seenW: Record<string, unknown> = {};
   const wg = await guarded(A, 'tdm.weapons', async () => {
+    await facePitch(A, -0.08);
     for (const [k, w] of weaponKeys) {
       await tap(A, k);
       await delay(900);
@@ -957,16 +1063,27 @@ async function ensureClose(A: Client, B: Client, id: string) {
     for (let leg = 0; leg < 3; leg++) {
       const b = me(B);
       if (!b) return false;
-      if ((selfDist(A, B) ?? 99) <= 8.5) return true;
+      if ((selfDist(A, B) ?? 99) <= 8.5) break;
       await driveTo(A, { x: b.x, y: b.y, z: b.z }, 7, 30000);
     }
-    return (selfDist(A, B) ?? 99) <= 8.5;
+    // a tree trunk between B and A hides the model: sidestep (real A/D keys) until the line of sight is clear
+    for (let k = 0; k < 8 && me(A) && me(B) && !losClear(me(B), me(A)); k++) {
+      const key = k % 4 < 2 ? 'KeyD' : 'KeyA';
+      await keyDown(A, key);
+      await delay(k % 2 ? 450 : 300);
+      await keyUp(A, key);
+      await delay(250);
+    }
+    const ok = (selfDist(A, B) ?? 99) <= 9.5 && losClear(me(B), me(A));
+    log(`  ensureClose ${id}: dist=${selfDist(A, B)?.toFixed(1)} los=${me(A) && me(B) ? losClear(me(B), me(A)) : null}`);
+    return ok;
   });
 }
 async function partBuddyRemote(A: Client, B: Client) {
   log('== Camper Buddy — what B renders for A (focus handover) ==');
   // bring A within ~8 m of B so the model is large in B's frame
   const close = await ensureClose(A, B, 'buddy.approachB');
+  await guarded(A, 'buddy.levelPitch', () => facePitch(A, -0.05), { attempts: 2 });
   check('buddy.approach(A→B ≤8 m)', close.valid ? (close.value ? 'PASS' : 'INFO') : 'NOT_TESTED', close.valid ? `${selfDist(A, B)?.toFixed(1)} m` : 'fokus intervali rad etildi');
   const dirForRun = () => {
     const a = me(A);
@@ -1000,7 +1117,7 @@ async function partBuddyRemote(A: Client, B: Client) {
     specs.push({ id: `buddy_remote_${w}`, act: async () => { await tap(A, k); await delay(1100); return async () => {}; }, expect: (p) => p.weapon === w && p.onGround && speedOf(p) < 0.3, describe: (p) => `weapon=${p.weapon} speed ${speedOf(p).toFixed(2)}` });
   }
   for (const s of specs) {
-    if ((selfDist(A, B) ?? 99) > 12) await ensureClose(A, B, `${s.id}.approach`);
+    if ((selfDist(A, B) ?? 99) > 12 || !(me(A) && me(B) && losClear(me(B), me(A)))) await ensureClose(A, B, `${s.id}.approach`);
     const r = await handoverCapture(A, B, s);
     check(`buddy.remote.${s.id.replace('buddy_remote_', '')} (B renders A)`, r.status, r.note);
     if (s.id === 'buddy_remote_run' || s.id === 'buddy_remote_walk') {
@@ -1020,6 +1137,29 @@ async function partFfa(A: Client, B: Client) {
   await waitAssets(A);
   await waitAssets(B);
   await worldChecks('ffa', A, B);
+  const lockB = await guarded(B, 'ffa.B.lock', async () => {
+    if (!radPerPx) await calibrateLook(B);
+    await setThirdPerson(B, false);
+    return true;
+  });
+  const lockA = await guarded(A, 'ffa.A.lock', async () => {
+    if (!radPerPx) await calibrateLook(A);
+    return true;
+  });
+  gcheck('ffa.pointerLock(A,B)', { ...lockA, valid: lockA.valid && lockB.valid, rejected: [...lockA.rejected, ...lockB.rejected] }, true, `rad/px=${radPerPx}`);
+  const walk = await guarded(A, 'ffa.walk', async () => {
+    await faceOpenLane(A);
+    await keyDown(A, 'ShiftLeft');
+    await keyDown(A, 'KeyW', 8);
+    try {
+      await delay(800);
+      return await sampleSpeed(B, A.myId, 1500);
+    } finally {
+      await keyUp(A, 'KeyW', 8);
+      await keyUp(A, 'ShiftLeft');
+    }
+  });
+  gcheck('ffa.walk≈3.0 m/s (B sees A, server snap)', walk, walk.value != null && Math.abs(walk.value - 3.0) < 0.5, `${walk.value?.toFixed(2)} m/s`);
   const run = await guarded(A, 'ffa.run', async () => {
     await faceOpenLane(A);
     await keyDown(A, 'KeyW');
@@ -1041,12 +1181,15 @@ async function partFfa(A: Client, B: Client) {
     return w;
   });
   gcheck('ffa.weaponSwitch (B sees A shotgun)', wsw, wsw.value === 'shotgun', String(wsw.value));
+  await ensureClose(A, B, 'ffa.approachB');
   const bShot = await guarded(B, 'ffa.B.view', async () => {
-    await aimAt(B, A);
+    const aimed = await aimAt(B, A);
+    await delay(300);
+    const t = Date.now();
     evidence.ffa_B = await shot(B, 'ffa_B_sees_A');
-    return true;
+    return { aimed, view: inView(B, A.myId, t) };
   });
-  gcheck('ffa.B.view.shot', bShot, true);
+  gcheck('ffa.B.view (A in B frame: yaw+pitch)', bShot, Boolean(bShot.value?.aimed && bShot.value?.view.ok), JSON.stringify(bShot.value?.view));
   await leaveRoom(A).catch((e) => log('leave A', String(e)));
   await leaveRoom(B).catch((e) => log('leave B', String(e)));
 }
@@ -1157,6 +1300,7 @@ async function partSurvival(A: Client, B: Client, C: Client) {
     gcheck('survival.equipWeapon(slot key)', sw, sw.value?.equipA === gotWeapon && sw.value?.equipB === gotWeapon, JSON.stringify(sw.value));
     gcheck('survival.weaponSwitch(0 holster → Q back)', sw, sw.value?.holsterB === null && sw.value?.qB === gotWeapon, JSON.stringify(sw.value));
     await ensureClose(A, B, 'surv.approachB');
+    await guarded(A, 'surv.levelPitch', () => facePitch(A, -0.05), { attempts: 2 });
     const bv = await handoverCapture(A, B, {
       id: `survival_B_sees_A_${gotWeapon}`,
       act: async () => { await delay(600); return async () => {}; },
@@ -1335,21 +1479,23 @@ async function main() {
 
     // A on the primary display, B (and later C) on the secondary display: no occlusion between clients
     A = await openChrome('A', 9600, 0, 0);
-    B = await openChrome('B', 9601, 1920, 0);
-    if (PARTS.has('tdm')) await partTdm(A, B);
+    // a VSync-only run needs exactly one client (no second GPU consumer)
+    const needB = [...PARTS].some((p) => p !== 'vsync');
+    if (needB) B = await openChrome('B', 9601, 1920, 0);
+    if (PARTS.has('tdm')) await partTdm(A, B!);
     else {
       await guarded(A, 'lobbyA', () => enterLobby(A!, 'ProdA'), { needLock: false });
-      await guarded(B, 'lobbyB', () => enterLobby(B!, 'ProdB'), { needLock: false });
+      if (B) await guarded(B, 'lobbyB', () => enterLobby(B!, 'ProdB'), { needLock: false });
     }
-    if (PARTS.has('buddy')) await partBuddyRemote(A, B);
+    if (PARTS.has('buddy')) await partBuddyRemote(A, B!);
     if (PARTS.has('tdm') || PARTS.has('buddy')) {
       await leaveRoom(A).catch((e) => log('leave A', String(e)));
-      await leaveRoom(B).catch((e) => log('leave B', String(e)));
+      await leaveRoom(B!).catch((e) => log('leave B', String(e)));
     }
-    if (PARTS.has('ffa')) await partFfa(A, B);
+    if (PARTS.has('ffa')) await partFfa(A, B!);
     if (PARTS.has('survival')) {
       C = await openChrome('C', 9602, 2240, 80);
-      await partSurvival(A, B, C);
+      await partSurvival(A, B!, C);
       await leaveRoom(A).catch(() => undefined);
     }
     for (const c of [A, B, C].filter(Boolean) as Client[]) {
@@ -1377,6 +1523,10 @@ async function main() {
       const L = s.label;
       check(`prod.noConsoleErrors.${L}`, ok(s.consoleErrors.length === 0 && s.exceptions.length === 0 && s.logErrors.length === 0), `${s.consoleErrors.length} console, ${s.exceptions.length} exceptions, ${s.logErrors.length} log errors`);
       check(`prod.noNetworkErrors.${L}`, ok(s.networkErrors.length === 0), `${s.networkErrors.length}`);
+      if (!s.roomId) {
+        check(`prod.inGameChecks.${L}`, 'NOT_TESTED', 'mijoz o‘yin xonasiga kirmagan (faqat lobby) — asset/WebGL tekshiruvlari qo‘llanilmaydi');
+        continue;
+      }
       check(`prod.websocket.${L}`, ok(s.wsUrls.some((u: string) => u.startsWith(`ws://127.0.0.1:${PORT}/socket.io`))), s.wsUrls[0] ?? 'none');
       const buddy = s.glbLoads.filter((g: any) => g.url.includes('camper_buddy_balanced_rigged.glb'));
       check(`prod.asset.camperBuddyGlb.${L}`, ok(buddy.length > 0 && buddy.every((g: any) => g.status === 200 || g.status === 304)), JSON.stringify(buddy));
@@ -1403,10 +1553,14 @@ async function main() {
     result.durationSec = Math.round((Date.now() - t0) / 1000);
     fs.writeFileSync(path.join(OUT, 'prod_smoke.json'), JSON.stringify(result, null, 2));
     log('SUMMARY', sum, `focus intervals valid ${(result.focus as any).valid}/${intervals.length}`);
+    shuttingDown = true;
     for (const c of clients) c.cdp.ws.close();
-    osf.stop();
     for (const p of procs) killTree(p.pid);
-    await delay(800);
+    await delay(1200);
+    result.chromeDiagnostics = collectChromeEvidence();
+    result.cdpLifecycle = Object.fromEntries([...clientSummaries.values()].map((s: any) => [s.label, s.lifecycle]));
+    fs.writeFileSync(path.join(OUT, 'prod_smoke.json'), JSON.stringify(result, null, 2));
+    osf.stop();
     for (const d of tmpDirs) fs.rmSync(d, { recursive: true, force: true, maxRetries: 3 });
     RUN_LOG.end();
   }
@@ -1431,6 +1585,7 @@ function snapshotClient(c: Client) {
     logErrors: c.cdp.logErrors,
     networkErrors: c.cdp.netErrors,
     networkAborted: c.cdp.netAborted.length,
+    lifecycle: c.cdp.lifecycle,
     webgl: { renderer: prev?.webgl?.renderer ?? webglRenderer.get(c.label) ?? null, contextLost: (focusEvents.get(c.label) ?? []).filter((e) => e.type === 'webglcontextlost').length, glWarnings: glWarn, threeDeprecations },
     wsEvents: Object.fromEntries(
       Object.entries(c.frames.reduce((m: Record<string, number>, f) => ((m[`${f.dir}:${f.ev.startsWith('ack#') ? 'ack' : f.ev}`] = (m[`${f.dir}:${f.ev.startsWith('ack#') ? 'ack' : f.ev}`] ?? 0) + 1), m), {})),

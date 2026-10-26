@@ -1,0 +1,830 @@
+[
+ {
+  "dir": "in",
+  "t": 1792999295862,
+  "ev": "roomList",
+  "data": "[{\"id\":\"r2d5vv\",\"name\":\"prod-surv\",\"mode\":\"forest_survival\",\"players\":1,\"bots\":0,\"maxPlayers\":10,\"timeLimit\":2,\"scoreLimit\":1,\"world\":{\"mapId\":\"forest_square\",\"worldVersion\":2,\"publicLayoutSeed\":6501,\"gameplayHash\":\"670a9c21f0565c94\"},\"lootPreview\":true,\"lootEnabled\":true,\"roundId\":1,\"phase\":\"waiting\"}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999297094,
+  "ev": "roomList",
+  "data": "[{\"id\":\"r2d5vv\",\"name\":\"prod-surv\",\"mode\":\"forest_survival\",\"players\":2,\"bots\":0,\"maxPlayers\":10,\"timeLimit\":2,\"scoreLimit\":1,\"world\":{\"mapId\":\"forest_square\",\"worldVersion\":2,\"publicLayoutSeed\":6501,\"gameplayHash\":\"670a9c21f0565c94\"},\"lootPreview\":true,\"lootEnabled\":true,\"roundId\":1,\"phase\":\"countdown\"}]"
+ },
+ {
+  "dir": "out",
+  "t": 1792999569690,
+  "ev": "hello",
+  "data": "{\"name\":\"ProdC\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999569702,
+  "ev": "ack#0",
+  "data": "{\"ok\":true,\"name\":\"ProdC\",\"rooms\":[{\"id\":\"r2d5vv\",\"name\":\"prod-surv\",\"mode\":\"forest_survival\",\"players\":2,\"bots\":0,\"maxPlayers\":10,\"timeLimit\":2,\"scoreLimit\":1,\"world\":{\"mapId\":\"forest_square\",\"worldVersion\":2,\"publicLayoutSeed\":6501,\"gameplayHash\":\"670a9c21f0565c94\"},\"lootPreview\":true,\"lootEnabled\":true,\"roundId\":2,\"phase\":\"ended\"}]}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999569779,
+  "ev": "hello",
+  "data": "{\"name\":\"ProdC\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999569780,
+  "ev": "ack#1",
+  "data": "{\"ok\":true,\"name\":\"ProdC\",\"rooms\":[{\"id\":\"r2d5vv\",\"name\":\"prod-surv\",\"mode\":\"forest_survival\",\"players\":2,\"bots\":0,\"maxPlayers\":10,\"timeLimit\":2,\"scoreLimit\":1,\"world\":{\"mapId\":\"forest_square\",\"worldVersion\":2,\"publicLayoutSeed\":6501,\"gameplayHash\":\"670a9c21f0565c94\"},\"lootPreview\":true,\"lootEnabled\":true,\"roundId\":2,\"phase\":\"ended\"}]}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999569923,
+  "ev": "listRooms",
+  "data": "null"
+ },
+ {
+  "dir": "in",
+  "t": 1792999569934,
+  "ev": "ack#2",
+  "data": "[{\"id\":\"r2d5vv\",\"name\":\"prod-surv\",\"mode\":\"forest_survival\",\"players\":2,\"bots\":0,\"maxPlayers\":10,\"timeLimit\":2,\"scoreLimit\":1,\"world\":{\"mapId\":\"forest_square\",\"worldVersion\":2,\"publicLayoutSeed\":6501,\"gameplayHash\":\"670a9c21f0565c94\"},\"lootPreview\":true,\"lootEnabled\":true,\"roundId\":2,\"phase\":\"ended\"}]"
+ },
+ {
+  "dir": "out",
+  "t": 1792999570474,
+  "ev": "joinRoom",
+  "data": "{\"roomId\":\"r2d5vv\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999570817,
+  "ev": "ack#3",
+  "data": "{\"ok\":true,\"welcome\":{\"you\":\"8lFcw_Dw4j4dkh47AAAF\",\"room\":{\"id\":\"r2d5vv\",\"name\":\"prod-surv\",\"mode\":\"forest_survival\",\"players\":3,\"bots\":0,\"maxPlayers\":10,\"timeLimit\":2,\"scoreLimit\":1,\"world\":{\"mapId\":\"forest_square\",\"worldVersion\":2,\"publicLayoutSeed\":6501,\"gameplayHash\":\"670a9c21f0565c94\"},\"lootPreview\":true,\"lootEnabled\":true,\"roundId\":2,\"phase\":\"ended\"},\"world\":{\"mapId\":\"forest_square\",\"worldVersion\":2,\"publicLayoutSeed\":6501,\"gameplayHash\":\"670a9c21f0565c94\"}}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999570818,
+  "ev": "latency",
+  "data": "1596"
+ },
+ {
+  "dir": "out",
+  "t": 1792999570818,
+  "ev": "ready",
+  "data": "{\"world\":{\"mapId\":\"forest_square\",\"worldVersion\":2,\"publicLayoutSeed\":6501,\"gameplayHash\":\"670a9c21f0565c94\"}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572315,
+  "ev": "snap",
+  "data": "(sample)"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572315,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"spectator\",\"alive\":false}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572315,
+  "ev": "snap",
+  "data": "(sample)"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572315,
+  "ev": "snap",
+  "data": "(sample)"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572317,
+  "ev": "ack#4",
+  "data": "1596"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572318,
+  "ev": "chat",
+  "data": "{\"name\":\"\",\"text\":\"ProdA Forest Survival xonasiga qo'shildi\",\"team\":\"none\",\"system\":true}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572318,
+  "ev": "chat",
+  "data": "{\"name\":\"\",\"text\":\"Raund #1 boshlanishiga 10 soniya qoldi!\",\"team\":\"none\",\"system\":true}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572318,
+  "ev": "chat",
+  "data": "{\"name\":\"\",\"text\":\"ProdB Forest Survival xonasiga qo'shildi\",\"team\":\"none\",\"system\":true}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572318,
+  "ev": "chat",
+  "data": "{\"name\":\"\",\"text\":\"Forest Survival — 1-raund boshlandi! Qurol va buyumlarni konteynerlardan toping.\",\"team\":\"none\",\"system\":true}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572318,
+  "ev": "chat",
+  "data": "{\"name\":\"\",\"text\":\"Raund durang bilan yakunlandi!\",\"team\":\"none\",\"system\":true}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572318,
+  "ev": "chat",
+  "data": "{\"name\":\"\",\"text\":\"Forest Survival — 2-raund boshlandi! Qurol va buyumlarni konteynerlardan toping.\",\"team\":\"none\",\"system\":true}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572318,
+  "ev": "chat",
+  "data": "{\"name\":\"\",\"text\":\"Raund durang bilan yakunlandi!\",\"team\":\"none\",\"system\":true}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572318,
+  "ev": "inventory:state",
+  "data": "{\"playerId\":\"8lFcw_Dw4j4dkh47AAAF\",\"roundId\":2,\"spawnId\":0,\"inventoryVersion\":23,\"lootEnabled\":true,\"lootPreview\":true,\"equippedWeapon\":null,\"ownedWeapons\":[],\"ammo\":{\"rifle\":{\"mag\":0,\"reserve\":0},\"pistol\":{\"mag\":0,\"reserve\":0},\"shotgun\":{\"mag\":0,\"reserve\":0},\"sniper\":{\"mag\":0,\"reserve\":0}},\"grenades\":0,\"medkits\":0,\"maxWeaponSlots\":4,\"maxMedkits\":3,\"maxGrenades\":3,\"items\":[]}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572319,
+  "ev": "loot:snapshot",
+  "data": "{\"roomId\":\"r2d5vv\",\"roundId\":2,\"version\":12,\"lootEnabled\":true,\"lootPreview\":true,\"containers\":[{\"id\":\"poi:poi_ranger_house:cnt_0:wooden_loot_crate_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"supply_crate\",\"labelUz\":\"Ta'minot qutisi\",\"position\":{\"x\":-67.65,\"y\":1.48,\"z\":-62.55},\"yaw\":3.142,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_1:metal_locker_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"metal_locker_01\",\"kind\":\"weapon_locker\",\"labelUz\":\"Qurol shkafi\",\"position\":{\"x\":-70.65,\"y\":1.48,\"z\":-65.58},\"yaw\":0,\"interactionRadius\":2.247,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_2:old_toolbox_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"old_toolbox_01\",\"kind\":\"ammo_box\",\"labelUz\":\"O'q-dori qutisi\",\"position\":{\"x\":-69.2,\"y\":2.23,\"z\":-65.35},\"yaw\":0,\"interactionRadius\":1.574,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_3:wooden_loot_crate_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"camp_chest\",\"labelUz\":\"Lager sandig‘i\",\"position\":{\"x\":-67.8,\"y\":1.32,\"z\":-60.6},\"yaw\":-1.571,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_cabin_cluster:cnt_0:wooden_loot_crate_01\",\"locationId\":\"poi_cabin_cluster\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"supply_crate\",\"labelUz\":\"Ta'minot qutisi\",\"position\":{\"x\":69.35,\"y\":2.03,\"z\":-68.55},\"yaw\":3.142,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_cabin_cluster:cnt_1:metal_locker_01\",\"locationId\":\"poi_cabin_cluster\",\"assetId\":\"metal_locker_01\",\"kind\":\"weapon_locker\",\"labelUz\":\"Qurol shkafi\",\"position\":{\"x\":66.35,\"y\":2.03,\"z\":-71.58},\"yaw\":0,\"interactionRadius\":2.247"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572319,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"spectator\",\"alive\":false}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572320,
+  "ev": "match",
+  "data": "{\"phase\":\"ended\",\"timeLeft\":7,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"draw\",\"roundId\":2,\"aliveCount\":2,\"totalContenders\":2,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"draw_timeout\",\"survival\":{\"roundId\":2,\"phase\":\"ended\",\"timeLeft\":7,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\"],\"spectatorIds\":[\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveCount\":2,\"totalContenders\":2,\"winnerId\":null,\"winnerName\":\"draw\",\"winReason\":\"draw_timeout\",\"statusTextUz\":\"Durang: vaqt tugadi, g‘olib aniqlanmadi • Keyingi raund: 7s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"spectator\",\"alive\":false,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572321,
+  "ev": "chat",
+  "data": "{\"name\":\"\",\"text\":\"ProdC kuzatuvchi sifatida qo'shildi (keyingi raundda qatnashadi)\",\"team\":\"none\",\"system\":true}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572321,
+  "ev": "ack#5",
+  "data": "{\"ok\":true,\"serverWorld\":{\"mapId\":\"forest_square\",\"worldVersion\":2,\"publicLayoutSeed\":6501,\"gameplayHash\":\"670a9c21f0565c94\"}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572324,
+  "ev": "match",
+  "data": "{\"phase\":\"ended\",\"timeLeft\":6,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"draw\",\"roundId\":2,\"aliveCount\":2,\"totalContenders\":2,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"draw_timeout\",\"survival\":{\"roundId\":2,\"phase\":\"ended\",\"timeLeft\":6,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\"],\"spectatorIds\":[\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveCount\":2,\"totalContenders\":2,\"winnerId\":null,\"winnerName\":\"draw\",\"winReason\":\"draw_timeout\",\"statusTextUz\":\"Durang: vaqt tugadi, g‘olib aniqlanmadi • Keyingi raund: 6s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"spectator\",\"alive\":false,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999572887,
+  "ev": "latency",
+  "data": "3666.4000000003725"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572887,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"spectator\",\"alive\":false}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572887,
+  "ev": "match",
+  "data": "{\"phase\":\"ended\",\"timeLeft\":5,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"draw\",\"roundId\":2,\"aliveCount\":2,\"totalContenders\":2,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"draw_timeout\",\"survival\":{\"roundId\":2,\"phase\":\"ended\",\"timeLeft\":5,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\"],\"spectatorIds\":[\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveCount\":2,\"totalContenders\":2,\"winnerId\":null,\"winnerName\":\"draw\",\"winReason\":\"draw_timeout\",\"statusTextUz\":\"Durang: vaqt tugadi, g‘olib aniqlanmadi • Keyingi raund: 5s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"spectator\",\"alive\":false,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999572892,
+  "ev": "ack#6",
+  "data": "3666.4000000003725"
+ },
+ {
+  "dir": "in",
+  "t": 1792999573901,
+  "ev": "match",
+  "data": "{\"phase\":\"ended\",\"timeLeft\":4,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"draw\",\"roundId\":2,\"aliveCount\":2,\"totalContenders\":2,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"draw_timeout\",\"survival\":{\"roundId\":2,\"phase\":\"ended\",\"timeLeft\":4,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\"],\"spectatorIds\":[\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveCount\":2,\"totalContenders\":2,\"winnerId\":null,\"winnerName\":\"draw\",\"winReason\":\"draw_timeout\",\"statusTextUz\":\"Durang: vaqt tugadi, g‘olib aniqlanmadi • Keyingi raund: 4s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"spectator\",\"alive\":false,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999574847,
+  "ev": "latency",
+  "data": "5626.799999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792999574847,
+  "ev": "ack#7",
+  "data": "5626.799999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792999574874,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"spectator\",\"alive\":false}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999574928,
+  "ev": "match",
+  "data": "{\"phase\":\"ended\",\"timeLeft\":3,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"draw\",\"roundId\":2,\"aliveCount\":2,\"totalContenders\":2,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"draw_timeout\",\"survival\":{\"roundId\":2,\"phase\":\"ended\",\"timeLeft\":3,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\"],\"spectatorIds\":[\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveCount\":2,\"totalContenders\":2,\"winnerId\":null,\"winnerName\":\"draw\",\"winReason\":\"draw_timeout\",\"statusTextUz\":\"Durang: vaqt tugadi, g‘olib aniqlanmadi • Keyingi raund: 3s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"spectator\",\"alive\":false,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999575971,
+  "ev": "match",
+  "data": "{\"phase\":\"ended\",\"timeLeft\":2,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"draw\",\"roundId\":2,\"aliveCount\":2,\"totalContenders\":2,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"draw_timeout\",\"survival\":{\"roundId\":2,\"phase\":\"ended\",\"timeLeft\":2,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\"],\"spectatorIds\":[\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveCount\":2,\"totalContenders\":2,\"winnerId\":null,\"winnerName\":\"draw\",\"winReason\":\"draw_timeout\",\"statusTextUz\":\"Durang: vaqt tugadi, g‘olib aniqlanmadi • Keyingi raund: 2s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"spectator\",\"alive\":false,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999576822,
+  "ev": "latency",
+  "data": "7601.700000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792999576823,
+  "ev": "ack#8",
+  "data": "7601.700000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792999576870,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"spectator\",\"alive\":false}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999577014,
+  "ev": "match",
+  "data": "{\"phase\":\"ended\",\"timeLeft\":1,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"draw\",\"roundId\":2,\"aliveCount\":2,\"totalContenders\":2,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"draw_timeout\",\"survival\":{\"roundId\":2,\"phase\":\"ended\",\"timeLeft\":1,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\"],\"spectatorIds\":[\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveCount\":2,\"totalContenders\":2,\"winnerId\":null,\"winnerName\":\"draw\",\"winReason\":\"draw_timeout\",\"statusTextUz\":\"Durang: vaqt tugadi, g‘olib aniqlanmadi • Keyingi raund: 1s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"spectator\",\"alive\":false,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999577197,
+  "ev": "spawn",
+  "data": "{\"spawnId\":1,\"roundId\":3,\"x\":35.452,\"y\":-0.093,\"z\":44.579,\"yaw\":0.26628368139643965,\"team\":\"none\",\"weapon\":null,\"lootPreview\":true,\"lootEnabled\":true}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999577197,
+  "ev": "inventory:state",
+  "data": "{\"playerId\":\"8lFcw_Dw4j4dkh47AAAF\",\"roundId\":3,\"spawnId\":1,\"inventoryVersion\":29,\"lootEnabled\":true,\"lootPreview\":true,\"equippedWeapon\":null,\"ownedWeapons\":[],\"ammo\":{\"rifle\":{\"mag\":0,\"reserve\":0},\"pistol\":{\"mag\":0,\"reserve\":0},\"shotgun\":{\"mag\":0,\"reserve\":0},\"sniper\":{\"mag\":0,\"reserve\":0}},\"grenades\":0,\"medkits\":0,\"maxWeaponSlots\":4,\"maxMedkits\":3,\"maxGrenades\":3,\"items\":[]}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999577200,
+  "ev": "loot:snapshot",
+  "data": "{\"roomId\":\"r2d5vv\",\"roundId\":3,\"version\":13,\"lootEnabled\":true,\"lootPreview\":true,\"containers\":[{\"id\":\"poi:poi_ranger_house:cnt_0:wooden_loot_crate_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"supply_crate\",\"labelUz\":\"Ta'minot qutisi\",\"position\":{\"x\":-67.65,\"y\":1.48,\"z\":-62.55},\"yaw\":3.142,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_1:metal_locker_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"metal_locker_01\",\"kind\":\"weapon_locker\",\"labelUz\":\"Qurol shkafi\",\"position\":{\"x\":-70.65,\"y\":1.48,\"z\":-65.58},\"yaw\":0,\"interactionRadius\":2.247,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_2:old_toolbox_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"old_toolbox_01\",\"kind\":\"ammo_box\",\"labelUz\":\"O'q-dori qutisi\",\"position\":{\"x\":-69.2,\"y\":2.23,\"z\":-65.35},\"yaw\":0,\"interactionRadius\":1.574,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_3:wooden_loot_crate_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"camp_chest\",\"labelUz\":\"Lager sandig‘i\",\"position\":{\"x\":-67.8,\"y\":1.32,\"z\":-60.6},\"yaw\":-1.571,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_cabin_cluster:cnt_0:wooden_loot_crate_01\",\"locationId\":\"poi_cabin_cluster\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"supply_crate\",\"labelUz\":\"Ta'minot qutisi\",\"position\":{\"x\":69.35,\"y\":2.03,\"z\":-68.55},\"yaw\":3.142,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_cabin_cluster:cnt_1:metal_locker_01\",\"locationId\":\"poi_cabin_cluster\",\"assetId\":\"metal_locker_01\",\"kind\":\"weapon_locker\",\"labelUz\":\"Qurol shkafi\",\"position\":{\"x\":66.35,\"y\":2.03,\"z\":-71.58},\"yaw\":0,\"interactionRadius\":2.247"
+ },
+ {
+  "dir": "in",
+  "t": 1792999577201,
+  "ev": "loot:snapshot",
+  "data": "{\"roomId\":\"r2d5vv\",\"roundId\":3,\"version\":13,\"lootEnabled\":true,\"lootPreview\":true,\"containers\":[{\"id\":\"poi:poi_ranger_house:cnt_0:wooden_loot_crate_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"supply_crate\",\"labelUz\":\"Ta'minot qutisi\",\"position\":{\"x\":-67.65,\"y\":1.48,\"z\":-62.55},\"yaw\":3.142,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_1:metal_locker_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"metal_locker_01\",\"kind\":\"weapon_locker\",\"labelUz\":\"Qurol shkafi\",\"position\":{\"x\":-70.65,\"y\":1.48,\"z\":-65.58},\"yaw\":0,\"interactionRadius\":2.247,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_2:old_toolbox_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"old_toolbox_01\",\"kind\":\"ammo_box\",\"labelUz\":\"O'q-dori qutisi\",\"position\":{\"x\":-69.2,\"y\":2.23,\"z\":-65.35},\"yaw\":0,\"interactionRadius\":1.574,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_3:wooden_loot_crate_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"camp_chest\",\"labelUz\":\"Lager sandig‘i\",\"position\":{\"x\":-67.8,\"y\":1.32,\"z\":-60.6},\"yaw\":-1.571,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_cabin_cluster:cnt_0:wooden_loot_crate_01\",\"locationId\":\"poi_cabin_cluster\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"supply_crate\",\"labelUz\":\"Ta'minot qutisi\",\"position\":{\"x\":69.35,\"y\":2.03,\"z\":-68.55},\"yaw\":3.142,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_cabin_cluster:cnt_1:metal_locker_01\",\"locationId\":\"poi_cabin_cluster\",\"assetId\":\"metal_locker_01\",\"kind\":\"weapon_locker\",\"labelUz\":\"Qurol shkafi\",\"position\":{\"x\":66.35,\"y\":2.03,\"z\":-71.58},\"yaw\":0,\"interactionRadius\":2.247"
+ },
+ {
+  "dir": "in",
+  "t": 1792999577202,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"waiting\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"waiting\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"waiting\",\"alive\":true}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999577202,
+  "ev": "match",
+  "data": "{\"phase\":\"countdown\",\"timeLeft\":10,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":0,\"totalContenders\":0,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"countdown\",\"timeLeft\":10,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[],\"aliveIds\":[],\"spectatorIds\":[],\"aliveCount\":0,\"totalContenders\":0,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Raund boshlanishiga 10s qoldi (3 ishtirokchi tayyor)\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999577202,
+  "ev": "match",
+  "data": "{\"phase\":\"countdown\",\"timeLeft\":10,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":0,\"totalContenders\":0,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"countdown\",\"timeLeft\":10,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[],\"aliveIds\":[],\"spectatorIds\":[],\"aliveCount\":0,\"totalContenders\":0,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Raund boshlanishiga 10s qoldi (3 ishtirokchi tayyor)\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999577203,
+  "ev": "match",
+  "data": "{\"phase\":\"countdown\",\"timeLeft\":10,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":0,\"totalContenders\":0,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"countdown\",\"timeLeft\":10,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[],\"aliveIds\":[],\"spectatorIds\":[],\"aliveCount\":0,\"totalContenders\":0,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Raund boshlanishiga 10s qoldi (3 ishtirokchi tayyor)\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999577203,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"waiting\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"waiting\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"waiting\",\"alive\":true}]"
+ },
+ {
+  "dir": "out",
+  "t": 1792999578031,
+  "ev": "input",
+  "data": "(sample)"
+ },
+ {
+  "dir": "out",
+  "t": 1792999578240,
+  "ev": "input",
+  "data": "(sample)"
+ },
+ {
+  "dir": "out",
+  "t": 1792999578242,
+  "ev": "input",
+  "data": "(sample)"
+ },
+ {
+  "dir": "in",
+  "t": 1792999578244,
+  "ev": "match",
+  "data": "{\"phase\":\"countdown\",\"timeLeft\":9,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":0,\"totalContenders\":0,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"countdown\",\"timeLeft\":9,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[],\"aliveIds\":[],\"spectatorIds\":[],\"aliveCount\":0,\"totalContenders\":0,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Raund boshlanishiga 9s qoldi (3 ishtirokchi tayyor)\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999578825,
+  "ev": "latency",
+  "data": "9604.600000000559"
+ },
+ {
+  "dir": "in",
+  "t": 1792999578825,
+  "ev": "ack#9",
+  "data": "9604.600000000559"
+ },
+ {
+  "dir": "in",
+  "t": 1792999579238,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"waiting\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"waiting\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"waiting\",\"alive\":true}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999579264,
+  "ev": "match",
+  "data": "{\"phase\":\"countdown\",\"timeLeft\":8,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":0,\"totalContenders\":0,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"countdown\",\"timeLeft\":8,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[],\"aliveIds\":[],\"spectatorIds\":[],\"aliveCount\":0,\"totalContenders\":0,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Raund boshlanishiga 8s qoldi (3 ishtirokchi tayyor)\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999580296,
+  "ev": "match",
+  "data": "{\"phase\":\"countdown\",\"timeLeft\":7,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":0,\"totalContenders\":0,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"countdown\",\"timeLeft\":7,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[],\"aliveIds\":[],\"spectatorIds\":[],\"aliveCount\":0,\"totalContenders\":0,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Raund boshlanishiga 7s qoldi (3 ishtirokchi tayyor)\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999580822,
+  "ev": "latency",
+  "data": "11602.200000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792999580823,
+  "ev": "ack#10",
+  "data": "11602.200000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792999581258,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"waiting\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"waiting\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"waiting\",\"alive\":true}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999581336,
+  "ev": "match",
+  "data": "{\"phase\":\"countdown\",\"timeLeft\":6,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":0,\"totalContenders\":0,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"countdown\",\"timeLeft\":6,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[],\"aliveIds\":[],\"spectatorIds\":[],\"aliveCount\":0,\"totalContenders\":0,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Raund boshlanishiga 6s qoldi (3 ishtirokchi tayyor)\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999582360,
+  "ev": "match",
+  "data": "{\"phase\":\"countdown\",\"timeLeft\":5,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":0,\"totalContenders\":0,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"countdown\",\"timeLeft\":5,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[],\"aliveIds\":[],\"spectatorIds\":[],\"aliveCount\":0,\"totalContenders\":0,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Raund boshlanishiga 5s qoldi (3 ishtirokchi tayyor)\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999582821,
+  "ev": "latency",
+  "data": "13600.799999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792999582821,
+  "ev": "ack#11",
+  "data": "13600.799999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792999583299,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"waiting\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"waiting\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"waiting\",\"alive\":true}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999583360,
+  "ev": "match",
+  "data": "{\"phase\":\"countdown\",\"timeLeft\":4,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":0,\"totalContenders\":0,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"countdown\",\"timeLeft\":4,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[],\"aliveIds\":[],\"spectatorIds\":[],\"aliveCount\":0,\"totalContenders\":0,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Raund boshlanishiga 4s qoldi (3 ishtirokchi tayyor)\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999584389,
+  "ev": "match",
+  "data": "{\"phase\":\"countdown\",\"timeLeft\":3,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":0,\"totalContenders\":0,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"countdown\",\"timeLeft\":3,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[],\"aliveIds\":[],\"spectatorIds\":[],\"aliveCount\":0,\"totalContenders\":0,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Raund boshlanishiga 3s qoldi (3 ishtirokchi tayyor)\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999584825,
+  "ev": "latency",
+  "data": "15604.100000000559"
+ },
+ {
+  "dir": "in",
+  "t": 1792999584825,
+  "ev": "ack#12",
+  "data": "15604.100000000559"
+ },
+ {
+  "dir": "in",
+  "t": 1792999585345,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"waiting\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"waiting\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"waiting\",\"alive\":true}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999585399,
+  "ev": "match",
+  "data": "{\"phase\":\"countdown\",\"timeLeft\":2,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":0,\"totalContenders\":0,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"countdown\",\"timeLeft\":2,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[],\"aliveIds\":[],\"spectatorIds\":[],\"aliveCount\":0,\"totalContenders\":0,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Raund boshlanishiga 2s qoldi (3 ishtirokchi tayyor)\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999586423,
+  "ev": "match",
+  "data": "{\"phase\":\"countdown\",\"timeLeft\":1,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":0,\"totalContenders\":0,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"countdown\",\"timeLeft\":1,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[],\"aliveIds\":[],\"spectatorIds\":[],\"aliveCount\":0,\"totalContenders\":0,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Raund boshlanishiga 1s qoldi (3 ishtirokchi tayyor)\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"waiting\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999586820,
+  "ev": "latency",
+  "data": "17600"
+ },
+ {
+  "dir": "in",
+  "t": 1792999586820,
+  "ev": "ack#13",
+  "data": "17600"
+ },
+ {
+  "dir": "in",
+  "t": 1792999587224,
+  "ev": "spawn",
+  "data": "{\"spawnId\":2,\"roundId\":3,\"x\":-90.547,\"y\":-0.141,\"z\":100.2,\"yaw\":4.67645653416009,\"team\":\"none\",\"weapon\":null,\"lootPreview\":true,\"lootEnabled\":true}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999587225,
+  "ev": "inventory:state",
+  "data": "{\"playerId\":\"8lFcw_Dw4j4dkh47AAAF\",\"roundId\":3,\"spawnId\":2,\"inventoryVersion\":35,\"lootEnabled\":true,\"lootPreview\":true,\"equippedWeapon\":null,\"ownedWeapons\":[],\"ammo\":{\"rifle\":{\"mag\":0,\"reserve\":0},\"pistol\":{\"mag\":0,\"reserve\":0},\"shotgun\":{\"mag\":0,\"reserve\":0},\"sniper\":{\"mag\":0,\"reserve\":0}},\"grenades\":0,\"medkits\":0,\"maxWeaponSlots\":4,\"maxMedkits\":3,\"maxGrenades\":3,\"items\":[]}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999587226,
+  "ev": "loot:snapshot",
+  "data": "{\"roomId\":\"r2d5vv\",\"roundId\":3,\"version\":14,\"lootEnabled\":true,\"lootPreview\":true,\"containers\":[{\"id\":\"poi:poi_ranger_house:cnt_0:wooden_loot_crate_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"supply_crate\",\"labelUz\":\"Ta'minot qutisi\",\"position\":{\"x\":-67.65,\"y\":1.48,\"z\":-62.55},\"yaw\":3.142,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_1:metal_locker_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"metal_locker_01\",\"kind\":\"weapon_locker\",\"labelUz\":\"Qurol shkafi\",\"position\":{\"x\":-70.65,\"y\":1.48,\"z\":-65.58},\"yaw\":0,\"interactionRadius\":2.247,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_2:old_toolbox_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"old_toolbox_01\",\"kind\":\"ammo_box\",\"labelUz\":\"O'q-dori qutisi\",\"position\":{\"x\":-69.2,\"y\":2.23,\"z\":-65.35},\"yaw\":0,\"interactionRadius\":1.574,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_3:wooden_loot_crate_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"camp_chest\",\"labelUz\":\"Lager sandig‘i\",\"position\":{\"x\":-67.8,\"y\":1.32,\"z\":-60.6},\"yaw\":-1.571,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_cabin_cluster:cnt_0:wooden_loot_crate_01\",\"locationId\":\"poi_cabin_cluster\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"supply_crate\",\"labelUz\":\"Ta'minot qutisi\",\"position\":{\"x\":69.35,\"y\":2.03,\"z\":-68.55},\"yaw\":3.142,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_cabin_cluster:cnt_1:metal_locker_01\",\"locationId\":\"poi_cabin_cluster\",\"assetId\":\"metal_locker_01\",\"kind\":\"weapon_locker\",\"labelUz\":\"Qurol shkafi\",\"position\":{\"x\":66.35,\"y\":2.03,\"z\":-71.58},\"yaw\":0,\"interactionRadius\":2.247"
+ },
+ {
+  "dir": "in",
+  "t": 1792999587227,
+  "ev": "loot:snapshot",
+  "data": "{\"roomId\":\"r2d5vv\",\"roundId\":3,\"version\":14,\"lootEnabled\":true,\"lootPreview\":true,\"containers\":[{\"id\":\"poi:poi_ranger_house:cnt_0:wooden_loot_crate_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"supply_crate\",\"labelUz\":\"Ta'minot qutisi\",\"position\":{\"x\":-67.65,\"y\":1.48,\"z\":-62.55},\"yaw\":3.142,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_1:metal_locker_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"metal_locker_01\",\"kind\":\"weapon_locker\",\"labelUz\":\"Qurol shkafi\",\"position\":{\"x\":-70.65,\"y\":1.48,\"z\":-65.58},\"yaw\":0,\"interactionRadius\":2.247,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_2:old_toolbox_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"old_toolbox_01\",\"kind\":\"ammo_box\",\"labelUz\":\"O'q-dori qutisi\",\"position\":{\"x\":-69.2,\"y\":2.23,\"z\":-65.35},\"yaw\":0,\"interactionRadius\":1.574,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_3:wooden_loot_crate_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"camp_chest\",\"labelUz\":\"Lager sandig‘i\",\"position\":{\"x\":-67.8,\"y\":1.32,\"z\":-60.6},\"yaw\":-1.571,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_cabin_cluster:cnt_0:wooden_loot_crate_01\",\"locationId\":\"poi_cabin_cluster\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"supply_crate\",\"labelUz\":\"Ta'minot qutisi\",\"position\":{\"x\":69.35,\"y\":2.03,\"z\":-68.55},\"yaw\":3.142,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_cabin_cluster:cnt_1:metal_locker_01\",\"locationId\":\"poi_cabin_cluster\",\"assetId\":\"metal_locker_01\",\"kind\":\"weapon_locker\",\"labelUz\":\"Qurol shkafi\",\"position\":{\"x\":66.35,\"y\":2.03,\"z\":-71.58},\"yaw\":0,\"interactionRadius\":2.247"
+ },
+ {
+  "dir": "in",
+  "t": 1792999587227,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"contender\",\"alive\":true}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999587227,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":120,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":120,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 120s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999587227,
+  "ev": "chat",
+  "data": "{\"name\":\"\",\"text\":\"Forest Survival — 3-raund boshlandi! Qurol va buyumlarni konteynerlardan toping.\",\"team\":\"none\",\"system\":true}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999587228,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":120,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":120,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 120s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999587228,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":120,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":120,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 120s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999587228,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"contender\",\"alive\":true}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999588259,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":119,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":119,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 119s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999588819,
+  "ev": "latency",
+  "data": "19598.900000000373"
+ },
+ {
+  "dir": "in",
+  "t": 1792999588819,
+  "ev": "ack#14",
+  "data": "19598.900000000373"
+ },
+ {
+  "dir": "in",
+  "t": 1792999589233,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999589292,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":118,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":118,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 118s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999590323,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":117,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":117,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 117s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999590817,
+  "ev": "latency",
+  "data": "21596.799999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792999590818,
+  "ev": "ack#15",
+  "data": "21596.799999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792999591261,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999591330,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":116,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":116,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 116s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999592357,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":115,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":115,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 115s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999592825,
+  "ev": "latency",
+  "data": "23604.400000000373"
+ },
+ {
+  "dir": "in",
+  "t": 1792999592826,
+  "ev": "ack#16",
+  "data": "23604.400000000373"
+ },
+ {
+  "dir": "in",
+  "t": 1792999593290,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999593357,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":114,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":114,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 114s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999594367,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":113,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":113,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 113s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999594821,
+  "ev": "latency",
+  "data": "25600.400000000373"
+ },
+ {
+  "dir": "in",
+  "t": 1792999594821,
+  "ev": "ack#17",
+  "data": "25600.400000000373"
+ },
+ {
+  "dir": "in",
+  "t": 1792999595332,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999595372,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":112,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":112,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 112s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999596396,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":111,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":111,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 111s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999596832,
+  "ev": "latency",
+  "data": "27609.5"
+ },
+ {
+  "dir": "in",
+  "t": 1792999596832,
+  "ev": "ack#18",
+  "data": "27609.5"
+ },
+ {
+  "dir": "in",
+  "t": 1792999597358,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999597423,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":110,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":110,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 110s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999598428,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":109,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":109,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 109s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999598820,
+  "ev": "latency",
+  "data": "29598.200000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792999598820,
+  "ev": "ack#19",
+  "data": "29598.200000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792999599365,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"contender\",\"alive\":true}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999599428,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":108,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":108,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 108s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999600434,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":107,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":107,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 107s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999600827,
+  "ev": "latency",
+  "data": "31605"
+ },
+ {
+  "dir": "in",
+  "t": 1792999600827,
+  "ev": "ack#20",
+  "data": "31605"
+ },
+ {
+  "dir": "in",
+  "t": 1792999601400,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999601468,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":106,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":106,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 106s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999602492,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":105,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":105,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 105s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999602824,
+  "ev": "latency",
+  "data": "33601.60000000056"
+ },
+ {
+  "dir": "in",
+  "t": 1792999602825,
+  "ev": "ack#21",
+  "data": "33601.60000000056"
+ },
+ {
+  "dir": "in",
+  "t": 1792999603400,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999603496,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":104,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":104,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 104s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999604526,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":103,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":103,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 103s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792999604822,
+  "ev": "latency",
+  "data": "35600.10000000056"
+ },
+ {
+  "dir": "in",
+  "t": 1792999604822,
+  "ev": "ack#22",
+  "data": "35600.10000000056"
+ },
+ {
+  "dir": "in",
+  "t": 1792999605429,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999605570,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":102,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":3,\"totalContenders\":3,\"readyCount\":3,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":102,\"minPlayers\":2,\"readyCount\":3,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":3,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 3/3 • Vaqt: 102s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"XgY883FK4TIqt84eAAAD\",\"name\":\"ProdB\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999605712,
+  "ev": "chat",
+  "data": "{\"name\":\"\",\"text\":\"ProdB o'yindan chiqdi\",\"team\":\"none\",\"system\":true}"
+ },
+ {
+  "dir": "in",
+  "t": 1792999605712,
+  "ev": "roster",
+  "data": "[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0,\"survivalRole\":\"contender\",\"alive\":true},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"team\":\"none\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1,\"survivalRole\":\"contender\",\"alive\":true}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792999605713,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":102,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":1,\"mode\":\"forest_survival\",\"winner\":\"\",\"roundId\":3,\"aliveCount\":2,\"totalContenders\":3,\"readyCount\":2,\"minPlayers\":2,\"winnerId\":null,\"winReason\":\"none\",\"survival\":{\"roundId\":3,\"phase\":\"playing\",\"timeLeft\":102,\"minPlayers\":2,\"readyCount\":2,\"contenderIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"XgY883FK4TIqt84eAAAD\",\"8lFcw_Dw4j4dkh47AAAF\"],\"aliveIds\":[\"O8lPK6eajlJgt3IyAAAB\",\"8lFcw_Dw4j4dkh47AAAF\"],\"spectatorIds\":[],\"aliveCount\":2,\"totalContenders\":3,\"winnerId\":null,\"winnerName\":\"\",\"winReason\":\"none\",\"statusTextUz\":\"Tirik qolganlar: 2/3 • Vaqt: 102s\",\"players\":[{\"id\":\"O8lPK6eajlJgt3IyAAAB\",\"name\":\"ProdA\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0},{\"id\":\"8lFcw_Dw4j4dkh47AAAF\",\"name\":\"ProdC\",\"role\":\"contender\",\"alive\":true,\"ready\":true,\"kills\":0,\"deaths\":0}]}}"
+ }
+]

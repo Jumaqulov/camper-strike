@@ -1,0 +1,1158 @@
+[
+ {
+  "client": "A",
+  "id": "lobbyA",
+  "attempt": 1,
+  "t0": 1792998203838,
+  "t1": 1792998204357,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792998203867,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998204097,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998204141,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998204230,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998204280,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6881515,
+    "tick": 6881531
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6881515,
+    "tick": 6882046
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "lobbyB",
+  "attempt": 1,
+  "t0": 1792998204375,
+  "t1": 1792998204887,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792998204393,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998204630,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998204673,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998204764,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998204813,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 21920,
+    "lastInput": 6882062,
+    "tick": 6882062
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 21920,
+    "lastInput": 6882062,
+    "tick": 6882578
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "ffa.create",
+  "attempt": 1,
+  "t0": 1792998204905,
+  "t1": 1792998207694,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792998204979,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998205279,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998205363,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998205663,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998205712,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998205796,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998205880,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6882593,
+    "tick": 6882593
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": true
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6882593,
+    "tick": 6885531
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "ffa.join",
+  "attempt": 1,
+  "t0": 1792998208466,
+  "t1": 1792998210730,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792998208480,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998209038,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 21920,
+    "lastInput": 6886156,
+    "tick": 6886156
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": true
+   },
+   "os": {
+    "fgPid": 21920,
+    "lastInput": 6886156,
+    "tick": 6888562
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "ffa.B.lock",
+  "attempt": 1,
+  "t0": 1792998216699,
+  "t1": 1792998217849,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 21920,
+    "lastInput": 6894265,
+    "tick": 6894390
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 21920,
+    "lastInput": 6894265,
+    "tick": 6895546
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "ffa.A.lock",
+  "attempt": 1,
+  "t0": 1792998217989,
+  "t1": 1792998217989,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6895546,
+    "tick": 6895687
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6895546,
+    "tick": 6895687
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "ffa.walk",
+  "attempt": 1,
+  "t0": 1792998218001,
+  "t1": 1792998221073,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [
+   "physical OS input during interval (user mouse/keyboard)"
+  ],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6895687,
+    "tick": 6895687
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6898765,
+    "tick": 6898765
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "ffa.run",
+  "attempt": 1,
+  "t0": 1792998221084,
+  "t1": 1792998225055,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [
+   "physical OS input during interval (user mouse/keyboard)"
+  ],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6898781,
+    "tick": 6898781
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6899156,
+    "tick": 6902750
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "ffa.weaponSwitch",
+  "attempt": 1,
+  "t0": 1792998225066,
+  "t1": 1792998226847,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6902750,
+    "tick": 6902765
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6902750,
+    "tick": 6904546
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "ffa.B.view",
+  "attempt": 1,
+  "t0": 1792998226981,
+  "t1": 1792998228144,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 21920,
+    "lastInput": 6904546,
+    "tick": 6904671
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 21920,
+    "lastInput": 6904546,
+    "tick": 6905843
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "surv.create",
+  "attempt": 1,
+  "t0": 1792998229341,
+  "t1": 1792998230391,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792998229397,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998229679,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998229763,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998229847,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6907015,
+    "tick": 6907031
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": true
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6907015,
+    "tick": 6908109
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "surv.join",
+  "attempt": 1,
+  "t0": 1792998230440,
+  "t1": 1792998232249,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792998230446,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998230987,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 21920,
+    "lastInput": 6908125,
+    "tick": 6908140
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": true
+   },
+   "os": {
+    "fgPid": 21920,
+    "lastInput": 6908125,
+    "tick": 6909984
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "surv.reach#1",
+  "attempt": 1,
+  "t0": 1792998241531,
+  "t1": 1792998262004,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6918984,
+    "tick": 6919218
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6918984,
+    "tick": 6939703
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "surv.open#1",
+  "attempt": 1,
+  "t0": 1792998262016,
+  "t1": 1792998263130,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6939703,
+    "tick": 6939703
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6939703,
+    "tick": 6940828
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "surv.pickup#1",
+  "attempt": 1,
+  "t0": 1792998263346,
+  "t1": 1792998266361,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6941031,
+    "tick": 6941031
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6941031,
+    "tick": 6944046
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "surv.weaponSwitch",
+  "attempt": 1,
+  "t0": 1792998266373,
+  "t1": 1792998269719,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6944062,
+    "tick": 6944062
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6944062,
+    "tick": 6947406
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "surv.approachB",
+  "attempt": 1,
+  "t0": 1792998269730,
+  "t1": 1792998281991,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6947421,
+    "tick": 6947421
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6947421,
+    "tick": 6959687
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "survival_B_sees_A_rifle.aim",
+  "attempt": 1,
+  "t0": 1792998282136,
+  "t1": 1792998282629,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 21920,
+    "lastInput": 6959687,
+    "tick": 6959828
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 21920,
+    "lastInput": 6959687,
+    "tick": 6960328
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "survival_B_sees_A_rifle.act",
+  "attempt": 1,
+  "t0": 1792998282784,
+  "t1": 1792998283383,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6960328,
+    "tick": 6960468
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 6960328,
+    "tick": 6961078
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "survival_B_sees_A_rifle.capture",
+  "attempt": 1,
+  "t0": 1792998283481,
+  "t1": 1792998283801,
+  "needLock": true,
+  "events": [
+   {
+    "type": "lock",
+    "ts": 1792998283481,
+    "focus": true,
+    "vis": "visible",
+    "locked": true
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 21920,
+    "lastInput": 6961078,
+    "tick": 6961171
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 21920,
+    "lastInput": 6961078,
+    "tick": 6961500
+   }
+  }
+ },
+ {
+  "client": "C",
+  "id": "surv.C.lobby",
+  "attempt": 1,
+  "t0": 1792998283835,
+  "t1": 1792998284382,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792998283867,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998284110,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998284161,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998284252,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998284303,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36672,
+    "lastInput": 6961515,
+    "tick": 6961531
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36672,
+    "lastInput": 6961515,
+    "tick": 6962078
+   }
+  }
+ },
+ {
+  "client": "C",
+  "id": "surv.C.join",
+  "attempt": 1,
+  "t0": 1792998284392,
+  "t1": 1792998286886,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792998284457,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998285001,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36672,
+    "lastInput": 6962078,
+    "tick": 6962078
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": true
+   },
+   "os": {
+    "fgPid": 36672,
+    "lastInput": 6962078,
+    "tick": 6965406
+   }
+  }
+ },
+ {
+  "client": "C",
+  "id": "surv.C.spectate",
+  "attempt": 1,
+  "t0": 1792998292047,
+  "t1": 1792998294037,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36672,
+    "lastInput": 6969625,
+    "tick": 6969734
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36672,
+    "lastInput": 6969625,
+    "tick": 6971734
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "surv.nextRound.shot",
+  "attempt": 1,
+  "t0": 1792998373829,
+  "t1": 1792998374285,
+  "needLock": false,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": true
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 7051500,
+    "tick": 7051515
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": true
+   },
+   "os": {
+    "fgPid": 7680,
+    "lastInput": 7051500,
+    "tick": 7051968
+   }
+  }
+ }
+]

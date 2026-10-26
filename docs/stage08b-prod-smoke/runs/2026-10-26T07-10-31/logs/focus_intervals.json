@@ -1,0 +1,542 @@
+[
+ {
+  "client": "A",
+  "id": "lobbyA",
+  "attempt": 1,
+  "t0": 1792998633526,
+  "t1": 1792998634070,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792998633548,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998633797,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998633850,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998633947,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998633997,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [
+   "physical OS input during interval (user mouse/keyboard)"
+  ],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7311203,
+    "tick": 7311203
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7311734,
+    "tick": 7311750
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "vsync.create",
+  "attempt": 1,
+  "t0": 1792998636645,
+  "t1": 1792998639213,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792998636696,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998636979,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998637064,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998637363,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998637413,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998637497,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998637580,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7314312,
+    "tick": 7314328
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": true
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7314312,
+    "tick": 7317031
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "vsync.calibrate",
+  "attempt": 1,
+  "t0": 1792998644066,
+  "t1": 1792998644731,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [
+   "physical OS input during interval (user mouse/keyboard)"
+  ],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7321609,
+    "tick": 7321734
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7322406,
+    "tick": 7322406
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "vsync.setQuality.medium",
+  "attempt": 1,
+  "t0": 1792998644744,
+  "t1": 1792998646832,
+  "needLock": false,
+  "events": [
+   {
+    "type": "unlock",
+    "ts": 1792998644766,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998645731,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [
+   "physical OS input during interval (user mouse/keyboard)"
+  ],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7322421,
+    "tick": 7322421
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": true
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7324500,
+    "tick": 7324515
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "vsync.medium.idle",
+  "attempt": 1,
+  "t0": 1792998646975,
+  "t1": 1792998667242,
+  "needLock": true,
+  "events": [
+   {
+    "type": "blur",
+    "ts": 1792998651206,
+    "focus": false,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "unlock",
+    "ts": 1792998651206,
+    "focus": false,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998654556,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "blur",
+    "ts": 1792998656022,
+    "focus": false,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": false,
+  "reasons": [
+   "os.foreground@end=16820≠31544",
+   "page.hasFocus@end=false",
+   "pointerLock@end=false",
+   "event:blur@+4231ms",
+   "event:unlock@+4231ms",
+   "event:blur@+9047ms"
+  ],
+  "warnings": [
+   "physical OS input during interval (user mouse/keyboard)"
+  ],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7324625,
+    "tick": 7324656
+   }
+  },
+  "end": {
+   "page": {
+    "focus": false,
+    "vis": "visible",
+    "locked": false,
+    "paused": true
+   },
+   "os": {
+    "fgPid": 16820,
+    "lastInput": 7334796,
+    "tick": 7344921
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "vsync.medium.idle",
+  "attempt": 2,
+  "t0": 1792998667371,
+  "t1": 1792998687666,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7344921,
+    "tick": 7345046
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7344921,
+    "tick": 7365343
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "vsync.medium.move",
+  "attempt": 1,
+  "t0": 1792998687675,
+  "t1": 1792998723811,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7365343,
+    "tick": 7365343
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7365343,
+    "tick": 7401484
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "vsync.setQuality.low",
+  "attempt": 1,
+  "t0": 1792998723820,
+  "t1": 1792998726442,
+  "needLock": false,
+  "events": [
+   {
+    "type": "unlock",
+    "ts": 1792998723841,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998724800,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7401484,
+    "tick": 7401500
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": true
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7401562,
+    "tick": 7404109
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "vsync.low.idle",
+  "attempt": 1,
+  "t0": 1792998726587,
+  "t1": 1792998746779,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7404125,
+    "tick": 7404265
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7404125,
+    "tick": 7424453
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "vsync.low.move",
+  "attempt": 1,
+  "t0": 1792998746790,
+  "t1": 1792998783584,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7424468,
+    "tick": 7424468
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 31544,
+    "lastInput": 7424468,
+    "tick": 7461265
+   }
+  }
+ }
+]

@@ -1,0 +1,1937 @@
+{
+  "meta": {
+    "startedAt": "2026-10-26T07:06:26.017Z",
+    "port": 3600,
+    "parts": [
+      "tdm",
+      "buddy"
+    ],
+    "attempts": 3,
+    "chrome": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "mode": "production dist via npm run serve",
+    "input": "CDP Input.dispatchMouseEvent/dispatchKeyEvent/insertText (trusted) only",
+    "focusPolicy": "OS foreground + page focus/visibility/pointer lock verified per interval; rejected intervals retried; never PASS without a valid interval",
+    "host": {
+      "cpu": "Intel(R) Core(TM) i5-14400",
+      "cores": 16,
+      "ramGB": 32,
+      "platform": "win32 10.0.26300"
+    }
+  },
+  "server": {
+    "pid": 18600,
+    "apiInfo": {
+      "status": 200,
+      "body": "{\"ips\":[\"192.168.0.8\",\"192.168.184.1\"],\"port\":3600}"
+    },
+    "index": {
+      "status": 200,
+      "type": "text/html; charset=utf-8",
+      "hasBundle": true,
+      "devHmr": false
+    },
+    "glbStatus": 200,
+    "glbBytes": 610972,
+    "viteClientStatus": 404
+  },
+  "clients": [
+    {
+      "label": "A",
+      "myId": "Lh08iANtBv0zl-QsAAAB",
+      "roomId": "r1pgy6",
+      "wsUrls": [
+        "ws://127.0.0.1:3600/socket.io/?EIO=4&transport=websocket",
+        "ws://127.0.0.1:3600/socket.io/?EIO=4&transport=websocket"
+      ],
+      "glbLoads": [
+        {
+          "url": "/models/weapons/ak47.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 939562
+        },
+        {
+          "url": "/models/weapons/pistol.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 674066
+        },
+        {
+          "url": "/models/weapons/awp.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 948666
+        },
+        {
+          "url": "/models/weapons/shotgun.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 426690
+        },
+        {
+          "url": "/models/forest/pine_tree_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 51940
+        },
+        {
+          "url": "/models/forest/pine_tree_02.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 67817
+        },
+        {
+          "url": "/models/forest/spruce_tree_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 76257
+        },
+        {
+          "url": "/models/forest/birch_tree_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 156174
+        },
+        {
+          "url": "/models/forest/dead_tree_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 78509
+        },
+        {
+          "url": "/models/forest/forest_rock_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 21072
+        },
+        {
+          "url": "/models/forest/forest_bush_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 84777
+        },
+        {
+          "url": "/models/buildings/wood_wall_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 93937
+        },
+        {
+          "url": "/models/buildings/wood_wall_window_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 159722
+        },
+        {
+          "url": "/models/buildings/wood_wall_door_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 130674
+        },
+        {
+          "url": "/models/buildings/wood_floor_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 72761
+        },
+        {
+          "url": "/models/buildings/wood_roof_slope_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 170986
+        },
+        {
+          "url": "/models/buildings/wood_roof_gable_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 97893
+        },
+        {
+          "url": "/models/buildings/wood_door_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 45768
+        },
+        {
+          "url": "/models/interior/wooden_table_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 32632
+        },
+        {
+          "url": "/models/buildings/wood_stairs_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 90957
+        },
+        {
+          "url": "/models/interior/wooden_chair_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 45184
+        },
+        {
+          "url": "/models/interior/wooden_shelf_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 48640
+        },
+        {
+          "url": "/models/interior/old_bed_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 92977
+        },
+        {
+          "url": "/models/interior/old_sofa_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 106006
+        },
+        {
+          "url": "/models/interior/kitchen_cabinet_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 79629
+        },
+        {
+          "url": "/models/loot/wooden_loot_crate_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 127442
+        },
+        {
+          "url": "/models/loot/metal_locker_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 156162
+        },
+        {
+          "url": "/models/loot/old_toolbox_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 104338
+        },
+        {
+          "url": "/models/grass/grass_short_soft_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 8143
+        },
+        {
+          "url": "/models/grass/grass_short_dense_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 10740
+        },
+        {
+          "url": "/models/grass/grass_meadow_wide_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 11384
+        },
+        {
+          "url": "/models/grass/grass_meadow_thin_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 12028
+        },
+        {
+          "url": "/models/grass/grass_tall_wild_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 11376
+        },
+        {
+          "url": "/models/grass/grass_tall_seeded_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 12676
+        },
+        {
+          "url": "/models/grass/grass_dry_straw_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 11372
+        },
+        {
+          "url": "/models/grass/grass_shade_dark_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 9219
+        },
+        {
+          "url": "/models/grass/grass_olive_tuft_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 10736
+        },
+        {
+          "url": "/models/grass/grass_path_edge_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 11376
+        },
+        {
+          "url": "/models/grass/grass_forest_sparse_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 8143
+        },
+        {
+          "url": "/models/grass/grass_wavy_broad_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 12460
+        },
+        {
+          "url": "/models/grass/flower_white_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 15260
+        },
+        {
+          "url": "/models/grass/flower_yellow_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 15024
+        },
+        {
+          "url": "/models/grass/flower_purple_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 15912
+        },
+        {
+          "url": "/models/grass/fern_small_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 16768
+        },
+        {
+          "url": "/models/grass/fern_wide_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 24324
+        },
+        {
+          "url": "/models/weapons/ak47.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/weapons/pistol.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/weapons/shotgun.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/weapons/awp.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/forest/pine_tree_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/forest/pine_tree_02.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/forest/spruce_tree_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/forest/birch_tree_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/forest/dead_tree_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/forest/forest_rock_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/forest/forest_bush_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/buildings/wood_wall_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/buildings/wood_wall_window_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/buildings/wood_wall_door_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/buildings/wood_floor_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/buildings/wood_roof_slope_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/buildings/wood_roof_gable_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/buildings/wood_door_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/buildings/wood_stairs_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/interior/wooden_table_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/interior/wooden_chair_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/interior/wooden_shelf_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/interior/old_bed_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/interior/old_sofa_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/interior/kitchen_cabinet_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/loot/wooden_loot_crate_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/loot/metal_locker_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/loot/old_toolbox_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/grass/grass_short_soft_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_short_dense_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_meadow_wide_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_meadow_thin_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_tall_wild_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_tall_seeded_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_dry_straw_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_olive_tuft_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_shade_dark_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_forest_sparse_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_path_edge_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_wavy_broad_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/flower_white_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/flower_yellow_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/flower_purple_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/fern_small_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/fern_wide_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/outdoor/wooden_signpost_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 66977
+        },
+        {
+          "url": "/models/outdoor/lumber_stack_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 75953
+        },
+        {
+          "url": "/models/outdoor/sawhorse_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 54336
+        },
+        {
+          "url": "/models/outdoor/old_fuel_pump_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 166550
+        },
+        {
+          "url": "/models/outdoor/rusty_barrel_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 100073
+        },
+        {
+          "url": "/models/outdoor/forest_tent_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 59072
+        },
+        {
+          "url": "/models/outdoor/campfire_pit_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 160678
+        },
+        {
+          "url": "/models/outdoor/wooden_railing_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 21144
+        },
+        {
+          "url": "/models/characters/camper_buddy_balanced_rigged.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 611286
+        }
+      ],
+      "consoleErrors": [],
+      "warnings": [
+        {
+          "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+          "n": 1
+        }
+      ],
+      "exceptions": [],
+      "logErrors": [],
+      "networkErrors": [],
+      "networkAborted": 0,
+      "lifecycle": [
+        {
+          "type": "cdp-ws-close",
+          "at": "2026-10-26T07:08:11.268Z"
+        },
+        {
+          "type": "os-at-close",
+          "fgPid": 16820,
+          "msAfterClose": 1,
+          "idleMs": 1110
+        }
+      ],
+      "webgl": {
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 730 (0x0000A782) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "contextLost": 0,
+        "glWarnings": [],
+        "threeDeprecations": [
+          {
+            "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+            "n": 1
+          }
+        ]
+      },
+      "wsEvents": {
+        "out:hello": 2,
+        "in:ack": 64,
+        "out:createRoom": 1,
+        "out:joinRoom": 1,
+        "out:latency": 50,
+        "out:ready": 1,
+        "in:snap": 3,
+        "in:roster": 52,
+        "in:match": 99,
+        "in:spawn": 1,
+        "in:inventory:state": 9,
+        "in:loot:snapshot": 1,
+        "in:chat": 2,
+        "out:input": 3,
+        "out:inventory:equip": 8,
+        "out:leaveRoom": 1,
+        "out:listRooms": 1,
+        "in:roomList": 1
+      }
+    },
+    {
+      "label": "B",
+      "myId": "Jzom6ycC4vEu4550AAAD",
+      "roomId": "r1pgy6",
+      "wsUrls": [
+        "ws://127.0.0.1:3600/socket.io/?EIO=4&transport=websocket",
+        "ws://127.0.0.1:3600/socket.io/?EIO=4&transport=websocket"
+      ],
+      "glbLoads": [
+        {
+          "url": "/models/weapons/ak47.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 939562
+        },
+        {
+          "url": "/models/weapons/pistol.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 674066
+        },
+        {
+          "url": "/models/weapons/shotgun.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 426690
+        },
+        {
+          "url": "/models/weapons/awp.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 948666
+        },
+        {
+          "url": "/models/forest/pine_tree_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 51940
+        },
+        {
+          "url": "/models/forest/pine_tree_02.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 67817
+        },
+        {
+          "url": "/models/forest/spruce_tree_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 76257
+        },
+        {
+          "url": "/models/forest/birch_tree_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 156174
+        },
+        {
+          "url": "/models/forest/dead_tree_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 78509
+        },
+        {
+          "url": "/models/forest/forest_rock_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 21072
+        },
+        {
+          "url": "/models/forest/forest_bush_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 84777
+        },
+        {
+          "url": "/models/buildings/wood_wall_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 93937
+        },
+        {
+          "url": "/models/buildings/wood_wall_window_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 159722
+        },
+        {
+          "url": "/models/buildings/wood_wall_door_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 130674
+        },
+        {
+          "url": "/models/buildings/wood_floor_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 72761
+        },
+        {
+          "url": "/models/buildings/wood_roof_slope_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 170986
+        },
+        {
+          "url": "/models/buildings/wood_roof_gable_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 97893
+        },
+        {
+          "url": "/models/buildings/wood_door_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 45768
+        },
+        {
+          "url": "/models/buildings/wood_stairs_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 90957
+        },
+        {
+          "url": "/models/interior/wooden_table_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 32632
+        },
+        {
+          "url": "/models/interior/wooden_chair_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 45184
+        },
+        {
+          "url": "/models/interior/wooden_shelf_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 48640
+        },
+        {
+          "url": "/models/interior/old_bed_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 92977
+        },
+        {
+          "url": "/models/interior/kitchen_cabinet_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 79629
+        },
+        {
+          "url": "/models/interior/old_sofa_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 106006
+        },
+        {
+          "url": "/models/loot/wooden_loot_crate_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 127442
+        },
+        {
+          "url": "/models/loot/metal_locker_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 156162
+        },
+        {
+          "url": "/models/loot/old_toolbox_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 104338
+        },
+        {
+          "url": "/models/grass/grass_short_soft_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 8143
+        },
+        {
+          "url": "/models/grass/grass_short_dense_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 10740
+        },
+        {
+          "url": "/models/grass/grass_meadow_wide_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 11384
+        },
+        {
+          "url": "/models/grass/grass_meadow_thin_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 12028
+        },
+        {
+          "url": "/models/grass/grass_tall_wild_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 11376
+        },
+        {
+          "url": "/models/grass/grass_dry_straw_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 11372
+        },
+        {
+          "url": "/models/grass/grass_tall_seeded_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 12676
+        },
+        {
+          "url": "/models/grass/grass_olive_tuft_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 10736
+        },
+        {
+          "url": "/models/grass/grass_shade_dark_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 9219
+        },
+        {
+          "url": "/models/grass/grass_forest_sparse_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 8143
+        },
+        {
+          "url": "/models/grass/grass_path_edge_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 11376
+        },
+        {
+          "url": "/models/grass/grass_wavy_broad_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 12460
+        },
+        {
+          "url": "/models/grass/flower_white_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 15260
+        },
+        {
+          "url": "/models/grass/flower_yellow_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 15024
+        },
+        {
+          "url": "/models/grass/flower_purple_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 15912
+        },
+        {
+          "url": "/models/grass/fern_small_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 16768
+        },
+        {
+          "url": "/models/grass/fern_wide_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 24324
+        },
+        {
+          "url": "/models/weapons/ak47.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/weapons/pistol.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/weapons/shotgun.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/weapons/awp.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/forest/pine_tree_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/forest/pine_tree_02.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/forest/spruce_tree_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/forest/birch_tree_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/forest/dead_tree_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/forest/forest_rock_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/forest/forest_bush_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/buildings/wood_wall_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/buildings/wood_wall_window_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/buildings/wood_wall_door_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/buildings/wood_floor_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/buildings/wood_roof_slope_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/buildings/wood_roof_gable_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/buildings/wood_door_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/buildings/wood_stairs_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/interior/wooden_table_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/interior/wooden_chair_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/interior/wooden_shelf_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/interior/old_bed_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/interior/old_sofa_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/interior/kitchen_cabinet_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/loot/wooden_loot_crate_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/loot/metal_locker_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/loot/old_toolbox_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 267
+        },
+        {
+          "url": "/models/grass/grass_short_soft_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_short_dense_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_meadow_wide_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_meadow_thin_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_tall_wild_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_tall_seeded_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_dry_straw_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_olive_tuft_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_shade_dark_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_forest_sparse_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_path_edge_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/grass_wavy_broad_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/flower_white_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/flower_yellow_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/flower_purple_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/fern_small_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/grass/fern_wide_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 266
+        },
+        {
+          "url": "/models/outdoor/lumber_stack_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 75953
+        },
+        {
+          "url": "/models/outdoor/wooden_signpost_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 66977
+        },
+        {
+          "url": "/models/outdoor/sawhorse_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 54336
+        },
+        {
+          "url": "/models/outdoor/old_fuel_pump_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 166550
+        },
+        {
+          "url": "/models/outdoor/rusty_barrel_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 100073
+        },
+        {
+          "url": "/models/outdoor/forest_tent_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 59072
+        },
+        {
+          "url": "/models/outdoor/campfire_pit_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 160678
+        },
+        {
+          "url": "/models/outdoor/wooden_railing_01.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 21144
+        },
+        {
+          "url": "/models/characters/camper_buddy_balanced_rigged.glb",
+          "status": 200,
+          "fromCache": false,
+          "bytes": 611286
+        }
+      ],
+      "consoleErrors": [],
+      "warnings": [
+        {
+          "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+          "n": 1
+        }
+      ],
+      "exceptions": [],
+      "logErrors": [],
+      "networkErrors": [],
+      "networkAborted": 0,
+      "lifecycle": [
+        {
+          "type": "cdp-ws-close",
+          "at": "2026-10-26T07:08:11.268Z"
+        },
+        {
+          "type": "os-at-close",
+          "fgPid": 16820,
+          "msAfterClose": 1,
+          "idleMs": 1110
+        }
+      ],
+      "webgl": {
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 730 (0x0000A782) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "contextLost": 0,
+        "glWarnings": [],
+        "threeDeprecations": [
+          {
+            "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead.",
+            "n": 1
+          }
+        ]
+      },
+      "wsEvents": {
+        "out:hello": 2,
+        "in:ack": 55,
+        "in:roomList": 1,
+        "out:listRooms": 2,
+        "out:joinRoom": 1,
+        "out:latency": 49,
+        "out:ready": 1,
+        "in:snap": 3,
+        "in:roster": 50,
+        "in:chat": 3,
+        "in:spawn": 1,
+        "in:inventory:state": 1,
+        "in:loot:snapshot": 1,
+        "in:match": 95,
+        "out:input": 3,
+        "out:leaveRoom": 1
+      }
+    }
+  ],
+  "checks": [
+    {
+      "id": "prod.apiInfo(same port)",
+      "status": "PASS",
+      "note": "{\"ips\":[\"192.168.0.8\",\"192.168.184.1\"],\"port\":3600}"
+    },
+    {
+      "id": "prod.index.html(dist bundle, no @vite/client)",
+      "status": "PASS"
+    },
+    {
+      "id": "prod.characterGlb.served",
+      "status": "PASS",
+      "note": "200 610972 B"
+    },
+    {
+      "id": "prod.noViteDevEndpoint",
+      "status": "PASS",
+      "note": "/@vite/client → 404"
+    },
+    {
+      "id": "tdm.welcome.received",
+      "status": "PASS",
+      "details": {
+        "A": {
+          "mapId": "forest_square",
+          "worldVersion": 2,
+          "publicLayoutSeed": 6501,
+          "gameplayHash": "670a9c21f0565c94"
+        },
+        "B": {
+          "mapId": "forest_square",
+          "worldVersion": 2,
+          "publicLayoutSeed": 6501,
+          "gameplayHash": "670a9c21f0565c94"
+        }
+      }
+    },
+    {
+      "id": "tdm.sameRoomId",
+      "status": "PASS",
+      "note": "r1pgy6 / r1pgy6"
+    },
+    {
+      "id": "tdm.gameplayHash",
+      "status": "PASS",
+      "note": "670a9c21f0565c94 / 670a9c21f0565c94"
+    },
+    {
+      "id": "tdm.worldVersion",
+      "status": "PASS",
+      "note": "2 / 2"
+    },
+    {
+      "id": "tdm.seeEachOther(snapshots)",
+      "status": "PASS"
+    },
+    {
+      "id": "tdm.devHooksAbsent.A",
+      "status": "INFO",
+      "note": "{\"tools\":\"undefined\",\"cam\":\"undefined\",\"lock\":\"undefined\",\"devStats\":\"false\"}"
+    },
+    {
+      "id": "tdm.pointerLock(real click, foreground window)",
+      "status": "PASS",
+      "note": "A=1 urinish, B=1 urinish"
+    },
+    {
+      "id": "tdm.mouseLook(real mousemove)",
+      "status": "PASS",
+      "note": "rad/px=-0.0022"
+    },
+    {
+      "id": "tdm.run≈6.5 m/s (B sees A, server snap)",
+      "status": "PASS",
+      "note": "6.05 m/s"
+    },
+    {
+      "id": "tdm.walk≈3.0 m/s (B sees A, server snap)",
+      "status": "PASS",
+      "note": "2.79 m/s"
+    },
+    {
+      "id": "tdm.jump (B sees A airborne)",
+      "status": "PASS"
+    },
+    {
+      "id": "tdm.A.ownView.1p3p.shots",
+      "status": "PASS"
+    },
+    {
+      "id": "tdm.4weapons (B sees A weapon via snap)",
+      "status": "PASS",
+      "note": "{\"rifle\":\"rifle\",\"pistol\":\"pistol\",\"shotgun\":\"shotgun\",\"sniper\":\"sniper\"}"
+    },
+    {
+      "id": "buddy.approach(A→B ≤8 m)",
+      "status": "PASS",
+      "note": "7.0 m"
+    },
+    {
+      "id": "buddy.remote.idle (B renders A)",
+      "status": "PASS",
+      "note": "speed 0.00 onGround=true; bearing -0.00 rad, 6.3 m; handover 99 ms"
+    },
+    {
+      "id": "buddy.remote.walk (B renders A)",
+      "status": "PASS",
+      "note": "speed 2.79 onGround=true; bearing -0.00 rad, 8.9 m; handover 104 ms"
+    },
+    {
+      "id": "buddy.remote.run (B renders A)",
+      "status": "PASS",
+      "note": "speed 6.05 onGround=true; bearing 0.00 rad, 11.6 m; handover 132 ms"
+    },
+    {
+      "id": "buddy.remote.jump (B renders A)",
+      "status": "PASS",
+      "note": "onGround=false vy=5.15; bearing -0.00 rad, 4.9 m; handover 100 ms"
+    },
+    {
+      "id": "buddy.remote.rifle (B renders A)",
+      "status": "PASS",
+      "note": "weapon=rifle speed 0.00; bearing -0.00 rad, 4.9 m; handover 106 ms"
+    },
+    {
+      "id": "buddy.remote.pistol (B renders A)",
+      "status": "PASS",
+      "note": "weapon=pistol speed 0.00; bearing -0.00 rad, 4.9 m; handover 110 ms"
+    },
+    {
+      "id": "buddy.remote.shotgun (B renders A)",
+      "status": "PASS",
+      "note": "weapon=shotgun speed 0.00; bearing -0.00 rad, 4.9 m; handover 98 ms"
+    },
+    {
+      "id": "buddy.remote.sniper (B renders A)",
+      "status": "PASS",
+      "note": "weapon=sniper speed 0.00; bearing -0.00 rad, 4.9 m; handover 94 ms"
+    },
+    {
+      "id": "prod.devHooksAbsent.A",
+      "status": "PASS",
+      "note": "{\"tools\":\"undefined\",\"cam\":\"undefined\",\"lock\":\"undefined\",\"devStats\":\"false\"}"
+    },
+    {
+      "id": "prod.devHooksAbsent.B",
+      "status": "PASS",
+      "note": "{\"tools\":\"undefined\",\"cam\":\"undefined\",\"lock\":\"undefined\",\"devStats\":\"false\"}"
+    },
+    {
+      "id": "prod.noConsoleErrors.A",
+      "status": "PASS",
+      "note": "0 console, 0 exceptions, 0 log errors"
+    },
+    {
+      "id": "prod.noNetworkErrors.A",
+      "status": "PASS",
+      "note": "0"
+    },
+    {
+      "id": "prod.websocket.A",
+      "status": "PASS",
+      "note": "ws://127.0.0.1:3600/socket.io/?EIO=4&transport=websocket"
+    },
+    {
+      "id": "prod.asset.camperBuddyGlb.A",
+      "status": "PASS",
+      "note": "[{\"url\":\"/models/characters/camper_buddy_balanced_rigged.glb\",\"status\":200,\"fromCache\":false,\"bytes\":611286}]"
+    },
+    {
+      "id": "prod.asset.allGlbOk.A",
+      "status": "PASS",
+      "note": "99 responses, 54 distinct GLB"
+    },
+    {
+      "id": "prod.webgl.noContextLost.A",
+      "status": "PASS",
+      "note": "contextlost=0"
+    },
+    {
+      "id": "prod.webgl.noGlErrors.A",
+      "status": "PASS",
+      "note": "0 GL warnings",
+      "details": []
+    },
+    {
+      "id": "prod.webgl.threeDeprecationWarnings.A",
+      "status": "INFO",
+      "note": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead. ×1"
+    },
+    {
+      "id": "prod.webgl.hardwareRenderer.A",
+      "status": "PASS",
+      "note": "ANGLE (Intel, Intel(R) UHD Graphics 730 (0x0000A782) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+    },
+    {
+      "id": "prod.noConsoleErrors.B",
+      "status": "PASS",
+      "note": "0 console, 0 exceptions, 0 log errors"
+    },
+    {
+      "id": "prod.noNetworkErrors.B",
+      "status": "PASS",
+      "note": "0"
+    },
+    {
+      "id": "prod.websocket.B",
+      "status": "PASS",
+      "note": "ws://127.0.0.1:3600/socket.io/?EIO=4&transport=websocket"
+    },
+    {
+      "id": "prod.asset.camperBuddyGlb.B",
+      "status": "PASS",
+      "note": "[{\"url\":\"/models/characters/camper_buddy_balanced_rigged.glb\",\"status\":200,\"fromCache\":false,\"bytes\":611286}]"
+    },
+    {
+      "id": "prod.asset.allGlbOk.B",
+      "status": "PASS",
+      "note": "99 responses, 54 distinct GLB"
+    },
+    {
+      "id": "prod.webgl.noContextLost.B",
+      "status": "PASS",
+      "note": "contextlost=0"
+    },
+    {
+      "id": "prod.webgl.noGlErrors.B",
+      "status": "PASS",
+      "note": "0 GL warnings",
+      "details": []
+    },
+    {
+      "id": "prod.webgl.threeDeprecationWarnings.B",
+      "status": "INFO",
+      "note": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead. ×1"
+    },
+    {
+      "id": "prod.webgl.hardwareRenderer.B",
+      "status": "PASS",
+      "note": "ANGLE (Intel, Intel(R) UHD Graphics 730 (0x0000A782) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+    }
+  ],
+  "evidence": {
+    "tdm_A_3p_run": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_tdm_A_3p_run.png",
+    "tdm_A_3p_walk": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_tdm_A_3p_walk.png",
+    "tdm_A_3p_jump": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_tdm_A_3p_jump.png",
+    "tdm_A_3p_idle": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_tdm_A_3p_idle.png",
+    "tdm_A_1p_idle": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_tdm_A_1p_idle.png",
+    "tdm_A_1p_run": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_tdm_A_1p_run.png",
+    "tdm_A_3p_rifle": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_tdm_A_3p_rifle.png",
+    "tdm_A_1p_rifle": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_tdm_A_1p_rifle.png",
+    "tdm_A_3p_pistol": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_tdm_A_3p_pistol.png",
+    "tdm_A_1p_pistol": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_tdm_A_1p_pistol.png",
+    "tdm_A_3p_shotgun": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_tdm_A_3p_shotgun.png",
+    "tdm_A_1p_shotgun": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_tdm_A_1p_shotgun.png",
+    "tdm_A_3p_sniper": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_tdm_A_3p_sniper.png",
+    "tdm_A_1p_sniper": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_tdm_A_1p_sniper.png",
+    "buddy_remote_idle": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_buddy_remote_idle_try1.png",
+    "buddy_remote_walk": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_buddy_remote_walk_try1.png",
+    "buddy_remote_run": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_buddy_remote_run_try1.png",
+    "buddy_remote_jump": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_buddy_remote_jump_try1.png",
+    "buddy_remote_rifle": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_buddy_remote_rifle_try1.png",
+    "buddy_remote_pistol": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_buddy_remote_pistol_try2.png",
+    "buddy_remote_shotgun": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_buddy_remote_shotgun_try1.png",
+    "buddy_remote_sniper": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_buddy_remote_sniper_try1.png"
+  },
+  "handovers": [
+    {
+      "id": "buddy_remote_idle",
+      "attempt": 1,
+      "shot": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_buddy_remote_idle_try1.png",
+      "handoverToLockMs": 99,
+      "aimValid": true,
+      "aimed": true,
+      "actorIntervalValid": true,
+      "observerIntervalValid": true,
+      "observerReasons": [],
+      "pauseOverlayAtCapture": false,
+      "actorStateAtRender": {
+        "speed": 0,
+        "onGround": true,
+        "weapon": "rifle",
+        "vy": 0
+      },
+      "stateOk": true,
+      "view": {
+        "ok": true,
+        "bearing": -0.0009247300045708214,
+        "dist": 6.3386832228783865
+      }
+    },
+    {
+      "id": "buddy_remote_walk",
+      "attempt": 1,
+      "shot": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_buddy_remote_walk_try1.png",
+      "handoverToLockMs": 104,
+      "aimValid": true,
+      "aimed": true,
+      "actorIntervalValid": true,
+      "observerIntervalValid": true,
+      "observerReasons": [],
+      "pauseOverlayAtCapture": false,
+      "actorStateAtRender": {
+        "speed": 2.79,
+        "onGround": true,
+        "weapon": "rifle",
+        "vy": 0
+      },
+      "stateOk": true,
+      "view": {
+        "ok": true,
+        "bearing": -0.0007379986258102128,
+        "dist": 8.945355051645512
+      }
+    },
+    {
+      "id": "buddy_remote_run",
+      "attempt": 1,
+      "shot": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_buddy_remote_run_try1.png",
+      "handoverToLockMs": 132,
+      "aimValid": true,
+      "aimed": true,
+      "actorIntervalValid": true,
+      "observerIntervalValid": true,
+      "observerReasons": [],
+      "pauseOverlayAtCapture": false,
+      "actorStateAtRender": {
+        "speed": 6.05,
+        "onGround": true,
+        "weapon": "rifle",
+        "vy": 0
+      },
+      "stateOk": true,
+      "view": {
+        "ok": true,
+        "bearing": 0.0018146489171113611,
+        "dist": 11.566222589938333
+      }
+    },
+    {
+      "id": "buddy_remote_jump",
+      "attempt": 1,
+      "shot": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_buddy_remote_jump_try1.png",
+      "handoverToLockMs": 100,
+      "aimValid": true,
+      "aimed": true,
+      "actorIntervalValid": true,
+      "observerIntervalValid": true,
+      "observerReasons": [],
+      "pauseOverlayAtCapture": false,
+      "actorStateAtRender": {
+        "speed": 0,
+        "onGround": false,
+        "weapon": "rifle",
+        "vy": 5.151
+      },
+      "stateOk": true,
+      "view": {
+        "ok": true,
+        "bearing": -0.0011693923651759919,
+        "dist": 4.901944206128812
+      }
+    },
+    {
+      "id": "buddy_remote_rifle",
+      "attempt": 1,
+      "shot": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_buddy_remote_rifle_try1.png",
+      "handoverToLockMs": 106,
+      "aimValid": true,
+      "aimed": true,
+      "actorIntervalValid": true,
+      "observerIntervalValid": true,
+      "observerReasons": [],
+      "pauseOverlayAtCapture": false,
+      "actorStateAtRender": {
+        "speed": 0,
+        "onGround": true,
+        "weapon": "rifle",
+        "vy": 0
+      },
+      "stateOk": true,
+      "view": {
+        "ok": true,
+        "bearing": -0.0011693923651759919,
+        "dist": 4.901944206128812
+      }
+    },
+    {
+      "id": "buddy_remote_pistol",
+      "attempt": 1,
+      "shot": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_buddy_remote_pistol_try1.png",
+      "handoverToLockMs": 112,
+      "aimValid": true,
+      "aimed": true,
+      "actorIntervalValid": true,
+      "observerIntervalValid": true,
+      "observerReasons": [],
+      "pauseOverlayAtCapture": true,
+      "actorStateAtRender": {
+        "speed": 0,
+        "onGround": true,
+        "weapon": "pistol",
+        "vy": 0
+      },
+      "stateOk": true,
+      "view": {
+        "ok": true,
+        "bearing": -0.0011693923651759919,
+        "dist": 4.901944206128812
+      }
+    },
+    {
+      "id": "buddy_remote_pistol",
+      "attempt": 2,
+      "shot": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_buddy_remote_pistol_try2.png",
+      "handoverToLockMs": 110,
+      "aimValid": true,
+      "aimed": true,
+      "actorIntervalValid": true,
+      "observerIntervalValid": true,
+      "observerReasons": [],
+      "pauseOverlayAtCapture": false,
+      "actorStateAtRender": {
+        "speed": 0,
+        "onGround": true,
+        "weapon": "pistol",
+        "vy": 0
+      },
+      "stateOk": true,
+      "view": {
+        "ok": true,
+        "bearing": -0.0011693923651759919,
+        "dist": 4.901944206128812
+      }
+    },
+    {
+      "id": "buddy_remote_shotgun",
+      "attempt": 1,
+      "shot": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_buddy_remote_shotgun_try1.png",
+      "handoverToLockMs": 98,
+      "aimValid": true,
+      "aimed": true,
+      "actorIntervalValid": true,
+      "observerIntervalValid": true,
+      "observerReasons": [],
+      "pauseOverlayAtCapture": false,
+      "actorStateAtRender": {
+        "speed": 0,
+        "onGround": true,
+        "weapon": "shotgun",
+        "vy": 0
+      },
+      "stateOk": true,
+      "view": {
+        "ok": true,
+        "bearing": -0.0011693923651759919,
+        "dist": 4.901944206128812
+      }
+    },
+    {
+      "id": "buddy_remote_sniper",
+      "attempt": 1,
+      "shot": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/shots/prod_buddy_remote_sniper_try1.png",
+      "handoverToLockMs": 94,
+      "aimValid": true,
+      "aimed": true,
+      "actorIntervalValid": true,
+      "observerIntervalValid": true,
+      "observerReasons": [],
+      "pauseOverlayAtCapture": false,
+      "actorStateAtRender": {
+        "speed": 0,
+        "onGround": true,
+        "weapon": "sniper",
+        "vy": 0
+      },
+      "stateOk": true,
+      "view": {
+        "ok": true,
+        "bearing": -0.0011693923651759919,
+        "dist": 4.901944206128812
+      }
+    }
+  ],
+  "focus": {
+    "intervals": 42,
+    "valid": 42,
+    "rejected": [],
+    "withPhysicalInputWarning": 0
+  },
+  "summary": {
+    "PASS": 43,
+    "INFO": 3
+  },
+  "durationSec": 105,
+  "chromeDiagnostics": {
+    "exits": [
+      {
+        "label": "A",
+        "pid": 3864,
+        "code": 1,
+        "signal": null,
+        "at": "2026-10-26T07:08:11.266Z",
+        "expected": true
+      },
+      {
+        "label": "B",
+        "pid": 36648,
+        "code": 1,
+        "signal": null,
+        "at": "2026-10-26T07:08:11.291Z",
+        "expected": true
+      }
+    ],
+    "profiles": [
+      {
+        "label": "A",
+        "pid": 3864,
+        "chromeDebugLog": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/logs/chrome_debug_A.log",
+        "chromeDebugLogErrors": [
+          "[3864:36572:1026/120631.597:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: PHONE_REGISTRATION_ERROR",
+          "[3864:4072:1026/120646.603:ERROR:chrome\\updater\\ipc\\update_service_dialer_win.cc:76] Failed to open named pipe server process 25996: Отказано в доступе. (0x5)",
+          "[3864:4072:1026/120646.663:ERROR:chrome\\updater\\ipc\\update_service_dialer_win.cc:76] Failed to open named pipe server process 25240: Отказано в доступе. (0x5)",
+          "[3864:19356:1026/120646.724:ERROR:chrome\\updater\\ipc\\update_service_dialer_win.cc:76] Failed to open named pipe server process 33720: Отказано в доступе. (0x5)",
+          "[3864:4072:1026/120646.782:ERROR:chrome\\updater\\ipc\\update_service_dialer_win.cc:76] Failed to open named pipe server process 35196: Отказано в доступе. (0x5)",
+          "[3864:19356:1026/120646.842:ERROR:chrome\\updater\\ipc\\update_service_dialer_win.cc:76] Failed to open named pipe server process 34040: Отказано в доступе. (0x5)",
+          "[3864:36572:1026/120656.014:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT",
+          "[3864:36572:1026/120742.048:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT"
+        ],
+        "crashpadReports": []
+      },
+      {
+        "label": "B",
+        "pid": 36648,
+        "chromeDebugLog": "docs/stage08b-prod-smoke/runs/2026-10-26T07-06-25/logs/chrome_debug_B.log",
+        "chromeDebugLogErrors": [
+          "[36648:324:1026/120631.474:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: PHONE_REGISTRATION_ERROR",
+          "[36648:324:1026/120631.474:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: PHONE_REGISTRATION_ERROR",
+          "[36648:324:1026/120631.475:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: PHONE_REGISTRATION_ERROR",
+          "[36648:324:1026/120631.530:ERROR:google_apis\\gcm\\engine\\mcs_client.cc:702]   Error code: 401  Error message: Authentication Failed: wrong_secret",
+          "[36648:324:1026/120631.530:ERROR:google_apis\\gcm\\engine\\mcs_client.cc:704] Failed to log in to GCM, resetting connection.",
+          "[36648:19736:1026/120646.909:ERROR:chrome\\updater\\ipc\\update_service_dialer_win.cc:76] Failed to open named pipe server process 21516: Отказано в доступе. (0x5)",
+          "[36648:8540:1026/120646.969:ERROR:chrome\\updater\\ipc\\update_service_dialer_win.cc:76] Failed to open named pipe server process 24920: Отказано в доступе. (0x5)",
+          "[36648:19736:1026/120647.027:ERROR:chrome\\updater\\ipc\\update_service_dialer_win.cc:76] Failed to open named pipe server process 5368: Отказано в доступе. (0x5)",
+          "[36648:8540:1026/120649.104:ERROR:chrome\\updater\\ipc\\update_service_dialer_win.cc:76] Failed to open named pipe server process 34156: Отказано в доступе. (0x5)",
+          "[36648:19736:1026/120649.104:ERROR:chrome\\updater\\ipc\\update_service_dialer_win.cc:76] Failed to open named pipe server process 34156: Отказано в доступе. (0x5)",
+          "[36648:8540:1026/120649.105:ERROR:chrome\\updater\\ipc\\update_service_dialer_win.cc:76] Failed to open named pipe server process 34156: Отказано в доступе. (0x5)",
+          "[36648:324:1026/120658.099:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT",
+          "[36648:324:1026/120747.368:ERROR:google_apis\\gcm\\engine\\registration_request.cc:291] Registration response error message: QUOTA_EXCEEDED"
+        ],
+        "crashpadReports": []
+      }
+    ],
+    "windowsApplicationEvents": 0
+  },
+  "cdpLifecycle": {
+    "A": [
+      {
+        "type": "cdp-ws-close",
+        "at": "2026-10-26T07:08:11.268Z"
+      },
+      {
+        "type": "os-at-close",
+        "fgPid": 16820,
+        "msAfterClose": 1,
+        "idleMs": 1110
+      }
+    ],
+    "B": [
+      {
+        "type": "cdp-ws-close",
+        "at": "2026-10-26T07:08:11.268Z"
+      },
+      {
+        "type": "os-at-close",
+        "fgPid": 16820,
+        "msAfterClose": 1,
+        "idleMs": 1110
+      }
+    ]
+  }
+}

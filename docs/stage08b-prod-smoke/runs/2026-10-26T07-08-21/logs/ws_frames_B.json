@@ -1,0 +1,26 @@
+[
+ {
+  "dir": "out",
+  "t": 1792998505170,
+  "ev": "hello",
+  "data": "{\"name\":\"ProdB\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998505177,
+  "ev": "ack#0",
+  "data": "{\"ok\":true,\"name\":\"ProdB\",\"rooms\":[]}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998505250,
+  "ev": "hello",
+  "data": "{\"name\":\"ProdB\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998505251,
+  "ev": "ack#1",
+  "data": "{\"ok\":true,\"name\":\"ProdB\",\"rooms\":[]}"
+ }
+]

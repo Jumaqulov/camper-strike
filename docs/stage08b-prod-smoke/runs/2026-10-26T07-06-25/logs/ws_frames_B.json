@@ -1,0 +1,1616 @@
+[
+ {
+  "dir": "out",
+  "t": 1792998389222,
+  "ev": "hello",
+  "data": "{\"name\":\"ProdB\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998389238,
+  "ev": "ack#0",
+  "data": "{\"ok\":true,\"name\":\"ProdB\",\"rooms\":[]}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998389318,
+  "ev": "hello",
+  "data": "{\"name\":\"ProdB\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998389319,
+  "ev": "ack#1",
+  "data": "{\"ok\":true,\"name\":\"ProdB\",\"rooms\":[]}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998390721,
+  "ev": "roomList",
+  "data": "[{\"id\":\"r1pgy6\",\"name\":\"prod-tdm\",\"mode\":\"tdm\",\"players\":1,\"bots\":0,\"maxPlayers\":10,\"timeLimit\":10,\"scoreLimit\":50,\"world\":{\"mapId\":\"forest_square\",\"worldVersion\":2,\"publicLayoutSeed\":6501,\"gameplayHash\":\"670a9c21f0565c94\"},\"lootPreview\":false,\"lootEnabled\":false,\"roundId\":1,\"phase\":\"playing\"}]"
+ },
+ {
+  "dir": "out",
+  "t": 1792998392979,
+  "ev": "listRooms",
+  "data": "null"
+ },
+ {
+  "dir": "in",
+  "t": 1792998392985,
+  "ev": "ack#2",
+  "data": "[{\"id\":\"r1pgy6\",\"name\":\"prod-tdm\",\"mode\":\"tdm\",\"players\":1,\"bots\":0,\"maxPlayers\":10,\"timeLimit\":10,\"scoreLimit\":50,\"world\":{\"mapId\":\"forest_square\",\"worldVersion\":2,\"publicLayoutSeed\":6501,\"gameplayHash\":\"670a9c21f0565c94\"},\"lootPreview\":false,\"lootEnabled\":false,\"roundId\":1,\"phase\":\"playing\"}]"
+ },
+ {
+  "dir": "out",
+  "t": 1792998393522,
+  "ev": "joinRoom",
+  "data": "{\"roomId\":\"r1pgy6\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998393858,
+  "ev": "ack#3",
+  "data": "{\"ok\":true,\"welcome\":{\"you\":\"Jzom6ycC4vEu4550AAAD\",\"room\":{\"id\":\"r1pgy6\",\"name\":\"prod-tdm\",\"mode\":\"tdm\",\"players\":2,\"bots\":0,\"maxPlayers\":10,\"timeLimit\":10,\"scoreLimit\":50,\"world\":{\"mapId\":\"forest_square\",\"worldVersion\":2,\"publicLayoutSeed\":6501,\"gameplayHash\":\"670a9c21f0565c94\"},\"lootPreview\":false,\"lootEnabled\":false,\"roundId\":1,\"phase\":\"playing\"},\"world\":{\"mapId\":\"forest_square\",\"worldVersion\":2,\"publicLayoutSeed\":6501,\"gameplayHash\":\"670a9c21f0565c94\"}}}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998393859,
+  "ev": "latency",
+  "data": "5085.5999999996275"
+ },
+ {
+  "dir": "out",
+  "t": 1792998393859,
+  "ev": "ready",
+  "data": "{\"world\":{\"mapId\":\"forest_square\",\"worldVersion\":2,\"publicLayoutSeed\":6501,\"gameplayHash\":\"670a9c21f0565c94\"}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998395162,
+  "ev": "snap",
+  "data": "(sample)"
+ },
+ {
+  "dir": "in",
+  "t": 1792998395162,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":3},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998395162,
+  "ev": "snap",
+  "data": "(sample)"
+ },
+ {
+  "dir": "in",
+  "t": 1792998395162,
+  "ev": "snap",
+  "data": "(sample)"
+ },
+ {
+  "dir": "in",
+  "t": 1792998395297,
+  "ev": "ack#4",
+  "data": "5085.5999999996275"
+ },
+ {
+  "dir": "in",
+  "t": 1792998395297,
+  "ev": "chat",
+  "data": "{\"name\":\"\",\"text\":\"ProdA o'yinga qo'shildi (Ko'k jamoa)\",\"team\":\"none\",\"system\":true}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998395298,
+  "ev": "spawn",
+  "data": "{\"spawnId\":1,\"roundId\":1,\"x\":93.076,\"y\":0.2,\"z\":96.948,\"yaw\":-0.102,\"team\":\"red\",\"weapon\":\"rifle\",\"lootPreview\":false,\"lootEnabled\":false}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998395298,
+  "ev": "inventory:state",
+  "data": "{\"playerId\":\"Jzom6ycC4vEu4550AAAD\",\"roundId\":1,\"spawnId\":1,\"inventoryVersion\":2,\"lootEnabled\":false,\"lootPreview\":false,\"equippedWeapon\":\"rifle\",\"ownedWeapons\":[\"rifle\",\"pistol\",\"shotgun\",\"sniper\"],\"ammo\":{\"rifle\":{\"mag\":30,\"reserve\":120},\"pistol\":{\"mag\":12,\"reserve\":60},\"shotgun\":{\"mag\":7,\"reserve\":28},\"sniper\":{\"mag\":5,\"reserve\":25}},\"grenades\":2,\"medkits\":0,\"maxWeaponSlots\":4,\"maxMedkits\":3,\"maxGrenades\":2,\"items\":[{\"slotIndex\":0,\"catalogId\":\"weapon:rifle\",\"kind\":\"weapon\",\"nameUz\":\"Avtomat\",\"weaponId\":\"rifle\",\"quantity\":1},{\"slotIndex\":1,\"catalogId\":\"weapon:pistol\",\"kind\":\"weapon\",\"nameUz\":\"To'pponcha\",\"weaponId\":\"pistol\",\"quantity\":1},{\"slotIndex\":2,\"catalogId\":\"weapon:shotgun\",\"kind\":\"weapon\",\"nameUz\":\"Drobovik\",\"weaponId\":\"shotgun\",\"quantity\":1},{\"slotIndex\":3,\"catalogId\":\"weapon:sniper\",\"kind\":\"weapon\",\"nameUz\":\"Snayper\",\"weaponId\":\"sniper\",\"quantity\":1},{\"slotIndex\":5,\"catalogId\":\"throwable:grenade\",\"kind\":\"grenade\",\"nameUz\":\"Granata\",\"quantity\":2}]}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998395299,
+  "ev": "loot:snapshot",
+  "data": "{\"roomId\":\"r1pgy6\",\"roundId\":1,\"version\":1,\"lootEnabled\":false,\"lootPreview\":false,\"containers\":[{\"id\":\"poi:poi_ranger_house:cnt_0:wooden_loot_crate_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"supply_crate\",\"labelUz\":\"Ta'minot qutisi\",\"position\":{\"x\":-67.65,\"y\":1.48,\"z\":-62.55},\"yaw\":3.142,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_1:metal_locker_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"metal_locker_01\",\"kind\":\"weapon_locker\",\"labelUz\":\"Qurol shkafi\",\"position\":{\"x\":-70.65,\"y\":1.48,\"z\":-65.58},\"yaw\":0,\"interactionRadius\":2.247,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_2:old_toolbox_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"old_toolbox_01\",\"kind\":\"ammo_box\",\"labelUz\":\"O'q-dori qutisi\",\"position\":{\"x\":-69.2,\"y\":2.23,\"z\":-65.35},\"yaw\":0,\"interactionRadius\":1.574,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_ranger_house:cnt_3:wooden_loot_crate_01\",\"locationId\":\"poi_ranger_house\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"camp_chest\",\"labelUz\":\"Lager sandig‘i\",\"position\":{\"x\":-67.8,\"y\":1.32,\"z\":-60.6},\"yaw\":-1.571,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_cabin_cluster:cnt_0:wooden_loot_crate_01\",\"locationId\":\"poi_cabin_cluster\",\"assetId\":\"wooden_loot_crate_01\",\"kind\":\"supply_crate\",\"labelUz\":\"Ta'minot qutisi\",\"position\":{\"x\":69.35,\"y\":2.03,\"z\":-68.55},\"yaw\":3.142,\"interactionRadius\":1.87,\"status\":\"closed\",\"opened\":false,\"openFraction\":0,\"version\":1,\"itemCount\":-1,\"items\":[]},{\"id\":\"poi:poi_cabin_cluster:cnt_1:metal_locker_01\",\"locationId\":\"poi_cabin_cluster\",\"assetId\":\"metal_locker_01\",\"kind\":\"weapon_locker\",\"labelUz\":\"Qurol shkafi\",\"position\":{\"x\":66.35,\"y\":2.03,\"z\":-71.58},\"yaw\":0,\"interactionRadius\":2.24"
+ },
+ {
+  "dir": "in",
+  "t": 1792998395300,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":3},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998395300,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":597,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998395301,
+  "ev": "chat",
+  "data": "{\"name\":\"\",\"text\":\"ProdB o'yinga qo'shildi (Qizil jamoa)\",\"team\":\"none\",\"system\":true}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998395301,
+  "ev": "ack#5",
+  "data": "{\"ok\":true,\"serverWorld\":{\"mapId\":\"forest_square\",\"worldVersion\":2,\"publicLayoutSeed\":6501,\"gameplayHash\":\"670a9c21f0565c94\"}}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998395304,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":596,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998395964,
+  "ev": "input",
+  "data": "(sample)"
+ },
+ {
+  "dir": "out",
+  "t": 1792998396128,
+  "ev": "input",
+  "data": "(sample)"
+ },
+ {
+  "dir": "out",
+  "t": 1792998396128,
+  "ev": "latency",
+  "data": "7355.799999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792998396130,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1440}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998396130,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":595,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998396169,
+  "ev": "input",
+  "data": "(sample)"
+ },
+ {
+  "dir": "in",
+  "t": 1792998396170,
+  "ev": "ack#6",
+  "data": "7355.799999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792998396898,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":594,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998397865,
+  "ev": "latency",
+  "data": "9093.099999999627"
+ },
+ {
+  "dir": "in",
+  "t": 1792998397866,
+  "ev": "ack#7",
+  "data": "9093.099999999627"
+ },
+ {
+  "dir": "in",
+  "t": 1792998397891,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998397926,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":593,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998398930,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":592,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998399868,
+  "ev": "latency",
+  "data": "11095.200000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792998399869,
+  "ev": "ack#8",
+  "data": "11095.200000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792998399903,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998399933,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":591,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998400958,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":590,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998401967,
+  "ev": "latency",
+  "data": "13194.700000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792998401967,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998401967,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":589,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998401967,
+  "ev": "ack#9",
+  "data": "13194.700000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792998403004,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":588,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998403858,
+  "ev": "latency",
+  "data": "15086.200000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792998403858,
+  "ev": "ack#10",
+  "data": "15086.200000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792998403939,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998404029,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":587,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998405058,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":585,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998405870,
+  "ev": "latency",
+  "data": "17098"
+ },
+ {
+  "dir": "in",
+  "t": 1792998405870,
+  "ev": "ack#11",
+  "data": "17098"
+ },
+ {
+  "dir": "in",
+  "t": 1792998405963,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":3},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998406076,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":584,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998407096,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":583,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998407860,
+  "ev": "latency",
+  "data": "19088.200000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792998407860,
+  "ev": "ack#12",
+  "data": "19088.200000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792998407969,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998408126,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":582,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998409128,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":581,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998409858,
+  "ev": "latency",
+  "data": "21085.799999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792998409858,
+  "ev": "ack#13",
+  "data": "21085.799999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792998410001,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998410169,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":580,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998411200,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":579,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998411869,
+  "ev": "latency",
+  "data": "23096.299999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792998411870,
+  "ev": "ack#14",
+  "data": "23096.299999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792998412028,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998412232,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":578,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998413270,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":577,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998413862,
+  "ev": "latency",
+  "data": "25090"
+ },
+ {
+  "dir": "in",
+  "t": 1792998413862,
+  "ev": "ack#15",
+  "data": "25090"
+ },
+ {
+  "dir": "in",
+  "t": 1792998414035,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998414298,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":576,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998415326,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":575,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998415858,
+  "ev": "latency",
+  "data": "27086"
+ },
+ {
+  "dir": "in",
+  "t": 1792998415858,
+  "ev": "ack#16",
+  "data": "27086"
+ },
+ {
+  "dir": "in",
+  "t": 1792998416058,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998416365,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":574,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998417370,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":573,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998417869,
+  "ev": "latency",
+  "data": "29096"
+ },
+ {
+  "dir": "in",
+  "t": 1792998417870,
+  "ev": "ack#17",
+  "data": "29096"
+ },
+ {
+  "dir": "in",
+  "t": 1792998418083,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998418392,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":572,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998419403,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":571,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998419869,
+  "ev": "latency",
+  "data": "31097.299999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792998419870,
+  "ev": "ack#18",
+  "data": "31097.299999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792998420091,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998420432,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":570,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998421458,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":569,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998421859,
+  "ev": "latency",
+  "data": "33087.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998421859,
+  "ev": "ack#19",
+  "data": "33087.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998422098,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998422461,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":568,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998423493,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":567,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998423860,
+  "ev": "latency",
+  "data": "35088.200000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792998423860,
+  "ev": "ack#20",
+  "data": "35088.200000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792998424106,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998424495,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":566,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998425537,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":565,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998425861,
+  "ev": "latency",
+  "data": "37088.90000000037"
+ },
+ {
+  "dir": "in",
+  "t": 1792998425861,
+  "ev": "ack#21",
+  "data": "37088.90000000037"
+ },
+ {
+  "dir": "in",
+  "t": 1792998426126,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998426564,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":564,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998427591,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":563,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998427858,
+  "ev": "latency",
+  "data": "39086.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998427858,
+  "ev": "ack#22",
+  "data": "39086.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998428144,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":4},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998428601,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":562,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998429632,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":561,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998429858,
+  "ev": "latency",
+  "data": "41086.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998429858,
+  "ev": "ack#23",
+  "data": "41086.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998430158,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998430657,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":560,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998431658,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":559,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998431858,
+  "ev": "latency",
+  "data": "43085.700000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792998431858,
+  "ev": "ack#24",
+  "data": "43085.700000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792998432160,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998432704,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":558,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998433733,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":557,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998433858,
+  "ev": "latency",
+  "data": "45086.299999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792998433858,
+  "ev": "ack#25",
+  "data": "45086.299999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792998434170,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998434761,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":556,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998435803,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":555,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998435868,
+  "ev": "latency",
+  "data": "47095.200000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792998435868,
+  "ev": "ack#26",
+  "data": "47095.200000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792998436194,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998436825,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":554,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998437826,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":553,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998437858,
+  "ev": "latency",
+  "data": "49085.799999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792998437858,
+  "ev": "ack#27",
+  "data": "49085.799999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792998438199,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998438860,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":552,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998439861,
+  "ev": "latency",
+  "data": "51089"
+ },
+ {
+  "dir": "in",
+  "t": 1792998439861,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":551,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998439861,
+  "ev": "ack#28",
+  "data": "51089"
+ },
+ {
+  "dir": "in",
+  "t": 1792998440225,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998440866,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":550,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998441860,
+  "ev": "latency",
+  "data": "53088.200000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792998441861,
+  "ev": "ack#29",
+  "data": "53088.200000000186"
+ },
+ {
+  "dir": "in",
+  "t": 1792998441892,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":549,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998442231,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998442901,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":548,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998443865,
+  "ev": "latency",
+  "data": "55093.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998443865,
+  "ev": "ack#30",
+  "data": "55093.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998443927,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":547,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998444270,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998444961,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":546,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998445861,
+  "ev": "latency",
+  "data": "57086.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998445861,
+  "ev": "ack#31",
+  "data": "57086.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998445968,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":545,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998446297,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":3},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998447001,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":544,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998447867,
+  "ev": "latency",
+  "data": "59092"
+ },
+ {
+  "dir": "in",
+  "t": 1792998447867,
+  "ev": "ack#32",
+  "data": "59092"
+ },
+ {
+  "dir": "in",
+  "t": 1792998448028,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":543,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998448309,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998449041,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":542,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998449864,
+  "ev": "latency",
+  "data": "61089.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998449865,
+  "ev": "ack#33",
+  "data": "61089.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998450066,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":540,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998450330,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998451094,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":539,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998451873,
+  "ev": "latency",
+  "data": "63098.299999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792998451874,
+  "ev": "ack#34",
+  "data": "63098.299999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792998452100,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":538,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998452336,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998453099,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":537,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998453861,
+  "ev": "latency",
+  "data": "65086.299999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792998453862,
+  "ev": "ack#35",
+  "data": "65086.299999999814"
+ },
+ {
+  "dir": "in",
+  "t": 1792998454099,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":536,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998454365,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998455129,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":535,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998455865,
+  "ev": "latency",
+  "data": "67089.59999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998455865,
+  "ev": "ack#36",
+  "data": "67089.59999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998456133,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":534,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998456395,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998457136,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":533,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998457868,
+  "ev": "latency",
+  "data": "69093.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998457869,
+  "ev": "ack#37",
+  "data": "69093.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998458167,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":532,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998458402,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998459195,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":531,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998459866,
+  "ev": "latency",
+  "data": "71089.20000000019"
+ },
+ {
+  "dir": "in",
+  "t": 1792998459866,
+  "ev": "ack#38",
+  "data": "71089.20000000019"
+ },
+ {
+  "dir": "in",
+  "t": 1792998460208,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":530,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998460427,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998461229,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":529,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998461861,
+  "ev": "latency",
+  "data": "73085.70000000019"
+ },
+ {
+  "dir": "in",
+  "t": 1792998461861,
+  "ev": "ack#39",
+  "data": "73085.70000000019"
+ },
+ {
+  "dir": "in",
+  "t": 1792998462264,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":528,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998462433,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998463304,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":527,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998463866,
+  "ev": "latency",
+  "data": "75090.79999999981"
+ },
+ {
+  "dir": "in",
+  "t": 1792998463866,
+  "ev": "ack#40",
+  "data": "75090.79999999981"
+ },
+ {
+  "dir": "in",
+  "t": 1792998464332,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":526,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998464462,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998465361,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":525,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998465862,
+  "ev": "latency",
+  "data": "77087.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998465863,
+  "ev": "ack#41",
+  "data": "77087.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998466407,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":524,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998466468,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998467436,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":523,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998467873,
+  "ev": "latency",
+  "data": "79095.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998467873,
+  "ev": "ack#42",
+  "data": "79095.09999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998468461,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":522,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998468494,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998469483,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":521,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998469864,
+  "ev": "latency",
+  "data": "81088.70000000019"
+ },
+ {
+  "dir": "in",
+  "t": 1792998469864,
+  "ev": "ack#43",
+  "data": "81088.70000000019"
+ },
+ {
+  "dir": "in",
+  "t": 1792998470495,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998470495,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":520,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998471507,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":519,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998471864,
+  "ev": "latency",
+  "data": "83089.5"
+ },
+ {
+  "dir": "in",
+  "t": 1792998471865,
+  "ev": "ack#44",
+  "data": "83089.5"
+ },
+ {
+  "dir": "in",
+  "t": 1792998472507,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998472527,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":518,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998473537,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":517,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998473865,
+  "ev": "latency",
+  "data": "85089.70000000019"
+ },
+ {
+  "dir": "in",
+  "t": 1792998473865,
+  "ev": "ack#45",
+  "data": "85089.70000000019"
+ },
+ {
+  "dir": "in",
+  "t": 1792998474534,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998474564,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":516,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998475608,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":515,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998475870,
+  "ev": "latency",
+  "data": "87095"
+ },
+ {
+  "dir": "in",
+  "t": 1792998475872,
+  "ev": "ack#46",
+  "data": "87095"
+ },
+ {
+  "dir": "in",
+  "t": 1792998476545,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998476632,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":514,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998477660,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":513,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998477863,
+  "ev": "latency",
+  "data": "89087.40000000037"
+ },
+ {
+  "dir": "in",
+  "t": 1792998477863,
+  "ev": "ack#47",
+  "data": "89087.40000000037"
+ },
+ {
+  "dir": "in",
+  "t": 1792998478563,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998478690,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":512,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998479701,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":511,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998479875,
+  "ev": "latency",
+  "data": "91099.40000000037"
+ },
+ {
+  "dir": "in",
+  "t": 1792998479875,
+  "ev": "ack#48",
+  "data": "91099.40000000037"
+ },
+ {
+  "dir": "in",
+  "t": 1792998480563,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":2},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998480707,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":510,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998481736,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":509,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998481869,
+  "ev": "latency",
+  "data": "93085.59999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998481869,
+  "ev": "ack#49",
+  "data": "93085.59999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998482596,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":2},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998482765,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":508,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998483798,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":507,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998483870,
+  "ev": "latency",
+  "data": "95095"
+ },
+ {
+  "dir": "in",
+  "t": 1792998483872,
+  "ev": "ack#50",
+  "data": "95095"
+ },
+ {
+  "dir": "in",
+  "t": 1792998484602,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998484805,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":506,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998485806,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":505,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998485861,
+  "ev": "latency",
+  "data": "97085.79999999981"
+ },
+ {
+  "dir": "in",
+  "t": 1792998485861,
+  "ev": "ack#51",
+  "data": "97085.79999999981"
+ },
+ {
+  "dir": "in",
+  "t": 1792998486632,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":0}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998486835,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":504,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998487864,
+  "ev": "latency",
+  "data": "99088.79999999981"
+ },
+ {
+  "dir": "in",
+  "t": 1792998487864,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":503,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998487864,
+  "ev": "ack#52",
+  "data": "99088.79999999981"
+ },
+ {
+  "dir": "in",
+  "t": 1792998488660,
+  "ev": "roster",
+  "data": "[{\"id\":\"Lh08iANtBv0zl-QsAAAB\",\"name\":\"ProdA\",\"team\":\"blue\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1},{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "in",
+  "t": 1792998488895,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":502,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "out",
+  "t": 1792998489874,
+  "ev": "latency",
+  "data": "101098.59999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998489874,
+  "ev": "ack#53",
+  "data": "101098.59999999963"
+ },
+ {
+  "dir": "in",
+  "t": 1792998489907,
+  "ev": "match",
+  "data": "{\"phase\":\"playing\",\"timeLeft\":501,\"scores\":{\"red\":0,\"blue\":0},\"scoreLimit\":50,\"mode\":\"tdm\",\"winner\":\"\"}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998490145,
+  "ev": "chat",
+  "data": "{\"name\":\"\",\"text\":\"ProdA o'yindan chiqdi\",\"team\":\"none\",\"system\":true}"
+ },
+ {
+  "dir": "in",
+  "t": 1792998490168,
+  "ev": "roster",
+  "data": "[{\"id\":\"Jzom6ycC4vEu4550AAAD\",\"name\":\"ProdB\",\"team\":\"red\",\"isBot\":false,\"kills\":0,\"deaths\":0,\"ping\":1}]"
+ },
+ {
+  "dir": "out",
+  "t": 1792998490526,
+  "ev": "leaveRoom",
+  "data": "null"
+ },
+ {
+  "dir": "out",
+  "t": 1792998490526,
+  "ev": "listRooms",
+  "data": "null"
+ },
+ {
+  "dir": "in",
+  "t": 1792998490527,
+  "ev": "ack#54",
+  "data": "[]"
+ }
+]

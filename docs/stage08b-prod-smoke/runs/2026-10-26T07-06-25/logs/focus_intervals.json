@@ -1,0 +1,1751 @@
+[
+ {
+  "client": "A",
+  "id": "tdm.lobbyA",
+  "attempt": 1,
+  "t0": 1792998388197,
+  "t1": 1792998388747,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792998388229,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998388454,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998388504,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998388604,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998388657,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7065859,
+    "tick": 7065890
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7065859,
+    "tick": 7066437
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "tdm.lobbyB",
+  "attempt": 1,
+  "t0": 1792998388766,
+  "t1": 1792998389319,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792998388827,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998389037,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998389088,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998389189,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998389239,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7066437,
+    "tick": 7066453
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7066437,
+    "tick": 7067000
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "tdm.create",
+  "attempt": 1,
+  "t0": 1792998389338,
+  "t1": 1792998392126,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792998389403,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998389703,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998389787,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998390069,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998390120,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998390203,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998390270,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7067015,
+    "tick": 7067031
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": true
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7067015,
+    "tick": 7069953
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "tdm.join",
+  "attempt": 1,
+  "t0": 1792998392929,
+  "t1": 1792998395161,
+  "needLock": false,
+  "events": [
+   {
+    "type": "focus",
+    "ts": 1792998392937,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   },
+   {
+    "type": "focus",
+    "ts": 1792998393491,
+    "focus": true,
+    "vis": "visible",
+    "locked": false
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7070609,
+    "tick": 7070609
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": false,
+    "paused": true
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7070609,
+    "tick": 7073000
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "tdm.B.lock+calibrate",
+  "attempt": 1,
+  "t0": 1792998401130,
+  "t1": 1792998402315,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7078687,
+    "tick": 7078812
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7078687,
+    "tick": 7080000
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "tdm.A.lock",
+  "attempt": 1,
+  "t0": 1792998402473,
+  "t1": 1792998402473,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7080015,
+    "tick": 7080156
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7080015,
+    "tick": 7080156
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "tdm.run",
+  "attempt": 1,
+  "t0": 1792998402489,
+  "t1": 1792998405715,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7080171,
+    "tick": 7080171
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7080171,
+    "tick": 7083453
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "tdm.walk",
+  "attempt": 1,
+  "t0": 1792998405775,
+  "t1": 1792998408487,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7083453,
+    "tick": 7083468
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7083453,
+    "tick": 7086171
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "tdm.jump",
+  "attempt": 1,
+  "t0": 1792998408504,
+  "t1": 1792998410450,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7086187,
+    "tick": 7086187
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7086187,
+    "tick": 7088140
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "tdm.A.1p3p",
+  "attempt": 1,
+  "t0": 1792998410473,
+  "t1": 1792998412841,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7088156,
+    "tick": 7088156
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7088156,
+    "tick": 7090531
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "tdm.weapons",
+  "attempt": 1,
+  "t0": 1792998412854,
+  "t1": 1792998423250,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7090531,
+    "tick": 7090546
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7090531,
+    "tick": 7100937
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "buddy.approachB",
+  "attempt": 1,
+  "t0": 1792998423263,
+  "t1": 1792998464706,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7100953,
+    "tick": 7100953
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7100953,
+    "tick": 7142390
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_idle.aim",
+  "attempt": 1,
+  "t0": 1792998464850,
+  "t1": 1792998465329,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7142390,
+    "tick": 7142531
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7142390,
+    "tick": 7143015
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "buddy_remote_idle.act",
+  "attempt": 1,
+  "t0": 1792998465458,
+  "t1": 1792998466657,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7143015,
+    "tick": 7143140
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7143015,
+    "tick": 7144343
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_idle.capture",
+  "attempt": 1,
+  "t0": 1792998466758,
+  "t1": 1792998466944,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7144343,
+    "tick": 7144437
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7144343,
+    "tick": 7144625
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_walk.aim",
+  "attempt": 1,
+  "t0": 1792998466954,
+  "t1": 1792998466954,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7144640,
+    "tick": 7144640
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7144640,
+    "tick": 7144640
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "buddy_remote_walk.act",
+  "attempt": 1,
+  "t0": 1792998467095,
+  "t1": 1792998469458,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7144640,
+    "tick": 7144781
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7144640,
+    "tick": 7147140
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_walk.capture",
+  "attempt": 1,
+  "t0": 1792998469569,
+  "t1": 1792998469811,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7147156,
+    "tick": 7147250
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7147156,
+    "tick": 7147500
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "buddy_remote_walk.return",
+  "attempt": 1,
+  "t0": 1792998469941,
+  "t1": 1792998471739,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7147500,
+    "tick": 7147625
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7147500,
+    "tick": 7149421
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_run.aim",
+  "attempt": 1,
+  "t0": 1792998471875,
+  "t1": 1792998472442,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7149437,
+    "tick": 7149562
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7149437,
+    "tick": 7150125
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "buddy_remote_run.act",
+  "attempt": 1,
+  "t0": 1792998472575,
+  "t1": 1792998474923,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7150140,
+    "tick": 7150265
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7150140,
+    "tick": 7152609
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_run.capture",
+  "attempt": 1,
+  "t0": 1792998475057,
+  "t1": 1792998475412,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7152609,
+    "tick": 7152734
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7152609,
+    "tick": 7153093
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "buddy_remote_run.return",
+  "attempt": 1,
+  "t0": 1792998475560,
+  "t1": 1792998478594,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7153109,
+    "tick": 7153250
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7153109,
+    "tick": 7156281
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_jump.aim",
+  "attempt": 1,
+  "t0": 1792998478740,
+  "t1": 1792998479700,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7156281,
+    "tick": 7156421
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7156281,
+    "tick": 7157390
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "buddy_remote_jump.act",
+  "attempt": 1,
+  "t0": 1792998479863,
+  "t1": 1792998480006,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7157406,
+    "tick": 7157546
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7157406,
+    "tick": 7157687
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_jump.capture",
+  "attempt": 1,
+  "t0": 1792998480108,
+  "t1": 1792998480283,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7157703,
+    "tick": 7157796
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7157703,
+    "tick": 7157968
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_rifle.aim",
+  "attempt": 1,
+  "t0": 1792998480296,
+  "t1": 1792998480296,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7157984,
+    "tick": 7157984
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7157984,
+    "tick": 7157984
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "buddy_remote_rifle.act",
+  "attempt": 1,
+  "t0": 1792998480425,
+  "t1": 1792998481592,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7157984,
+    "tick": 7158109
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7157984,
+    "tick": 7159281
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_rifle.capture",
+  "attempt": 1,
+  "t0": 1792998481704,
+  "t1": 1792998481869,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7159296,
+    "tick": 7159390
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7159296,
+    "tick": 7159546
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_pistol.aim",
+  "attempt": 1,
+  "t0": 1792998481881,
+  "t1": 1792998481881,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7159562,
+    "tick": 7159562
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7159562,
+    "tick": 7159562
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "buddy_remote_pistol.act",
+  "attempt": 1,
+  "t0": 1792998482027,
+  "t1": 1792998483201,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7159578,
+    "tick": 7159703
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7159578,
+    "tick": 7160890
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_pistol.capture",
+  "attempt": 1,
+  "t0": 1792998483315,
+  "t1": 1792998483573,
+  "needLock": true,
+  "events": [
+   {
+    "type": "lock",
+    "ts": 1792998483318,
+    "focus": true,
+    "vis": "visible",
+    "locked": true
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": true
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7160890,
+    "tick": 7161000
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7160890,
+    "tick": 7161250
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_pistol.aim",
+  "attempt": 1,
+  "t0": 1792998484100,
+  "t1": 1792998484100,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7161781,
+    "tick": 7161781
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7161781,
+    "tick": 7161781
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "buddy_remote_pistol.act",
+  "attempt": 1,
+  "t0": 1792998484242,
+  "t1": 1792998485413,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7161796,
+    "tick": 7161921
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7161796,
+    "tick": 7163093
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_pistol.capture",
+  "attempt": 2,
+  "t0": 1792998485526,
+  "t1": 1792998485768,
+  "needLock": true,
+  "events": [
+   {
+    "type": "lock",
+    "ts": 1792998485528,
+    "focus": true,
+    "vis": "visible",
+    "locked": true
+   }
+  ],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7163109,
+    "tick": 7163218
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7163109,
+    "tick": 7163453
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_shotgun.aim",
+  "attempt": 1,
+  "t0": 1792998485779,
+  "t1": 1792998485779,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7163468,
+    "tick": 7163468
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7163468,
+    "tick": 7163468
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "buddy_remote_shotgun.act",
+  "attempt": 1,
+  "t0": 1792998485907,
+  "t1": 1792998487073,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7163468,
+    "tick": 7163593
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7163468,
+    "tick": 7164750
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_shotgun.capture",
+  "attempt": 1,
+  "t0": 1792998487173,
+  "t1": 1792998487493,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7164765,
+    "tick": 7164859
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7164765,
+    "tick": 7165171
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_sniper.aim",
+  "attempt": 1,
+  "t0": 1792998487502,
+  "t1": 1792998487502,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7165187,
+    "tick": 7165187
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7165187,
+    "tick": 7165187
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "buddy_remote_sniper.act",
+  "attempt": 1,
+  "t0": 1792998487644,
+  "t1": 1792998488816,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7165187,
+    "tick": 7165328
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7165187,
+    "tick": 7166500
+   }
+  }
+ },
+ {
+  "client": "B",
+  "id": "buddy_remote_sniper.capture",
+  "attempt": 1,
+  "t0": 1792998488912,
+  "t1": 1792998489100,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7166515,
+    "tick": 7166593
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 36648,
+    "lastInput": 7166515,
+    "tick": 7166781
+   }
+  }
+ },
+ {
+  "client": "A",
+  "id": "buddy.resetWeapon",
+  "attempt": 1,
+  "t0": 1792998489237,
+  "t1": 1792998489301,
+  "needLock": true,
+  "events": [],
+  "valid": true,
+  "reasons": [],
+  "warnings": [],
+  "start": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7166796,
+    "tick": 7166921
+   }
+  },
+  "end": {
+   "page": {
+    "focus": true,
+    "vis": "visible",
+    "locked": true,
+    "paused": false
+   },
+   "os": {
+    "fgPid": 3864,
+    "lastInput": 7166796,
+    "tick": 7166984
+   }
+  }
+ }
+]
