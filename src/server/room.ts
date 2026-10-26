@@ -62,6 +62,10 @@ export interface ServerPlayer extends Body {
   pendingReloadWeapon: WeaponId | null;
   pendingReloadUntil: number;
   lastShot: number;
+  /** Otish tezligi nazorati (token bucket): to'plangan otish huquqi va oxirgi to'ldirish vaqti. */
+  fireCredit: number;
+  fireCreditAt: number;
+  lastTeamSwitch: number;
   grenades: number;
   lastGrenade: number;
   kills: number;
@@ -109,6 +113,8 @@ export class Room {
   private nextRosterAt = 0;
   private nextMatchAt = 0;
   private chatHistory: ChatMsg[] = [];
+  /** Xonadan chiqib ketgan, lekin hali portlamagan granatasi bor o'yinchilar (granata zarar berishi uchun). */
+  private departed = new Map<string, ServerPlayer>();
   destroyed = false;
 
   constructor(readonly opts: CreateRoomOpts, private io: Server, private onEmpty: (room: Room) => void) {
@@ -281,6 +287,7 @@ export class Room {
       ammo: startUnarmed ? emptyAmmo() : fullAmmo(),
       reloadUntil: 0, reloadWeapon: null, lastShot: 0,
       pendingReloadWeapon: null, pendingReloadUntil: 0,
+      fireCredit: 2, fireCreditAt: 0, lastTeamSwitch: -99,
       switchUntil: 0,
       grenades: startUnarmed ? 0 : GRENADES_PER_LIFE,
       lastGrenade: 0,
@@ -434,6 +441,11 @@ export class Room {
     this.players.delete(id);
     this.loot.removePlayer(id);
     p.socket?.leave(this.channel);
+    if (this.grenades.some((g) => g.owner === id)) {
+      p.socket = null;
+      p.brain = null;
+      this.departed.set(id, p);
+    }
     this.rosterDirty = true;
     if (this.humanCount() === 0) {
       this.destroy();
@@ -496,6 +508,8 @@ export class Room {
     p.reloadWeapon = null;
     p.reloadUntil = 0;
     p.pendingReloadWeapon = null;
+    p.fireCredit = 2;
+    p.fireCreditAt = p.spawnTime;
     if (p.isBot) {
       p.weapon = 'rifle';
       p.ammo = fullAmmo();
@@ -636,10 +650,22 @@ export class Room {
     if (this.phase !== 'playing') return false;
     const t = this.now();
     if (p.reloadWeapon === def.id) return false;
-    if (t - p.lastShot < def.fireInterval * intervalTolerance) return false;
+    // Token bucket: otish huquqi 1/fireInterval tezlikda to'planadi, sig'imi 2.0 (insonlar) / 1.0 (botlar).
+    // Shunday qilib o'rtacha tezlik hech qachon fireInterval dan oshmaydi (eski 0.75 tolerantlik 33%
+    // tezroq otishga yo'l qo'yardi), tarmoq jitteri uchun esa bir otishlik zaxira bor.
+    const cap = 1 + (1 - intervalTolerance) * 4;
+    // Ikki intervaldan uzoq pauzadan keyin zaxira to'liq (pauza ustunlik bermaydi, testlar lastShot ni tiklaydi)
+    if (t - p.lastShot > def.fireInterval * 2) {
+      p.fireCredit = cap;
+    } else {
+      p.fireCredit = Math.min(cap, p.fireCredit + Math.max(0, t - p.fireCreditAt) / def.fireInterval);
+    }
+    p.fireCreditAt = t;
+    if (p.fireCredit < 1 - 1e-6) return false;
     const ammo = p.ammo[def.id];
     if (ammo.mag <= 0) return false;
     ammo.mag--;
+    p.fireCredit -= 1;
     p.lastShot = t;
     p.spawnTime = -99; // o'q uzgan zahoti spawn himoyasi tugaydi
 
@@ -849,7 +875,13 @@ export class Room {
     if (res.ok && !res.idempotentReplay) {
       this.loot.applyInventoryToServerPlayer(p.id, p);
       if (prevWeapon === null && p.weapon !== null) {
-        applyAuthoritativeWeaponSwitch(p, p.weapon, this.now(), { fromAutoPickup: true });
+        // applyInventoryToServerPlayer p.weapon ni allaqachon o'rnatgan; haqiqiy almashtirish bo'lishi uchun
+        // avvalgi qurolni qaytarib, so'ng auto-pickup (cooldown'siz) almashtirishni qo'llaymiz.
+        const pickedWeapon = p.weapon;
+        p.weapon = prevWeapon;
+        applyAuthoritativeWeaponSwitch(p, pickedWeapon, this.now(), { fromAutoPickup: true });
+        // Klient ack olguncha yuborgan `weapon: null` kirishlari serverni qurolsiz holatga qaytarmasin
+        p.authority.guardWeaponRevert(prevWeapon);
       }
       if (res.inventory) {
         p.socket?.emit('inventory:state', res.inventory);
@@ -893,7 +925,10 @@ export class Room {
     this.loot.syncPlayerFromServerPlayer(p.id, p);
     const res = this.loot.equipWeapon(id, p.alive, rawReq);
     if (res.ok && !res.idempotentReplay) {
-      applyAuthoritativeWeaponSwitch(p, res.equippedWeapon, this.now(), { fromAutoPickup: false });
+      const prevEquipped = p.weapon;
+      if (applyAuthoritativeWeaponSwitch(p, res.equippedWeapon, this.now(), { fromAutoPickup: false })) {
+        p.authority.guardWeaponRevert(prevEquipped);
+      }
       if (res.inventory) {
         p.socket?.emit('inventory:state', res.inventory);
       }
@@ -990,11 +1025,19 @@ export class Room {
   onSwitchTeam(id: string): void {
     const p = this.players.get(id);
     if (!p || this.opts.mode !== 'tdm') return;
+    const t = this.now();
+    // Spam / chat toshqini va respawn taymerini qisqartirish hiylasiga qarshi cheklov
+    if (t - p.lastTeamSwitch < 2) return;
+    p.lastTeamSwitch = t;
     p.team = p.team === 'red' ? 'blue' : 'red';
-    p.alive = false;
-    p.scoped = false;
-    p.authority.clear();
-    p.respawnAt = this.now() + 1;
+    if (p.alive) {
+      // Tirik o'yinchi jamoa almashtirsa o'ladi va odatdagi respawn vaqtini kutadi (klientdagi taymer bilan mos)
+      p.alive = false;
+      p.scoped = false;
+      p.authority.clear();
+      p.respawnAt = t + RESPAWN_TIME;
+    }
+    // O'lik o'yinchi uchun respawnAt o'zgarmaydi — M bilan respawnni tezlashtirib bo'lmaydi
     this.rosterDirty = true;
     this.systemChat(`${p.name} ${TEAM_NAMES[p.team]} jamoaga o'tdi`);
     this.balanceBots();
@@ -1039,6 +1082,9 @@ export class Room {
     resetServerWeaponSwitchState(victim);
     if (!victim.isBot) {
       this.loot.onPlayerDeath(victim.id);
+      // Klientdagi inventar paneli o'lgan o'yinchining eski yuklamasini ko'rsatib turmasin
+      const invSnap = this.loot.getPlayerInventorySnap(victim.id);
+      if (invSnap) victim.socket?.emit('inventory:state', invSnap);
     }
     if (this.isSurvival && this.survival) {
       victim.respawnAt = Infinity;
@@ -1097,7 +1143,11 @@ export class Room {
   private explode(g: ServerGrenadeRecord) {
     if (!isValidGrenadeRecord(g)) return;
     this.io.to(this.channel).emit('explosion', { x: r3(g.pos.x), y: r3(g.pos.y), z: r3(g.pos.z) });
-    const owner = this.players.get(g.owner);
+    // Xonadan chiqib ketgan o'yinchining granatasi ham zarar beradi (departed ro'yxatidan olinadi)
+    const owner = this.players.get(g.owner) ?? this.departed.get(g.owner);
+    if (this.departed.has(g.owner) && !this.grenades.some((o) => o !== g && o.owner === g.owner)) {
+      this.departed.delete(g.owner);
+    }
     if (!owner || this.phase !== 'playing') return;
     const origin = { x: g.pos.x, y: g.pos.y + 0.15, z: g.pos.z };
     const prevDefer = this.deferWinCheck;
@@ -1402,7 +1452,8 @@ export class Room {
   }
 
   private sendMatch() {
-    this.nextMatchAt = this.now() + 1;
+    // 0.5 s: 1 s (33 ms tick kvantlanishi bilan ~1.03 s) oraliq ceil() bilan countdown soniyalarini sakratib yuborardi
+    this.nextMatchAt = this.now() + 0.5;
     const t = this.now();
     if (this.isSurvival && this.survival) {
       const surv = this.survival.getStateSnap(t);

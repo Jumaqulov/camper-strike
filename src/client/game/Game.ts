@@ -350,7 +350,13 @@ export class Game {
   private deathKiller = '';
   private stepTimer = 0;
   private fov: number;
-  private prevWeapon: WeaponId | null = 'pistol';
+  /** Q uchun oldingi qurol; qurolsiz boshlanganda (loot rejimi) null — aks holda Q "qurol yo'q" xatosini chiqaradi. */
+  private prevWeapon: WeaponId | null = null;
+  /** Jamoa almashtirish so'rovi yuborilgan vaqt (o'lim ekranida "o'ldirildi" o'rniga mos matn uchun). */
+  private teamSwitchAt = -99;
+  /** Lokal qurol almashtirish vaqti: eskirgan inventory:state qurolni orqaga qaytarmasligi uchun. */
+  private lastLocalSwitchAt = -99;
+  private maxDpr = 2;
   private readonly lootPreview: boolean;
   private lootUi: LootUI;
   private inventoryUi: InventoryUI;
@@ -419,7 +425,7 @@ export class Game {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
     this.renderer.autoClear = false;
@@ -446,6 +452,7 @@ export class Game {
     this.vm = new ViewModel(aspect);
     this.myModel = new Stickman(colorFor('red', this.myId));
     const initialWeapon: WeaponId | null = this.lootPreview ? null : 'rifle';
+    if (!this.lootPreview) this.prevWeapon = 'pistol';
     this.vm.setWeapon(initialWeapon);
     this.myModel.setWeapon(initialWeapon);
     this.myModel.setNameTag(this.myName, '#ffe082', false);
@@ -959,8 +966,10 @@ export class Game {
 
   private applyQualityRendererSettings(q: QualityLevel): void {
     const maxDpr = q === 'low' ? 1.0 : q === 'medium' ? 1.5 : 2.0;
+    this.maxDpr = maxDpr;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxDpr));
-    this.renderer.shadowMap.type = q === 'low' ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
+    // PCFSoftShadowMap three r186 da olib tashlangan (konsol ogohlantirishi bilan PCF ga tushardi)
+    this.renderer.shadowMap.type = q === 'low' ? THREE.BasicShadowMap : THREE.PCFShadowMap;
   }
 
   // ================= Tarmoq =================
@@ -1030,7 +1039,9 @@ export class Game {
       } else {
         this.lootSnapshot.containers.push(c);
       }
-      this.lootSnapshot.version = Math.max(this.lootSnapshot.version + 1, c.version);
+      // Versiyani +1 qilmaymiz: ack va broadcast bir xil o'zgarishni ikki marta keltiradi, lokal hisoblagich
+      // serverdan o'zib ketib keyingi loot:snapshot lar e'tiborsiz qolardi. Server versiyasi snapshot bilan keladi.
+      this.lootSnapshot.version = Math.max(this.lootSnapshot.version, c.version);
       this.lootWorld.applyLootSnapshot(this.lootSnapshot);
     }
     if (this.lootUi.getActiveContainerId() === c.id) {
@@ -1060,7 +1071,11 @@ export class Game {
     }
     const prevWeapon = this.me.weapon;
     this.inventorySnap = inv;
-    this.me.applyInventorySnap(inv);
+    // Qurol endigina lokal almashtirilgan bo'lsa (ack hali kelmagan), serverning eski qurolni ko'rsatuvchi
+    // oraliq inventory:state (reload tugashi, granata) qurolni orqaga "flicker" qilmasin.
+    const recentLocalSwitch = performance.now() / 1000 - this.lastLocalSwitchAt < 0.6;
+    const keepEquipped = recentLocalSwitch && inv.equippedWeapon !== this.me.weapon;
+    this.me.applyInventorySnap(inv, undefined, keepEquipped);
     this.inventoryUi.setVisible(inv.lootPreview || this.lootPreview);
     this.inventoryUi.updateInventory(inv);
     this.vm.setWeapon(this.me.weapon);
@@ -1342,6 +1357,8 @@ export class Game {
 
   private onMatch(m: MatchState) {
     this.match = m;
+    // Raund/match tugaganda snayper pritseli ochiq qolmasin (handleWeapons bu fazada ishlamaydi)
+    if (m.phase !== 'playing' && this.me.scoped) this.me.scoped = false;
     if (m.roundId !== undefined && m.roundId > this.me.roundId) {
       this.me.roundId = m.roundId;
     }
@@ -1437,7 +1454,9 @@ export class Game {
 
   private onShot(e: ShotEvent) {
     const rem = this.remotes.get(e.shooter);
-    const vis = rem && rem.model.root.visible;
+    // Masofaviy model hali qurolsiz bo'lsa (loot rejimida snapshot kechikishi) muzzle anchor'i ajratilgan —
+    // bunda server bergan ko'z nuqtasidan foydalanamiz, aks holda trasser xarita markazidan chiqardi.
+    const vis = rem && rem.model.root.visible && rem.model.hasWeapon();
     const from = vis ? rem.model.getMuzzleWorld(new THREE.Vector3()) : v3(e.origin);
     const ejectFrom = vis ? rem.model.getEjectWorld(new THREE.Vector3()) : from;
     const rightDir = vis
@@ -1529,8 +1548,12 @@ export class Game {
     this.me.resetPrediction();
     this.lastSentSeq = 0;
     this.deathAt = performance.now() / 1000;
-    this.deathKiller = killerHtml;
+    // Jamoa almashtirish (M) natijasidagi "o'lim" — qotil yo'q, mos matn ko'rsatamiz
+    const byTeamSwitch = !killerHtml && this.deathAt - this.teamSwitchAt < 3;
+    this.deathKiller = byTeamSwitch ? '<span>Jamoa almashtirildi</span>' : killerHtml;
     this.vm.cancelReload();
+    // O'lgan/kuzatuvchi o'yinchida eski yuklama ko'rinib turmasin; spawn'da qayta ko'rsatiladi
+    this.inventoryUi.setVisible(false);
   }
 
   private sendInput() {
@@ -1666,6 +1689,8 @@ export class Game {
   private onResize() {
     const w = window.innerWidth;
     const h = window.innerHeight;
+    // Boshqa DPR li monitorga o'tganda / brauzer zoom'ida piksel nisbati ham yangilansin
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.maxDpr));
     this.renderer.setSize(w, h);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
@@ -1720,7 +1745,11 @@ export class Game {
 
     if (active) {
       if (inp.justPressed('Enter') || inp.justPressed('KeyT')) this.openChat();
-      if (inp.justPressed('KeyM') && this.mode === 'tdm') this.socket.emit('switchTeam');
+      // Jamoa almashtirish faqat tirik holatda (o'lik holatda respawn taymerini aylanib o'tishga yo'l qo'ymaslik uchun)
+      if (inp.justPressed('KeyM') && this.mode === 'tdm' && me.alive && t - this.teamSwitchAt > 2) {
+        this.teamSwitchAt = t;
+        this.socket.emit('switchTeam');
+      }
       if (inp.justPressed('KeyV')) this.thirdPerson = !this.thirdPerson;
     }
 
@@ -1932,6 +1961,7 @@ export class Game {
       if (me.switchTo(null, t)) {
         // switchTo(null) dan keyin me.weapon doim null — Q ishlashi uchun avvalgi qurolni saqlaymiz
         if (holstered) this.prevWeapon = holstered;
+        this.lastLocalSwitchAt = t;
         this.vm.setWeapon(null);
         this.myModel.setWeapon(null);
         void this.requestEquipWeapon(null);
@@ -1956,7 +1986,7 @@ export class Game {
         slot = WEAPON_SLOTS.indexOf(nextW);
       }
     }
-    if (inp.justPressed('KeyQ') && this.prevWeapon) {
+    if (inp.justPressed('KeyQ') && this.prevWeapon && me.ownsWeapon(this.prevWeapon)) {
       slot = WEAPON_SLOTS.indexOf(this.prevWeapon);
     }
     if (slot >= 0 && !notPlaying) {
@@ -1967,6 +1997,7 @@ export class Game {
         const prev = me.weapon;
         if (me.switchTo(w, t)) {
           if (prev) this.prevWeapon = prev;
+          this.lastLocalSwitchAt = t;
           this.vm.setWeapon(w);
           this.myModel.setWeapon(w);
           this.vm.startSwitch(WEAPONS[w].switchTime);
@@ -2335,9 +2366,9 @@ export class Game {
     this.hud.setHealth(me.alive ? me.hp : 0);
     if (me.weapon) {
       const a = me.ammo[me.weapon];
-      this.hud.setAmmo(me.weapon, a.mag, a.reserve, !!me.reloadWeapon, me.grenades);
+      this.hud.setAmmo(me.weapon, a.mag, a.reserve, !!me.reloadWeapon, me.grenades, this.lootPreview ? me.ownedWeapons : undefined);
     } else {
-      this.hud.setAmmo(null, 0, 0, false, me.grenades);
+      this.hud.setAmmo(null, 0, 0, false, me.grenades, this.lootPreview ? me.ownedWeapons : undefined);
     }
     const spreadPx = (me.currentSpread() * (window.innerHeight / 2)) / Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
     this.hud.setCrosshair(4 + spreadPx, me.alive && !me.scoped);
@@ -2485,6 +2516,9 @@ export class Game {
     this.fx.dispose();
     this.world.dispose();
     this.renderer.dispose();
+    // WebGL kontekstini darhol bo'shatamiz — aks holda ko'p marta xonaga kirib-chiqqanda
+    // "Too many active WebGL contexts" ogohlantirishi va eski kontekstlar GC ga qadar yashab qoladi
+    this.renderer.forceContextLoss();
     this.renderer.domElement.remove();
     if (import.meta.env.DEV) {
       window.__DEV_GAME_TOOLS__ = null;

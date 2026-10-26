@@ -467,12 +467,17 @@ export class Effects {
     for (const s of this.smokes) s.obj.material.dispose();
     for (const sh of this.shells) this.scene.remove(sh.mesh);
     for (const dw of this.droppedWeapons) this.disposeDroppedGroup(dw.group);
-    this.sparks.points.geometry.dispose();
-    (this.sparks.points.material as THREE.Material).dispose();
-    this.blood.points.geometry.dispose();
-    (this.blood.points.material as THREE.Material).dispose();
-    this.debris.points.geometry.dispose();
-    (this.debris.points.material as THREE.Material).dispose();
+    for (const pool of [this.sparks, this.blood, this.debris]) {
+      this.scene.remove(pool.points);
+      pool.points.geometry.dispose();
+      const pm = pool.points.material as THREE.PointsMaterial;
+      pm.map?.dispose();
+      pm.dispose();
+    }
+    for (const d of this.decals) this.scene.remove(d);
+    this.scene.remove(this.boomLight);
+    this.decalMat.map?.dispose();
+    this.smokeTex.dispose();
     this.tracerGeo.dispose();
     this.brassShellGeo.dispose();
     this.shotgunShellGeo.dispose();

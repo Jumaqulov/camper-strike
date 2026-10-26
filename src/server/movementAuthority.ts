@@ -49,6 +49,13 @@ export class PlayerMovementAuthority {
   readonly queue: PlayerInputCmd[] = [];
   simTimeCreditSec = INITIAL_SIM_CREDIT_SEC;
   timeSinceLastInputSec = 0;
+  /**
+   * Server o'zi qurolni almashtirganda (pickup auto-equip, inventory:equip) klientning hali eski qurolni
+   * ko'rsatayotgan, yo'lda kelayotgan kirishlari serverni orqaga qaytarmasligi uchun qo'riqlash.
+   */
+  private revertGuardWeapon: WeaponId | null = null;
+  private revertGuardThroughSeq = 0;
+  private revertGuardActive = false;
 
   readonly stats: MovementAuthorityStats = {
     acceptedInputs: 0,
@@ -71,6 +78,17 @@ export class PlayerMovementAuthority {
     this.queue.length = 0;
     this.simTimeCreditSec = INITIAL_SIM_CREDIT_SEC;
     this.timeSinceLastInputSec = 0;
+    this.revertGuardActive = false;
+  }
+
+  /**
+   * Server tomonidan boshlangan qurol almashtirishdan keyin chaqiriladi: `prevWeapon` ga qaytaruvchi,
+   * seq ≤ lastQueuedSeq + window bo'lgan kirishlar e'tiborsiz qoldiriladi (klient ack olguncha yuborganlari).
+   */
+  guardWeaponRevert(prevWeapon: WeaponId | null, windowInputs = 24): void {
+    this.revertGuardWeapon = prevWeapon;
+    this.revertGuardThroughSeq = this.lastQueuedSeq + windowInputs;
+    this.revertGuardActive = true;
   }
 
   clear(): void {
@@ -263,8 +281,12 @@ export class PlayerMovementAuthority {
       this.simTimeCreditSec = Math.max(0, this.simTimeCreditSec - cmd.dt);
       simTimeUsedThisTick += cmd.dt;
 
+      if (this.revertGuardActive && cmd.seq > this.revertGuardThroughSeq) {
+        this.revertGuardActive = false;
+      }
       if (cmd.weapon !== player.weapon) {
-        const allowed = canEquipWeapon ? canEquipWeapon(cmd.weapon) : true;
+        const revertingToOld = this.revertGuardActive && cmd.weapon === this.revertGuardWeapon;
+        const allowed = !revertingToOld && (canEquipWeapon ? canEquipWeapon(cmd.weapon) : true);
         if (allowed) {
           player.weapon = cmd.weapon;
           player.reloadWeapon = null;

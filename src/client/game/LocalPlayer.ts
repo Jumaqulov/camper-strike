@@ -116,6 +116,8 @@ export class LocalPlayer {
       medkits: number;
     },
     t: number = performance.now() / 1000,
+    /** true: snapshot'dagi equippedWeapon ni e'tiborsiz qoldirib, lokal qurolni saqlash (yaqinda almashtirilgan). */
+    keepEquipped = false,
   ): boolean {
     if (snap.roundId !== undefined && this.roundId > 0 && snap.roundId < this.roundId) {
       return false;
@@ -143,7 +145,12 @@ export class LocalPlayer {
     this.grenades = snap.grenades;
     this.medkits = snap.medkits;
     const prevWeapon = this.weapon;
-    this.weapon = snap.equippedWeapon;
+    const nextWeapon = snap.equippedWeapon;
+    // Yaqinda lokal almashtirilgan bo'lsa va snapshot egasi bo'lmagan qurolni ko'rsatmasa, lokalni saqlaymiz
+    if (keepEquipped && (this.weapon === null || this.ownedWeapons.has(this.weapon))) {
+      return false;
+    }
+    this.weapon = nextWeapon;
     if (this.weapon !== prevWeapon) {
       this.reloadWeapon = null;
       this.scoped = false;

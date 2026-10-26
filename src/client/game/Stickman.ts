@@ -987,6 +987,11 @@ export class Stickman {
     this.recoilKick = 1.0;
   }
 
+  /** Qo'lida qurol modeli bormi (muzzle/eject anchorlari sahnaga ulanganmi). */
+  hasWeapon(): boolean {
+    return this.weapon !== null && this.gunModel !== null;
+  }
+
   getMuzzleWorld(out: THREE.Vector3): THREE.Vector3 {
     return this.muzzle.getWorldPosition(out);
   }

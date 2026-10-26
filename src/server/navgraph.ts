@@ -64,6 +64,8 @@ export class NavGraph {
   private readonly valid: Uint8Array;
   private readonly neighbors: number[][];
   readonly validList: number[] = [];
+  /** Eng katta bog'langan komponent tugunlari (bot sayr maqsadlari uchun). */
+  readonly roamList: number[];
 
   constructor(private readonly world: WorldDefinition = DEFAULT_WORLD) {
     const b = this.world.bounds;
@@ -102,6 +104,35 @@ export class NavGraph {
         }
       }
     }
+    // Eng katta bog'langan komponentni topamiz: botlar faqat shu tugunlar orasida sayr qiladi,
+    // aks holda ajralgan orolchalar (yetib bo'lmas nuqtalar) tanlanib, A* har tickda bekor ishlaydi.
+    const comp = new Int32Array(n).fill(-1);
+    let bestSize = 0;
+    let bestId = -1;
+    let compId = 0;
+    const stack: number[] = [];
+    for (const start of this.validList) {
+      if (comp[start] !== -1) continue;
+      let size = 0;
+      comp[start] = compId;
+      stack.push(start);
+      while (stack.length) {
+        const cur = stack.pop()!;
+        size++;
+        for (const nb of this.neighbors[cur]) {
+          if (comp[nb] === -1) {
+            comp[nb] = compId;
+            stack.push(nb);
+          }
+        }
+      }
+      if (size > bestSize) {
+        bestSize = size;
+        bestId = compId;
+      }
+      compId++;
+    }
+    this.roamList = bestId >= 0 ? this.validList.filter((i) => comp[i] === bestId) : this.validList.slice();
   }
 
   center(i: number): Vec3 {
@@ -175,7 +206,8 @@ export class NavGraph {
   }
 
   randomPoint(): Vec3 {
-    return this.center(this.validList[Math.floor(Math.random() * this.validList.length)]);
+    const list = this.roamList.length ? this.roamList : this.validList;
+    return this.center(list[Math.floor(Math.random() * list.length)]);
   }
 
   findPath(from: Vec3, to: Vec3): Vec3[] {

@@ -801,8 +801,26 @@ export function buildWorld(
       scene.remove(sun.target);
       scene.remove(sky);
       sky.geometry.dispose();
+      // Dekoratsiya materiallari va CanvasTexture lar (yo'l belgilari, qabr toshlari, RV bezaklari) ham
+      // bo'shatilsin — aks holda har kirib-chiqishda GPU xotirasi o'sib borardi.
+      const disposedMats = new Set<THREE.Material>();
+      const disposedTex = new Set<THREE.Texture>();
       group.traverse((o) => {
-        if (o instanceof THREE.Mesh) o.geometry.dispose();
+        if (!(o instanceof THREE.Mesh)) return;
+        o.geometry.dispose();
+        const list = Array.isArray(o.material) ? o.material : [o.material];
+        for (const m of list) {
+          if (!m || disposedMats.has(m) || m.userData?.sharedAsset) continue;
+          disposedMats.add(m);
+          for (const key of ['map', 'normalMap', 'roughnessMap', 'emissiveMap', 'alphaMap'] as const) {
+            const tex = (m as unknown as Record<string, unknown>)[key];
+            if (tex instanceof THREE.Texture && !disposedTex.has(tex)) {
+              disposedTex.add(tex);
+              tex.dispose();
+            }
+          }
+          m.dispose();
+        }
       });
       terrainMat?.dispose();
       Object.values(mats).forEach((m) => m.dispose());
