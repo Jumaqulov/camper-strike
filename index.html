@@ -73,6 +73,13 @@
         <div class="panel pause-panel">
           <h2 id="pause-room-name">Xona</h2>
           <button id="btn-resume" class="btn primary big">▶ O'YINGA QAYTISH</button>
+          <div id="pause-bots" class="pause-bots">
+            <span>🤖 Botlar: <b id="pause-bot-count">0</b> · 👤 Odamlar: <b id="pause-human-count">0</b></span>
+            <span class="pause-bots-btns">
+              <button id="btn-bot-add" class="btn" type="button" title="Xonaga bot qo'shish">+ Bot</button>
+              <button id="btn-bot-remove" class="btn" type="button" title="Bitta botni olib tashlash">− Bot</button>
+            </span>
+          </div>
           <div class="settings">
             <label>Sichqoncha sezgirligi <span id="val-sens">1.0</span>
               <input id="set-sens" type="range" min="0.1" max="4" step="0.05" />

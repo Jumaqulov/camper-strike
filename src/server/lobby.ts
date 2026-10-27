@@ -59,7 +59,8 @@ export function sanitizeOpts(raw: Partial<CreateRoomOpts> | undefined, owner: st
     name,
     mode,
     // Survival: botlar loot AI bilan ishtirok etadi (0–8); klassik loot ko'rish rejimida botlar yo'q
-    bots: mode === 'forest_survival' ? num(raw?.bots, 3, 0, 8) : lootPreview ? 0 : num(raw?.bots, 4, 0, 16),
+    // Barcha rejimlarda botlar: survival 0–8, klassik (loot rejimi bilan ham) 0–16
+    bots: mode === 'forest_survival' ? num(raw?.bots, 3, 0, 8) : num(raw?.bots, 4, 0, 16),
     maxPlayers: num(raw?.maxPlayers, 10, mode === 'forest_survival' ? 2 : 1, 16),
     timeLimit: num(raw?.timeLimit, mode === 'forest_survival' ? 3 : 10, 1, 60),
     scoreLimit: num(raw?.scoreLimit, mode === 'forest_survival' ? 1 : mode === 'tdm' ? 50 : 25, 1, 500),

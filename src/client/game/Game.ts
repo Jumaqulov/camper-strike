@@ -1419,6 +1419,11 @@ export class Game {
 
   private onRoster(list: RosterEntry[]) {
     this.roster = list;
+    // Pauza menyusidagi botlar/odamlar soni
+    let bots = 0;
+    for (const r of list) if (r.isBot) bots++;
+    $('pause-bot-count').textContent = String(bots);
+    $('pause-human-count').textContent = String(list.length - bots);
     const ids = new Set(list.map((r) => r.id));
     for (const r of list) {
       if (r.id === this.myId) {
@@ -1737,6 +1742,9 @@ export class Game {
       this.input.lock();
     });
     this.dom($('btn-leave'), 'click', () => this.onLeave());
+    // Pauza menyusidan bot qo'shish / olib tashlash (server chat buyruqlari orqali, barcha rejimlarda)
+    this.dom($('btn-bot-add'), 'click', () => this.socket.emit('chat', '/addbot'));
+    this.dom($('btn-bot-remove'), 'click', () => this.socket.emit('chat', '/removebot'));
     this.dom(this.renderer.domElement, 'click', () => {
       if (!this.input.locked) this.input.lock();
     });

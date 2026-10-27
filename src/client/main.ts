@@ -682,16 +682,10 @@ function initEvents(): void {
         if (Number(botsInput.value) > 8) botsInput.value = '3';
       }
       if (mapSel) mapSel.value = 'forest_square';
-    } else if (lootPreviewChk.checked) {
-      if (botsInput) {
-        botsInput.value = '0';
-        botsInput.disabled = true;
-      }
-    } else {
-      if (botsInput) {
-        botsInput.disabled = false;
-        if (Number(botsInput.value) === 0) botsInput.value = '4';
-      }
+    } else if (botsInput) {
+      // Loot rejimida ham botlar bo'ladi (loot AI) — maydon doim faol
+      botsInput.disabled = false;
+      botsInput.max = '16';
     }
   });
 
@@ -718,9 +712,7 @@ function initEvents(): void {
       mode: isSurvival ? 'forest_survival' : curMode === 'ffa' ? 'ffa' : 'tdm',
       bots: isSurvival
         ? Math.max(0, Math.min(8, Number(botsInput?.value ?? 3)))
-        : lootPreview
-          ? 0
-          : Math.max(0, Math.min(16, Number(botsInput?.value ?? 4))),
+        : Math.max(0, Math.min(16, Number(botsInput?.value ?? 4))),
       maxPlayers: Math.max(isSurvival ? 2 : 1, Math.min(16, Number(maxInput?.value ?? 10))),
       timeLimit: Math.max(1, Math.min(60, Number(timeInput?.value ?? (isSurvival ? 15 : 10)))),
       scoreLimit: isSurvival ? 1 : Math.max(1, Math.min(500, Number(scoreInput?.value ?? (curMode === 'tdm' ? 50 : 25)))),

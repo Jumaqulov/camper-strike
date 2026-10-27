@@ -202,8 +202,8 @@ export class Room {
 
     this.matchEndsAt = this.now() + opts.timeLimit * 60;
     this.lastTick = this.now();
-    // Survival'da botlar loot AI bilan ishtirok etadi; klassik loot ko'rish rejimida botlar yo'q
-    const initialBots = this.lootEnabled && !this.isSurvival ? 0 : opts.bots;
+    // Botlar barcha rejimlarda (loot rejimida ham — loot AI bilan qurol yig'adi)
+    const initialBots = opts.bots;
     for (let i = 0; i < initialBots; i++) this.addBot();
     // Windows'da taymer aniqligi ~15.6 ms, shuning uchun tez-tez tekshirib, aniq 30 Hz ushlab turamiz
     const step = 1 / TICK_RATE;
@@ -1054,18 +1054,12 @@ export class Room {
   private chatCommand(p: ServerPlayer, cmd: string) {
     const c = cmd.toLowerCase();
     if (c === '/addbot') {
-      if (this.lootEnabled && !this.isSurvival) {
-        return this.systemChat("Loot ko'rish rejimida botlar o'chirilgan");
-      }
       if (this.players.size >= 24) return this.systemChat('Botlar soni maksimal');
       const b = this.addBot();
       this.balanceBots();
       this.systemChat(`${p.name} bot qo'shdi: ${b.name}`);
       if (this.isSurvival) this.sendMatch();
     } else if (c === '/removebot' || c === '/kickbot') {
-      if (this.lootEnabled && !this.isSurvival) {
-        return this.systemChat("Loot ko'rish rejimida botlar o'chirilgan");
-      }
       if (this.removeBot()) {
         this.balanceBots();
         this.systemChat(`${p.name} bitta botni olib tashladi`);

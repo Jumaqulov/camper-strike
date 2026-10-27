@@ -351,7 +351,7 @@ describe('STAGE 06 — Server-Authoritative Loot, Containers, Inventory, Unarmed
   });
 
   it('3. Stage 05 Audit Fix 3 & Stage 06 — Unarmed Spawn & Unowned Weapon Exploit Rejection', () => {
-    // Verify lobby sanitizeOpts forces bots=0 when lootPreview=true on forest_square
+    // Lobby keeps the requested bot count in lootPreview rooms too (bots loot with their AI)
     const sanitized = sanitizeOpts(
       {
         name: 'Loot Room',
@@ -363,14 +363,14 @@ describe('STAGE 06 — Server-Authoritative Loot, Containers, Inventory, Unarmed
       'Host',
     );
     assert.equal(sanitized.lootPreview, true);
-    assert.equal(sanitized.bots, 0, 'sanitizeOpts must force bots=0 in lootPreview rooms');
+    assert.equal(sanitized.bots, 6, 'sanitizeOpts keeps the bot count in lootPreview rooms');
 
     const { io } = createFakeIo();
     const room = new Room(
       {
         name: 'Unarmed Spawn & Exploit Room',
         mode: 'ffa',
-        bots: 4, // Even if 4 bots are requested directly, Room constructor must spawn 0 bots in lootPreview
+        bots: 4,
         maxPlayers: 8,
         timeLimit: 10,
         scoreLimit: 25,
@@ -384,7 +384,10 @@ describe('STAGE 06 — Server-Authoritative Loot, Containers, Inventory, Unarmed
 
     try {
       assert.equal(room.lootPreview, true);
-      assert.equal(room.botCount(), 0, 'lootPreview room must have 0 bots');
+      assert.equal(room.botCount(), 4, 'lootPreview room spawns the requested bots');
+      for (const b of room.players.values()) {
+        if (b.isBot) assert.equal(b.weapon, null, 'bots start unarmed in loot rooms too');
+      }
 
       const sock1 = createFakeSocket('p1');
       const sock2 = createFakeSocket('p2');
