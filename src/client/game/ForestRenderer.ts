@@ -66,6 +66,7 @@ import { createGroundCoverRenderer, type GroundCoverRendererHandle } from './Gro
 import { sampleForestSquareRoad } from '../../shared/forestSquareRoads';
 import { getForestSquarePoiSites } from '../../shared/structures/contracts';
 import { setTerrainDetail } from './terrain/TerrainMaterial';
+import { buildBoundaryFence } from './BoundaryFence';
 
 /** O't maydoni zichlik ko'paytiruvchisi (faqat vizual; server/gameplay hash ga ta'sir qilmaydi). */
 const GRASS_FIELD_DENSITY_SCALE = 8;
@@ -800,6 +801,10 @@ export function buildForestSampleScene(
   terrainMesh.receiveShadow = true;
   terrainMesh.castShadow = false;
   group.add(terrainMesh);
+
+  // 1b. Xarita chegarasi: yog'och ranger panjarasi + "LAGER CHEGARASI" belgilari (faqat vizual)
+  const boundaryFence = isForestSquare ? buildBoundaryFence(world) : null;
+  if (boundaryFence) group.add(boundaryFence.group);
 
   // 2. Structure & Interior Rendering (`forest_assets_preview` / `forest_square` GLBs vs `forest_sample` procedural cabin)
   let stage04aHandles: Stage04ASceneHandles | undefined;
@@ -1797,6 +1802,7 @@ export function buildForestSampleScene(
       stage04aHandles?.containers.dispose();
       stage04aHandles?.outdoor?.dispose();
       sun.shadow.map?.dispose();
+      boundaryFence?.dispose();
       scene.remove(group);
       scene.remove(hemi);
       scene.remove(sun);
