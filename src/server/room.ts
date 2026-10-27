@@ -192,7 +192,8 @@ export class Room {
 
     this.matchEndsAt = this.now() + opts.timeLimit * 60;
     this.lastTick = this.now();
-    const initialBots = this.lootEnabled ? 0 : opts.bots;
+    // Survival'da botlar loot AI bilan ishtirok etadi; klassik loot ko'rish rejimida botlar yo'q
+    const initialBots = this.lootEnabled && !this.isSurvival ? 0 : opts.bots;
     for (let i = 0; i < initialBots; i++) this.addBot();
     // Windows'da taymer aniqligi ~15.6 ms, shuning uchun tez-tez tekshirib, aniq 30 Hz ushlab turamiz
     const step = 1 / TICK_RATE;
@@ -294,7 +295,7 @@ export class Room {
   // ---------------- O'yinchilar ----------------
 
   private createPlayer(id: string, name: string, isBot: boolean, socket: Socket | null): ServerPlayer {
-    const startUnarmed = this.lootEnabled && !isBot;
+    const startUnarmed = this.lootEnabled;
     return {
       id, name, isBot, socket,
       team: this.pickTeam(),
@@ -357,7 +358,10 @@ export class Room {
       victim = bots.find((b) => b.team === big) ?? victim;
     }
     this.players.delete(victim.id);
+    this.loot.removePlayer(victim.id);
+    this.survival?.onPlayerRemoved(victim.id, this.now());
     this.rosterDirty = true;
+    if (this.isSurvival) this.sendMatch();
     return true;
   }
 
@@ -541,9 +545,15 @@ export class Room {
     p.fireCredit = 2;
     p.fireCreditAt = p.spawnTime;
     if (p.isBot) {
-      p.weapon = 'rifle';
-      p.ammo = fullAmmo();
-      p.grenades = GRENADES_PER_LIFE;
+      if (this.lootEnabled) {
+        // Loot rejimida bot ham qurolsiz boshlaydi va konteynerlardan yig'adi
+        this.loot.resetPlayerForSpawn(p.id, p.spawnId);
+        this.loot.applyInventoryToServerPlayer(p.id, p);
+      } else {
+        p.weapon = 'rifle';
+        p.ammo = fullAmmo();
+        p.grenades = GRENADES_PER_LIFE;
+      }
       if (p.brain) p.brain.onSpawn();
     } else {
       const invSnap = this.loot.resetPlayerForSpawn(p.id, p.spawnId);
@@ -1033,16 +1043,17 @@ export class Room {
   private chatCommand(p: ServerPlayer, cmd: string) {
     const c = cmd.toLowerCase();
     if (c === '/addbot') {
-      if (this.isSurvival || this.lootEnabled) {
-        return this.systemChat("Forest Survival rejimida botlar o'chirilgan");
+      if (this.lootEnabled && !this.isSurvival) {
+        return this.systemChat("Loot ko'rish rejimida botlar o'chirilgan");
       }
       if (this.players.size >= 24) return this.systemChat('Botlar soni maksimal');
       const b = this.addBot();
       this.balanceBots();
       this.systemChat(`${p.name} bot qo'shdi: ${b.name}`);
+      if (this.isSurvival) this.sendMatch();
     } else if (c === '/removebot' || c === '/kickbot') {
-      if (this.isSurvival || this.lootEnabled) {
-        return this.systemChat("Forest Survival rejimida botlar o'chirilgan");
+      if (this.lootEnabled && !this.isSurvival) {
+        return this.systemChat("Loot ko'rish rejimida botlar o'chirilgan");
       }
       if (this.removeBot()) {
         this.balanceBots();
@@ -1090,10 +1101,12 @@ export class Room {
       absorbed = Math.min(target.armor, Math.round(amount * ARMOR_DAMAGE_ABSORB));
       target.armor -= absorbed;
     }
-    if (absorbed > 0 && !target.isBot) {
+    if (absorbed > 0) {
       this.loot.syncPlayerFromServerPlayer(target.id, target);
-      const invSnap = this.loot.getPlayerInventorySnap(target.id);
-      if (invSnap) target.socket?.emit('inventory:state', invSnap);
+      if (!target.isBot) {
+        const invSnap = this.loot.getPlayerInventorySnap(target.id);
+        if (invSnap) target.socket?.emit('inventory:state', invSnap);
+      }
     }
     amount -= absorbed;
     if (amount <= 0) return;
@@ -1129,7 +1142,7 @@ export class Room {
     victim.authority.clear();
     victim.deaths++;
     resetServerWeaponSwitchState(victim);
-    if (!victim.isBot) {
+    if (!victim.isBot || this.lootEnabled) {
       // Loot rejimida qo'ldagi qurol (joriy o'qlari bilan) yerga tushadi — g'olib uni olishi mumkin
       const dropped = this.loot.dropWeaponOnDeath(victim.id, victim.weapon, victim.pos, victim.yaw);
       this.loot.onPlayerDeath(victim.id);
@@ -1164,6 +1177,67 @@ export class Room {
     if (!this.deferWinCheck) {
       this.checkWin();
     }
+  }
+
+  // ---------------- Bot loot yordamchilari (server ichida, ack'siz) ----------------
+
+  private botReqSeq = 0;
+
+  /** Bot konteynerni ochadi (masofa/LOS tekshiruvi loot authority'da). */
+  botOpenContainer(p: ServerPlayer, containerId: string): ContainerOpenAck {
+    this.loot.syncPlayerFromServerPlayer(p.id, p);
+    const res = this.loot.openContainer(p, {
+      requestId: `bot:${p.id}:${++this.botReqSeq}`,
+      containerId,
+      roundId: this.roundId,
+      spawnId: p.spawnId,
+    });
+    if (res.ok && !res.idempotentReplay && res.container) {
+      this.io.to(this.channel).emit('container:state', res.container);
+      this.io.to(this.channel).emit('loot:snapshot', this.loot.getPublicLootSnapshot());
+    }
+    return res;
+  }
+
+  /** Bot konteynerdan (yoki yerdan, containerId=null) buyum oladi. */
+  botPickupItem(p: ServerPlayer, containerId: string | null, itemId: string): LootPickupAck {
+    this.loot.syncPlayerFromServerPlayer(p.id, p);
+    const prevWeapon = p.weapon;
+    const res = this.loot.pickupItem(p, {
+      requestId: `bot:${p.id}:${++this.botReqSeq}`,
+      containerId,
+      itemId,
+      roundId: this.roundId,
+      spawnId: p.spawnId,
+    });
+    if (res.ok && !res.idempotentReplay) {
+      this.loot.applyInventoryToServerPlayer(p.id, p);
+      if (prevWeapon === null && p.weapon !== null) {
+        const pickedWeapon = p.weapon;
+        p.weapon = prevWeapon;
+        applyAuthoritativeWeaponSwitch(p, pickedWeapon, this.now(), { fromAutoPickup: true });
+      }
+      if (res.container) {
+        this.io.to(this.channel).emit('container:state', res.container);
+      }
+      this.io.to(this.channel).emit('loot:snapshot', this.loot.getPublicLootSnapshot());
+    }
+    return res;
+  }
+
+  /** Bot aptechka ishlatadi. */
+  botUseMedkit(p: ServerPlayer): boolean {
+    this.loot.syncPlayerFromServerPlayer(p.id, p);
+    const { ack, newHp } = this.loot.useMedkit(
+      { id: p.id, alive: p.alive, hp: p.hp },
+      { requestId: `bot:${p.id}:${++this.botReqSeq}`, roundId: this.roundId, spawnId: p.spawnId },
+    );
+    if (ack.ok && !ack.idempotentReplay) {
+      p.hp = newHp;
+      this.loot.applyInventoryToServerPlayer(p.id, p);
+      return true;
+    }
+    return false;
   }
 
   /** Joriy xavfsiz zona holati (faqat survival 'playing' fazasida), aks holda null. */
@@ -1295,7 +1369,7 @@ export class Room {
         p.weapon = null;
         p.respawnAt = Infinity;
         p.authority.clear();
-        if (!p.isBot && p.ready) {
+        if (p.ready) {
           const invSnap = this.loot.resetPlayerForSpawn(p.id, p.spawnId);
           this.loot.onPlayerDeath(p.id);
           p.socket?.emit('inventory:state', invSnap);
@@ -1458,6 +1532,7 @@ export class Room {
         }
       }
       if (this.survival.getPhase() === 'playing') {
+        for (const p of this.players.values()) if (p.brain && p.alive) p.brain.update(dt, t);
         this.updateGrenades(dt, t);
         this.applyZoneDamage(t);
       }

@@ -586,24 +586,24 @@ describe('STAGE 07 — Forest Survival Mode, Round Lifecycle, Elimination, Spect
       /forest_square/i,
     );
 
-    // 3b) sanitizeOpts forces forest_square, 0 bots, lootPreview: true
+    // 3b) sanitizeOpts forces forest_square, lootPreview: true; bots clamped to 0–8 (survival bots have loot AI)
     const sanitized = sanitizeOpts(
       {
         name: 'Survival Sanitize',
         mode: 'forest_survival',
         mapId: 'dust_arena',
-        bots: 8,
+        bots: 12,
         maxPlayers: 1,
       },
       'Host',
     );
     assert.equal(sanitized.mode, 'forest_survival');
     assert.equal(sanitized.mapId, 'forest_square');
-    assert.equal(sanitized.bots, 0);
+    assert.equal(sanitized.bots, 8, 'survival bots are clamped to 8');
     assert.equal(sanitized.lootPreview, true);
     assert.ok(sanitized.maxPlayers >= 2);
 
-    // 3c) Room constructor forces 0 bots, blocks /addbot and /removebot, and ignores onSwitchTeam
+    // 3c) Room constructor spawns the requested bots (unarmed), /addbot and /removebot work, onSwitchTeam ignored
     const room = new Room(
       {
         name: 'Valid Survival Room',
@@ -622,7 +622,13 @@ describe('STAGE 07 — Forest Survival Mode, Round Lifecycle, Elimination, Spect
     try {
       assert.equal(room.isSurvival, true);
       assert.equal(room.lootEnabled, true);
-      assert.equal(room.botCount(), 0, 'forest_survival must spawn 0 bots');
+      assert.equal(room.botCount(), 6, 'forest_survival spawns the requested bots');
+      for (const b of room.players.values()) {
+        if (b.isBot) {
+          assert.equal(b.weapon, null, 'survival bots start unarmed (loot AI)');
+          assert.equal(b.team, 'none');
+        }
+      }
 
       const sock1 = createFakeSocket('p1');
       room.addHuman(sock1.socket, 'Solo');
@@ -632,10 +638,10 @@ describe('STAGE 07 — Forest Survival Mode, Round Lifecycle, Elimination, Spect
       assert.equal(p1.team, 'none');
 
       room.onChat('p1', '/addbot');
-      assert.equal(room.botCount(), 0, '/addbot must be blocked in forest_survival');
+      assert.equal(room.botCount(), 7, '/addbot works in forest_survival');
 
       room.onChat('p1', '/removebot');
-      assert.equal(room.botCount(), 0, '/removebot must be blocked in forest_survival');
+      assert.equal(room.botCount(), 6, '/removebot works in forest_survival');
 
       room.onSwitchTeam('p1');
       assert.equal(p1.team, 'none', 'onSwitchTeam must be ignored in forest_survival');

@@ -369,8 +369,10 @@ function applyModeSelection(mode: string): void {
   if (mode === 'forest_survival') {
     if (mapSel) mapSel.value = 'forest_square';
     if (botsInput) {
-      botsInput.value = '0';
-      botsInput.disabled = true;
+      // Survival'da botlar loot AI bilan qatnashadi (0–8)
+      botsInput.disabled = false;
+      botsInput.max = '8';
+      if (Number(botsInput.value) > 8 || Number(botsInput.value) === 0) botsInput.value = '3';
     }
     if (scoreInput) {
       scoreInput.value = '1';
@@ -391,6 +393,7 @@ function applyModeSelection(mode: string): void {
     }
     if (botsInput) {
       botsInput.disabled = false;
+      botsInput.max = '16';
       if (Number(botsInput.value) === 0) {
         botsInput.value = '4';
       }
@@ -668,13 +671,18 @@ function initEvents(): void {
   lootPreviewChk?.addEventListener('change', () => {
     const botsInput = getEl<HTMLInputElement>('room-bots');
     const mapSel = getEl<HTMLSelectElement>('room-map');
-    if (lootPreviewChk.checked || modeSel?.value === 'forest_survival') {
+    if (modeSel?.value === 'forest_survival') {
+      // Survival: botlar ruxsat etilgan (loot AI), xarita qat'iy forest_square
+      if (botsInput) {
+        botsInput.disabled = false;
+        botsInput.max = '8';
+        if (Number(botsInput.value) > 8) botsInput.value = '3';
+      }
+      if (mapSel) mapSel.value = 'forest_square';
+    } else if (lootPreviewChk.checked) {
       if (botsInput) {
         botsInput.value = '0';
         botsInput.disabled = true;
-      }
-      if (mapSel && modeSel?.value === 'forest_survival') {
-        mapSel.value = 'forest_square';
       }
     } else {
       if (botsInput) {

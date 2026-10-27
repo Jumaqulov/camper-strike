@@ -1,8 +1,53 @@
 import { EYE_HEIGHT, RUN_SPEED, WALK_SPEED } from '../shared/constants';
 import { anglesFromDir, angleDiff, clamp, dirFromAngles, vcopy, vdist, vnorm, vsub, type Vec3 } from '../shared/math';
-import { applyWorldMovement, raycastWorld } from '../shared/physics';
+import { applyWorldMovement, collidesAtWorld, raycastWorld } from '../shared/physics';
+import {
+  DEFAULT_CONTAINER_EXTRA_MARGIN_M,
+  GROUND_ITEM_PICKUP_RADIUS_M,
+  hasLineOfSightToContainer,
+  type PlayerInventorySnap,
+  type PublicContainerState,
+  type PublicLootItem,
+} from '../shared/loot';
+import { sampleTerrainHeight } from '../shared/world';
 import { WEAPONS, WEAPON_SLOTS, type WeaponId } from '../shared/weapons';
+import { findLocalPath, standingHeights } from './botLocalPath';
 import type { Room, ServerPlayer } from './room';
+
+/** Bot uchun qurol afzalligi (loot rejimida eng yaxshisini qo'lga oladi). */
+const BOT_WEAPON_PREFERENCE: WeaponId[] = ['rifle', 'sniper', 'shotgun', 'pistol'];
+/** Loot buyumlari ustuvorligi (konteyner ichidan olish tartibi). */
+const LOOT_KIND_PRIORITY: Record<PublicLootItem['kind'], number> = {
+  weapon: 0,
+  ammo: 1,
+  armor: 2,
+  helmet: 3,
+  medkit: 4,
+  grenade: 5,
+};
+
+interface BotLootTarget {
+  kind: 'container' | 'ground';
+  id: string;
+  pos: Vec3;
+  /** Konteyner uchun interaktiv radius; yer buyumi uchun olish radiusi. */
+  reach: number;
+  /** Yo'l maqsadi (konteyner oldi) — `candidates[approachIdx]`. */
+  approach: Vec3;
+  /** Ko'rinish (LOS) tekshiruvidan o'tgan yondashuv nuqtalari; ochish muvaffaqiyatsiz bo'lsa keyingisi sinaladi. */
+  candidates: Vec3[];
+  approachIdx: number;
+  /** Shu vaqtgacha yetib bormasa — tashlab yuboriladi. */
+  deadline: number;
+  /** Yondashuv nuqtasiga 1.6 m yaqinlashgan vaqt (aniq yetib bo'lmasa, biroz kutib shu yerdan urinamiz). */
+  nearSince: number;
+}
+
+interface ZoneTargetCircle {
+  cx: number;
+  cz: number;
+  r: number;
+}
 
 const BOT_NAMES = [
   'Amaki Bobur',
@@ -70,11 +115,25 @@ export class BotBrain {
   private walkMode = false;
   /** Survival: zona markazi (zonadan tashqarida zarar olganda o'rnatiladi). */
   private zoneGoal: Vec3 | null = null;
+  // --- Loot AI (lootEnabled xonalar) ---
+  private lootTarget: BotLootTarget | null = null;
+  private lootBlacklist = new Map<string, number>();
+  private lootSkippedItems = new Set<string>();
+  private nextLootThinkAt = 0;
+  private nextLootActAt = 0;
+  private lootTries = 0;
+  private nextMedkitAt = 0;
+  private zoneGoalPoint: Vec3 | null = null;
+  private zoneGoalAt = -99;
+  private lastGoalKey = '';
+  /** Joriy yo'l mahalliy (0.8 m katak) — tugun yaqinlik chegarasi kichikroq. */
+  private pathIsLocal = false;
 
   constructor(private room: Room, private me: ServerPlayer) {}
 
   onSpawn(): void {
-    this.me.weapon = pickBotWeapon();
+    // Loot rejimida bot qurolsiz boshlaydi (inventar bo'sh) — tasodifiy qurol faqat klassik rejimda
+    if (!this.room.lootEnabled) this.me.weapon = pickBotWeapon();
     this.path = [];
     this.pathIdx = 0;
     this.repathAt = 0;
@@ -83,11 +142,19 @@ export class BotBrain {
     this.pendingAttacker = null;
     this.aimHeight = 0.85 + Math.random() * 0.25;
     this.burstLeft = 3 + Math.floor(Math.random() * 3);
+    this.lootTarget = null;
+    this.lootBlacklist.clear();
+    this.lootSkippedItems.clear();
+    this.nextLootThinkAt = 0;
+    this.zoneGoal = null;
+    this.zoneGoalPoint = null;
+    this.lastGoalKey = '';
   }
 
   /** Xavfsiz zonadan tashqarida zarar oldi — zona markazi tomon yo'l oladi (survival). */
   onZoneDamaged(cx: number, cz: number): void {
     this.zoneGoal = { x: cx, y: this.me.pos.y, z: cz };
+    this.zoneGoalPoint = null;
     this.repathAt = 0;
   }
 
@@ -146,6 +213,15 @@ export class BotBrain {
 
   private pickRoamGoal(): Vec3 {
     const nav = this.room.nav;
+    const zt = this.zoneTarget();
+    if (zt) {
+      // Survival: faqat xavfsiz zona (maqsad aylana) ichidagi nuqtalar
+      for (let i = 0; i < 12; i++) {
+        const p = nav.randomPoint();
+        if (Math.hypot(p.x - zt.cx, p.z - zt.cz) < zt.r - 3) return p;
+      }
+      return { x: zt.cx, y: this.me.pos.y, z: zt.cz };
+    }
     if (this.room.opts.mode === 'tdm' && Math.random() < 0.55) {
       const enemyTeam = this.me.team === 'red' ? 'blue' : 'red';
       const sp = this.room.world.spawnPoints.filter((s) => s.team === enemyTeam);
@@ -160,6 +236,311 @@ export class BotBrain {
     const turn = rate * dt;
     me.yaw += clamp(angleDiff(me.yaw, yaw), -turn, turn);
     me.pitch += clamp(pitch - me.pitch, -turn, turn);
+  }
+
+  // ---------------- Survival zona ----------------
+
+  /** Maqsad (keyingi) aylana; butun xaritani qoplaydigan boshlang'ich zona uchun null. */
+  private zoneTarget(): ZoneTargetCircle | null {
+    const z = this.room.getZoneSnap();
+    if (!z || z.targetRadius >= 150) return null;
+    return { cx: z.targetCx, cz: z.targetCz, r: z.targetRadius };
+  }
+
+  /** Nuqta aylana ichida (chetidan `margin` m ichkarida) mi. */
+  private insideCircle(p: Vec3, c: ZoneTargetCircle, margin: number): boolean {
+    return Math.hypot(p.x - c.cx, p.z - c.cz) < c.r - margin;
+  }
+
+  /** Zona ichidagi tasodifiy nuqta (2 s kesh) — bot markazga to'planib qolmasin. */
+  private pickZoneGoal(zt: ZoneTargetCircle, t: number): Vec3 {
+    if (!this.zoneGoalPoint || t - this.zoneGoalAt > 2 || !this.insideCircle(this.zoneGoalPoint, zt, 1)) {
+      const ang = Math.random() * Math.PI * 2;
+      const d = Math.sqrt(Math.random()) * Math.max(0, zt.r - 4) * 0.6;
+      this.zoneGoalPoint = { x: zt.cx + Math.cos(ang) * d, y: this.me.pos.y, z: zt.cz + Math.sin(ang) * d };
+      this.zoneGoalAt = t;
+    }
+    return this.zoneGoalPoint;
+  }
+
+  // ---------------- Loot AI ----------------
+
+  private lootBlacklisted(id: string, t: number): boolean {
+    const until = this.lootBlacklist.get(id);
+    if (until === undefined) return false;
+    if (t >= until) {
+      this.lootBlacklist.delete(id);
+      return false;
+    }
+    return true;
+  }
+
+  /** 2 — qurol/o'q yo'q (shoshilinch), 1 — jihoz/aptechka/o'q kerak, 0 — kerak emas. */
+  private lootNeed(inv: PlayerInventorySnap | null): 0 | 1 | 2 {
+    const me = this.me;
+    if (!inv) return 0;
+    const w = me.weapon;
+    if (!w || inv.ownedWeapons.length === 0) return 2;
+    const ammoTotal = me.ammo[w].mag + me.ammo[w].reserve;
+    if (ammoTotal <= 0) return 2;
+    if (
+      inv.armor <= 0 ||
+      inv.helmet <= 0 ||
+      inv.medkits < 1 ||
+      inv.grenades < 1 ||
+      me.ammo[w].reserve < WEAPONS[w].magSize ||
+      inv.ownedWeapons.length < 2
+    ) {
+      return 1;
+    }
+    return 0;
+  }
+
+  private wantsItem(it: PublicLootItem, inv: PlayerInventorySnap): boolean {
+    if (this.lootSkippedItems.has(it.id)) return false;
+    switch (it.kind) {
+      case 'weapon': {
+        const w = it.weaponId;
+        if (!w) return false;
+        if (inv.ownedWeapons.includes(w)) return false;
+        return inv.ownedWeapons.length < inv.maxWeaponSlots;
+      }
+      case 'ammo': {
+        const w = it.ammoWeapon;
+        return !!w && inv.ownedWeapons.includes(w);
+      }
+      case 'medkit':
+        return inv.medkits < inv.maxMedkits;
+      case 'grenade':
+        return inv.grenades < inv.maxGrenades;
+      case 'armor':
+        return inv.armor <= 0;
+      case 'helmet':
+        return inv.helmet <= 0;
+      default:
+        return false;
+    }
+  }
+
+  /** Eng yaxshi egalik qilingan (o'qi bor) qurolni qo'lga oladi. */
+  private equipBestWeapon(): void {
+    const me = this.me;
+    if (me.reloadWeapon) return;
+    for (const w of BOT_WEAPON_PREFERENCE) {
+      if (!this.room.loot.canPlayerUseWeapon(me.id, w)) continue;
+      if (me.ammo[w].mag + me.ammo[w].reserve <= 0) continue;
+      if (me.weapon !== w) {
+        me.weapon = w;
+        this.room.loot.syncPlayerFromServerPlayer(me.id, me);
+      }
+      return;
+    }
+  }
+
+  /**
+   * Konteyner atrofidan ko'z balandligida LOS bo'lgan turish nuqtalari (oldi birinchi, keyin halqa).
+   * Bo'sh ro'yxat — konteynerga yetib bo'lmaydi (devor ichida va h.k.).
+   */
+  private approachCandidates(c: PublicContainerState): Vec3[] {
+    const world = this.room.world;
+    const out: Vec3[] = [];
+    const tryPos = (x: number, z: number, y: number) => {
+      // O'yinchi kapsulasi shu nuqtada kollayderga tegmasin (ayvon ustuni, devor, konteynerning o'zi)
+      if (collidesAtWorld(world, x, y + 0.05, z)) return;
+      const eye: Vec3 = { x, y: y + EYE_HEIGHT, z };
+      if (hasLineOfSightToContainer(world, eye, c.position, c.id)) out.push({ x, y, z });
+    };
+    // Konteyner kollayderidan tashqarida turish uchun radiuslar 1.1–1.6 m (interaktiv radius ichida)
+    // Pol balandligi: konteyner asosi bilan bir sathda yoki undan 1.3 m gacha past (stol ustidagi quti)
+    const tryColumn = (x: number, z: number) => {
+      for (const hgt of standingHeights(world, x, z, c.position.y)) {
+        const below = c.position.y - hgt;
+        if (below < -0.25 || below > 1.3) continue;
+        tryPos(x, z, hgt);
+      }
+    };
+    const fx = c.position.x + Math.sin(c.yaw) * 1.1;
+    const fz = c.position.z + Math.cos(c.yaw) * 1.1;
+    tryColumn(fx, fz);
+    for (let deg = 0; deg < 360 && out.length < 6; deg += 45) {
+      const rad = (deg * Math.PI) / 180;
+      for (const r of [1.15, 1.55]) {
+        tryColumn(c.position.x + Math.cos(rad) * r, c.position.z + Math.sin(rad) * r);
+        if (out.length >= 6) break;
+      }
+    }
+    return out;
+  }
+
+  /** Yaqin-atrofdan foydali konteyner/yer buyumini tanlaydi. */
+  private thinkLoot(t: number, zt: ZoneTargetCircle | null): void {
+    if (this.lootTarget) return;
+    const me = this.me;
+    const inv = this.room.loot.getPlayerInventorySnap(me.id);
+    const need = this.lootNeed(inv);
+    if (need === 0 || !inv) return;
+    const maxDist = need === 2 ? 160 : 45;
+    const snap = this.room.loot.getPublicLootSnapshot();
+
+    let best: BotLootTarget | null = null;
+    let bestScore = Infinity;
+
+    for (const g of snap.groundItems) {
+      if (this.lootBlacklisted(g.id, t)) continue;
+      if (need === 2 && g.kind !== 'weapon') continue;
+      if (!this.wantsItem(g, inv)) continue;
+      if (zt && !this.insideCircle(g.position, zt, 2)) continue;
+      const d = Math.hypot(g.position.x - me.pos.x, g.position.z - me.pos.z);
+      if (d > maxDist) continue;
+      const score = d - (g.kind === 'weapon' ? 12 : 0);
+      if (score < bestScore) {
+        bestScore = score;
+        best = {
+          kind: 'ground',
+          id: g.id,
+          pos: g.position,
+          reach: GROUND_ITEM_PICKUP_RADIUS_M - 0.4,
+          approach: { x: g.position.x, y: g.position.y, z: g.position.z },
+          candidates: [{ x: g.position.x, y: g.position.y, z: g.position.z }],
+          approachIdx: 0,
+          deadline: t + 15 + d / 3,
+          nearSince: -1,
+        };
+      }
+    }
+
+    for (const c of snap.containers) {
+      if (this.lootBlacklisted(c.id, t)) continue;
+      if (c.status === 'empty') continue;
+      if (c.opened && !c.items.some((it) => this.wantsItem(it, inv))) continue;
+      if (zt && !this.insideCircle(c.position, zt, 2)) continue;
+      const d = Math.hypot(c.position.x - me.pos.x, c.position.z - me.pos.z);
+      if (d > maxDist) continue;
+      // Ochilmagan konteyner noma'lum — ozgina jarima, ochiq va kerakli buyumi bor konteyner afzal.
+      // Qurolsiz bot qurol bo'lishi ehtimoli yuqori konteynerlarni (qurol shkafi, ta'minot qutisi) afzal ko'radi.
+      let score = d + (c.opened ? 0 : 4);
+      if (need === 2) {
+        if (c.opened && c.items.some((it) => it.kind === 'weapon')) score -= 30;
+        else if (c.kind === 'weapon_locker') score -= 18;
+        else if (c.kind === 'supply_crate') score -= 8;
+        else if (c.kind === 'ammo_box') score += 12;
+      }
+      if (score < bestScore) {
+        const candidates = this.approachCandidates(c).sort(
+          (a, b) => Math.hypot(a.x - me.pos.x, a.z - me.pos.z) - Math.hypot(b.x - me.pos.x, b.z - me.pos.z),
+        );
+        if (!candidates.length) {
+          // Yetib bo'lmaydigan konteyner (LOS yo'q) — uzoq vaqt e'tiborga olmaymiz
+          this.lootBlacklist.set(c.id, t + 120);
+          continue;
+        }
+        bestScore = score;
+        best = {
+          kind: 'container',
+          id: c.id,
+          pos: c.position,
+          reach: c.interactionRadius + DEFAULT_CONTAINER_EXTRA_MARGIN_M - 0.05,
+          approach: candidates[0]!,
+          candidates,
+          approachIdx: 0,
+          deadline: t + 20 + d / 3,
+          nearSince: -1,
+        };
+      }
+    }
+
+    if (best) {
+      this.lootTarget = best;
+      this.lootTries = 0;
+      this.lootSkippedItems.clear();
+      this.repathAt = 0;
+    }
+  }
+
+  /**
+   * Loot maqsadi yonida: konteynerni ochadi / buyum oladi. Qaytaradi: bot joyida turib ishlayaptimi.
+   * Yetib bormagan bo'lsa false (navigatsiya davom etadi).
+   */
+  private actLoot(t: number, dt: number): boolean {
+    const tgt = this.lootTarget;
+    if (!tgt) return false;
+    const me = this.me;
+    const dx = tgt.pos.x - me.pos.x;
+    const dz = tgt.pos.z - me.pos.z;
+    const d = Math.hypot(dx, dz);
+    // Yondashuv nuqtasiga (LOS tekshirilgan) yetib kelganimizda yoki konteynerga juda yaqin bo'lganda harakat qilamiz
+    const dApproach = Math.hypot(tgt.approach.x - me.pos.x, tgt.approach.z - me.pos.z);
+    // Konteyner uchun yondashuv nuqtasining o'zi; 1.6 m ichida 1.2 s turib qolsa (to'siq) — shu yerdan urinamiz
+    if (tgt.kind === 'container' && dApproach <= 1.6 && tgt.nearSince < 0) tgt.nearSince = t;
+    if (tgt.kind === 'container' && dApproach > 1.6) tgt.nearSince = -1;
+    const near =
+      tgt.kind === 'ground'
+        ? d <= tgt.reach
+        : dApproach <= 0.7 || (tgt.nearSince >= 0 && t - tgt.nearSince > 1.2 && d <= tgt.reach);
+    if (!near) {
+      if (t > tgt.deadline) {
+        this.lootBlacklist.set(tgt.id, t + 25);
+        this.lootTarget = null;
+      }
+      return false;
+    }
+    // Konteynerga qaraymiz (odamga o'xshab)
+    this.turnTowards(Math.atan2(-dx, -dz), -0.35, 5, dt);
+    if (t < this.nextLootActAt) return true;
+    this.nextLootActAt = t + 0.35 + Math.random() * 0.25;
+
+    if (tgt.kind === 'ground') {
+      const res = this.room.botPickupItem(me, null, tgt.id);
+      this.lootBlacklist.set(tgt.id, t + (res.ok ? 5 : 20));
+      this.lootTarget = null;
+      if (res.ok) this.equipBestWeapon();
+      return true;
+    }
+
+    const cnt = this.room.loot.getPublicContainerState(tgt.id);
+    if (!cnt || cnt.status === 'empty') {
+      this.lootBlacklist.set(tgt.id, t + 90);
+      this.lootTarget = null;
+      return false;
+    }
+    if (!cnt.opened) {
+      const res = this.room.botOpenContainer(me, tgt.id);
+      if (!res.ok) {
+        this.lootTries++;
+        // Shu nuqtadan ochib bo'lmadi (masofa/LOS) — keyingi yondashuv nuqtasiga o'tamiz
+        if (tgt.approachIdx + 1 < tgt.candidates.length && this.lootTries <= 6) {
+          tgt.approachIdx++;
+          tgt.approach = tgt.candidates[tgt.approachIdx]!;
+          tgt.deadline = t + 12;
+          tgt.nearSince = -1;
+          this.lastGoalKey = '';
+          return false;
+        }
+        this.lootBlacklist.set(tgt.id, t + 30);
+        this.lootTarget = null;
+        return false;
+      }
+      return true;
+    }
+    const inv = this.room.loot.getPlayerInventorySnap(me.id);
+    if (!inv) {
+      this.lootTarget = null;
+      return false;
+    }
+    const wanted = cnt.items
+      .filter((it) => this.wantsItem(it, inv))
+      .sort((a, b) => LOOT_KIND_PRIORITY[a.kind] - LOOT_KIND_PRIORITY[b.kind]);
+    const item = wanted[0];
+    if (!item) {
+      // Bu konteynerdan kerakli hamma narsa olindi
+      this.lootBlacklist.set(tgt.id, t + 90);
+      this.lootTarget = null;
+      return false;
+    }
+    const res = this.room.botPickupItem(me, tgt.id, item.id);
+    if (res.ok) this.equipBestWeapon();
+    else this.lootSkippedItems.add(item.id);
+    return true;
   }
 
   update(dt: number, t: number): void {
@@ -205,8 +586,13 @@ export class BotBrain {
     const activeWeapon: WeaponId = me.weapon ?? 'rifle';
     const def = WEAPONS[activeWeapon];
     const speed = RUN_SPEED * def.speedMul;
+    const lootMode = this.room.lootEnabled;
+    const canFight = !!me.weapon && me.ammo[me.weapon].mag + me.ammo[me.weapon].reserve > 0;
+    const zt = lootMode ? this.zoneTarget() : null;
+    // Zona chetiga 2 m qolganda ham ichkariga yo'l olamiz
+    const outsideZone = !!zt && !this.insideCircle(me.pos, zt, 2);
 
-    if (visible && this.target) {
+    if (visible && this.target && canFight) {
       // --- Jang ---
       const tgt = this.target;
       const eye = this.eye();
@@ -279,10 +665,46 @@ export class BotBrain {
     } else {
       // --- Navigatsiya ---
       const nav = this.room.nav;
-      if (t >= this.repathAt || this.pathIdx >= this.path.length) {
+
+      // Loot rejimi: aptechka, loot maqsadi va zona
+      let lootBusy = false;
+      let goalOverride: Vec3 | null = null;
+      let goalKey = '';
+      if (lootMode) {
+        if (me.hp < 55 && t >= this.nextMedkitAt) {
+          this.nextMedkitAt = t + 4;
+          if ((this.room.loot.getPlayerInventorySnap(me.id)?.medkits ?? 0) > 0) this.room.botUseMedkit(me);
+        }
+        if (t >= this.nextLootThinkAt) {
+          this.nextLootThinkAt = t + 0.7 + Math.random() * 0.3;
+          this.thinkLoot(t, zt);
+        }
+        if (this.lootTarget) {
+          lootBusy = this.actLoot(t, dt);
+          if (this.lootTarget && !lootBusy) {
+            goalOverride = this.lootTarget.approach;
+            goalKey = `loot:${this.lootTarget.id}`;
+          }
+        }
+        if (zt && outsideZone) {
+          // Zona hamma narsadan ustun: tashqarida qolish — o'lim
+          goalOverride = this.pickZoneGoal(zt, t);
+          goalKey = `zone:${Math.round(goalOverride.x)}:${Math.round(goalOverride.z)}`;
+          lootBusy = false;
+        }
+      }
+
+      if (goalKey !== this.lastGoalKey) {
+        this.lastGoalKey = goalKey;
+        this.repathAt = 0;
+      }
+      // Loot/zona maqsadida yo'l tugasa qayta hisoblamaymiz — to'g'ri yurish (pastda) maqsadga yetkazadi
+      if (t >= this.repathAt || (this.pathIdx >= this.path.length && !goalOverride)) {
         let goal: Vec3;
-        const hunting = this.lastSeenPos && t - this.lastSeenAt < 8;
-        if (hunting && this.lastSeenPos) {
+        const hunting = canFight && this.lastSeenPos && t - this.lastSeenAt < 8;
+        if (goalOverride) {
+          goal = goalOverride;
+        } else if (hunting && this.lastSeenPos) {
           goal = this.lastSeenPos;
           if (vdist(goal, me.pos) < 2) {
             this.lastSeenPos = null;
@@ -291,18 +713,50 @@ export class BotBrain {
         } else {
           goal = this.pickRoamGoal();
         }
-        this.path = nav.findPath(me.pos, goal);
+        this.pathIsLocal = false;
+        if (goalOverride && Math.hypot(goal.x - me.pos.x, goal.z - me.pos.z) < 12) {
+          // Yaqin maqsad (konteyner oldi / zona nuqtasi): mayda mahalliy yo'l — binolar ichi va zinalar
+          this.path = findLocalPath(this.room.world, me.pos, goal);
+          this.pathIsLocal = this.path.length > 0;
+        } else {
+          this.path = [];
+        }
+        if (!this.path.length) this.path = nav.findPath(me.pos, goal);
+        if (goalOverride && this.path.length === 0 && this.lootTarget && goalKey.startsWith('loot:')) {
+          // Yondashuv nuqtasiga yo'l yo'q — konteynerning o'ziga yaqin nav katagiga boramiz
+          this.path = nav.findPath(me.pos, this.lootTarget.pos);
+          if (this.path.length === 0) {
+            this.lootBlacklist.set(this.lootTarget.id, t + 40);
+            this.lootTarget = null;
+          }
+        } else if (goalOverride && this.path.length === 0 && goalKey.startsWith('zone:')) {
+          this.zoneGoalPoint = null;
+        }
         this.pathIdx = 0;
-        this.repathAt = t + 4 + Math.random() * 3;
-        this.walkMode = Math.random() < 0.15;
+        this.repathAt = goalOverride ? t + 1.5 + Math.random() * 0.5 : t + 4 + Math.random() * 3;
+        this.walkMode = !goalOverride && Math.random() < 0.15;
       }
       let lookYaw = me.yaw;
-      if (this.pathIdx < this.path.length) {
+      if (lootBusy) {
+        // Konteyner yonida turib ishlaymiz (actLoot qarashni boshqaradi)
+        this.pathIdx = this.path.length;
+      } else if (goalOverride && this.pathIdx >= this.path.length) {
+        // Yo'l tugadi, lekin maqsad (konteyner oldi / zona nuqtasi) hali yetilmagan — to'g'ri yuramiz
+        const dx = goalOverride.x - me.pos.x;
+        const dz = goalOverride.z - me.pos.z;
+        const dl = Math.hypot(dx, dz);
+        if (dl > 0.3 && dl < 12) {
+          wishX = (dx / dl) * speed;
+          wishZ = (dz / dl) * speed;
+          lookYaw = Math.atan2(-dx, -dz);
+        }
+      } else if (this.pathIdx < this.path.length) {
         const node = this.path[this.pathIdx];
         const dx = node.x - me.pos.x;
         const dz = node.z - me.pos.z;
         const dl = Math.hypot(dx, dz);
-        if (dl < 0.8) {
+        const isLast = this.pathIdx === this.path.length - 1;
+        if (dl < (this.pathIsLocal ? (isLast ? 0.35 : 0.5) : 0.8)) {
           this.pathIdx++;
         } else {
           const sp = this.walkMode ? WALK_SPEED : speed;
@@ -311,11 +765,11 @@ export class BotBrain {
           lookYaw = Math.atan2(-dx, -dz);
         }
       }
-      if (this.lastSeenPos && t - this.lastSeenAt < 4) {
+      if (this.lastSeenPos && t - this.lastSeenAt < 4 && canFight) {
         const d = vsub(this.lastSeenPos, me.pos);
         lookYaw = Math.atan2(-d.x, -d.z);
       }
-      this.turnTowards(lookYaw, 0, 4, dt);
+      if (!lootBusy) this.turnTowards(lookYaw, 0, 4, dt);
 
       // Tiqilib qolishni aniqlash
       if (t >= this.stuckCheckAt) {
@@ -326,7 +780,23 @@ export class BotBrain {
           this.repathAt = 0;
           if (this.stuckCount > 2) {
             this.lastSeenPos = null;
-            this.stuckCount = 0;
+            if (this.lootTarget) {
+              // Loot maqsadiga yetib bo'lmayapti — boshqasini tanlaymiz
+              this.lootBlacklist.set(this.lootTarget.id, t + 40);
+              this.lootTarget = null;
+            }
+            if (this.stuckCount > 4) {
+              // Geometriyaga tiqilib qolgan: eng yaqin nav katagi markaziga (≤2.5 m) qaytaramiz
+              const ni = nav.nearest(me.pos);
+              if (ni >= 0) {
+                const c = nav.center(ni);
+                if (Math.hypot(c.x - me.pos.x, c.z - me.pos.z) < 2.5) {
+                  me.pos = { x: c.x, y: Math.max(me.pos.y, c.y), z: c.z };
+                  me.vel = { x: 0, y: 0, z: 0 };
+                }
+              }
+              this.stuckCount = 0;
+            }
           }
         } else {
           this.stuckCount = 0;
@@ -336,7 +806,7 @@ export class BotBrain {
       }
 
       // Granata otish
-      if (this.lastSeenPos && t >= this.grenadeCheckAt && t - this.lastSeenAt > 0.8 && t - this.lastSeenAt < 4) {
+      if (canFight && this.lastSeenPos && t >= this.grenadeCheckAt && t - this.lastSeenAt > 0.8 && t - this.lastSeenAt < 4) {
         this.grenadeCheckAt = t + 2;
         const d = vdist(me.pos, this.lastSeenPos);
         if (me.grenades > 0 && Math.random() < 0.3 && d > 8 && d < 28) {
@@ -351,12 +821,17 @@ export class BotBrain {
 
     // --- O'q-dorilar ---
     const ammo = me.ammo[activeWeapon];
-    if (!me.reloadWeapon) {
+    if (!me.reloadWeapon && me.weapon) {
       if (ammo.mag === 0) {
         if (ammo.reserve > 0) this.room.startReload(me);
         else {
-          const alt = WEAPON_SLOTS.find((w) => me.ammo[w].mag + me.ammo[w].reserve > 0);
-          if (alt) me.weapon = alt;
+          const alt = WEAPON_SLOTS.find(
+            (w) => (!lootMode || this.room.loot.canPlayerUseWeapon(me.id, w)) && me.ammo[w].mag + me.ammo[w].reserve > 0,
+          );
+          if (alt) {
+            me.weapon = alt;
+            if (lootMode) this.room.loot.syncPlayerFromServerPlayer(me.id, me);
+          }
         }
       } else if (!visible && ammo.mag < WEAPONS[activeWeapon].magSize * 0.4 && ammo.reserve > 0) {
         this.room.startReload(me);

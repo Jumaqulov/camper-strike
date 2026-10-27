@@ -164,10 +164,30 @@ export class SurvivalRoundController {
     return res;
   }
 
+  /** Tayyor ishtirokchilar: odamlar + botlar (botlar doim tayyor). */
+  private getReadyContenders(): SurvivalPlayerView[] {
+    const res: SurvivalPlayerView[] = [];
+    for (const p of this.hooks.getPlayers()) {
+      if (p.ready) {
+        res.push(p);
+      }
+    }
+    return res;
+  }
+
+  /**
+   * Raund boshlash uchun hisobga olinadigan "tayyor" soni: kamida bitta tayyor odam bo'lmasa 0
+   * (faqat botlar o'zaro raund boshlamaydi), aks holda odamlar + botlar.
+   */
+  private getEffectiveReadyCount(): number {
+    if (this.getReadyHumanPlayers().length === 0) return 0;
+    return this.getReadyContenders().length;
+  }
+
   getPlayerRole(playerId: string): SurvivalPlayerRole {
     if (this.phase === 'waiting' || this.phase === 'countdown') {
       const p = this.hooks.getPlayerById(playerId);
-      if (p && p.ready && !p.isBot) {
+      if (p && p.ready) {
         return 'waiting';
       }
       return 'spectator';
@@ -194,7 +214,7 @@ export class SurvivalRoundController {
 
   canPlayerMove(playerId: string): boolean {
     const p = this.hooks.getPlayerById(playerId);
-    if (!p || p.isBot || !p.ready) {
+    if (!p || !p.ready) {
       return false;
     }
     return canPlayerMoveInSurvival(this.phase, this.getPlayerRole(playerId), p.alive);
@@ -202,7 +222,7 @@ export class SurvivalRoundController {
 
   canPlayerCombat(playerId: string): boolean {
     const p = this.hooks.getPlayerById(playerId);
-    if (!p || p.isBot || !p.ready) {
+    if (!p || !p.ready) {
       return false;
     }
     return canPlayerPerformCombatAction(this.phase, this.getPlayerRole(playerId), p.alive);
@@ -210,7 +230,7 @@ export class SurvivalRoundController {
 
   canPlayerLoot(playerId: string): boolean {
     const p = this.hooks.getPlayerById(playerId);
-    if (!p || p.isBot || !p.ready) {
+    if (!p || !p.ready) {
       return false;
     }
     return canPlayerPerformLootAction(this.phase, this.getPlayerRole(playerId), p.alive);
@@ -222,8 +242,8 @@ export class SurvivalRoundController {
   ): { spawnInPreRound: boolean; joinAsSpectator: boolean } {
     if (this.phase === 'waiting' || this.phase === 'countdown') {
       this.spectatorIds.delete(playerId);
-      const readyHumanCount = this.getReadyHumanPlayers().length;
-      if (this.phase === 'waiting' && readyHumanCount >= this.config.minPlayersToStart) {
+      const readyCount = this.getEffectiveReadyCount();
+      if (this.phase === 'waiting' && readyCount >= this.config.minPlayersToStart) {
         this.phase = 'countdown';
         this.phaseEndsAt = now + this.config.countdownDurationSec;
         this.hooks.onPhaseChanged?.('countdown', this.roundId);
@@ -242,7 +262,7 @@ export class SurvivalRoundController {
     this.spectatorIds.delete(playerId);
 
     if (this.phase === 'countdown') {
-      if (this.getReadyHumanPlayers().length < this.config.minPlayersToStart) {
+      if (this.getEffectiveReadyCount() < this.config.minPlayersToStart) {
         this.phase = 'waiting';
         this.phaseEndsAt = 0;
         this.hooks.onPhaseChanged?.('waiting', this.roundId);
@@ -335,8 +355,8 @@ export class SurvivalRoundController {
   }
 
   startRoundNow(now: number): boolean {
-    const readyPlayers = this.getReadyHumanPlayers();
-    if (readyPlayers.length < this.config.minPlayersToStart) {
+    const readyPlayers = this.getReadyContenders();
+    if (this.getEffectiveReadyCount() < this.config.minPlayersToStart) {
       this.phase = 'waiting';
       this.phaseEndsAt = 0;
       return false;
@@ -360,7 +380,7 @@ export class SurvivalRoundController {
   }
 
   tick(now: number): void {
-    const readyCount = this.getReadyHumanPlayers().length;
+    const readyCount = this.getEffectiveReadyCount();
 
     if (this.phase === 'waiting' || this.phase === 'countdown') {
       const nextPrePhase = computePreRoundPhaseTransition(
@@ -412,7 +432,7 @@ export class SurvivalRoundController {
 
   getStateSnap(now: number): SurvivalStateSnap {
     const timeLeft = this.getTimeLeft(now);
-    const readyCount = this.getReadyHumanPlayers().length;
+    const readyCount = this.getEffectiveReadyCount();
     const contenderIds = [...this.contenderOrder];
     const aliveIds = [...this.aliveContenderIds];
     const aliveCount = this.aliveContenderIds.size;
@@ -427,9 +447,6 @@ export class SurvivalRoundController {
 
     const players: SurvivalPlayerStatusSnap[] = [];
     for (const p of this.hooks.getPlayers()) {
-      if (p.isBot) {
-        continue;
-      }
       const role = this.getPlayerRole(p.id);
       if (role === 'spectator' || role === 'eliminated') {
         spectatorSet.add(p.id);
