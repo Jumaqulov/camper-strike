@@ -11,9 +11,12 @@ const HOLD: Record<WeaponId, THREE.Vector3> = {
   pistol: new THREE.Vector3(0.17, -0.125, -0.34),
   shotgun: new THREE.Vector3(0.20, -0.135, -0.37),
   sniper: new THREE.Vector3(0.20, -0.155, -0.38),
-  // Pichoq: pastroq va yaqinroq, biroz o'ngda — teskari ushlash (uchi oldinga)
-  knife: new THREE.Vector3(0.17, -0.135, -0.3),
+  // Pichoq: pastki o'ngda, ko'krak balandligida — musht dastada, tig' markazga qiya
+  knife: new THREE.Vector3(0.19, -0.17, -0.3),
 };
+
+/** Pichoq guruhining holder ichidagi tabiiy tutish burilishi: uchi yuqoriga-oldinga va biroz markaz tomon, tig' ichkariga qiya. */
+const KNIFE_POSE = new THREE.Euler(0.3, 0.25, 0.35, 'YXZ');
 
 const watchBandMat = new THREE.MeshStandardMaterial({ color: '#382919', roughness: 0.7 });
 
@@ -63,6 +66,7 @@ export class ViewModel {
     for (const w of Object.keys(WEAPONS) as WeaponId[]) {
       const g = buildGun(w, '1p');
       g.group.visible = false;
+      if (w === 'knife') g.group.setRotationFromEuler(KNIFE_POSE);
       this.addCamperArms(g, w);
       this.holder.add(g.group);
       this.guns[w] = g;
@@ -141,16 +145,25 @@ export class ViewModel {
       g.group.add(sleeve);
     };
 
+    if (w === 'knife') {
+      // Pichoq: musht dastaning o'rtasini o'raydi; yelka ekranning pastki o'ng burchagidan keladi.
+      // Pichoq guruhi burilgan (KNIFE_POSE), shuning uchun yelka siljishi holder fazosida berilib,
+      // guruh fazosiga teskari burish bilan o'tkaziladi — qo'l burilishdan qat'i nazar pastga-o'ngga ketadi.
+      const grip = new THREE.Vector3(0, -0.012, -0.004);
+      const inv = g.group.quaternion.clone().invert();
+      const shoulder = grip.clone().add(new THREE.Vector3(0.08, -0.32, 0.3).applyQuaternion(inv));
+      buildArm(grip, shoulder, false);
+      return;
+    }
+
     // O'ng qo'l: dastadan pastga-orqaga
     const gripR =
-      w === 'pistol' || w === 'knife'
+      w === 'pistol'
         ? new THREE.Vector3(0, -0.045, 0.025)
         : w === 'shotgun'
           ? new THREE.Vector3(0, -0.038, 0.095)
           : new THREE.Vector3(0, -0.048, 0.065);
     buildArm(gripR, gripR.clone().add(new THREE.Vector3(0.08, -0.22, 0.34)), false);
-    // Pichoq bir qo'lda ushlanadi — chap qo'l ko'rinmaydi
-    if (w === 'knife') return;
     // Chap qo'l: old tirsaklagich / pompa qismidan
     const gripL =
       w === 'pistol'

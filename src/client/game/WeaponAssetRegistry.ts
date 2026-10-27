@@ -56,8 +56,9 @@ const CALIBRATION: Record<WeaponId, WeaponCalibration> = {
     magPivot: new THREE.Vector3(0, -0.02, -0.115),
   },
   knife: {
-    // GLB allaqachon metr birligida, origin dastada, uchi −Z da (0.25 m); harakatlanuvchi qism yo'q
-    scale: 1.0,
+    // GLB allaqachon metr birligida, origin dastada, uchi −Z da (0.25 m); harakatlanuvchi qism yo'q.
+    // Boshqa qurollar kabi biroz kattalashtiriladi (ekranda o'qilishi uchun)
+    scale: 1.15,
     offset: new THREE.Vector3(0, 0, 0),
     muzzle: new THREE.Vector3(0, 0.002, -0.25),
     ejectPort: new THREE.Vector3(0, 0, 0),

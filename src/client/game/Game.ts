@@ -1111,6 +1111,7 @@ export class Game {
     this.on<HurtEvent>('hurt', (e) => this.onHurt(e));
     this.on<HitConfirm>('hitConfirm', (e) => {
       this.hud.hitmarker(e.headshot, e.kill);
+      if (isMeleeWeapon(this.me.weapon)) this.audio.knifeHit();
       this.audio.hitmarker(e.headshot);
       if (e.kill) this.audio.killConfirm();
     });

@@ -307,13 +307,27 @@ export class AudioSys {
     return { d: entry, dist, k };
   }
 
-  /** Pichoq hilpirashi (havoni kesish): qisqa shovqin "vush". */
+  /**
+   * Pichoq hilpirashi (havoni kesish): sekin ko'tarilib tushadigan yumshoq "vush" — o'q ovozidan farqli
+   * o'laroq keskin boshlanishsiz (attack 90 ms), past tovush va o'rta chastotali tor filtr.
+   */
   knifeSwing(pos?: P3): void {
     const chain = this.shotDest(pos);
     if (!chain) return;
     const t = this.ctx!.currentTime;
-    this.noise(chain.d, t, 0.16, 'bandpass', 700, 2600, 1.2, 0.45, 0.03);
-    this.noise(chain.d, t + 0.04, 0.1, 'highpass', 3000, 6000, 0.8, 0.18, 0.02);
+    // Asosiy "vush": bandpass 350 → 1400 Hz, 0.26 s, sekin kirish
+    this.noise(chain.d, t, 0.26, 'bandpass', 350, 1400, 2.2, 0.16, 0.09);
+    // Yengil "svish" dumi
+    this.noise(chain.d, t + 0.08, 0.16, 'bandpass', 1800, 900, 1.6, 0.05, 0.05);
+  }
+
+  /** Pichoq tanaga tegdi: bo'g'iq "tup" — past shovqin va qisqa past ton. */
+  knifeHit(): void {
+    const c = this.ctx;
+    if (!c) return;
+    const t = c.currentTime;
+    this.noise(this.master, t, 0.11, 'lowpass', 420, 90, 0.8, 0.5, 0.004);
+    this.tone(this.master, t, 'sine', 140, 55, 0.09, 0.35);
   }
 
   gunshot(w: WeaponId, pos?: P3): void {
