@@ -17,7 +17,9 @@ const SIGN_EVERY = 12; // har 12-segmentda belgi (~38 m)
 const POST_H = 1.5;
 const RAIL_HEIGHTS = [0.52, 1.1];
 
-function makeSignTexture(): THREE.CanvasTexture {
+function makeSignTexture(): THREE.CanvasTexture | null {
+  // Node testlarida (DOM yo'q) tekstura o'rniga oddiy rang ishlatiladi
+  if (typeof document === 'undefined') return null;
   const c = document.createElement('canvas');
   c.width = 512;
   c.height = 160;
@@ -108,7 +110,12 @@ export function buildBoundaryFence(world: WorldDefinition): BoundaryFenceHandle 
   const woodMat = new THREE.MeshStandardMaterial({ color: '#7a5533', roughness: 0.88, metalness: 0.02 });
   const railMat = new THREE.MeshStandardMaterial({ color: '#8a6238', roughness: 0.86, metalness: 0.02 });
   const signTex = makeSignTexture();
-  const signMat = new THREE.MeshStandardMaterial({ map: signTex, roughness: 0.8, side: THREE.DoubleSide });
+  const signMat = new THREE.MeshStandardMaterial({
+    map: signTex ?? undefined,
+    color: signTex ? '#ffffff' : '#b98a52',
+    roughness: 0.8,
+    side: THREE.DoubleSide,
+  });
 
   const postGeo = new THREE.BoxGeometry(0.16, 1, 0.16);
   postGeo.translate(0, 0.5, 0); // tubi 0 da
@@ -198,7 +205,7 @@ export function buildBoundaryFence(world: WorldDefinition): BoundaryFenceHandle 
       woodMat.dispose();
       railMat.dispose();
       signMat.dispose();
-      signTex.dispose();
+      signTex?.dispose();
     },
   };
 }

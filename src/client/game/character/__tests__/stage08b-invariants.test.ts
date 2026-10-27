@@ -25,9 +25,9 @@ function walk(dir: string, out: string[] = []): string[] {
 }
 
 describe('BOSQICH 08B-CHAR — Invariant: faqat vizual o‘zgarish (gameplay daxlsiz)', () => {
-  it('1. forest_square seed 6501: gameplayHash 670a9c21f0565c94, worldVersion 2, 36 spawn', () => {
+  it('1. forest_square seed 6501: gameplayHash 0d7cae19287644dc, worldVersion 2, 36 spawn', () => {
     const w = createWorldDefinition({ mapId: 'forest_square', publicLayoutSeed: 6501 });
-    assert.equal(w.gameplayHash, '670a9c21f0565c94');
+    assert.equal(w.gameplayHash, '0d7cae19287644dc');
     assert.equal(w.worldVersion, 2);
     assert.equal(w.spawnPoints.length, 36);
     const again = createWorldDefinition({ mapId: 'forest_square', publicLayoutSeed: 6501 });

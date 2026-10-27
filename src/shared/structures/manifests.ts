@@ -111,11 +111,15 @@ export function buildWoodStairsLocalBoxes(): LocalBoxSpec[] {
     });
   }
 
-  // Handrail flush along +X edge (x_local in [0.52, 0.60], leaves bottom landing z in [0, -0.95] open)
+  // Handrail flush along +X edge (x_local in [0.52, 0.60]).
+  // Faqat yuqori qismda (z in [-1.4, -4.0], y in [0.85, 4.0]): pastki 3 ta pog'ona (z in [0, -1.4]) yon tomondan
+  // ochiq — o'yinchi zinaga yon tomondan (masalan, kulba eshigi tomonidan) qadam qo'ya oladi; avvalgi 4 m
+  // balandlikdagi to'liq uzunlikdagi devor zinaga yo'lni butunlay to'sib qo'yardi. Yuqorida esa pog'onalar
+  // o'zi (har biri 0.2 m ko'tarilish, yon devor sifatida) va dasta o'yinchini zinada ushlab turadi.
   boxes.push({
     name: 'stair_handrail_plus_x',
-    center: [0.56, 2.0, -2.475],
-    size: [0.08, 4.0, 3.05],
+    center: [0.56, 2.425, -2.7],
+    size: [0.08, 3.15, 2.6],
   });
 
   return boxes;
