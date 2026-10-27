@@ -35,7 +35,7 @@ import { DEFAULT_PUBLIC_LAYOUT_SEED } from '../world';
  * 1. GLB Birinchi yuklanish va asset o'tishlari (Fallback -> Real GLB transition).
  * 2. GrassRenderer ichida atomik geometriya almashtirish (Atomic geometry swap).
  * 3. Terrain shader va GLSL invariantlari (smoothstep tartibi, onBeforeCompile, rang namunalari).
- * 4. Gameplay hash va dunyo invariantlarining saqlanishi (Seed 6501, 36 spawn, 26 container, 2356 collider).
+ * 4. Gameplay hash va dunyo invariantlarining saqlanishi (Seed 6501, 36 spawn, 26 container, 2571 collider).
  */
 
 describe('BOSQICH 08-TERRAIN-QA — GLB Lifecycle, Atomik Swap, Terrain Shader va Determinizm Regressiyasi', () => {
@@ -527,17 +527,17 @@ void main() {
       assert.deepEqual(t1.heights, t2.heights, 'Qayta chaqirilganda relyef balandliklari 100% teng bo\'lishi shart');
     });
 
-    it('4.2 Seed 6501 uchun gameplayHash aynan "d82286ad69e55014" ga teng va barcha xaritalash invariantlari daxlsiz', () => {
+    it('4.2 Seed 6501 uchun gameplayHash aynan "6e4913c3e10347c9" ga teng va barcha xaritalash invariantlari daxlsiz', () => {
       const world = createForestSquareWorld({ publicLayoutSeed: 6501 });
 
       assert.equal(
         world.gameplayHash,
-        'd82286ad69e55014',
-        'seed 6501 uchun gameplayHash aynan d82286ad69e55014 bo\'lishi shart',
+        '6e4913c3e10347c9',
+        'seed 6501 uchun gameplayHash aynan 6e4913c3e10347c9 bo\'lishi shart',
       );
       assert.equal(world.spawnPoints.length, 36, 'O\'rmon xaritasida aynan 36 ta spawn nuqtasi bo\'lishi kerak');
       assert.equal(world.containerLocations.length, 26, 'O\'rmon xaritasida aynan 26 ta loot konteyneri bo\'lishi kerak');
-      assert.equal(world.colliders.length, 2356, 'O\'rmon xaritasida aynan 2356 ta fizik kollayder bo\'lishi kerak');
+      assert.equal(world.colliders.length, 2571, 'O\'rmon xaritasida aynan 2571 ta fizik kollayder bo\'lishi kerak');
     });
 
     it('4.3 Ground cover va shader vizual o‘zgarishlari dunyo hashiga yoki kollayderlar ro‘yxatiga ta’sir qilmaydi', () => {
@@ -554,7 +554,7 @@ void main() {
       assert.equal(JSON.stringify(world.colliders), collidersBefore, 'Kollayderlar ro\'yxati mutlaqo daxlsiz bo\'lishi shart');
       assert.equal(world.spawnPoints.length, 36);
       assert.equal(world.containerLocations.length, 26);
-      assert.equal(world.colliders.length, 2356);
+      assert.equal(world.colliders.length, 2571);
     });
   });
 });

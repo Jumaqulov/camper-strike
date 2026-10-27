@@ -111,19 +111,42 @@ export function buildWoodStairsLocalBoxes(): LocalBoxSpec[] {
     });
   }
 
-  // Handrail flush along +X edge (x_local in [0.52, 0.60]).
-  // Faqat yuqori qismda (z in [-1.4, -4.0], y in [0.85, 4.0]): pastki 3 ta pog'ona (z in [0, -1.4]) yon tomondan
-  // ochiq — o'yinchi zinaga yon tomondan (masalan, kulba eshigi tomonidan) qadam qo'ya oladi; avvalgi 4 m
-  // balandlikdagi to'liq uzunlikdagi devor zinaga yo'lni butunlay to'sib qo'yardi. Yuqorida esa pog'onalar
-  // o'zi (har biri 0.2 m ko'tarilish, yon devor sifatida) va dasta o'yinchini zinada ushlab turadi.
-  boxes.push({
-    name: 'stair_handrail_plus_x',
-    center: [0.56, 2.425, -2.7],
-    size: [0.08, 3.15, 2.6],
-  });
-
+  // Tutqich kollayderi yo'q: avval +X chetidagi dasta (keyin faqat yuqori qismi) o'yinchini zinaga kirish va
+  // yuqorida burilishda to'sib qo'yardi. Pog'onalar o'zi (har biri 0.2 m ko'tarilish) yon devor vazifasini
+  // yetarlicha bajaradi; GLB dagi dasta faqat vizual.
   return boxes;
 }
+
+/**
+ * `wood_roof_slope_01` uchun qattiq qiya tom: GLB paneli lokal z ≈ −0.08 (tom tizmasi, y ≈ 1.64) dan
+ * z ≈ 2.45 (tom cheti, y ≈ −0.45) gacha tushadi. Avvalgi yagona gorizontal "qopqoq" plita (y ≈ 1.95)
+ * tom ustida havoda turardi: o'yinchi loftdan sakrab unga chiqib, so'ng vizual tom orqali pastga tushib ketardi.
+ * Endi panel 8 ta pog'onali plita bilan qoplanadi (har pog'ona ko'tarilishi 0.26 m < STEP_HEIGHT) — tom
+ * ichkaridan ham, tashqaridan ham qattiq, ustida yurish mumkin, lekin teshib o'tib bo'lmaydi.
+ */
+export function buildRoofSlopeLocalBoxes(): LocalBoxSpec[] {
+  const ridgeZ = -0.08;
+  const eaveZ = 2.45;
+  const ridgeY = 1.64;
+  const eaveY = -0.45;
+  const thickness = 0.28;
+  const steps = 8;
+  const depth = (eaveZ - ridgeZ) / steps;
+  const boxes: LocalBoxSpec[] = [];
+  for (let i = 0; i < steps; i++) {
+    const z0 = ridgeZ + i * depth;
+    const zMid = z0 + depth / 2;
+    const topY = ridgeY + ((zMid - ridgeZ) / (eaveZ - ridgeZ)) * (eaveY - ridgeY);
+    boxes.push({
+      name: `roof_slope_step_${String(i + 1).padStart(2, '0')}`,
+      center: [0, q3(topY - thickness / 2), q3(zMid)],
+      size: [4.0, thickness, q3(depth)],
+    });
+  }
+  return boxes;
+}
+
+export const ROOF_SLOPE_LOCAL_BOXES: readonly LocalBoxSpec[] = buildRoofSlopeLocalBoxes();
 
 export const WOOD_STAIRS_LOCAL_BOXES: readonly LocalBoxSpec[] = buildWoodStairsLocalBoxes();
 
@@ -232,15 +255,8 @@ export const BUILDING_MANIFESTS: Record<BuildingAssetId, BuildingAssetManifest> 
     materials: ['wood', 'roof'],
     staticMeshes: ['wood_roof_slope_01_frame', 'wood_roof_slope_01_shingles'],
     pivots: [],
-    // Upper roof cap positioned at y >= 1.90 in local space (world y >= 4.90) so a 1.8m player on a y=3.0 loft has full standing headroom
-    colliderBoxes: [
-      {
-        name: 'roof_slope_cap',
-        center: [0, 1.95, 1.0],
-        size: [4.0, 0.14, 2.5],
-        rotationX: 0.6435,
-      },
-    ],
+    // Qattiq pog'onali qiya tom (tizma → chet); loft kulbalarida tom endi 2-qavat devorlari ustida (y = 6)
+    colliderBoxes: [...ROOF_SLOPE_LOCAL_BOXES],
   },
   wood_roof_gable_01: {
     id: 'wood_roof_gable_01',

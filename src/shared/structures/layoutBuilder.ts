@@ -57,7 +57,8 @@ export function placeWallTransform(
 }
 
 /**
- * Builds the 8x4 m two-story loft cabin prefab (`examples/sample_cabin_layout.json`, 17 building modules)
+ * Builds the 8x4 m two-story loft cabin prefab (`examples/sample_cabin_layout.json`; 17 base modules +
+ * 6 second-floor walls = 23 building modules, roof at y = 6.0)
  * plus entrance porch step-up pads (`porchSteps`) outside the front doorway at `(origin.x + 2, origin.y, origin.z + 4)`.
  */
 export function buildCabin8x4Prefab(
@@ -91,6 +92,13 @@ export function buildCabin8x4Prefab(
   const wEast = placeWallTransform(8, 4, 8, 0, 0);
   const wNorthEastWin = placeWallTransform(8, 0, 4, 0, 0);
   const wNorthWest = placeWallTransform(4, 0, 0, 0, 0);
+  // Ikkinchi qavat devorlari (y = 3.0), birinchi qavat bilan bir xil perimetr
+  const wWest2 = placeWallTransform(0, 0, 0, 4, 3);
+  const wSouthWest2 = placeWallTransform(0, 4, 4, 4, 3);
+  const wSouthEast2 = placeWallTransform(4, 4, 8, 4, 3);
+  const wEast2 = placeWallTransform(8, 4, 8, 0, 3);
+  const wNorthEast2 = placeWallTransform(8, 0, 4, 0, 3);
+  const wNorthWest2 = placeWallTransform(4, 0, 0, 0, 3);
 
   const modules: BuildingModulePlacement[] = [
     // 1-2. Ground floor 4x4 slabs (y = 0)
@@ -135,16 +143,25 @@ export function buildCabin8x4Prefab(
     ),
     // 10. Open front door leaf (1.38 rad inward)
     addMod(10, 'wood_door_01', 2, 0, 4, 0, { doorOpenAngleRad: 1.38 }),
-    // 11-12. Roof gables at x = 0 and x = 8 (y = 3.0)
-    addMod(11, 'wood_roof_gable_01', 0, 3, 2, -Math.PI / 2),
-    addMod(12, 'wood_roof_gable_01', 8, 3, 2, Math.PI / 2),
-    // 13-16. Roof slopes (y = 3.0)
-    addMod(13, 'wood_roof_slope_01', 2, 3, 2, 0),
-    addMod(14, 'wood_roof_slope_01', 2, 3, 2, Math.PI),
-    addMod(15, 'wood_roof_slope_01', 6, 3, 2, 0),
-    addMod(16, 'wood_roof_slope_01', 6, 3, 2, Math.PI),
+    // 11-12. Roof gables at x = 0 and x = 8 (y = 6.0 — ikkinchi qavat devorlari ustida; avval y = 3.0 da bo'lib,
+    // loft tomi 1.64 m balandlikda edi: o'yinchi boshi tomdan chiqib, sakrab tom ustiga chiqib tushib ketardi)
+    addMod(11, 'wood_roof_gable_01', 0, 6, 2, -Math.PI / 2),
+    addMod(12, 'wood_roof_gable_01', 8, 6, 2, Math.PI / 2),
+    // 13-16. Roof slopes (y = 6.0)
+    addMod(13, 'wood_roof_slope_01', 2, 6, 2, 0),
+    addMod(14, 'wood_roof_slope_01', 2, 6, 2, Math.PI),
+    addMod(15, 'wood_roof_slope_01', 6, 6, 2, 0),
+    addMod(16, 'wood_roof_slope_01', 6, 6, 2, Math.PI),
     // 17. Interior stairs ascending from (0.15, 0, 0.85) toward +X loft at (4.15, 3.0, 0.85)
     addMod(17, 'wood_stairs_01', 0.15, 0, 0.85, -Math.PI / 2),
+    // 18-23. Ikkinchi qavat devorlari (y = 3.0): loft to'liq balandlikdagi xona bo'ladi (3 m bosh balandligi).
+    // G'arbiy yarim (x 0..4) ustidagi devorlar ochiq zal ustida turadi (ikki qavatli zal, loft unga qaraydi).
+    addMod(18, 'wood_wall_window_01', wWest2.position.x, wWest2.position.y, wWest2.position.z, wWest2.rotationY),
+    addMod(19, 'wood_wall_01', wSouthWest2.position.x, wSouthWest2.position.y, wSouthWest2.position.z, wSouthWest2.rotationY),
+    addMod(20, 'wood_wall_window_01', wSouthEast2.position.x, wSouthEast2.position.y, wSouthEast2.position.z, wSouthEast2.rotationY),
+    addMod(21, 'wood_wall_window_01', wEast2.position.x, wEast2.position.y, wEast2.position.z, wEast2.rotationY),
+    addMod(22, 'wood_wall_window_01', wNorthEast2.position.x, wNorthEast2.position.y, wNorthEast2.position.z, wNorthEast2.rotationY),
+    addMod(23, 'wood_wall_01', wNorthWest2.position.x, wNorthWest2.position.y, wNorthWest2.position.z, wNorthWest2.rotationY),
   ];
 
   // Porch steps outside the south doorway (x = ox + 2, z = oz + 4) so player can walk in/out smoothly

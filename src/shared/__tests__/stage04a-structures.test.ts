@@ -117,7 +117,7 @@ describe('BOSQICH 04A — Shared Structures, Segmented Colliders & Layout Builde
 
     const cabin = buildCabin8x4Prefab({ x: 0, y: 0, z: 0 }, 'test_cabin');
     const room = buildRoom4x4Prefab({ x: 20, y: 0, z: 0 }, 'test_room');
-    assert.equal(cabin.modules.length, 17);
+    assert.equal(cabin.modules.length, 23); // 17 asosiy + 6 ta ikkinchi qavat devori
     assert.equal(room.modules.length, 10);
 
     const world = makeFlatWorldWithColliders([
@@ -256,7 +256,7 @@ describe('BOSQICH 04A — Shared Structures, Segmented Colliders & Layout Builde
     );
 
     // Verify every stair step rise is <= STEP_HEIGHT (0.45m)
-    assert.equal(BUILDING_MANIFESTS.wood_stairs_01.colliderBoxes.length, 16); // 15 steps + 1 handrail
+    assert.equal(BUILDING_MANIFESTS.wood_stairs_01.colliderBoxes.length, 15); // 15 steps, tutqich kollayderi yo‘q
     for (const box of BUILDING_MANIFESTS.wood_stairs_01.colliderBoxes) {
       if (box.name.startsWith('stair_step_')) {
         assert.ok(box.size[1] <= 0.45 && box.size[1] <= STEP_HEIGHT);
