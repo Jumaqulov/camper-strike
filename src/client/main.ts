@@ -286,7 +286,7 @@ function quickPlay(): void {
       const opts: CreateRoomOpts = {
         name: `${settings.name} o'rmoni`,
         mode: 'forest_survival',
-        bots: 0,
+        bots: 3, // tezkor start: yolg'iz o'yinchi ham loot AI botlari bilan o'ynay oladi
         maxPlayers: 10,
         timeLimit: 15,
         scoreLimit: 1,
@@ -712,7 +712,11 @@ function initEvents(): void {
     const opts: CreateRoomOpts = {
       name: (rNameInput ? rNameInput.value.trim() : '') || `${settings.name} xonasi`,
       mode: isSurvival ? 'forest_survival' : curMode === 'ffa' ? 'ffa' : 'tdm',
-      bots: isSurvival || lootPreview ? 0 : Math.max(0, Math.min(16, Number(botsInput?.value ?? 4))),
+      bots: isSurvival
+        ? Math.max(0, Math.min(8, Number(botsInput?.value ?? 3)))
+        : lootPreview
+          ? 0
+          : Math.max(0, Math.min(16, Number(botsInput?.value ?? 4))),
       maxPlayers: Math.max(isSurvival ? 2 : 1, Math.min(16, Number(maxInput?.value ?? 10))),
       timeLimit: Math.max(1, Math.min(60, Number(timeInput?.value ?? (isSurvival ? 15 : 10)))),
       scoreLimit: isSurvival ? 1 : Math.max(1, Math.min(500, Number(scoreInput?.value ?? (curMode === 'tdm' ? 50 : 25)))),
