@@ -84,6 +84,11 @@ export interface LocalBoxSpec {
   size: [number, number, number];
   rotationX?: number;
   rotationY?: number;
+  /**
+   * O'q uchun aniq uchburchak (gable) shakli: modul lokal fazosida asos yarim kengligi va asos/uch Y.
+   * AABB o'zgarmaydi (harakat fizikasi), faqat raycast uchburchak ichida tegadi.
+   */
+  gable?: { halfWidth: number; baseY: number; apexY: number };
 }
 
 export interface PivotSpec {

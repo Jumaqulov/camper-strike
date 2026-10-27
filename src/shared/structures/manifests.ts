@@ -256,6 +256,8 @@ export const BUILDING_MANIFESTS: Record<BuildingAssetId, BuildingAssetManifest> 
         name: 'gable_wall',
         center: [0, 0.75, 0],
         size: [4.0, 1.5, 0.2],
+        // O'q uchun: GLB uchburchagi (asos y=-0.46 da ±2.41, uchi y=1.68) — quti burchaklari havoda qolmasin
+        gable: { halfWidth: 2.41, baseY: -0.46, apexY: 1.68 },
       },
     ],
   },
@@ -1005,7 +1007,7 @@ export function localBoxToWorldCollider(
   const halfY = sy / 2;
   const halfZ = (Math.abs(sinT) * sx + Math.abs(cosT) * sz) / 2;
 
-  return {
+  const out: ColliderBox = {
     id,
     sourceObjectId,
     tag,
@@ -1013,6 +1015,30 @@ export function localBoxToWorldCollider(
     min: { x: q3(cx - halfX), y: q3(cy - halfY), z: q3(cz - halfZ) },
     max: { x: q3(cx + halfX), y: q3(cy + halfY), z: q3(cz + halfZ) },
   };
+  // O'q uchun aniq shakl: uchburchak old devor yoki o'qqa to'g'ri kelmaydigan (kardinal bo'lmagan) burilish
+  if (box.gable) {
+    const g = box.gable;
+    // Uchburchak quti balandligi bilan kesishadi: asos/uch dunyo Y da, AABB ichida qoladi
+    out.hit = {
+      kind: 'gable',
+      cx: q3(cx),
+      cz: q3(cz),
+      hx: Math.min(g.halfWidth, sx / 2),
+      baseY: q3(position.y + g.baseY),
+      apexY: q3(position.y + g.apexY),
+      hz: sz / 2,
+      yaw: totalYaw,
+    };
+  } else if (!isCardinalYaw(totalYaw)) {
+    out.hit = { kind: 'obb', cx: q3(cx), cy: q3(cy), cz: q3(cz), hx: sx / 2, hy: sy / 2, hz: sz / 2, yaw: totalYaw };
+  }
+  return out;
+}
+
+/** Burilish 90° ga karrali (AABB aniq) bo'lsa true. */
+function isCardinalYaw(yaw: number): boolean {
+  const k = yaw / (Math.PI / 2);
+  return Math.abs(k - Math.round(k)) < 1e-6;
 }
 
 /**

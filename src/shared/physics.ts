@@ -662,6 +662,175 @@ export function rayBox(o: Vec3, d: Vec3, min: Vec3, max: Vec3, maxT: number): Ra
   };
 }
 
+// ---------- Aniq hit-shakllar (o'q / ko'rinish uchun) ----------
+
+interface Plane {
+  nx: number;
+  ny: number;
+  nz: number;
+  c: number;
+}
+
+/** Qavariq ko'pyoqli (yarim fazolar kesishmasi) bilan nur kesishuvi; kirish nuqtasi va tekislik normali. */
+function rayConvex(o: Vec3, d: Vec3, planes: readonly Plane[], maxT: number): RayHit | null {
+  let tEnter = 0;
+  let tExit = maxT;
+  let entry: Plane | null = null;
+  for (const p of planes) {
+    const nd = p.nx * d.x + p.ny * d.y + p.nz * d.z;
+    const no = p.nx * o.x + p.ny * o.y + p.nz * o.z;
+    if (Math.abs(nd) < 1e-12) {
+      if (no > p.c) return null;
+      continue;
+    }
+    const t = (p.c - no) / nd;
+    if (nd > 0) {
+      if (t < tExit) tExit = t;
+    } else if (t > tEnter) {
+      tEnter = t;
+      entry = p;
+    }
+    if (tEnter > tExit) return null;
+  }
+  if (!entry) return null; // boshlanish nuqtasi ichkarida — tegish hisoblanmaydi
+  return { t: tEnter, nx: entry.nx, ny: entry.ny, nz: entry.nz };
+}
+
+/** Vertikal silindr (y oralig'i qutidan) bilan nur kesishuvi. */
+export function rayCylinderY(o: Vec3, d: Vec3, cx: number, cz: number, r: number, yMin: number, yMax: number, maxT: number): RayHit | null {
+  const ox = o.x - cx;
+  const oz = o.z - cz;
+  const a = d.x * d.x + d.z * d.z;
+  let t1: number;
+  let t2: number;
+  if (a < 1e-12) {
+    if (ox * ox + oz * oz > r * r) return null;
+    t1 = -Infinity;
+    t2 = Infinity;
+  } else {
+    const b = 2 * (ox * d.x + oz * d.z);
+    const c = ox * ox + oz * oz - r * r;
+    const disc = b * b - 4 * a * c;
+    if (disc < 0) return null;
+    const sq = Math.sqrt(disc);
+    t1 = (-b - sq) / (2 * a);
+    t2 = (-b + sq) / (2 * a);
+  }
+  // Y plitasi
+  let ty1 = -Infinity;
+  let ty2 = Infinity;
+  if (Math.abs(d.y) < 1e-12) {
+    if (o.y < yMin || o.y > yMax) return null;
+  } else {
+    ty1 = (yMin - o.y) / d.y;
+    ty2 = (yMax - o.y) / d.y;
+    if (ty1 > ty2) [ty1, ty2] = [ty2, ty1];
+  }
+  const tEnter = Math.max(t1, ty1, 0);
+  const tExit = Math.min(t2, ty2, maxT);
+  if (tEnter > tExit || tEnter <= 0) return null;
+  if (tEnter === ty1) return { t: tEnter, nx: 0, ny: d.y > 0 ? -1 : 1, nz: 0 };
+  const px = ox + d.x * tEnter;
+  const pz = oz + d.z * tEnter;
+  const l = Math.hypot(px, pz) || 1;
+  return { t: tEnter, nx: px / l, ny: 0, nz: pz / l };
+}
+
+/** Ellipsoid bilan nur kesishuvi (birlik sferaga masshtablab). */
+export function rayEllipsoid(o: Vec3, d: Vec3, cx: number, cy: number, cz: number, rx: number, ry: number, rz: number, maxT: number): RayHit | null {
+  const ox = (o.x - cx) / rx;
+  const oy = (o.y - cy) / ry;
+  const oz = (o.z - cz) / rz;
+  const dx = d.x / rx;
+  const dy = d.y / ry;
+  const dz = d.z / rz;
+  const a = dx * dx + dy * dy + dz * dz;
+  const b = 2 * (ox * dx + oy * dy + oz * dz);
+  const c = ox * ox + oy * oy + oz * oz - 1;
+  const disc = b * b - 4 * a * c;
+  if (disc < 0 || a < 1e-12) return null;
+  const t = (-b - Math.sqrt(disc)) / (2 * a);
+  if (t <= 0 || t > maxT) return null;
+  // Normal — gradient: (x/rx², y/ry², z/rz²)
+  const px = o.x + d.x * t - cx;
+  const py = o.y + d.y * t - cy;
+  const pz = o.z + d.z * t - cz;
+  let nx = px / (rx * rx);
+  let ny = py / (ry * ry);
+  let nz = pz / (rz * rz);
+  const l = Math.hypot(nx, ny, nz) || 1;
+  nx /= l;
+  ny /= l;
+  nz /= l;
+  return { t, nx, ny, nz };
+}
+
+/** Y o'qi atrofida burilgan quti (OBB) bilan nur kesishuvi. */
+export function rayObbY(o: Vec3, d: Vec3, cx: number, cy: number, cz: number, hx: number, hy: number, hz: number, yaw: number, maxT: number): RayHit | null {
+  const cos = Math.cos(yaw);
+  const sin = Math.sin(yaw);
+  // Lokal o'qlar (dunyo koordinatalarida): X' = (cos, 0, -sin), Z' = (sin, 0, cos) — localBoxToWorldCollider bilan mos
+  const ax = { x: cos, y: 0, z: -sin };
+  const az = { x: sin, y: 0, z: cos };
+  const planes: Plane[] = [
+    { nx: ax.x, ny: 0, nz: ax.z, c: ax.x * cx + ax.z * cz + hx },
+    { nx: -ax.x, ny: 0, nz: -ax.z, c: -(ax.x * cx + ax.z * cz) + hx },
+    { nx: az.x, ny: 0, nz: az.z, c: az.x * cx + az.z * cz + hz },
+    { nx: -az.x, ny: 0, nz: -az.z, c: -(az.x * cx + az.z * cz) + hz },
+    { nx: 0, ny: 1, nz: 0, c: cy + hy },
+    { nx: 0, ny: -1, nz: 0, c: -cy + hy },
+  ];
+  return rayConvex(o, d, planes, maxT);
+}
+
+/** Uchburchak prizma (tom old devori): asos `baseY` da ±hx, uchi `apexY` da; qalinlik ±hz; Y atrofida burilgan. */
+export function rayGable(o: Vec3, d: Vec3, cx: number, cz: number, hx: number, baseY: number, apexY: number, hz: number, yaw: number, maxT: number): RayHit | null {
+  const cos = Math.cos(yaw);
+  const sin = Math.sin(yaw);
+  const ax = { x: cos, z: -sin };
+  const az = { x: sin, z: cos };
+  const h = Math.max(1e-6, apexY - baseY);
+  const base = { nx: 0, ny: -1, nz: 0, c: -baseY };
+  // Qiya qirralar: ±x·h + hx·y <= hx·apexY  (x — lokal X koordinatasi)
+  const xc = ax.x * cx + ax.z * cz;
+  const slopeR = { nx: ax.x * h, ny: hx, nz: ax.z * h, c: xc * h + hx * apexY };
+  const slopeL = { nx: -ax.x * h, ny: hx, nz: -ax.z * h, c: -xc * h + hx * apexY };
+  const planes: Plane[] = [
+    base,
+    slopeR,
+    slopeL,
+    { nx: az.x, ny: 0, nz: az.z, c: az.x * cx + az.z * cz + hz },
+    { nx: -az.x, ny: 0, nz: -az.z, c: -(az.x * cx + az.z * cz) + hz },
+  ];
+  const hit = rayConvex(o, d, planes, maxT);
+  if (!hit) return null;
+  const l = Math.hypot(hit.nx, hit.ny, hit.nz) || 1;
+  return { t: hit.t, nx: hit.nx / l, ny: hit.ny / l, nz: hit.nz / l };
+}
+
+/**
+ * Bitta kollayder bilan nur kesishuvi: avval AABB (keng faza), so'ng aniq shakl (bo'lsa).
+ * Aniq shakl AABB ichida bo'lgani uchun AABB tegmasa shakl ham tegmaydi.
+ */
+export function rayCollider(col: ColliderBox, o: Vec3, d: Vec3, maxT: number): RayHit | null {
+  const box = rayBox(o, d, col.min, col.max, maxT);
+  if (!box) return null;
+  const h = col.hit;
+  if (!h) return box;
+  switch (h.kind) {
+    case 'cylinder':
+      return rayCylinderY(o, d, h.cx, h.cz, h.r, col.min.y, col.max.y, maxT);
+    case 'ellipsoid':
+      return rayEllipsoid(o, d, h.cx, h.cy, h.cz, h.rx, h.ry, h.rz, maxT);
+    case 'obb':
+      return rayObbY(o, d, h.cx, h.cy, h.cz, h.hx, h.hy, h.hz, h.yaw, maxT);
+    case 'gable':
+      return rayGable(o, d, h.cx, h.cz, h.hx, h.baseY, h.apexY, h.hz, h.yaw, maxT);
+    default:
+      return box;
+  }
+}
+
 export function raycastBoxes(boxes: Box[], o: Vec3, d: Vec3, maxT: number): RayHit | null {
   let best: RayHit | null = null;
   let limit = maxT;
@@ -692,7 +861,7 @@ export function raycastWorld(
 
   const candidates = getWorldSpatialIndex(world).queryRay(origin, dir, maxDist);
   for (const b of candidates) {
-    const h = rayBox(origin, dir, b.min, b.max, limit);
+    const h = rayCollider(b, origin, dir, limit);
     if (h) {
       bestHit = h;
       bestKind = 'collider';

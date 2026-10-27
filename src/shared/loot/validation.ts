@@ -1,4 +1,5 @@
 import { dirFromAngles, isVec3, type Vec3, vnorm, vsub } from '../math';
+import { rayCollider } from '../physics';
 import { raycastTerrain } from '../terrain';
 import { isWeaponId, type WeaponDef } from '../weapons';
 import type { WorldDefinition } from '../world';
@@ -227,7 +228,9 @@ export function hasLineOfSightToContainer(
       if (col.sourceObjectId === containerId || col.id.startsWith(containerId)) {
         continue;
       }
-      const t = rayIntersectsBox(eye, dir, col.min, col.max, maxT);
+      // Aniq shakl (daraxt silindri, tosh ellipsoidi, burilgan quti) bilan — quti burchaklari LOS ni to'smasin
+      const hit = col.hit ? rayCollider(col, eye, dir, maxT) : null;
+      const t = col.hit ? (hit ? hit.t : null) : rayIntersectsBox(eye, dir, col.min, col.max, maxT);
       if (t === null) continue;
 
       if (

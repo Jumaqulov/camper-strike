@@ -142,10 +142,34 @@ export type TerrainDescriptor = FlatTerrainDescriptor | HeightfieldTerrainDescri
 
 export type ColliderTag = 'ground' | 'structure' | 'prop' | 'tree' | 'rock' | 'boundary';
 
+/**
+ * O'q/ko'rinish (raycast) uchun aniq shakl. Harakat fizikasi hamon AABB (`min`/`max`) bilan ishlaydi,
+ * lekin o'q trayektoriyasi vizual shaklga mos keladi: dumaloq daraxt tanasi, yumaloq tosh, burilgan devor,
+ * uchburchak tom old devori. Shakl doim AABB ichida bo'lishi shart (keng faza AABB bo'yicha).
+ * gameplayHash ga kirmaydi (min/max/tag/mat hashlanadi).
+ */
+export type ColliderHitShape =
+  | { kind: 'cylinder'; cx: number; cz: number; r: number }
+  | { kind: 'ellipsoid'; cx: number; cy: number; cz: number; rx: number; ry: number; rz: number }
+  | { kind: 'obb'; cx: number; cy: number; cz: number; hx: number; hy: number; hz: number; yaw: number }
+  | {
+      kind: 'gable';
+      cx: number;
+      cz: number;
+      /** Uchburchak asosi yarim kengligi (lokal X) va asos/uch balandliklari (dunyo Y). */
+      hx: number;
+      baseY: number;
+      apexY: number;
+      /** Qalinlik yarmi (lokal Z) va burilish. */
+      hz: number;
+      yaw: number;
+    };
+
 export interface ColliderBox extends Box {
   id: string;
   tag: ColliderTag;
   sourceObjectId?: string;
+  hit?: ColliderHitShape;
 }
 
 export interface SpawnPointDef extends SpawnPoint {
@@ -478,14 +502,20 @@ export function compilePrefabPlacement(
     const chunk = getChunkCoord(cx, cz, chunkSize);
 
     if (part.hasCollider) {
-      colliders.push({
+      const col: ColliderBox = {
         id: `${placement.objectId}:${part.localId}:col`,
         sourceObjectId: placement.objectId,
         tag: part.colliderTag ?? 'structure',
         mat: part.mat,
         min,
         max,
-      });
+      };
+      // Kardinal bo'lmagan burilishda AABB shishadi — o'q uchun haqiqiy burilgan quti
+      const k = yaw / (Math.PI / 2);
+      if (Math.abs(k - Math.round(k)) >= 1e-6) {
+        col.hit = { kind: 'obb', cx: q3(cx), cy: q3(cy), cz: q3(cz), hx: sx / 2, hy: sy / 2, hz: sz / 2, yaw };
+      }
+      colliders.push(col);
     }
 
     if (part.hasVisual) {

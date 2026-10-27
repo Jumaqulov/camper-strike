@@ -556,6 +556,8 @@ export function createGroundedTreeCollider(
     mat: 'wall',
     min: { x: q3(x - trunkRadius), y: q3(baseY - 0.2), z: q3(z - trunkRadius) },
     max: { x: q3(x + trunkRadius), y: q3(baseY + trunkHeight), z: q3(z + trunkRadius) },
+    // O'q uchun: dumaloq tana (quti burchaklari emas)
+    hit: { kind: 'cylinder', cx: q3(x), cz: q3(z), r: q3(trunkRadius) },
   };
 }
 
@@ -572,12 +574,24 @@ export function createGroundedRockCollider(
   const h = typeof sizeOrSx === 'number' ? sy : sizeOrSx.y;
   const d = typeof sizeOrSx === 'number' ? sz : sizeOrSx.z;
   const baseY = sampleTerrainHeight(terrain, x, z);
+  const minY = q3(baseY - 0.15);
+  const maxY = q3(baseY + h - 0.15);
   return {
     id,
     tag: 'rock',
     mat: 'wall',
-    min: { x: q3(x - sx / 2), y: q3(baseY - 0.15), z: q3(z - d / 2) },
-    max: { x: q3(x + sx / 2), y: q3(baseY + h - 0.15), z: q3(z + d / 2) },
+    min: { x: q3(x - sx / 2), y: minY, z: q3(z - d / 2) },
+    max: { x: q3(x + sx / 2), y: maxY, z: q3(z + d / 2) },
+    // O'q uchun: yumaloq tosh (ellipsoid), quti burchaklari havoda qolmasin
+    hit: {
+      kind: 'ellipsoid',
+      cx: q3(x),
+      cy: q3((minY + maxY) / 2),
+      cz: q3(z),
+      rx: q3(sx / 2),
+      ry: q3((maxY - minY) / 2),
+      rz: q3(d / 2),
+    },
   };
 }
 
