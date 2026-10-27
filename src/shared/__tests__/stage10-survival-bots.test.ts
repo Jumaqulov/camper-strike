@@ -122,11 +122,12 @@ describe('Bosqich 10 — Forest Survival botlari (loot AI)', () => {
         p1.hp = MAX_HP;
         room.advanceTimeForTest(1, 1 / 30);
         if (room.phase !== 'playing') break;
-        if (i >= 20 && bots.some((b) => b.weapon !== null)) break;
+        // Pichoq har doim bor — faqat o'qotar qurol olgan bot "qurollangan" hisoblanadi
+        if (i >= 20 && bots.some((b) => b.weapon !== null && b.weapon !== 'knife')) break;
       }
       const opened = room.loot.getPublicLootSnapshot().containers.filter((c) => c.opened).length;
       assert.ok(opened >= 1, `botlar kamida bitta konteyner ochishi kerak (opened=${opened})`);
-      const armed = bots.filter((b) => b.weapon !== null);
+      const armed = bots.filter((b) => b.weapon !== null && b.weapon !== 'knife');
       assert.ok(
         armed.length >= 1,
         `kamida bitta bot qurol olishi kerak (armed=${armed.length}, weapons=${bots.map((b) => b.weapon).join(',')})`,
