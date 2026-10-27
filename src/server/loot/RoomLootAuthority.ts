@@ -1,4 +1,4 @@
-import { EYE_HEIGHT, GRENADES_PER_LIFE, MAX_HP } from '../../shared/constants';
+import { GRENADES_PER_LIFE, MAX_HP } from '../../shared/constants';
 import type { Vec3 } from '../../shared/math';
 import { fullAmmo, WEAPONS, WEAPON_SLOTS, type AmmoState, type WeaponId } from '../../shared/weapons';
 import type { WorldDefinition } from '../../shared/world';
@@ -32,6 +32,7 @@ import {
   type RoomLootSnapshot,
   type UseMedkitAck,
 } from '../../shared/loot';
+import { eyeHeightOf } from '../../shared/stance';
 import { generateRoomContainersAndLoot, type ServerContainerRecord } from './lootGenerator';
 
 export interface ServerPlayerInventory {
@@ -497,7 +498,7 @@ export class RoomLootAuthority {
   }
 
   openContainer(
-    player: { id: string; alive: boolean; pos: Vec3; spawnId: number },
+    player: { id: string; alive: boolean; pos: Vec3; spawnId: number; crouched?: boolean },
     rawReq: unknown,
   ): ContainerOpenAck {
     const req = sanitizeContainerOpenReq(rawReq);
@@ -609,9 +610,10 @@ export class RoomLootAuthority {
       };
     }
 
+    // Ko'z balandligi o'tirish holatiga bog'liq (EYE_HEIGHT / CROUCH_EYE_HEIGHT)
     const eye: Vec3 = {
       x: player.pos.x,
-      y: player.pos.y + EYE_HEIGHT,
+      y: player.pos.y + eyeHeightOf(player),
       z: player.pos.z,
     };
     if (!hasLineOfSightToContainer(this.world, eye, cnt.position, cnt.id)) {
@@ -652,7 +654,7 @@ export class RoomLootAuthority {
   }
 
   pickupItem(
-    player: { id: string; alive: boolean; pos: Vec3; spawnId: number },
+    player: { id: string; alive: boolean; pos: Vec3; spawnId: number; crouched?: boolean },
     rawReq: unknown,
   ): LootPickupAck {
     const req = sanitizeLootPickupReq(rawReq);
@@ -837,7 +839,7 @@ export class RoomLootAuthority {
 
     const eye: Vec3 = {
       x: player.pos.x,
-      y: player.pos.y + EYE_HEIGHT,
+      y: player.pos.y + eyeHeightOf(player),
       z: player.pos.z,
     };
     if (!hasLineOfSightToContainer(this.world, eye, cnt.position, cnt.id)) {

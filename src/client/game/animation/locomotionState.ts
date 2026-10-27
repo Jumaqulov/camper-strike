@@ -31,6 +31,11 @@ export interface LocoInput {
   speed: number;
   onGround: boolean;
   alive: boolean;
+  /**
+   * O'tirib yurish (crouch): Walk klipi ishlatiladi, lekin o'tirish pozasi qadamni `CROUCH_STRIDE_SCALE`
+   * marta qisqartiradi — oyoq sirpanmasligi uchun timeScale shu qisqa qadam bo'yicha hisoblanadi.
+   */
+  crouched?: boolean;
 }
 
 export interface LocoOutput {
@@ -46,6 +51,11 @@ export interface LocoOutput {
 /** Natural ground speed of the authored clips (m/s at timeScale 1). */
 export const WALK_NATURAL_SPEED = 3.005;
 export const RUN_NATURAL_SPEED = 6.498;
+/**
+ * O'tirib yurishda qadam uzunligi ko'paytuvchisi (CharacterCrouchPose to'piq nishonini oldinga/orqaga shu
+ * nisbatda qisqartiradi). Walk klipining tabiiy tezligi ham shu nisbatda kamayadi: 2.1 m/s ≈ timeScale 1.4.
+ */
+export const CROUCH_STRIDE_SCALE = 0.5;
 
 /** Clip durations (seconds) — match the GLB (see docs/stage08b-char/CONTRACTS.md). */
 export const JUMP_START_DURATION = 0.4;
@@ -102,9 +112,12 @@ function fadeInto(s: LocoState): number {
   }
 }
 
-/** Recommended timeScale for `state` at (smoothed) `speed`. */
-export function locomotionTimeScale(state: LocoState, speed: number): number {
-  if (state === 'Walk') return clamp(speed / WALK_NATURAL_SPEED, T.WALK_TIMESCALE_MIN, T.WALK_TIMESCALE_MAX);
+/** Recommended timeScale for `state` at (smoothed) `speed`; `crouched` — qisqa qadamli o'tirib yurish. */
+export function locomotionTimeScale(state: LocoState, speed: number, crouched = false): number {
+  if (state === 'Walk') {
+    const natural = WALK_NATURAL_SPEED * (crouched ? CROUCH_STRIDE_SCALE : 1);
+    return clamp(speed / natural, T.WALK_TIMESCALE_MIN, T.WALK_TIMESCALE_MAX);
+  }
   if (state === 'Run') return clamp(speed / RUN_NATURAL_SPEED, T.RUN_TIMESCALE_MIN, T.RUN_TIMESCALE_MAX);
   return 1;
 }
@@ -194,7 +207,7 @@ export class LocomotionStateMachine {
       changed = true;
     }
 
-    this.lastTimeScale = locomotionTimeScale(this._state, s);
+    this.lastTimeScale = locomotionTimeScale(this._state, s, Boolean(i.crouched));
     return { state: this._state, changed, timeScale: this.lastTimeScale, fade: this.lastFade };
   }
 

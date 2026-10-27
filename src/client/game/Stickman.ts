@@ -6,6 +6,7 @@ import { flashTexture } from './Textures';
 import { onWeaponAssetsReady } from './WeaponAssetRegistry';
 import { CamperBuddyAnimator } from './animation/CamperBuddyAnimator';
 import { applyUpperBodyAimPose } from './character/CharacterAimPose';
+import { applyCrouchPose } from './character/CharacterCrouchPose';
 import {
   instantiateCamperBuddy,
   isCharacterAssetReady,
@@ -135,6 +136,22 @@ const sharedStickmanVertexMat = new THREE.MeshStandardMaterial({
 
 let flashTex: THREE.Texture | null = null;
 
+/** Model pozasining tik turish ↔ o'tirish o'tish vaqti, s (chiziqli ulush + smoothstep). */
+export const CROUCH_POSE_BLEND_TIME = 0.14;
+/** O'limda o'tirish pozasi shu vaqt ichida bo'shatiladi (yiqilish animatsiyalari tik tanaga sozlangan), s. */
+export const CROUCH_DEATH_RELEASE_TIME = 0.12;
+/** Procedural (GLB siz) zaxira tana: o'tirishda son/tizza burchaklari (rad) va tos pasayishi (m). */
+const PROC_CROUCH_LEG = 1.3;
+const PROC_CROUCH_KNEE = 2.3;
+const PROC_CROUCH_DROP = 0.35;
+/** Ism yorlig'ining o'tirgandagi pasayishi, m. */
+const CROUCH_NAME_TAG_DROP = 0.5;
+
+const crouchEase = (k: number): number => {
+  const x = k < 0 ? 0 : k > 1 ? 1 : k;
+  return x * x * (3 - 2 * x);
+};
+
 export interface StickmanState {
   speed: number;
   onGround: boolean;
@@ -158,6 +175,8 @@ export interface CharacterModelDiag {
   hipsBoneUuid: string | null;
   teamMaterialUuid: string | null;
   teamColorHex: string | null;
+  /** Silliqlangan o'tirish ulushi 0..1 (0 — tik turibdi). */
+  crouch: number;
 }
 
 /** 08B: Camper Buddy GLB visual + its animator / weapon mount (one per Stickman, never shared). */
@@ -238,6 +257,13 @@ export class Stickman {
   private buddyReloadTilt = 0;
   /** Procedural tana hozir qurilgan va `root` ostida turibdimi (GLB kelganda bo'shatiladi). */
   private proceduralBuilt = false;
+  /** `setCrouch()` dan: o'yinchi (avtoritativ / bashorat) o'tirganmi. */
+  private crouchTarget = false;
+  /** Chiziqli o'tirish ulushi 0..1 (`CROUCH_POSE_BLEND_TIME` ichida); pozaga smoothstep bilan beriladi. */
+  private crouchAmount = 0;
+  /** Procedural zaxira tana: oxirgi qo'llangan son/tizza ofsetlari (keyingi kadrda bekor qilinadi). */
+  private procCrouchLeg = 0;
+  private procCrouchKnee = 0;
 
   constructor(color: THREE.ColorRepresentation) {
     const hex = '#' + new THREE.Color(color).getHexString();
@@ -596,7 +622,41 @@ export class Stickman {
       hipsBoneUuid: b?.inst.bones.get('Hips')?.uuid ?? null,
       teamMaterialUuid: b?.inst.teamMaterial.uuid ?? null,
       teamColorHex: b ? '#' + b.inst.teamMaterial.color.getHexString() : null,
+      crouch: this.crouchAmount,
     };
+  }
+
+  /**
+   * O'tirish holati (lokal o'yinchi — bashorat, masofaviy — snapshot). Poza `update()` ichida
+   * `CROUCH_POSE_BLEND_TIME` davomida silliq o'tadi; o'limda bo'shatiladi, tirilganda 0 dan boshlanadi.
+   */
+  setCrouch(crouched: boolean): void {
+    this.crouchTarget = crouched;
+  }
+
+  /** Joriy (chiziqli) o'tirish ulushi 0..1 — testlar/diagnostika uchun. */
+  getCrouchAmount(): number {
+    return this.crouchAmount;
+  }
+
+  /** Procedural zaxira tananing oxirgi o'tirish ofsetlarini bekor qiladi. */
+  private undoProceduralCrouch(): void {
+    if (this.procCrouchLeg === 0 && this.procCrouchKnee === 0) return;
+    this.legL.rotation.x -= this.procCrouchLeg;
+    this.legR.rotation.x -= this.procCrouchLeg;
+    this.kneeL.rotation.x += this.procCrouchKnee;
+    this.kneeR.rotation.x += this.procCrouchKnee;
+    this.procCrouchLeg = 0;
+    this.procCrouchKnee = 0;
+  }
+
+  /** O'limda: o'tirish pozasi tez bo'shatiladi (GLB — muzlagan mixer ustida idempotent qayta qo'llanadi). */
+  private releaseCrouchOnDeath(dt: number): void {
+    this.crouchTarget = false;
+    this.undoProceduralCrouch();
+    if (this.crouchAmount <= 0) return;
+    this.crouchAmount = Math.max(0, this.crouchAmount - Math.max(0, dt) / CROUCH_DEATH_RELEASE_TIME);
+    if (this.buddy) applyCrouchPose(this.buddy.inst.bones, crouchEase(this.crouchAmount));
   }
 
   /**
@@ -1077,7 +1137,10 @@ export class Stickman {
       this.flashT -= dt;
       if (this.flashT <= 0) this.flash.visible = false;
     }
-    if (this.nameTag) this.nameTag.visible = s.alive;
+    if (this.nameTag) {
+      this.nameTag.visible = s.alive;
+      this.nameTag.position.y = 2.18 - CROUCH_NAME_TAG_DROP * crouchEase(this.crouchAmount);
+    }
 
     // ==================== O'LIM HOLATI: Qurol qo'ldan tushadi va 6 xil kreativ yiqilish! ====================
     if (!s.alive) {
@@ -1091,6 +1154,7 @@ export class Stickman {
       this.gunParent().visible = false;
       this.flash.visible = false;
       this.buddy?.anim.freeze();
+      this.releaseCrouchOnDeath(dt);
 
       this.deathT = Math.min(1, this.deathT + dt * 2.2);
       const t = this.deathT;
@@ -1205,6 +1269,9 @@ export class Stickman {
     if (!this.wasAlive || this.deathT > 0) {
       this.wasAlive = true;
       this.deathT = 0;
+      // O'tirish har doim tik holatdan boshlanadi (GLB suyaklarini resetToIdle qayta yozadi)
+      this.undoProceduralCrouch();
+      this.crouchAmount = 0;
       this.gunHolder.visible = this.weapon !== null;
       this.body.rotation.set(0, 0, 0);
       this.body.position.set(0, 0, 0);
@@ -1225,6 +1292,12 @@ export class Stickman {
       }
     }
 
+    // O'tirish ulushi: chiziqli, CROUCH_POSE_BLEND_TIME ichida
+    const crouchStep = Math.max(0, dt) / CROUCH_POSE_BLEND_TIME;
+    this.crouchAmount = this.crouchTarget
+      ? Math.min(1, this.crouchAmount + crouchStep)
+      : Math.max(0, this.crouchAmount - crouchStep);
+
     if (this.buddy) {
       this.updateBuddy(dt, s, this.buddy);
       return;
@@ -1235,6 +1308,8 @@ export class Stickman {
     const sw = Math.sin(this.phase);
     const cw = Math.cos(this.phase);
     const doubleSw = Math.sin(this.phase * 2);
+    // Havodagi oyoq pozasi joriy qiymatdan lerp qilinadi — o'tgan kadrdagi o'tirish ofsetini avval olib tashlaymiz
+    this.undoProceduralCrouch();
 
     if (!s.onGround) {
       this.legL.rotation.x = THREE.MathUtils.lerp(this.legL.rotation.x, 0.72, dt * 10);
@@ -1252,6 +1327,18 @@ export class Stickman {
     this.hips.position.y = 0.76 - Math.abs(cw) * 0.06 * amp;
     this.hips.rotation.y = sw * 0.16 * amp;
     this.hips.rotation.z = sw * 0.09 * amp;
+
+    // Zaxira tanada o'tirish: tos pastga, son oldinga, tizza orqaga (oyoq taglari taxminan joyida qoladi)
+    const crouchK = crouchEase(this.crouchAmount);
+    if (crouchK > 0) {
+      this.procCrouchLeg = PROC_CROUCH_LEG * crouchK;
+      this.procCrouchKnee = PROC_CROUCH_KNEE * crouchK;
+      this.legL.rotation.x += this.procCrouchLeg;
+      this.legR.rotation.x += this.procCrouchLeg;
+      this.kneeL.rotation.x -= this.procCrouchKnee;
+      this.kneeR.rotation.x -= this.procCrouchKnee;
+      this.hips.position.y -= PROC_CROUCH_DROP * crouchK;
+    }
     this.chest.rotation.y = -sw * 0.16 * amp;
     this.chest.rotation.x = s.pitch * 0.85;
 
@@ -1315,7 +1402,10 @@ export class Stickman {
    * gun solved onto the Hand_R_Grip socket. Recoil/reload feel mirrors the procedural branch above.
    */
   private updateBuddy(dt: number, s: StickmanState, b: BuddyRig): void {
-    b.anim.update(dt, { speed: s.speed, onGround: s.onGround, alive: true });
+    b.anim.update(dt, { speed: s.speed, onGround: s.onGround, alive: true, crouched: this.crouchAmount > 0.5 });
+    // O'tirish pozasi: mixer'dan keyin, aim pozasidan OLDIN — aim tanani egilgan tosga nisbatan
+    // stabillaydi, qurol/bosh nishonda qoladi (CharacterCrouchPose izohi). Amount 0 da ham chaqiriladi.
+    applyCrouchPose(b.inst.bones, crouchEase(this.crouchAmount));
 
     this.recoilKick *= Math.exp(-dt * 14);
     if (s.reloading) this.reloadAnimT += dt * 4.5;

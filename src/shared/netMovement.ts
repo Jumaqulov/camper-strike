@@ -1,5 +1,8 @@
 import {
   BACKPEDAL_SPEED_MUL,
+  CROUCH_SPEED,
+  PLAYER_HEIGHT,
+  PLAYER_RADIUS,
   RUN_SPEED,
   SPRINT_MIN_FORWARD,
   STAMINA_REGEN_SECONDS,
@@ -9,7 +12,7 @@ import {
   WALK_SPEED,
 } from './constants';
 import { clamp } from './math';
-import { applyWorldMovement, type Body, type WorldMovementOptions } from './physics';
+import { applyWorldMovement, collidesAtWorld, type Body, type WorldMovementOptions } from './physics';
 import type { PlayerInputCmd } from './protocol';
 import { isWeaponId, UNARMED_SPEED_MUL, WEAPONS, type WeaponId } from './weapons';
 import type { WorldDefinition } from './world';
@@ -46,7 +49,41 @@ export function cloneMovementState(state: MovementState): MovementState {
     scoped: state.scoped,
     stamina: state.stamina ?? 1,
     staminaLocked: Boolean(state.staminaLocked),
+    crouched: Boolean(state.crouched),
   };
+}
+
+/**
+ * Turish tekshiruvi oyoqdan shu masofa yuqoridan boshlanadi: oyoq ostidagi pol/relyef bilan tegish
+ * to'qnashuv hisoblanmaydi (`isSpawnPointSafe` dagi kabi), tepa esa aynan `PLAYER_HEIGHT` da qoladi.
+ */
+const STAND_UP_PROBE_EPS = 0.01;
+
+/**
+ * O'tirish/turish holatini kirishga qarab yangilaydi (server va klient bashorati bir xil chaqiradi).
+ * - `wantCrouch` — darhol o'tiradi;
+ * - qo'yib yuborilgan va hozir o'tirgan bo'lsa — joriy oyoq nuqtasida tik turgan kapsula sig'sagina turadi,
+ *   aks holda (past shift, quvur ostida va h.k.) o'tirgan holatda qoladi.
+ */
+export function resolveStance(state: Body, wantCrouch: boolean, world: WorldDefinition): void {
+  if (wantCrouch) {
+    state.crouched = true;
+    return;
+  }
+  if (!state.crouched) return;
+  const p = state.pos;
+  if (
+    !collidesAtWorld(
+      world,
+      p.x,
+      p.y + STAND_UP_PROBE_EPS,
+      p.z,
+      PLAYER_RADIUS,
+      PLAYER_HEIGHT - STAND_UP_PROBE_EPS,
+    )
+  ) {
+    state.crouched = false;
+  }
 }
 
 /** Kirish sprintni talab qiladimi (Shift + asosan oldinga harakat). */
@@ -165,6 +202,8 @@ export function sanitizePlayerInputCmd(
     r.weapon === null ? null : isWeaponId(r.weapon) ? r.weapon : fallbackWeapon;
   const jump = Boolean(r.jump);
   const walk = Boolean(r.walk);
+  // Eski klientlar `crouch` yubormaydi — false (tik turish)
+  const crouch = Boolean(r.crouch);
   const scoped = weapon === 'sniper' ? Boolean(r.scoped) : false;
 
   const cmd: PlayerInputCmd = {
@@ -175,6 +214,7 @@ export function sanitizePlayerInputCmd(
     moveRight,
     jump,
     walk,
+    crouch,
     scoped,
     weapon,
     yaw,
@@ -254,8 +294,14 @@ export function extractSanitizedInputBatch(
   };
 }
 
+/**
+ * Kirishdan istalgan gorizontal tezlik.
+ * `crouched` — o'yinchining (avtoritativ) o'tirgan holati: asosiy tezlik `CROUCH_SPEED`, sprint yo'q
+ * (yo'nalish, qurol va snayper pritsel ko'paytuvchilari baribir qo'llanadi).
+ */
 export function computeWishVelocity(
   cmd: Pick<PlayerInputCmd, 'moveForward' | 'moveRight' | 'walk' | 'scoped' | 'weapon' | 'yaw'>,
+  crouched = false,
 ): { wx: number; wz: number; maxSpeed: number } {
   const speedMul = cmd.weapon ? (WEAPONS[cmd.weapon]?.speedMul ?? 1) : UNARMED_SPEED_MUL;
   const scopedMul = cmd.scoped && cmd.weapon === 'sniper' ? 0.55 : 1;
@@ -264,15 +310,16 @@ export function computeWishVelocity(
   const right = clamp(cmd.moveRight, -1, 1);
   const inputMag = Math.min(1, Math.hypot(fwd, right));
   if (inputMag <= 0) {
-    return { wx: 0, wz: 0, maxSpeed: WALK_SPEED * speedMul * scopedMul };
+    return { wx: 0, wz: 0, maxSpeed: (crouched ? CROUCH_SPEED : WALK_SPEED) * speedMul * scopedMul };
   }
 
   // Yo'nalishga bog'liq tezlik: oldinga 1.0, yon tomonga STRAFE, orqaga BACKPEDAL (diagonal — oraliq).
   const f = fwd / Math.hypot(fwd, right); // -1 (orqaga) .. +1 (oldinga)
   const dirMul = f >= 0 ? STRAFE_SPEED_MUL + (1 - STRAFE_SPEED_MUL) * f : STRAFE_SPEED_MUL + (BACKPEDAL_SPEED_MUL - STRAFE_SPEED_MUL) * -f;
-  // Sprint (Shift) faqat asosan oldinga harakatda; orqaga/yon sprint yo'q.
-  const sprinting = cmd.walk && f > SPRINT_MIN_FORWARD;
-  const maxSpeed = (sprinting ? RUN_SPEED : WALK_SPEED) * dirMul * speedMul * scopedMul;
+  // Sprint (Shift) faqat asosan oldinga harakatda; orqaga/yon sprint yo'q. O'tirganda sprint umuman yo'q.
+  const sprinting = !crouched && cmd.walk && f > SPRINT_MIN_FORWARD;
+  const baseSpeed = crouched ? CROUCH_SPEED : sprinting ? RUN_SPEED : WALK_SPEED;
+  const maxSpeed = baseSpeed * dirMul * speedMul * scopedMul;
 
   const s = Math.sin(cmd.yaw);
   const c = Math.cos(cmd.yaw);
@@ -309,10 +356,15 @@ export function stepPlayerMovement(
   state.weapon = cmd.weapon;
   state.scoped = cmd.weapon === 'sniper' ? Boolean(cmd.scoped) : false;
 
+  // O'tirish/turish — harakatdan oldin (tepada joy bo'lmasa o'tirgan holat saqlanadi)
+  resolveStance(state, Boolean(cmd.crouch), world);
+  const crouched = Boolean(state.crouched);
+
   const totalDt = quantizeInputDt(cmd.dt);
-  // Stamina: sprint faqat chidamlilik bo'lsa; tugaganda avtomatik yurishga o'tadi
-  const sprintOk = stepStamina(state, wantsSprint(cmd), totalDt);
-  const { wx, wz } = computeWishVelocity(sprintOk === cmd.walk ? cmd : { ...cmd, walk: sprintOk });
+  // Stamina: sprint faqat chidamlilik bo'lsa; tugaganda avtomatik yurishga o'tadi.
+  // O'tirganda sprint so'ralmagan hisoblanadi — stamina tiklanadi.
+  const sprintOk = stepStamina(state, !crouched && wantsSprint(cmd), totalDt);
+  const { wx, wz } = computeWishVelocity(sprintOk === cmd.walk ? cmd : { ...cmd, walk: sprintOk }, crouched);
   const substeps = Math.max(1, Math.ceil(totalDt / FIXED_MOVE_DT));
   const sdt = totalDt / substeps;
 
@@ -321,6 +373,7 @@ export function stepPlayerMovement(
   }
 }
 
+/** Kirishsiz (starvation) qadam: joriy o'tirish/turish holati o'zgarmaydi. */
 export function stepNeutralMovement(
   body: Body,
   dt: number,

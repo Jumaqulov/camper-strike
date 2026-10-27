@@ -11,6 +11,7 @@ import {
 } from './constants';
 import type { Vec3 } from './math';
 import { getWorldSpatialIndex } from './spatialIndex';
+import { bodyHeightOf, hitboxScaleOf } from './stance';
 import {
   DEFAULT_MAX_WALKABLE_SLOPE_DEG,
   isTerrainWalkable,
@@ -25,6 +26,8 @@ export interface Body {
   pos: Vec3; // oyoq nuqtasi
   vel: Vec3;
   onGround: boolean;
+  /** O'tirgan holat (crouch): to'qnashuv balandligi `CROUCH_HEIGHT`. Bo'lmasa — tik turibdi. */
+  crouched?: boolean;
 }
 
 export interface WorldMovementOptions {
@@ -224,7 +227,8 @@ function moveAxisInWorld(
   if (d === 0) return false;
   const p = body.pos;
   const r = PLAYER_RADIUS;
-  const h = PLAYER_HEIGHT;
+  // Kapsula balandligi holatga bog'liq: o'tirganda CROUCH_HEIGHT (past shift ostidan o'tadi)
+  const h = bodyHeightOf(body);
 
   const prevCoord = p[axis];
   const prevY = p.y;
@@ -320,7 +324,8 @@ export function moveBodyInWorld(
   const p = body.pos;
   const v = body.vel;
   const r = PLAYER_RADIUS;
-  const h = PLAYER_HEIGHT;
+  // Tik turish — PLAYER_HEIGHT, o'tirish — CROUCH_HEIGHT (vertikal, gorizontal va depenetratsiya bir xil h dan)
+  const h = bodyHeightOf(body);
 
   // Substep so large dt (e.g. lag spikes) cannot tunnel through walls or terrain
   const maxComp = Math.max(Math.abs(v.x), Math.abs(v.y), Math.abs(v.z));
@@ -859,31 +864,38 @@ export type HitZone = 'head' | 'torso' | 'legs';
 /** Oyoq nuqtasidan shu balandlikdan pastga tekkan o'q — oyoq zonasi. */
 export const LEGS_HITBOX_TOP = 0.85;
 
+/**
+ * O'q nuri va o'yinchi xitbokslari (bosh / tana / oyoq).
+ * `crouched` — o'tirgan o'yinchi: barcha balandliklar `hitboxScaleOf` nisbatida kichrayadi (radiuslar o'zgarmaydi);
+ * tik turganda koeffitsient aynan 1, natija avvalgidek.
+ */
 export function rayVsPlayer(
   o: Vec3,
   d: Vec3,
   feet: Vec3,
   maxT: number,
+  crouched = false,
 ): { t: number; head: boolean; zone: HitZone } | null {
   const hr = HEAD_HITBOX.radius;
   const br = BODY_HITBOX.radius;
+  const s = hitboxScaleOf({ crouched });
   const head = rayBox(
     o, d,
-    { x: feet.x - hr, y: feet.y + HEAD_HITBOX.bottom, z: feet.z - hr },
-    { x: feet.x + hr, y: feet.y + HEAD_HITBOX.top, z: feet.z + hr },
+    { x: feet.x - hr, y: feet.y + HEAD_HITBOX.bottom * s, z: feet.z - hr },
+    { x: feet.x + hr, y: feet.y + HEAD_HITBOX.top * s, z: feet.z + hr },
     maxT,
   );
   const body = rayBox(
     o, d,
-    { x: feet.x - br, y: feet.y + BODY_HITBOX.bottom, z: feet.z - br },
-    { x: feet.x + br, y: feet.y + BODY_HITBOX.top, z: feet.z + br },
+    { x: feet.x - br, y: feet.y + BODY_HITBOX.bottom * s, z: feet.z - br },
+    { x: feet.x + br, y: feet.y + BODY_HITBOX.top * s, z: feet.z + br },
     maxT,
   );
   if (head && (!body || head.t <= body.t)) return { t: head.t, head: true, zone: 'head' };
   if (body) {
     // Tegish nuqtasining balandligi bo'yicha tana / oyoq
     const hitY = o.y + d.y * body.t - feet.y;
-    return { t: body.t, head: false, zone: hitY < LEGS_HITBOX_TOP ? 'legs' : 'torso' };
+    return { t: body.t, head: false, zone: hitY < LEGS_HITBOX_TOP * s ? 'legs' : 'torso' };
   }
   return null;
 }

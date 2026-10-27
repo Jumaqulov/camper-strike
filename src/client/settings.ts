@@ -8,6 +8,11 @@ export interface GameSettings {
   quality: QualityLevel;
   /** FPS past bo'lsa sifatni avtomatik pasaytirish (kuchsiz / integratsiyalangan GPU lar uchun). */
   autoQuality: boolean;
+  /**
+   * O'yinga kirganda to'liq ekran + Keyboard Lock (Alt+Tab, Ctrl+W kabi brauzer/OT yorliqlaridan himoya).
+   * Faqat Chromium + xavfsiz kontekst (localhost / HTTPS) da to'liq ishlaydi; standart — o'chiq.
+   */
+  fullscreen: boolean;
 }
 
 export type Settings = GameSettings;
@@ -22,6 +27,7 @@ export function loadSettings(): Settings {
     fov: 80,
     quality: 'medium',
     autoQuality: true,
+    fullscreen: false,
   };
   try {
     const raw = localStorage.getItem(KEY);
@@ -58,6 +64,7 @@ export function loadSettings(): Settings {
         fov,
         quality,
         autoQuality: parsed.autoQuality !== false,
+        fullscreen: parsed.fullscreen === true,
       };
     }
   } catch {
@@ -81,6 +88,7 @@ export function saveSettings(s: Settings): void {
       fov: fovVal,
       quality: qualityVal,
       autoQuality: s.autoQuality !== false,
+      fullscreen: s.fullscreen === true,
     };
     localStorage.setItem(KEY, JSON.stringify(toSave));
   } catch {

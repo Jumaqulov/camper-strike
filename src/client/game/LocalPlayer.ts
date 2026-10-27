@@ -1,18 +1,23 @@
-import { EYE_HEIGHT, GRENADES_PER_LIFE, MAX_HP, RUN_SPEED, type Team } from '../../shared/constants';
+import { CROUCH_EYE_HEIGHT, EYE_HEIGHT, GRENADES_PER_LIFE, MAX_HP, RUN_SPEED, type Team } from '../../shared/constants';
 import { clamp, dirFromAngles, spreadDir, type Vec3 } from '../../shared/math';
 import type { MovementState } from '../../shared/netMovement';
 import type { Body } from '../../shared/physics';
 import type { PlayerInputCmd, PlayerSnap, SpawnEvent } from '../../shared/protocol';
+import { eyeHeightOf } from '../../shared/stance';
 import { emptyAmmo, fullAmmo, isMeleeWeapon, WEAPON_SLOTS, WEAPONS, type AmmoState, type WeaponId } from '../../shared/weapons';
 import type { WorldDefinition } from '../../shared/world';
 import { ClientPrediction, type ReconcileResult } from './ClientPrediction';
 
+/** Kamera ko'z balandligining tik turish ↔ o'tirish o'tish vaqti, s (faqat vizual; o'q chiqish nuqtasi darhol). */
+export const CROUCH_VIEW_BLEND_TIME = 0.12;
 /** Lokal o'yinchi: harakat (klient tomonida bashorat va server bilan solishtirish) va qurol holati. */
 export class LocalPlayer {
   /** Harakat bashorati uchun dunyo; `setWorld()` orqali (yoki konstruktorda) o'rnatiladi. */
   private world: WorldDefinition | null;
   readonly prediction = new ClientPrediction();
-  body: Body = { pos: { x: 0, y: 0, z: 0 }, vel: { x: 0, y: 0, z: 0 }, onGround: true };
+  body: Body = { pos: { x: 0, y: 0, z: 0 }, vel: { x: 0, y: 0, z: 0 }, onGround: true, crouched: false };
+  /** Kamera uchun silliqlangan o'tirish ulushi 0 (tik) .. 1 (o'tirgan); `updateViewCrouch()` yangilaydi. */
+  viewCrouch = 0;
   yaw = 0;
   pitch = 0;
   alive = false;
@@ -88,6 +93,8 @@ export class LocalPlayer {
     this.body.pos = { x: e.x, y: e.y, z: e.z };
     this.body.vel = { x: 0, y: 0, z: 0 };
     this.body.onGround = true;
+    this.body.crouched = false;
+    this.viewCrouch = 0;
     this.yaw = e.yaw;
     this.pitch = 0;
     this.alive = true;
@@ -189,6 +196,7 @@ export class LocalPlayer {
       pos: { x: this.body.pos.x, y: this.body.pos.y, z: this.body.pos.z },
       vel: { x: this.body.vel.x, y: this.body.vel.y, z: this.body.vel.z },
       onGround: this.body.onGround,
+      crouched: Boolean(this.body.crouched),
       yaw: this.yaw,
       pitch: this.pitch,
       weapon: this.weapon,
@@ -202,11 +210,12 @@ export class LocalPlayer {
     this.body.pos = { x: state.pos.x, y: state.pos.y, z: state.pos.z };
     this.body.vel = { x: state.vel.x, y: state.vel.y, z: state.vel.z };
     this.body.onGround = state.onGround;
+    this.body.crouched = Boolean(state.crouched);
     this.stamina = state.stamina ?? this.stamina;
     this.staminaLocked = Boolean(state.staminaLocked);
   }
 
-  move(dt: number, fwd: number, right: number, jump: boolean, walk: boolean): PlayerInputCmd {
+  move(dt: number, fwd: number, right: number, jump: boolean, walk: boolean, crouch = false): PlayerInputCmd {
     const state = this.getMovementState();
     const cmd = this.prediction.recordAndStepInput(
       state,
@@ -216,6 +225,7 @@ export class LocalPlayer {
         moveRight: right,
         jump,
         walk,
+        crouch,
         scoped: this.scoped,
         weapon: this.weapon,
         yaw: this.yaw,
@@ -240,15 +250,35 @@ export class LocalPlayer {
 
   smoothedEye(): Vec3 {
     const p = this.smoothedPos();
-    return { x: p.x, y: p.y + EYE_HEIGHT, z: p.z };
+    return { x: p.x, y: p.y + eyeHeightOf(this.body), z: p.z };
+  }
+
+  /**
+   * Kamera ko'z balandligini (bashorat qilingan) o'tirish holatiga qarab `CROUCH_VIEW_BLEND_TIME` ichida
+   * chiziqli siljitadi. Har kadrda bir marta chaqiriladi; qaytaradi: joriy `viewEyeHeight()`.
+   */
+  updateViewCrouch(dt: number): number {
+    const target = this.body.crouched ? 1 : 0;
+    const step = Math.max(0, Number.isFinite(dt) ? dt : 0) / CROUCH_VIEW_BLEND_TIME;
+    if (this.viewCrouch < target) this.viewCrouch = Math.min(target, this.viewCrouch + step);
+    else if (this.viewCrouch > target) this.viewCrouch = Math.max(target, this.viewCrouch - step);
+    return this.viewEyeHeight();
+  }
+
+  /** Kamera uchun silliqlangan ko'z balandligi (oyoqdan), m: EYE_HEIGHT ↔ CROUCH_EYE_HEIGHT (smoothstep). */
+  viewEyeHeight(): number {
+    const k = clamp(this.viewCrouch, 0, 1);
+    const e = k * k * (3 - 2 * k);
+    return EYE_HEIGHT + (CROUCH_EYE_HEIGHT - EYE_HEIGHT) * e;
   }
 
   speedH(): number {
     return Math.hypot(this.body.vel.x, this.body.vel.z);
   }
 
+  /** O'q chiqish nuqtasi — server bilan bir xil (o'tirganda CROUCH_EYE_HEIGHT, silliqlashsiz). */
   eye(): Vec3 {
-    return { x: this.body.pos.x, y: this.body.pos.y + EYE_HEIGHT, z: this.body.pos.z };
+    return { x: this.body.pos.x, y: this.body.pos.y + eyeHeightOf(this.body), z: this.body.pos.z };
   }
 
   aimDir(): Vec3 {

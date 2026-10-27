@@ -250,10 +250,12 @@ export class ViewModel {
     this.camera.updateProjectionMatrix();
   }
 
-  update(dt: number, speed: number, onGround: boolean, mouseDX: number, mouseDY: number): void {
+  /** `crouch` — silliqlangan o'tirish ulushi 0..1: o'tirganda qurol chayqalishi kamayadi. */
+  update(dt: number, speed: number, onGround: boolean, mouseDX: number, mouseDY: number, crouch = 0): void {
     const hold = HOLD[this.weapon];
     const g = this.guns[this.weapon];
-    const amp = onGround ? Math.min(1, speed / RUN_SPEED) : 0;
+    const crouchK = 1 - 0.45 * THREE.MathUtils.clamp(Number.isFinite(crouch) ? crouch : 0, 0, 1);
+    const amp = onGround ? Math.min(1, speed / RUN_SPEED) * crouchK : 0;
     this.bob += dt * (4 + speed * 1.4) * (amp > 0.05 ? 1 : 0);
     this.kick *= Math.exp(-dt * 12);
     this.kickRoll *= Math.exp(-dt * 14);

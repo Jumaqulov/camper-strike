@@ -76,6 +76,8 @@ export interface PlayerSnap {
   weapon: WeaponId | null;
   onGround: boolean;
   reloading: boolean;
+  /** O'tirgan (crouch) holat — avtoritativ; bo'lmasa tik turibdi deb hisoblanadi. */
+  crouched?: boolean;
   /** Current authoritative spawnId for this player (Stage 05+). */
   spawnId?: number;
   /** Highest input sequence number processed by the server for this spawnId (Stage 05+). */
@@ -259,6 +261,11 @@ export interface PlayerInputCmd {
   jump: boolean;
   /** Shift modifier state = SPRINT (oldinga tez yugurish). Protokol mosligi uchun maydon nomi `walk` saqlangan. */
   walk: boolean;
+  /**
+   * O'tirish tugmasi (Alt yoki C) bosib turilgan. Ixtiyoriy — eski klientlar yubormaydi (false deb olinadi).
+   * Qo'yib yuborilganda server tepada joy bo'lsagina o'yinchini turg'izadi.
+   */
+  crouch?: boolean;
   /** Sniper scope state (reduces move speed when weapon === 'sniper'). */
   scoped: boolean;
   /** Selected weapon slot (`null` when unarmed in Stage 06+). */

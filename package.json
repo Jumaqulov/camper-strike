@@ -15,7 +15,7 @@
     "start": "npm run build && tsx src/server/index.ts",
     "serve": "tsx src/server/index.ts",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/shared/__tests__/*.test.ts src/client/game/terrain/__tests__/*.test.ts src/client/game/character/__tests__/*.test.ts src/client/game/animation/__tests__/*.test.ts",
+    "test": "tsx --test src/shared/__tests__/*.test.ts src/client/game/terrain/__tests__/*.test.ts src/client/game/character/__tests__/*.test.ts src/client/game/animation/__tests__/*.test.ts src/client/game/__tests__/*.test.ts",
     "test:perf": "tsx --test --test-concurrency=1 src/shared/__perf__/*.perf.test.ts",
     "validate:assets": "node tools/asset-validation/validate-stage04a-assets.mjs && node tools/grass-validation/validate-grass-assets.mjs && node tools/outdoor-validation/validateOutdoorAssets.mjs"
   },

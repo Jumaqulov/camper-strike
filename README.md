@@ -62,6 +62,7 @@ Dunyo `publicLayoutSeed` dan **deterministik** yaratiladi: server va klient bir 
 | `V` | 1-shaxs / 3-shaxs kamerasini almashtirish |
 | `Space` | Sakrash |
 | `Shift` | Sprint (chidamlilik — stamina bilan cheklangan) |
+| `Alt` yoki `C` (bosib turing) | O'tirish (crouch) |
 | `R` | Qayta o'qlash |
 | `1–5`, `G'ildirak`, `Q` | Qurol almashtirish (`Q` — oldingi qurol) |
 | `0` | Qurolni yig'ishtirish (holster; loot rejimida) |
@@ -73,6 +74,15 @@ Dunyo `publicLayoutSeed` dan **deterministik** yaratiladi: server va klient bir 
 | `Enter` yoki `T` | Chat yozish |
 | `M` | Jamoani almashtirish (`tdm` rejimida) |
 | `Esc` | Pauza va sozlamalar menyusi |
+
+### Brauzer yorliqlari
+
+O'yin paytida (sichqoncha ushlangan — pointer lock) brauzer/OT yorliqlari o'yinga xalaqit bermasligi uchun:
+
+- **Bloklanadi:** `Alt` / `Ctrl` + istalgan tugma (masalan `Alt+D` — manzil satri, `Alt+E`/`Alt+F` — Chrome menyusi, Firefox `Alt+S/V/T/H` menyulari va yolg'iz `Alt` dagi menyu satri, `Alt+←`/`Alt+Home` — boshqa sahifaga o'tish, `Ctrl+S/D/F/R/P/G/H` — dialoglar), `Tab`, `Space`, `/`, shuningdek sichqoncha g'ildiragi (skroll, `Ctrl+g'ildirak` masshtabi, tarix bo'ylab o'tish). Pauza menyusida va chatda hech narsa bloklanmaydi.
+- **"Saytdan chiqasizmi?" tasdig'i:** `Ctrl+W`, `Ctrl+T`, `Ctrl+N`, `Alt+F4` va qayta yuklashni oddiy sahifa to'xtata olmaydi — shuning uchun faol o'yin paytida (va pointer lockdan chiqqandan keyin ~1.5 s) brauzer tabni yopishdan oldin tasdiq so'raydi. Pauza menyusida bu tasdiq o'chiq.
+- **To'liq ekran + Keyboard Lock (ixtiyoriy):** pauza menyusidagi "To'liq ekran" katakchasi. O'yinga qaytganda sahifa to'liq ekranga o'tadi va `navigator.keyboard.lock()` o'yin tugmalarini (`Esc`, `Tab`, `Alt`, `Ctrl`, `W A S D`, `Q E R T G H V M N C F`, `Space`, `0–5`, `←`/`→`, `Enter`) ushlaydi — shunda `Alt+Tab`, `Ctrl+W` ham brauzer/OT ga yetmaydi. Faqat Chromium (Chrome/Edge) da va faqat **xavfsiz kontekstda** (`http://localhost` yoki HTTPS) ishlaydi; LAN manzili (`http://192.168.x.x`) xavfsiz emas — u yerda faqat "Saytdan chiqasizmi?" tasdig'i himoya qiladi. Qisqa `Esc` — pauza menyusi (to'liq ekran saqlanadi), **`Esc` ni ~2 soniya bosib turish** — to'liq ekrandan chiqish. `Alt+F4` va `Win` tugmasi ataylab ushlanmaydi.
+- **Cheklovlar:** to'liq ekransiz `Alt` bilan o'tirib turganda `Tab` bosilsa (`Alt+Tab`) OT oynani almashtiradi — buni to'xtatib bo'lmaydi. Windows da `Alt+Shift` klaviatura tilini almashtirishi mumkin (OT sozlamasi).
 
 ---
 

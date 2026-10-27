@@ -10,6 +10,16 @@ export const PLAYER_HEIGHT = 1.8;
 export const EYE_HEIGHT = 1.62;
 export const STEP_HEIGHT = 0.55;
 
+// O'tirish (crouch) — Alt yoki C bosib turilganda
+/** O'tirgan o'yinchining to'qnashuv balandligi, m. */
+export const CROUCH_HEIGHT = 1.25;
+/** O'tirgan holatdagi ko'z balandligi (kamera va o'q chiqish nuqtasi), m. */
+export const CROUCH_EYE_HEIGHT = 1.1;
+/** O'tirib yurish tezligi, m/s (sprint yo'q; yo'nalish/qurol ko'paytuvchilari baribir qo'llanadi). */
+export const CROUCH_SPEED = 2.1;
+/** O'tirganda bosh/tana/oyoq xitbokslari balandligi shu nisbatda kichrayadi. */
+export const CROUCH_HITBOX_SCALE = CROUCH_HEIGHT / PLAYER_HEIGHT;
+
 // Harakat
 export const GRAVITY = 22;
 export const JUMP_SPEED = 7.6;

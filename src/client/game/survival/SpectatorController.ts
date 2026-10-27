@@ -1,5 +1,6 @@
 import { EYE_HEIGHT } from '../../../shared/constants';
 import { clamp, lerp, type Vec3 } from '../../../shared/math';
+import { eyeHeightOf } from '../../../shared/stance';
 import type { WeaponId } from '../../../shared/weapons';
 import { sampleTerrainHeight, type WorldDefinition } from '../../../shared/world';
 import { computeFairThirdPersonCameraDist } from '../ForestRenderer';
@@ -14,6 +15,8 @@ export interface SpectatableTarget {
   hp: number;
   alive: boolean;
   weapon: WeaponId | null;
+  /** O'tirgan holat: kamera CROUCH_EYE_HEIGHT ga (mavjud silliqlash bilan) tushadi. */
+  crouched?: boolean;
 }
 
 export interface SpectatorCameraPose {
@@ -128,7 +131,7 @@ export class SpectatorController {
       const target = aliveTargets.find((t) => t.id === this.targetId) ?? aliveTargets[0]!;
       this.targetId = target.id;
 
-      const eyeY = target.pos.y + EYE_HEIGHT;
+      const eyeY = target.pos.y + eyeHeightOf(target);
       this.smoothedCamY =
         Math.abs(eyeY - this.smoothedCamY) < 1.2
           ? lerp(this.smoothedCamY, eyeY, Math.min(1, Math.max(0, dt) * 16))

@@ -1,4 +1,4 @@
-import { EYE_HEIGHT, RUN_SPEED, WALK_SPEED } from '../shared/constants';
+import { RUN_SPEED, WALK_SPEED } from '../shared/constants';
 import { anglesFromDir, angleDiff, clamp, dirFromAngles, vcopy, vdist, vnorm, vsub, type Vec3 } from '../shared/math';
 import { applyWorldMovement, collidesAtWorld, raycastWorld } from '../shared/physics';
 import {
@@ -9,6 +9,7 @@ import {
   type PublicContainerState,
   type PublicLootItem,
 } from '../shared/loot';
+import { eyeHeightOf, hitboxScaleOf } from '../shared/stance';
 import { sampleTerrainHeight } from '../shared/world';
 import { WEAPONS, WEAPON_SLOTS, isMeleeWeapon, type WeaponId } from '../shared/weapons';
 import { findLocalPath, standingHeights } from './botLocalPath';
@@ -181,13 +182,16 @@ export class BotBrain {
   }
 
   private eye(): Vec3 {
-    return { x: this.me.pos.x, y: this.me.pos.y + EYE_HEIGHT, z: this.me.pos.z };
+    // Botlar o'tirmaydi, lekin ko'z balandligi umumiy qoidadan olinadi
+    return { x: this.me.pos.x, y: this.me.pos.y + eyeHeightOf(this.me), z: this.me.pos.z };
   }
 
   private canSee(o: ServerPlayer): boolean {
     const eye = this.eye();
+    // O'tirgan nishonning ko'krak/bosh nuqtalari pastroq (xitboks koeffitsienti bilan)
+    const s = hitboxScaleOf(o);
     for (const h of [1.3, 1.65]) {
-      const p = { x: o.pos.x, y: o.pos.y + h, z: o.pos.z };
+      const p = { x: o.pos.x, y: o.pos.y + h * s, z: o.pos.z };
       const d = vdist(eye, p);
       const dir = vnorm(vsub(p, eye));
       const hit = raycastWorld(this.room.world, eye, dir, d);
@@ -352,7 +356,7 @@ export class BotBrain {
     const tryPos = (x: number, z: number, y: number) => {
       // O'yinchi kapsulasi shu nuqtada kollayderga tegmasin (ayvon ustuni, devor, konteynerning o'zi)
       if (collidesAtWorld(world, x, y + 0.05, z)) return;
-      const eye: Vec3 = { x, y: y + EYE_HEIGHT, z };
+      const eye: Vec3 = { x, y: y + eyeHeightOf(this.me), z };
       if (hasLineOfSightToContainer(world, eye, c.position, c.id)) out.push({ x, y, z });
     };
     // Konteyner kollayderidan tashqarida turish uchun radiuslar 1.1–1.6 m (interaktiv radius ichida)
@@ -604,7 +608,8 @@ export class BotBrain {
       const eye = this.eye();
       const aimPt = {
         x: tgt.pos.x + tgt.vel.x * 0.03,
-        y: tgt.pos.y + this.aimHeight,
+        // O'tirgan nishonga pastroq mo'ljal (xitbokslar shu nisbatda kichrayadi)
+        y: tgt.pos.y + this.aimHeight * hitboxScaleOf(tgt),
         z: tgt.pos.z + tgt.vel.z * 0.03,
       };
       const { yaw, pitch } = anglesFromDir(vsub(aimPt, eye));

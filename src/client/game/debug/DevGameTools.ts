@@ -89,6 +89,8 @@ export interface DevSyntheticInput {
   right: number;
   jump: boolean;
   walk: boolean;
+  /** O'tirish tugmasi bosib turilgan (bo'lmasa — false). */
+  crouch?: boolean;
   yaw?: number;
   pitch?: number;
 }
@@ -119,11 +121,14 @@ export interface DevRemoteView {
   name: string;
   pos: { x: number; y: number; z: number };
   weapon: WeaponId | null;
+  crouched: boolean;
   model: Stickman;
 }
 
 /** Game asboblarga beradigan tor interfeys: faqat kerakli obyektlar, getter/setter'lar va amallar. */
 export interface DevGameHooks {
+  /** BrowserGuard holati (to'liq ekran, Keyboard Lock, "chiqasizmi?" tasdig'i). */
+  getBrowserGuardState?: () => unknown;
   readonly scene: THREE.Scene;
   readonly camera: THREE.PerspectiveCamera;
   readonly socket: Socket;
@@ -181,7 +186,19 @@ export interface DevGameTools {
   setThirdPerson: (tp: boolean) => void;
   triggerFireAnim: () => void;
   triggerReloadAnim: () => void;
-  getPlayerTransform: () => { x: number; y: number; z: number; yaw: number; onGround: boolean };
+  getPlayerTransform: () => {
+    x: number;
+    y: number;
+    z: number;
+    yaw: number;
+    onGround: boolean;
+    /** Bashorat qilingan o'tirish holati. */
+    crouched: boolean;
+    /** Joriy (silliqlangan) kamera ko'zining dunyo Y koordinatasi. */
+    eyeY: number;
+    /** Joriy (silliqlangan) ko'z balandligi oyoqdan, m (EYE_HEIGHT .. CROUCH_EYE_HEIGHT). */
+    eyeHeight: number;
+  };
   getDiagnostics: () => ReturnType<typeof getWeaponAssetDiagnostics>;
   getForestDiagnostics: () => ReturnType<typeof getForestAssetDiagnostics>;
   getWorldMeta: () => WorldMeta;
@@ -258,6 +275,7 @@ export interface DevGameTools {
       right?: number;
       jump?: boolean;
       walk?: boolean;
+      crouch?: boolean;
       yaw?: number;
       pitch?: number;
     } | null,
@@ -302,8 +320,9 @@ export interface DevGameTools {
   getGameplayHash?: () => string;
   getWorldVersion?: () => number;
   getRoomId?: () => string;
+  getBrowserGuardState?: () => unknown;
   getOtherPlayerCount?: () => number;
-  getOtherPlayers?: () => Array<{ id: string; name: string; pos: Vec3; weapon: WeaponId | null }>;
+  getOtherPlayers?: () => Array<{ id: string; name: string; pos: Vec3; weapon: WeaponId | null; crouched: boolean }>;
   getContainersCount?: () => number;
   /** 08B: Camper Buddy asset + per-model animator/weapon-mount diagnostics. */
   getCharacterDiagnostics?: () => {
@@ -346,13 +365,19 @@ export function installDevGameTools(h: DevGameHooks): () => void {
       if (!me.weapon) return;
       h.vm.startReload(WEAPONS[me.weapon].reloadTime);
     },
-    getPlayerTransform: () => ({
-      x: me.body.pos.x,
-      y: me.body.pos.y,
-      z: me.body.pos.z,
-      yaw: me.yaw,
-      onGround: me.body.onGround,
-    }),
+    getPlayerTransform: () => {
+      const eyeHeight = me.viewEyeHeight();
+      return {
+        x: me.body.pos.x,
+        y: me.body.pos.y,
+        z: me.body.pos.z,
+        yaw: me.yaw,
+        onGround: me.body.onGround,
+        crouched: Boolean(me.body.crouched),
+        eyeY: me.smoothedPos().y + eyeHeight,
+        eyeHeight,
+      };
+    },
     getDiagnostics: () => getWeaponAssetDiagnostics(),
     getForestDiagnostics: () => getForestAssetDiagnostics(),
     getWorldMeta: () => h.getWorldMeta(),
@@ -624,6 +649,7 @@ export function installDevGameTools(h: DevGameHooks): () => void {
         right: clamp(Number(input.right ?? 0), -1, 1),
         jump: Boolean(input.jump),
         walk: Boolean(input.walk),
+        crouch: Boolean(input.crouch),
         ...(input.yaw !== undefined && Number.isFinite(input.yaw) ? { yaw: Number(input.yaw) } : {}),
         ...(input.pitch !== undefined && Number.isFinite(input.pitch)
           ? { pitch: clamp(Number(input.pitch), -1.55, 1.55) }
@@ -704,6 +730,7 @@ export function installDevGameTools(h: DevGameHooks): () => void {
     getGameplayHash: () => h.getWorldDef().gameplayHash,
     getWorldVersion: () => h.getWorldDef().worldVersion,
     getRoomId: () => h.roomId,
+    getBrowserGuardState: () => h.getBrowserGuardState?.() ?? null,
     getOtherPlayerCount: () => Array.from(h.getRemotes()).length,
     getOtherPlayers: () =>
       Array.from(h.getRemotes()).map((r) => ({
@@ -711,6 +738,7 @@ export function installDevGameTools(h: DevGameHooks): () => void {
         name: r.name,
         pos: { x: r.pos.x, y: r.pos.y, z: r.pos.z },
         weapon: r.weapon,
+        crouched: r.crouched,
       })),
     getContainersCount: () => h.getLootSnapshot()?.containers.length ?? 0,
     getCharacterDiagnostics: () => ({

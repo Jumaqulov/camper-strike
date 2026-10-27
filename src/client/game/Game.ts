@@ -60,6 +60,7 @@ import {
   type NetSimConfig,
 } from './debug/DevGameTools';
 import { TP_MAX_DIST_LOCAL, TP_SHOULDER_OFFSET, TP_SHOULDER_PAD } from './cameraConstants';
+import { createBrowserGuard, type BrowserGuard } from './BrowserGuard';
 
 /** Minimal shape of the ground-cover stats exposed (optionally) by the forest world handle (Stage 08-FIX, agent E). */
 interface GroundCoverStatsLite {
@@ -76,6 +77,11 @@ type WorldHandlesWithGroundCover = WorldHandles & {
 
 const INTERP_DELAY = 0.1;
 const SEND_INTERVAL = 1 / 30;
+/** O'tirib yurganda qadam tovushi balandligi ko'paytuvchisi: lokal o'yinchi / masofaviy o'yinchilar. */
+const CROUCH_STEP_VOLUME_LOCAL = 0.35;
+const CROUCH_STEP_VOLUME_REMOTE = 0.3;
+/** O'tirib yurganda qadamlar orasidagi vaqt, s (oddiy yurish — 0.44). */
+const CROUCH_STEP_INTERVAL = 0.55;
 
 interface Remote {
   id: string;
@@ -88,6 +94,8 @@ interface Remote {
   hp: number;
   weapon: WeaponId | null;
   alive: boolean;
+  /** O'tirgan holat — yangiroq (bracketing) snapshot'dan; xitboks va model pozasi uchun. */
+  crouched: boolean;
   speed: number;
   stepTimer: number;
   tagKey: string;
@@ -110,6 +118,8 @@ export class Game {
   private camera: THREE.PerspectiveCamera;
   private world: WorldHandles;
   private input: Input;
+  /** Brauzer yorliqlaridan himoya: "chiqasizmi?" tasdig'i, ixtiyoriy to'liq ekran + Keyboard Lock. */
+  private browserGuard!: BrowserGuard;
   private hud = new Hud();
   private fx: Effects;
   private vm: ViewModel;
@@ -311,6 +321,8 @@ export class Game {
     });
     this.survivalUi.setVisible(this.isSurvival);
     this.input = new Input(this.renderer.domElement);
+    // root — butun hujjat: to'liq ekranda HUD, pauza menyusi va chat ham ko'rinsin
+    this.browserGuard = createBrowserGuard({ input: this.input, root: document.documentElement, settings: this.settings });
     this.input.onLockChange = () => {
       if (!this.input.locked && this.chatOpen) this.closeChat();
       this.updatePauseMenu();
@@ -348,6 +360,7 @@ export class Game {
   /** DEV asboblari (debug/DevGameTools.ts) uchun tor ko'prik: faqat ularga kerakli ichki holat va amallar. */
   private devHooks(): DevGameHooks {
     return {
+      getBrowserGuardState: () => this.browserGuard.diagnostics(),
       scene: this.scene,
       camera: this.camera,
       socket: this.socket,
@@ -449,6 +462,7 @@ export class Game {
         hp: rem.hp,
         alive: rem.alive,
         weapon: rem.weapon,
+        crouched: rem.crouched,
       });
     }
     return out;
@@ -910,6 +924,7 @@ export class Game {
           hp: 100,
           weapon: this.lootPreview ? null : 'rifle',
           alive: false,
+          crouched: false,
           speed: 0,
           stepTimer: 0,
           tagKey: '',
@@ -1205,6 +1220,8 @@ export class Game {
     this.dom(window, 'resize', () => this.onResize());
     this.dom($('btn-resume'), 'click', () => {
       this.audio.init();
+      // Foydalanuvchi bosishi (transient activation) ichida: Keyboard Lock + to'liq ekran, keyin pointer lock
+      this.browserGuard.beforeLock();
       this.input.lock();
     });
     this.dom($('btn-leave'), 'click', () => this.onLeave());
@@ -1212,7 +1229,10 @@ export class Game {
     this.dom($('btn-bot-add'), 'click', () => this.socket.emit('chat', '/addbot'));
     this.dom($('btn-bot-remove'), 'click', () => this.socket.emit('chat', '/removebot'));
     this.dom(this.renderer.domElement, 'click', () => {
-      if (!this.input.locked) this.input.lock();
+      if (!this.input.locked) {
+        this.browserGuard.beforeLock();
+        this.input.lock();
+      }
     });
 
     const sens = $('set-sens') as HTMLInputElement;
@@ -1444,11 +1464,15 @@ export class Game {
       const right = syn ? syn.right : active ? Number(inp.down('KeyD')) - Number(inp.down('KeyA')) : 0;
       const jump = syn ? syn.jump : active && inp.down('Space');
       const walk = syn ? syn.walk : active && (inp.down('ShiftLeft') || inp.down('ShiftRight'));
+      // O'tirish: Alt (chap/o'ng) yoki C bosib turilganda; qo'yib yuborilganda server tepada joy bo'lsa turg'izadi
+      const crouch = syn
+        ? Boolean(syn.crouch)
+        : active && (inp.down('AltLeft') || inp.down('AltRight') || inp.down('KeyC'));
       const wasGround = me.body.onGround;
       const vyBefore = me.body.vel.y;
       if (jump && wasGround) this.audio.jump();
       if (!(import.meta.env.DEV && window.__DEV_PLAYER_POSE_LOCK__)) {
-        me.move(dt, fwd, right, jump, walk);
+        me.move(dt, fwd, right, jump, walk, crouch);
       }
       // Qurol mantiqi harakat kirishi yozilgandan KEYIN: otish paytida server joriy kadr yaw/pitch ini ko'rsin
       // (aks holda tez "flick" otishlar aim-cone tekshiruvidan o'tmay rad etiladi).
@@ -1457,11 +1481,12 @@ export class Game {
       if (me.body.onGround && me.speedH() > 1.0) {
         this.stepTimer -= dt;
         if (this.stepTimer <= 0) {
-          // Sprintda qadamlar tezroq va balandroq, yurishda sekinroq va yumshoqroq
-          const sprinting = me.speedH() > WALK_SPEED + 0.6;
-          this.stepTimer = sprinting ? 0.30 : 0.44;
+          // Sprintda qadamlar tezroq va balandroq, yurishda sekinroq va yumshoqroq, o'tirib yurishda — juda past
+          const crouched = Boolean(me.body.crouched);
+          const sprinting = !crouched && me.speedH() > WALK_SPEED + 0.6;
+          this.stepTimer = sprinting ? 0.30 : crouched ? CROUCH_STEP_INTERVAL : 0.44;
           const surf = detectSurface(this.worldDef, me.body.pos.x, me.body.pos.y, me.body.pos.z);
-          this.audio.footstep(undefined, sprinting ? 0.18 : 0.11, surf);
+          this.audio.footstep(undefined, (sprinting ? 0.18 : 0.11) * (crouched ? CROUCH_STEP_VOLUME_LOCAL : 1), surf);
         }
       } else {
         this.stepTimer = 0.12;
@@ -1785,7 +1810,7 @@ export class Game {
       let hitPlayer = false;
       for (const rem of this.remotes.values()) {
         if (!rem.alive || !rem.model.root.visible || !this.isEnemy(rem)) continue;
-        const h = rayVsPlayer(origin, d, rem.pos, maxT);
+        const h = rayVsPlayer(origin, d, rem.pos, maxT, rem.crouched);
         if (h) {
           maxT = h.t;
           hitPlayer = true;
@@ -1821,7 +1846,7 @@ export class Game {
       let hitPlayer = false;
       for (const rem of this.remotes.values()) {
         if (!rem.alive || !rem.model.root.visible || !this.isEnemy(rem)) continue;
-        const h = rayVsPlayer(origin, d, rem.pos, maxT);
+        const h = rayVsPlayer(origin, d, rem.pos, maxT, rem.crouched);
         if (h) {
           maxT = h.t;
           hitPlayer = true;
@@ -1869,6 +1894,8 @@ export class Game {
       rem.hp = src.hp;
       rem.weapon = src.weapon;
       rem.alive = src.alive;
+      // O'tirish holati har doim yangiroq snapshot'dan (interpolyatsiya oralig'ida xitboks kechikmasin)
+      rem.crouched = Boolean(p1.crouched);
       rem.speed = Math.hypot(src.vx, src.vz);
       const m = rem.model;
       const distToCam = this.camera.position.distanceTo(rem.pos);
@@ -1878,15 +1905,17 @@ export class Game {
       m.root.rotation.y = rem.yaw;
       m.setWeapon(src.weapon);
       m.setGear(unpackGearState(src.gear));
+      m.setCrouch(rem.crouched);
       m.update(dt, { speed: rem.speed, onGround: src.onGround, pitch: rem.pitch, alive: src.alive, reloading: src.reloading });
       m.updateNameTagDistance(distToCam, src.alive);
       if (src.alive && src.onGround && rem.speed > 1.0) {
         rem.stepTimer -= dt;
         if (rem.stepTimer <= 0) {
-          const sprinting = rem.speed > WALK_SPEED + 0.6;
-          rem.stepTimer = sprinting ? 0.30 : 0.44;
+          const sprinting = !rem.crouched && rem.speed > WALK_SPEED + 0.6;
+          rem.stepTimer = sprinting ? 0.30 : rem.crouched ? CROUCH_STEP_INTERVAL : 0.44;
           const surf = detectSurface(this.worldDef, rem.pos.x, rem.pos.y, rem.pos.z);
-          this.audio.footstep({ x: rem.pos.x, y: rem.pos.y, z: rem.pos.z }, sprinting ? 0.6 : 0.38, surf);
+          const vol = (sprinting ? 0.6 : 0.38) * (rem.crouched ? CROUCH_STEP_VOLUME_REMOTE : 1);
+          this.audio.footstep({ x: rem.pos.x, y: rem.pos.y, z: rem.pos.z }, vol, surf);
         }
       }
     }
@@ -1943,7 +1972,8 @@ export class Game {
     backZ: number,
     e: number,
   ): void {
-    const pivot = { x: renderPos.x, y: renderPos.y + lerp(EYE_HEIGHT, 1.65, e), z: renderPos.z };
+    // O'lim paytidagi (o'tirgan bo'lishi mumkin) ko'z balandligidan boshlanadi: kamera sakramaydi
+    const pivot = { x: renderPos.x, y: renderPos.y + lerp(this.me.viewEyeHeight(), 1.65, e), z: renderPos.z };
     const len = Math.hypot(backX, backZ);
     const desired = len * e;
     if (len < 1e-6 || desired < 1e-3) {
@@ -1963,6 +1993,8 @@ export class Game {
     const renderPos = me.smoothedPos();
     const myRole = this.lastAuthoritativeSnap?.survivalRole ?? null;
     const isMidJoinSpectator = this.isSurvival && myRole === 'spectator' && !me.alive;
+    // Kamera ko'z balandligi: tik turish va o'tirish orasida ~0.12 s silliq o'tish (o'q chiqish nuqtasi darhol)
+    const eyeH = me.updateViewCrouch(dt);
 
     // O'zimizning 3D kemper modelimizni yangilash
     this.myModel.root.visible = useThird && !isMidJoinSpectator;
@@ -1970,6 +2002,7 @@ export class Game {
     this.myModel.root.rotation.y = me.yaw;
     this.myModel.setWeapon(me.weapon);
     this.myModel.setGear({ helmet: me.helmet > 0, armor: me.armor > 0, grenades: me.grenades, medkits: me.medkits });
+    this.myModel.setCrouch(Boolean(me.body.crouched));
     this.myModel.update(dt, {
       speed: me.speedH(),
       onGround: me.body.onGround,
@@ -1986,7 +2019,7 @@ export class Game {
     if (me.alive) {
       this.spectator.setActive(false);
       this.lastSpectatorPose = null;
-      const target = renderPos.y + EYE_HEIGHT;
+      const target = renderPos.y + eyeH;
       if (me.body.onGround && target > this.camY && target - this.camY < 0.7) this.camY = lerp(this.camY, target, Math.min(1, dt * 18));
       else this.camY = target;
 
@@ -2085,7 +2118,7 @@ export class Game {
       this.bench.cullTimesMs.push(performance.now() - tCull0);
     }
     this.vm.visible = me.alive && !scoped && !useThird && !hasDevOv;
-    this.vm.update(dt, me.speedH(), me.body.onGround, this.input.mouseDX, this.input.mouseDY);
+    this.vm.update(dt, me.speedH(), me.body.onGround, this.input.mouseDX, this.input.mouseDY, me.viewCrouch);
   }
 
   /** Mini-xarita uchun joriy (interpolyatsiyalangan) va maqsad aylana. */
@@ -2254,6 +2287,7 @@ export class Game {
     for (const [ev, fn] of this.netHandlers) this.socket.off(ev, fn);
     for (const [t, type, fn] of this.domHandlers) t.removeEventListener(type, fn);
     this.input.dispose();
+    this.browserGuard.dispose();
     this.zoneWall?.dispose();
     this.zoneWall = null;
     this.hud.setZoneWarning(false, 0);

@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import {
-  EYE_HEIGHT, GRENADE_DAMAGE, GRENADE_FUSE, GRENADE_RADIUS, GRENADE_THROW_SPEED, GRENADES_PER_LIFE, MATCH_END_DURATION,
+  GRENADE_DAMAGE, GRENADE_FUSE, GRENADE_RADIUS, GRENADE_THROW_SPEED, GRENADES_PER_LIFE, MATCH_END_DURATION,
   MAX_HP, RESPAWN_TIME, SPAWN_PROTECTION, TEAM_NAMES, TICK_RATE, type Team,
 } from '../shared/constants';
 import { clamp, isVec3, q3, spreadDir, vdist, vnorm, vsub, type Vec3 } from '../shared/math';
@@ -20,6 +20,7 @@ import type {
   SurvivalConfig, SurvivalPhase, SurvivalStateSnap, UseMedkitAck, UseMedkitReq, WelcomeMsg,
 } from '../shared/protocol';
 import { packGearState } from '../shared/protocol';
+import { eyeHeightOf, hitboxScaleOf } from '../shared/stance';
 import {
   ARMOR_DAMAGE_ABSORB,
   HELMET_HEADSHOT_ABSORB,
@@ -335,6 +336,7 @@ export class Room {
       pos: { x: 0, y: 0, z: 0 },
       vel: { x: 0, y: 0, z: 0 },
       onGround: true,
+      crouched: false,
       yaw: 0, pitch: 0,
       scoped: false,
       stamina: 1, staminaLocked: false,
@@ -575,6 +577,8 @@ export class Room {
     p.pos = { x: sp.x, y: sp.y, z: sp.z };
     p.vel = { x: 0, y: 0, z: 0 };
     p.onGround = true;
+    // Yangi hayot har doim tik turgan holatda boshlanadi
+    p.crouched = false;
     p.yaw = this.opts.mode === 'ffa' || this.opts.mode === 'forest_survival' ? Math.random() * Math.PI * 2 : sp.yaw;
     p.pitch = 0;
     p.scoped = false;
@@ -695,7 +699,8 @@ export class Room {
     }
 
     const def = WEAPONS[p.weapon!];
-    const eye = { x: p.pos.x, y: p.pos.y + EYE_HEIGHT, z: p.pos.z };
+    // Avtoritativ ko'z balandligi o'tirish holatiga bog'liq (CROUCH_EYE_HEIGHT / EYE_HEIGHT)
+    const eye = { x: p.pos.x, y: p.pos.y + eyeHeightOf(p), z: p.pos.z };
 
     // 2. Virtual bullet origin fix (Stage 05 Audit):
     // NEVER accept client-supplied m.origin for raycasting. Always use server's authoritative eye position.
@@ -727,7 +732,7 @@ export class Room {
   botFire(p: ServerPlayer, extraSpread: number): boolean {
     if (!p.weapon) return false;
     const def = WEAPONS[p.weapon];
-    const eye = { x: p.pos.x, y: p.pos.y + EYE_HEIGHT, z: p.pos.z };
+    const eye = { x: p.pos.x, y: p.pos.y + eyeHeightOf(p), z: p.pos.z };
     const aim = { x: -Math.sin(p.yaw) * Math.cos(p.pitch), y: Math.sin(p.pitch), z: -Math.cos(p.yaw) * Math.cos(p.pitch) };
     const moving = Math.hypot(p.vel.x, p.vel.z) > 1 ? def.moveSpread * 0.5 : 0;
     const base = (def.id === 'sniper' ? 0.002 : def.spread) + moving + extraSpread;
@@ -792,7 +797,8 @@ export class Room {
       let zone: HitZone = 'torso';
       for (const o of this.players.values()) {
         if (!o.alive || !this.isEnemy(p, o)) continue;
-        const h = rayVsPlayer(origin, d, o.pos, maxT);
+        // O'tirgan qurbonning xitbokslari pastroq
+        const h = rayVsPlayer(origin, d, o.pos, maxT, o.crouched === true);
         if (h) {
           maxT = h.t;
           hitP = o;
@@ -924,7 +930,7 @@ export class Room {
       const invSnap = this.loot.getPlayerInventorySnap(p.id);
       if (invSnap) p.socket?.emit('inventory:state', invSnap);
     }
-    const eye = { x: p.pos.x, y: p.pos.y + EYE_HEIGHT - 0.1, z: p.pos.z };
+    const eye = { x: p.pos.x, y: p.pos.y + eyeHeightOf(p) - 0.1, z: p.pos.z };
     let pos = { x: eye.x + dir.x * 0.6, y: eye.y + dir.y * 0.6, z: eye.z + dir.z * 0.6 };
     if (pointInsideBoxes(this.world.colliders, pos)) pos = eye;
     this.grenades.push({
@@ -1212,6 +1218,8 @@ export class Room {
     victim.alive = false;
     victim.hp = 0;
     victim.scoped = false;
+    // Halok bo'lgan o'yinchi snapshotlarda o'tirgan holda qolmasin (jasad pozasi o'lim animatsiyasidan)
+    victim.crouched = false;
     victim.authority.clear();
     victim.deaths++;
     resetServerWeaponSwitchState(victim);
@@ -1385,7 +1393,8 @@ export class Room {
       for (const o of this.players.values()) {
         if (!o.alive) continue;
         if (o !== owner && !this.isEnemy(owner, o)) continue;
-        const center = { x: o.pos.x, y: o.pos.y + 1.0, z: o.pos.z };
+        // Tana markazi (o'tirganda pastroq) — portlashdan ko'rinish shu nuqtagacha tekshiriladi
+        const center = { x: o.pos.x, y: o.pos.y + 1.0 * hitboxScaleOf(o), z: o.pos.z };
         const d = vdist(origin, center);
         if (d > GRENADE_RADIUS) continue;
         const blocked = raycastWorld(this.world, origin, vnorm(vsub(center, origin)), d);
@@ -1667,6 +1676,8 @@ export class Room {
           medkits: this.loot.getMedkitCount(p.id),
         }),
       };
+      // O'tirish faqat true bo'lganda yuboriladi (tik turish — maydon yo'q, trafik tejaladi)
+      if (p.crouched) snapP.crouched = true;
       if (this.isSurvival && this.survival) {
         snapP.survivalRole = this.survival.getPlayerRole(p.id);
         snapP.spectateTargetId = this.survival.getSpectateTarget(p.id);

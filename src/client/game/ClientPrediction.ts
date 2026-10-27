@@ -1,3 +1,4 @@
+import { PLAYER_RADIUS } from '../../shared/constants';
 import { clamp, type Vec3 } from '../../shared/math';
 import {
   cloneMovementState,
@@ -9,6 +10,7 @@ import {
 } from '../../shared/netMovement';
 import { collidesAtWorld } from '../../shared/physics';
 import type { PlayerInputCmd, PlayerSnap } from '../../shared/protocol';
+import { bodyHeightOf } from '../../shared/stance';
 import type { WeaponId } from '../../shared/weapons';
 import type { WorldDefinition } from '../../shared/world';
 
@@ -94,6 +96,8 @@ export class ClientPrediction {
       moveRight: number;
       jump: boolean;
       walk: boolean;
+      /** O'tirish tugmasi (Alt / C) bosib turilgan; bo'lmasa — false. */
+      crouch?: boolean;
       scoped: boolean;
       weapon: WeaponId | null;
       yaw: number;
@@ -136,6 +140,8 @@ export class ClientPrediction {
         state.pos.x + this.smoothOffset.x,
         state.pos.y + this.smoothOffset.y,
         state.pos.z + this.smoothOffset.z,
+        PLAYER_RADIUS,
+        bodyHeightOf(state),
       )
     ) {
       this.smoothOffset.x = 0;
@@ -226,11 +232,15 @@ export class ClientPrediction {
         snap.stamina === undefined ||
         (Math.abs((ackRecord.stateAfter.stamina ?? 1) - snap.stamina) <= 0.02 &&
           Boolean(ackRecord.stateAfter.staminaLocked) === Boolean(snap.staminaLocked));
+      // O'tirish holati ham mos bo'lishi shart: server tepada joy yo'qligi uchun turg'izmagan bo'lsa
+      // (yoki aksincha), bashorat qayta o'ynaladi — aks holda kamera/xitboks balandligi farq qilib qoladi.
+      const stanceOk = Boolean(ackRecord.stateAfter.crouched) === Boolean(snap.crouched);
       if (
         posErrAtAck <= RECONCILE_SMOOTH_THRESHOLD &&
         velErrAtAck <= 0.08 &&
         ackRecord.stateAfter.onGround === snap.onGround &&
-        staminaOk
+        staminaOk &&
+        stanceOk
       ) {
         return {
           accepted: true,
@@ -248,6 +258,7 @@ export class ClientPrediction {
       z: state.pos.z + this.smoothOffset.z,
     };
 
+    const prevCrouched = Boolean(state.crouched);
     const savedYaw = state.yaw;
     const savedPitch = state.pitch;
     const savedWeapon = state.weapon;
@@ -256,6 +267,8 @@ export class ClientPrediction {
     state.pos = { x: snap.x, y: snap.y, z: snap.z };
     state.vel = { x: snap.vx, y: snap.vy, z: snap.vz };
     state.onGround = snap.onGround;
+    // Server faqat o'tirganda `crouched: true` yuboradi; yo'q bo'lsa — tik turibdi
+    state.crouched = Boolean(snap.crouched);
     if (snap.stamina !== undefined) {
       state.stamina = snap.stamina;
       state.staminaLocked = Boolean(snap.staminaLocked);
@@ -282,11 +295,13 @@ export class ClientPrediction {
     this.maxPositionError = Math.max(this.maxPositionError, this.lastPositionError);
 
     const replayedCount = this.buffer.length;
+    // Faqat o'tirish holati tuzatilgan bo'lsa ham (pozitsiya bir xil) — bu tuzatish hisoblanadi
+    const stanceChanged = Boolean(state.crouched) !== prevCrouched;
 
     if (errorDist <= 0.004) {
       return {
         accepted: true,
-        corrected: false,
+        corrected: stanceChanged,
         snapped: false,
         errorDist,
         replayedCount,
@@ -316,6 +331,8 @@ export class ClientPrediction {
         state.pos.x + this.smoothOffset.x,
         state.pos.y + this.smoothOffset.y,
         state.pos.z + this.smoothOffset.z,
+        PLAYER_RADIUS,
+        bodyHeightOf(state),
       )
     ) {
       this.smoothOffset = { x: 0, y: 0, z: 0 };
