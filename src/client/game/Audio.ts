@@ -1,10 +1,17 @@
 import type { WeaponId } from '../../shared/weapons';
+import type { SurfaceKind } from './surface';
 
 interface P3 {
   x: number;
   y: number;
   z: number;
 }
+
+export type AmbientProfile = 'forest' | 'arena';
+
+/** Masofaviy otishma: shu masofadan boshlab past chastota filtri va aks-sado qo'shiladi (m). */
+const DISTANT_SHOT_FROM = 22;
+const DISTANT_SHOT_FULL = 150;
 
 /**
  * Barcha ovozlar WebAudio yordamida protsedural tarzda yaratiladi (tashqi fayllar kerak emas).
@@ -15,10 +22,14 @@ export class AudioSys {
   private master!: GainNode;
   private noiseBuf!: AudioBuffer;
   private vol = 0.7;
+  private listenerPos: P3 = { x: 0, y: 0, z: 0 };
+  private ambientProfile: AmbientProfile | null = null;
+  private ambient: { gain: GainNode; nodes: AudioNode[]; timers: number[] } | null = null;
 
   init(): void {
     if (this.ctx) {
       if (this.ctx.state === 'suspended') void this.ctx.resume();
+      if (this.ambientProfile && !this.ambient) this.buildAmbient();
       return;
     }
     const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -35,6 +46,178 @@ export class AudioSys {
     this.noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
     const data = this.noiseBuf.getChannelData(0);
     for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+    if (this.ambientProfile) this.buildAmbient();
+  }
+
+  // ---------------- Ambient qatlam: shamol, barglar shitirlashi, qushlar ----------------
+
+  /** Ambient fonni yoqadi (kontekst hali yo'q bo'lsa, init() dan keyin avtomatik boshlanadi). */
+  startAmbient(profile: AmbientProfile): void {
+    if (this.ambientProfile === profile && this.ambient) return;
+    this.stopAmbient();
+    this.ambientProfile = profile;
+    if (this.ctx) this.buildAmbient();
+  }
+
+  stopAmbient(): void {
+    this.ambientProfile = null;
+    const a = this.ambient;
+    if (!a) return;
+    this.ambient = null;
+    for (const t of a.timers) clearTimeout(t);
+    const now = this.ctx?.currentTime ?? 0;
+    try {
+      a.gain.gain.setTargetAtTime(0.0001, now, 0.4);
+    } catch {
+      /* e'tibor bermaymiz */
+    }
+    setTimeout(() => {
+      for (const n of a.nodes) {
+        try {
+          if (n instanceof AudioScheduledSourceNode) n.stop();
+          n.disconnect();
+        } catch {
+          /* e'tibor bermaymiz */
+        }
+      }
+      try {
+        a.gain.disconnect();
+      } catch {
+        /* e'tibor bermaymiz */
+      }
+    }, 1200);
+  }
+
+  private buildAmbient(): void {
+    const c = this.ctx;
+    const profile = this.ambientProfile;
+    if (!c || !profile || this.ambient) return;
+    const forest = profile === 'forest';
+    const nodes: AudioNode[] = [];
+    const timers: number[] = [];
+    const gain = c.createGain();
+    gain.gain.setValueAtTime(0.0001, c.currentTime);
+    gain.gain.exponentialRampToValueAtTime(forest ? 1 : 0.7, c.currentTime + 2.5);
+    gain.connect(this.master);
+
+    // 1. Shamol: uzluksiz shovqin → past chastota filtri, chastotasi va kuchi sekin LFO bilan "esadi"
+    const wind = c.createBufferSource();
+    wind.buffer = this.noiseBuf;
+    wind.loop = true;
+    const windLp = c.createBiquadFilter();
+    windLp.type = 'lowpass';
+    windLp.frequency.value = forest ? 300 : 420;
+    windLp.Q.value = 0.6;
+    const windGain = c.createGain();
+    windGain.gain.value = forest ? 0.075 : 0.1;
+    const gustLfo = c.createOscillator();
+    gustLfo.type = 'sine';
+    gustLfo.frequency.value = 0.07;
+    const gustDepth = c.createGain();
+    gustDepth.gain.value = 170;
+    gustLfo.connect(gustDepth).connect(windLp.frequency);
+    const swellLfo = c.createOscillator();
+    swellLfo.type = 'sine';
+    swellLfo.frequency.value = 0.019;
+    const swellDepth = c.createGain();
+    swellDepth.gain.value = forest ? 0.03 : 0.045;
+    swellLfo.connect(swellDepth).connect(windGain.gain);
+    wind.connect(windLp).connect(windGain).connect(gain);
+    wind.start();
+    gustLfo.start();
+    swellLfo.start();
+    nodes.push(wind, windLp, windGain, gustLfo, gustDepth, swellLfo, swellDepth);
+
+    if (forest) {
+      // 2. Uzoqdagi daraxt barglarining shitirlashi: o'rta-yuqori chastotali shovqin, shamol kuchayganda kuchayadi
+      const leaves = c.createBufferSource();
+      leaves.buffer = this.noiseBuf;
+      leaves.loop = true;
+      const leafBp = c.createBiquadFilter();
+      leafBp.type = 'bandpass';
+      leafBp.frequency.value = 2600;
+      leafBp.Q.value = 0.7;
+      const leafGain = c.createGain();
+      leafGain.gain.value = 0.012;
+      const leafLfo = c.createOscillator();
+      leafLfo.type = 'sine';
+      leafLfo.frequency.value = 0.11;
+      const leafDepth = c.createGain();
+      leafDepth.gain.value = 0.011;
+      leafLfo.connect(leafDepth).connect(leafGain.gain);
+      leaves.connect(leafBp).connect(leafGain).connect(gain);
+      leaves.start(0, Math.random());
+      leafLfo.start();
+      nodes.push(leaves, leafBp, leafGain, leafLfo, leafDepth);
+
+      // 3. Qushlar: tasodifiy joydan, tasodifiy oraliqda chirqillash; vaqti-vaqti bilan uzoqdan qizilishton
+      const schedule = (fn: () => void, minMs: number, maxMs: number) => {
+        const id = window.setTimeout(() => {
+          if (this.ambient?.timers !== timers) return;
+          fn();
+          schedule(fn, minMs, maxMs);
+        }, minMs + Math.random() * (maxMs - minMs));
+        timers.push(id);
+      };
+      schedule(() => this.birdChirp(gain), 1500, 6500);
+      schedule(() => this.woodpecker(gain), 18000, 45000);
+    }
+
+    this.ambient = { gain, nodes, timers };
+  }
+
+  /** Tinglovchi atrofidagi tasodifiy nuqta (uzoqlik va balandlik bilan). */
+  private randomAround(minD: number, maxD: number, height: number): P3 {
+    const a = Math.random() * Math.PI * 2;
+    const d = minD + Math.random() * (maxD - minD);
+    const l = this.listenerPos;
+    return { x: l.x + Math.cos(a) * d, y: l.y + height, z: l.z + Math.sin(a) * d };
+  }
+
+  private birdChirp(out: AudioNode): void {
+    const c = this.ctx;
+    if (!c) return;
+    const d = this.spatial(this.randomAround(10, 34, 4 + Math.random() * 6), out, 6);
+    const t = c.currentTime;
+    const notes = 2 + Math.floor(Math.random() * 4);
+    const base = 2100 + Math.random() * 1900;
+    const gap = 0.08 + Math.random() * 0.07;
+    for (let i = 0; i < notes; i++) {
+      const f0 = base * (0.9 + Math.random() * 0.25);
+      const f1 = f0 * (0.65 + Math.random() * 0.7);
+      this.tone(d, t + i * gap, 'sine', f0, f1, 0.045 + Math.random() * 0.06, 0.05 + Math.random() * 0.035);
+    }
+  }
+
+  private woodpecker(out: AudioNode): void {
+    const c = this.ctx;
+    if (!c) return;
+    const d = this.spatial(this.randomAround(25, 55, 5), out, 6);
+    const t = c.currentTime;
+    const n = 6 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < n; i++) {
+      this.noise(d, t + i * 0.07, 0.025, 'bandpass', 1400, 1100, 2.5, 0.09, 0.002);
+    }
+  }
+
+  /** Pozitsion panner, ixtiyoriy chiqish tuguniga (ambient gain) ulanadi. */
+  private spatial(pos: P3, out: AudioNode, refDistance = 4): AudioNode {
+    const c = this.ctx!;
+    const p = c.createPanner();
+    p.panningModel = 'equalpower';
+    p.distanceModel = 'inverse';
+    p.refDistance = refDistance;
+    p.maxDistance = 250;
+    p.rolloffFactor = 1.1;
+    if (p.positionX) {
+      p.positionX.value = pos.x;
+      p.positionY.value = pos.y;
+      p.positionZ.value = pos.z;
+    } else {
+      p.setPosition(pos.x, pos.y, pos.z);
+    }
+    p.connect(out);
+    return p;
   }
 
   setVolume(v: number): void {
@@ -45,6 +228,7 @@ export class AudioSys {
   updateListener(pos: P3, fwd: P3): void {
     const c = this.ctx;
     if (!c) return;
+    this.listenerPos = { x: pos.x, y: pos.y, z: pos.z };
     const l = c.listener;
     if (l.positionX) {
       l.positionX.value = pos.x;
@@ -121,10 +305,65 @@ export class AudioSys {
     o.stop(t0 + dur + 0.05);
   }
 
+  /**
+   * Otishma uchun chiqish zanjiri. Yaqin otishma — oddiy panner. Uzoq otishma (> 22 m):
+   * yuqori chastotalar so'nadi (lowpass), ikkita aks-sado (o'rmon echo) va past "gumburlash" dumi qo'shiladi —
+   * o'yinchi raqib qanchalik uzoqdaligini ovozdan biladi.
+   */
+  private shotDest(pos?: P3): { d: AudioNode; dist: number; k: number } | null {
+    const c = this.ctx;
+    if (!c) return null;
+    if (!pos) return { d: this.master, dist: 0, k: 0 };
+    const dist = Math.hypot(pos.x - this.listenerPos.x, pos.y - this.listenerPos.y, pos.z - this.listenerPos.z);
+    const panner = this.dest(pos)!;
+    if (dist < DISTANT_SHOT_FROM) return { d: panner, dist, k: 0 };
+    const k = Math.min(1, (dist - DISTANT_SHOT_FROM) / (DISTANT_SHOT_FULL - DISTANT_SHOT_FROM));
+    const entry = c.createGain();
+    entry.gain.value = 1 - 0.2 * k;
+    const lp = c.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 5200 - 4500 * k;
+    lp.Q.value = 0.5;
+    entry.connect(lp).connect(panner);
+    // Aks-sado: ikki tap, uzoqlashgan sari kechroq va nisbatan kuchliroq
+    const echoNodes: AudioNode[] = [];
+    const taps: [number, number, number][] = [
+      [0.09 + 0.22 * k, 0.22 + 0.25 * k, 900 - 450 * k],
+      [0.26 + 0.5 * k, 0.1 + 0.16 * k, 600 - 250 * k],
+    ];
+    for (const [delay, g, cutoff] of taps) {
+      const dl = c.createDelay(1.2);
+      dl.delayTime.value = delay;
+      const f = c.createBiquadFilter();
+      f.type = 'lowpass';
+      f.frequency.value = cutoff;
+      const eg = c.createGain();
+      eg.gain.value = g;
+      lp.connect(dl).connect(f).connect(eg).connect(panner);
+      echoNodes.push(dl, f, eg);
+    }
+    // Tugunlarni ovoz tugagach bo'shatamiz (delay tuguni o'z-o'zidan yig'ilmaydi)
+    window.setTimeout(() => {
+      for (const n of [entry, lp, ...echoNodes, panner]) {
+        try {
+          n.disconnect();
+        } catch {
+          /* e'tibor bermaymiz */
+        }
+      }
+    }, 3200);
+    return { d: entry, dist, k };
+  }
+
   gunshot(w: WeaponId, pos?: P3): void {
-    const d = this.dest(pos);
-    if (!d) return;
+    const chain = this.shotDest(pos);
+    if (!chain) return;
+    const { d, k } = chain;
     const t = this.ctx!.currentTime;
+    if (k > 0) {
+      // Uzoqdagi otishmaning past chastotali gumburlashi
+      this.noise(d, t + 0.01, 0.35 + 0.6 * k, 'lowpass', 420, 70, 0.7, 0.12 + 0.3 * k, 0.02);
+    }
     switch (w) {
       case 'pistol':
         this.noise(d, t, 0.13, 'bandpass', 2400, 700, 0.9, 0.9);
@@ -175,13 +414,60 @@ export class AudioSys {
     this.click(d, this.ctx!.currentTime, 2600, 0.3);
   }
 
-  footstep(pos?: P3, vol = 0.25): void {
+  /** Qadam tovushi yuzaga qarab: maysa (yumshoq), shag'al (g'ichirlash), tuproq, yog'och (taqillash), tosh, metall. */
+  footstep(pos?: P3, vol = 0.25, surface: SurfaceKind = 'grass'): void {
     const d = this.dest(pos);
     if (!d) return;
     const t = this.ctx!.currentTime;
-    const f = 500 + Math.random() * 400;
-    this.noise(d, t, 0.08, 'lowpass', f, f * 0.5, 1.2, vol, 0.003);
-    this.tone(d, t, 'sine', 90, 60, 0.05, vol * 0.5);
+    const r = Math.random();
+    switch (surface) {
+      case 'gravel': {
+        // Shag'al: bir nechta mayda tosh g'ichirlashi + past "ezilish"
+        const n = 3 + Math.floor(r * 3);
+        for (let i = 0; i < n; i++) {
+          const f = 1600 + Math.random() * 2200;
+          this.noise(d, t + i * 0.012 + Math.random() * 0.01, 0.03, 'highpass', f, f * 0.7, 1.4, vol * 0.5, 0.002);
+        }
+        this.noise(d, t, 0.09, 'lowpass', 700 + r * 300, 250, 1.0, vol * 0.8, 0.003);
+        break;
+      }
+      case 'dirt': {
+        const f = 650 + r * 350;
+        this.noise(d, t, 0.085, 'lowpass', f, f * 0.4, 1.1, vol, 0.003);
+        this.noise(d, t + 0.01, 0.035, 'bandpass', 1500 + r * 800, 1200, 1.2, vol * 0.25, 0.002);
+        this.tone(d, t, 'sine', 85, 55, 0.05, vol * 0.45);
+        break;
+      }
+      case 'wood': {
+        // Yog'och pol: quruq "tak" — qisqa rezonansli zarba va ichi bo'sh taxta ohangi
+        const f = 170 + r * 80;
+        this.tone(d, t, 'sine', f, f * 0.6, 0.075, vol * 1.1);
+        this.tone(d, t, 'triangle', f * 2.1, f * 1.3, 0.045, vol * 0.35);
+        this.noise(d, t, 0.045, 'bandpass', 900 + r * 500, 500, 3.0, vol * 0.7, 0.002);
+        break;
+      }
+      case 'stone': {
+        const f = 1800 + r * 1200;
+        this.noise(d, t, 0.05, 'highpass', f, f * 0.6, 1.0, vol * 0.75, 0.002);
+        this.tone(d, t, 'sine', 320 + r * 120, 240, 0.045, vol * 0.4);
+        break;
+      }
+      case 'metal': {
+        this.noise(d, t, 0.04, 'highpass', 2600, 1800, 1.2, vol * 0.6, 0.002);
+        this.tone(d, t, 'triangle', 2200 + r * 600, 1900, 0.14, vol * 0.35);
+        this.tone(d, t, 'sine', 140, 90, 0.06, vol * 0.5);
+        break;
+      }
+      case 'grass':
+      default: {
+        // Maysa: yumshoq, bo'g'iq zarba + ingichka shitirlash
+        const f = 380 + r * 260;
+        this.noise(d, t, 0.09, 'lowpass', f, f * 0.45, 1.2, vol * 0.85, 0.004);
+        this.noise(d, t + 0.005, 0.07, 'bandpass', 2300 + r * 900, 1600, 0.9, vol * 0.22, 0.004);
+        this.tone(d, t, 'sine', 80, 55, 0.05, vol * 0.4);
+        break;
+      }
+    }
   }
 
   land(vol = 0.4): void {

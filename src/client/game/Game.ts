@@ -32,6 +32,7 @@ import { Effects } from './Effects';
 import { buildGrenadeModel } from './GunModels';
 import { esc, Hud, weaponBadgeHtml } from './Hud';
 import { MiniMap, type MiniMapMarker } from './MiniMap';
+import { detectSurface } from './surface';
 import { Input } from './Input';
 import { LocalPlayer } from './LocalPlayer';
 import {
@@ -514,6 +515,8 @@ export class Game {
       this.updatePauseMenu();
     };
     this.audio.setVolume(settings.volume);
+    // Ambient fon: o'rmon xaritalarida shamol + barglar + qushlar, arenada faqat shamol
+    this.audio.startAmbient(this.worldDef.terrain.kind === 'heightfield' ? 'forest' : 'arena');
 
     this.hud.reset();
     this.hud.show(true);
@@ -1912,7 +1915,8 @@ export class Game {
           // Sprintda qadamlar tezroq va balandroq, yurishda sekinroq va yumshoqroq
           const sprinting = me.speedH() > WALK_SPEED + 0.6;
           this.stepTimer = sprinting ? 0.30 : 0.44;
-          this.audio.footstep(undefined, sprinting ? 0.18 : 0.11);
+          const surf = detectSurface(this.worldDef, me.body.pos.x, me.body.pos.y, me.body.pos.z);
+          this.audio.footstep(undefined, sprinting ? 0.18 : 0.11, surf);
         }
       } else {
         this.stepTimer = 0.12;
@@ -2281,7 +2285,8 @@ export class Game {
         if (rem.stepTimer <= 0) {
           const sprinting = rem.speed > WALK_SPEED + 0.6;
           rem.stepTimer = sprinting ? 0.30 : 0.44;
-          this.audio.footstep({ x: rem.pos.x, y: rem.pos.y, z: rem.pos.z }, sprinting ? 0.6 : 0.38);
+          const surf = detectSurface(this.worldDef, rem.pos.x, rem.pos.y, rem.pos.z);
+          this.audio.footstep({ x: rem.pos.x, y: rem.pos.y, z: rem.pos.z }, sprinting ? 0.6 : 0.38, surf);
         }
       }
     }
@@ -2644,6 +2649,7 @@ export class Game {
     this.collisionDebug?.dispose();
     this.collisionDebug = null;
     this.survivalUi.dispose();
+    this.audio.stopAmbient();
     this.miniMap?.dispose();
     this.miniMap = null;
     this.lootUi.dispose();
