@@ -83,6 +83,29 @@ export interface PlayerSnap {
   role?: SurvivalPlayerRole;
   survivalRole?: SurvivalPlayerRole;
   spectateTargetId?: string | null;
+  /** Modelda ko'rinadigan jihozlar (kaska, nimcha, granata/aptechka soni) — `packGearState` bit maydoni. */
+  gear?: number;
+}
+
+export interface GearVisualState {
+  helmet: boolean;
+  armor: boolean;
+  /** 0..3 */
+  grenades: number;
+  /** 0..3 */
+  medkits: number;
+}
+
+/** Jihoz holatini 6 bitga joylaydi: bit0 kaska, bit1 nimcha, bit2-3 granata (0..3), bit4-5 aptechka (0..3). */
+export function packGearState(g: GearVisualState): number {
+  const gr = Math.max(0, Math.min(3, Math.round(g.grenades)));
+  const md = Math.max(0, Math.min(3, Math.round(g.medkits)));
+  return (g.helmet ? 1 : 0) | (g.armor ? 2 : 0) | (gr << 2) | (md << 4);
+}
+
+export function unpackGearState(v: number | undefined): GearVisualState {
+  const n = v ?? 0;
+  return { helmet: (n & 1) !== 0, armor: (n & 2) !== 0, grenades: (n >> 2) & 3, medkits: (n >> 4) & 3 };
 }
 
 export interface GrenadeSnap {

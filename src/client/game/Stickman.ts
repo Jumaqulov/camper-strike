@@ -12,6 +12,7 @@ import {
   preloadCharacterAssets,
   type CamperBuddyInstance,
 } from './character/CharacterAssetRegistry';
+import { CharacterGearRig, type CharacterGearState } from './character/CharacterGear';
 import { applyTeamColor } from './character/CharacterMaterials';
 import { CharacterWeaponMount } from './character/CharacterWeaponMount';
 
@@ -228,6 +229,8 @@ export class Stickman {
   private ownedGeometries: THREE.BufferGeometry[] = [];
   private teamHex: string;
   private buddy: BuddyRig | null = null;
+  /** Kaska / nimcha / granata / aptechka osmalari (bosh, ko'krak, kamar). */
+  private readonly gear = new CharacterGearRig();
   private unsubCharacterReady: (() => void) | null = null;
   private disposed = false;
   private buddyReloadTilt = 0;
@@ -467,6 +470,8 @@ export class Stickman {
     this.flash.visible = false;
 
     this.mergeStaticBoneMeshes();
+    // Jihoz osmalari statik birlashtirishdan keyin ulanadi (dinamik, alohida mesh'lar)
+    this.gear.attach('procedural', this.headGroup, this.chest, this.hips);
     this.setArchetype(Stickman.spawnCounter++ % 6);
 
     // 08B: Camper Buddy GLB replaces the procedural body once loaded; until then (or on failure) the
@@ -494,6 +499,12 @@ export class Stickman {
     this.buddy = { inst, pivot, anim, mount, head: inst.bones.get('Head') ?? null };
     applyTeamColor(inst, this.teamHex);
     this.body.visible = false;
+    this.gear.attach(
+      'buddy',
+      inst.bones.get('Head') ?? null,
+      inst.bones.get('Chest') ?? inst.bones.get('Spine') ?? null,
+      inst.bones.get('Hips') ?? null,
+    );
     // Re-mount the current weapon into the hand socket.
     const w = this.weapon;
     this.weapon = null;
@@ -1000,7 +1011,13 @@ export class Stickman {
     return this.ejectPort.getWorldPosition(out);
   }
 
+  /** Modelda ko'rinadigan jihozlar: kaska, zirh nimcha, kamardagi granatalar va aptechkalar. */
+  setGear(g: CharacterGearState): void {
+    this.gear.setState(g);
+  }
+
   update(dt: number, s: StickmanState): void {
+    this.gear.update();
     this.idleT += dt;
     this.propeller.rotation.y += dt * (4 + s.speed * 2.5);
     if (this.flashT > 0) {
@@ -1302,6 +1319,7 @@ export class Stickman {
 
   dispose(): void {
     this.disposed = true;
+    this.gear.dispose();
     this.unsubCharacterReady?.();
     this.unsubCharacterReady = null;
     if (this.buddy) {

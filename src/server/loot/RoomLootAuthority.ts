@@ -360,6 +360,11 @@ export class RoomLootAuthority {
     return inv.ownedWeapons.has(weapon);
   }
 
+  /** Arzon o'qish (har snapshotda chaqiriladi): o'yinchidagi aptechkalar soni. */
+  getMedkitCount(playerId: string): number {
+    return this.inventories.get(playerId)?.medkits ?? 0;
+  }
+
   getPlayerInventorySnap(playerId: string): PlayerInventorySnap | null {
     const inv = this.inventories.get(playerId);
     if (!inv) return null;

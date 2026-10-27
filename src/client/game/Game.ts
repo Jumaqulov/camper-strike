@@ -17,6 +17,7 @@ import type {
   PlayerInventorySnap, PlayerSnap, PublicContainerState, PublicLootItem, RosterEntry, RoomLootSnapshot, ShootMsg, ShotEvent,
   Snapshot, SpawnEvent, UseMedkitAck, UseMedkitReq, WelcomeMsg,
 } from '../../shared/protocol';
+import { unpackGearState } from '../../shared/protocol';
 import { WEAPONS, WEAPON_SLOTS, type WeaponId } from '../../shared/weapons';
 import {
   createTechnicalTerrainFixture,
@@ -35,6 +36,7 @@ import { esc, Hud, weaponBadgeHtml } from './Hud';
 import { MiniMap, type MiniMapMarker } from './MiniMap';
 import { ZoneWall } from './survival/ZoneWall';
 import { createLootPrewarmGroup } from './loot/LootWorldRenderer';
+import { createGearPrewarmGroup } from './character/CharacterGear';
 import { interpolateSurvivalZone, isOutsideSurvivalZone, type SurvivalZoneSnap } from '../../shared/survival';
 import { detectSurface } from './surface';
 import { Input } from './Input';
@@ -1848,6 +1850,9 @@ export class Game {
       const g = new THREE.Group();
       g.name = 'prewarm';
       if (this.lootPreview) g.add(createLootPrewarmGroup());
+      const gear = createGearPrewarmGroup();
+      gear.position.set(0, 0, 4);
+      g.add(gear);
       let k = 0;
       for (const w of WEAPON_SLOTS) {
         for (const variant of ['3p', '1p'] as const) {
@@ -2376,6 +2381,7 @@ export class Game {
       m.root.position.copy(rem.pos);
       m.root.rotation.y = rem.yaw;
       m.setWeapon(src.weapon);
+      m.setGear(unpackGearState(src.gear));
       m.update(dt, { speed: rem.speed, onGround: src.onGround, pitch: rem.pitch, alive: src.alive, reloading: src.reloading });
       m.updateNameTagDistance(distToCam, src.alive);
       if (src.alive && src.onGround && rem.speed > 1.0) {
@@ -2467,6 +2473,7 @@ export class Game {
     this.myModel.root.position.set(renderPos.x, renderPos.y, renderPos.z);
     this.myModel.root.rotation.y = me.yaw;
     this.myModel.setWeapon(me.weapon);
+    this.myModel.setGear({ helmet: me.helmet > 0, armor: me.armor > 0, grenades: me.grenades, medkits: me.medkits });
     this.myModel.update(dt, {
       speed: me.speedH(),
       onGround: me.body.onGround,

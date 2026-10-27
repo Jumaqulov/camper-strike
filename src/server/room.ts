@@ -19,6 +19,7 @@ import type {
   RoomInfo, RoomLootSnapshot, RosterEntry, ShootMsg, ShotEvent, Snapshot, SpawnEvent,
   SurvivalConfig, SurvivalPhase, SurvivalStateSnap, UseMedkitAck, UseMedkitReq, WelcomeMsg,
 } from '../shared/protocol';
+import { packGearState } from '../shared/protocol';
 import {
   ARMOR_DAMAGE_ABSORB,
   HELMET_HEADSHOT_ABSORB,
@@ -1599,6 +1600,12 @@ export class Room {
         lastProcessedInputSeq: p.isBot ? 0 : p.authority.lastProcessedSeq,
         stamina: r3(p.stamina),
         staminaLocked: p.staminaLocked,
+        gear: packGearState({
+          helmet: p.helmet > 0,
+          armor: p.armor > 0,
+          grenades: p.grenades,
+          medkits: this.loot.getMedkitCount(p.id),
+        }),
       };
       if (this.isSurvival && this.survival) {
         snapP.survivalRole = this.survival.getPlayerRole(p.id);
