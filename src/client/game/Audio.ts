@@ -109,57 +109,6 @@ export class AudioSys {
       timers.push(id);
     };
 
-    let leafGain: GainNode | null = null;
-    if (forest) {
-      const leaves = c.createBufferSource();
-      leaves.buffer = this.noiseBuf;
-      leaves.loop = true;
-      const leafHp = c.createBiquadFilter();
-      leafHp.type = 'highpass';
-      leafHp.frequency.value = 2400;
-      leafHp.Q.value = 0.5;
-      const leafBp = c.createBiquadFilter();
-      leafBp.type = 'bandpass';
-      leafBp.frequency.value = 3800;
-      leafBp.Q.value = 0.6;
-      leafGain = c.createGain();
-      leafGain.gain.value = 0.006;
-      leaves.connect(leafHp).connect(leafBp).connect(leafGain).connect(gain);
-      leaves.start(0, Math.random() * 1.5);
-      nodes.push(leaves, leafHp, leafBp, leafGain);
-    }
-
-    // Gust envelope: tasodifiy kuch (0.25..1), hujum 0.8–2.5 s, ushlab turish 0.4–2 s, so'nish 2–5 s
-    const gust = () => {
-      const now = c.currentTime;
-      const s = 0.25 + Math.random() * 0.75;
-      const attack = 0.8 + Math.random() * 1.7;
-      const hold = 0.4 + Math.random() * 1.6;
-      const release = 2 + Math.random() * 3;
-      const peakAt = now + attack;
-      const endAt = peakAt + hold;
-      const doneAt = endAt + release;
-      if (leafGain) {
-        const lg = leafGain.gain;
-        const lag = 0.4;
-        lg.cancelScheduledValues(now);
-        lg.setValueAtTime(Math.max(0.0001, lg.value), now + lag);
-        lg.linearRampToValueAtTime(0.006 + 0.034 * s, peakAt + lag);
-        lg.setValueAtTime(0.006 + 0.034 * s, endAt + lag);
-        lg.setTargetAtTime(0.006, endAt + lag, release / 3);
-      }
-      return (doneAt - now) * 1000;
-    };
-    const gustLoop = () => {
-      const dur = gust();
-      const id = window.setTimeout(() => {
-        if (this.ambient?.timers !== timers) return;
-        gustLoop();
-      }, dur * (0.55 + Math.random() * 0.5) + 1500 + Math.random() * 5000);
-      timers.push(id);
-    };
-    gustLoop();
-
     if (forest) {
       // 3. Qushlar: tasodifiy joydan, tasodifiy oraliqda chirqillash; vaqti-vaqti bilan uzoqdan qizilishton
       schedule(() => this.birdChirp(gain), 1500, 6500);

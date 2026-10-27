@@ -515,7 +515,7 @@ export class Game {
       this.updatePauseMenu();
     };
     this.audio.setVolume(settings.volume);
-    // Ambient fon: o'rmon xaritalarida qushlar + yengil barg shitirlashi (shamol ovozi foydalanuvchi so'rovi bilan olib tashlangan)
+    // Ambient fon: o'rmon xaritalarida faqat qushlar (shamol va barg shovqini foydalanuvchi so'rovi bilan olib tashlangan)
     this.audio.startAmbient(this.worldDef.terrain.kind === 'heightfield' ? 'forest' : 'arena');
 
     this.hud.reset();
