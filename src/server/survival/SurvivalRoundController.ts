@@ -97,6 +97,9 @@ export class SurvivalRoundController {
         this.phaseEndsAt = now + this.config.endedDisplayDurationSec;
       }
     }
+    if (partial.zoneEnabled !== undefined) {
+      this.config.zoneEnabled = Boolean(partial.zoneEnabled);
+    }
   }
 
   getRoundId(): number {

@@ -68,6 +68,8 @@ export class BotBrain {
   private reactDamageAt = 0;
   private grenadeCheckAt = 0;
   private walkMode = false;
+  /** Survival: zona markazi (zonadan tashqarida zarar olganda o'rnatiladi). */
+  private zoneGoal: Vec3 | null = null;
 
   constructor(private room: Room, private me: ServerPlayer) {}
 
@@ -81,6 +83,12 @@ export class BotBrain {
     this.pendingAttacker = null;
     this.aimHeight = 0.85 + Math.random() * 0.25;
     this.burstLeft = 3 + Math.floor(Math.random() * 3);
+  }
+
+  /** Xavfsiz zonadan tashqarida zarar oldi — zona markazi tomon yo'l oladi (survival). */
+  onZoneDamaged(cx: number, cz: number): void {
+    this.zoneGoal = { x: cx, y: this.me.pos.y, z: cz };
+    this.repathAt = 0;
   }
 
   onDamaged(attacker: ServerPlayer): void {

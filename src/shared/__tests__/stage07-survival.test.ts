@@ -132,6 +132,7 @@ function armPlayerFromContainer(
   room: Room,
   playerId: string,
   reqPrefix: string,
+  preferWeapon?: WeaponId,
 ): { containerId: string; weaponId: WeaponId; weaponItemId: string; ammoItemId: string } {
   const p = room.players.get(playerId)!;
   assert.ok(p, `Player ${playerId} must exist`);
@@ -144,7 +145,7 @@ function armPlayerFromContainer(
   for (const cntId of room.loot.getAuthoritativeContainerIds()) {
     const raw = room.loot.getRawContainerForServerTest(cntId)!;
     for (const item of raw.items.values()) {
-      if (item.kind === 'weapon' && item.weaponId) {
+      if (item.kind === 'weapon' && item.weaponId && (!preferWeapon || item.weaponId === preferWeapon)) {
         const matchingAmmo = [...raw.items.values()].find(
           (it) => it.kind === 'ammo' && it.ammoWeapon === item.weaponId,
         );
@@ -1329,6 +1330,7 @@ describe('STAGE 07 — Forest Survival Mode, Round Lifecycle, Elimination, Spect
         countdownDurationSec: 2,
         roundDurationSec: 15,
         endedDisplayDurationSec: 5,
+        zoneEnabled: false, // vaqt tugashi bo'yicha durang sinovi — zona o'limlari aralashmasin
       });
 
       const sock1 = createFakeSocket('p1');
@@ -1404,6 +1406,7 @@ describe('STAGE 07 — Forest Survival Mode, Round Lifecycle, Elimination, Spect
         countdownDurationSec: 2,
         roundDurationSec: 30,
         endedDisplayDurationSec: 3,
+        zoneEnabled: false, // ko'p raundli reset sinovi — zona o'limlari aralashmasin
       });
 
       const sock1 = createFakeSocket('p1');
@@ -1790,9 +1793,11 @@ describe('STAGE 07 — Forest Survival Mode, Round Lifecycle, Elimination, Spect
       room.advanceTimeForTest(2.5, 0.25);
       assert.equal(room.phase, 'playing');
 
-      armPlayerFromContainer(room, 'p1', 'arm_p1');
+      // Bir o'qli qurol (avtomat): server tomonida sochma pelletlar tasodifiy zonalarga tegib, hisobni buzmasin
+      armPlayerFromContainer(room, 'p1', 'arm_p1', 'rifle');
       const shooter = room.players.get('p1')!;
       const tank = room.players.get('p2')!;
+      assert.equal(shooter.weapon, 'rifle');
 
       // Berilgan turdagi jihozni (nimcha/kaska) biror konteynerdan olishga urinadi va ack qaytaradi
       const usedContainers = new Set<string>();

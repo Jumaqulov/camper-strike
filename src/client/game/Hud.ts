@@ -125,7 +125,11 @@ const HEADSHOT_SVG = `<svg class="hs-svg" viewBox="0 0 24 24" fill="none" xmlns=
   <circle cx="12" cy="12" r="3" fill="#ffd15c"/>
 </svg>`;
 
-export function weaponIconHtml(w: WeaponId | 'grenade'): string {
+/** Xavfsiz zona (survival) belgisi — killfeed va o'lim ekrani uchun. */
+export const ZONE_SVG = `<svg class="w-svg w-svg-zone" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="11" stroke="#7dd3fc" stroke-width="2.4" stroke-dasharray="4 3"/><circle cx="16" cy="16" r="4" fill="#7dd3fc"/></svg>`;
+
+export function weaponIconHtml(w: WeaponId | 'grenade' | 'zone'): string {
+  if (w === 'zone') return ZONE_SVG;
   const icons3d = getWeaponIcons3D();
   const src = icons3d[w];
   if (src) {
@@ -134,7 +138,7 @@ export function weaponIconHtml(w: WeaponId | 'grenade'): string {
   return WEAPON_SVG[w];
 }
 
-export function weaponBadgeHtml(w: WeaponId | 'grenade', headshot = false): string {
+export function weaponBadgeHtml(w: WeaponId | 'grenade' | 'zone', headshot = false): string {
   return `<span class="kf-weapon">${weaponIconHtml(w)}${
     headshot ? `<span class="kf-hs">${HEADSHOT_SVG}</span>` : ''
   }</span>`;
@@ -163,6 +167,18 @@ export class Hud {
     $('hp-value').textContent = String(Math.max(0, Math.round(hp)));
     const fill = $('hp-fill');
     fill.style.width = `${Math.max(0, hp)}%`;
+  }
+
+  private lastZoneKey = '';
+  /** Xavfsiz zonadan tashqarida ogohlantirish (survival): matn + qizil pulsatsiya. */
+  setZoneWarning(outside: boolean, dps: number): void {
+    const key = outside ? `1|${dps}` : '0';
+    if (key === this.lastZoneKey) return;
+    this.lastZoneKey = key;
+    const el = $('zone-warn');
+    el.classList.toggle('hidden', !outside);
+    $('hud').classList.toggle('zone-outside', outside);
+    if (outside) el.textContent = `XAVFSIZ ZONADAN TASHQARIDASIZ · −${dps}/s · zonaga qayting`;
   }
 
   private lastGearKey = '';

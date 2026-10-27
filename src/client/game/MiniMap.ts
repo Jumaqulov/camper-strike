@@ -10,6 +10,17 @@ import type { WorldDefinition } from '../../shared/world';
  * - [N] bilan butun xarita (shimol yuqorida) rejimi.
  * - Raqiblar hech qachon ko'rsatilmaydi; TDM'da faqat jamoadoshlar.
  */
+/** Xavfsiz zona (survival): joriy va maqsad aylana. */
+export interface MiniMapZone {
+  cx: number;
+  cz: number;
+  radius: number;
+  targetCx: number;
+  targetCz: number;
+  targetRadius: number;
+  shrinking: boolean;
+}
+
 export interface MiniMapMarker {
   x: number;
   z: number;
@@ -178,7 +189,7 @@ export class MiniMap {
    * @param me o'yinchi (yoki kuzatuvchi kamerasi) pozitsiyasi va yaw (radian, 0 = -Z)
    * @param allies ko'rsatiladigan jamoadoshlar (raqiblar hech qachon berilmaydi)
    */
-  update(me: { x: number; z: number; yaw: number }, allies: readonly MiniMapMarker[]): void {
+  update(me: { x: number; z: number; yaw: number }, allies: readonly MiniMapMarker[], zone: MiniMapZone | null = null): void {
     const ctx = this.ctx;
     const size = this.cssSize;
     const half = size / 2;
@@ -232,6 +243,34 @@ export class MiniMap {
       const sn = Math.sin(rot);
       return [half + dx * c - dz * sn, half + dx * sn + dz * c];
     };
+
+    // Xavfsiz zona: joriy aylana (och ko'k) va maqsad aylana (oq, chiziqli). Aylana burilishga bog'liq emas.
+    if (zone) {
+      const [zx, zz] = toScreen(zone.cx, zone.cz);
+      ctx.save();
+      // Zonadan tashqari qismni qizg'ish qoplama bilan belgilaymiz
+      ctx.beginPath();
+      ctx.rect(0, 0, size, size);
+      ctx.arc(zx, zz, Math.max(0.1, zone.radius * k), 0, Math.PI * 2, true);
+      ctx.fillStyle = 'rgba(220, 60, 40, 0.22)';
+      ctx.fill();
+      ctx.restore();
+      ctx.lineWidth = whole ? 2 : 2.5;
+      ctx.strokeStyle = zone.shrinking ? 'rgba(255, 183, 77, 0.95)' : 'rgba(125, 211, 252, 0.95)';
+      ctx.beginPath();
+      ctx.arc(zx, zz, Math.max(0.1, zone.radius * k), 0, Math.PI * 2);
+      ctx.stroke();
+      if (Math.abs(zone.targetRadius - zone.radius) > 0.5 || Math.hypot(zone.targetCx - zone.cx, zone.targetCz - zone.cz) > 0.5) {
+        const [tx, tz] = toScreen(zone.targetCx, zone.targetCz);
+        ctx.setLineDash([5, 4]);
+        ctx.lineWidth = 1.6;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.beginPath();
+        ctx.arc(tx, tz, Math.max(0.1, zone.targetRadius * k), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
 
     // POI nomlari
     ctx.font = `700 ${whole ? 12 : 10}px Bahnschrift, "Segoe UI", sans-serif`;

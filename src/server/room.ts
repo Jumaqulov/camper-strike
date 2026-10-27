@@ -43,6 +43,14 @@ import { RoomLootAuthority, type LootAuthorityStats } from './loot';
 import { PlayerMovementAuthority, type MovementAuthorityStats } from './movementAuthority';
 import { getNav, type NavGraph } from './navgraph';
 import { SurvivalRoundController } from './survival';
+import {
+  ZONE_DAMAGE_INTERVAL_SEC,
+  buildSurvivalZoneTimeline,
+  evaluateSurvivalZone,
+  isOutsideSurvivalZone,
+  type SurvivalZoneSnap,
+  type SurvivalZoneTimeline,
+} from '../shared/survival';
 
 export interface ServerPlayer extends Body {
   id: string;
@@ -123,6 +131,10 @@ export class Room {
   private rosterDirty = true;
   private nextRosterAt = 0;
   private nextMatchAt = 0;
+  /** Forest Survival xavfsiz zona jadvali (raund boshida quriladi) va raund boshlangan vaqt. */
+  private zoneTimeline: SurvivalZoneTimeline | null = null;
+  private roundStartedAt = 0;
+  private nextZoneDamageAt = 0;
   private chatHistory: ChatMsg[] = [];
   /** Xonadan chiqib ketgan, lekin hali portlamagan granatasi bor o'yinchilar (granata zarar berishi uchun). */
   private departed = new Map<string, ServerPlayer>();
@@ -170,6 +182,7 @@ export class Room {
           countdownDurationSec: opts.countdownSec ?? 10,
           roundDurationSec: Math.max(5, (opts.timeLimit || 3) * 60),
           endedDisplayDurationSec: MATCH_END_DURATION,
+          zoneEnabled: true,
         },
       );
     } else {
@@ -1109,7 +1122,7 @@ export class Room {
     if (target.hp <= 0) this.kill(target, attacker, weapon, headshot);
   }
 
-  private kill(victim: ServerPlayer, killer: ServerPlayer, weapon: WeaponId | 'grenade', headshot: boolean) {
+  private kill(victim: ServerPlayer, killer: ServerPlayer, weapon: WeaponId | 'grenade' | 'zone', headshot: boolean) {
     victim.alive = false;
     victim.hp = 0;
     victim.scoped = false;
@@ -1135,7 +1148,7 @@ export class Room {
     if (killer !== victim) {
       killer.kills++;
       if (this.opts.mode === 'tdm' && (killer.team === 'red' || killer.team === 'blue')) this.scores[killer.team]++;
-    } else {
+    } else if (weapon !== 'zone') {
       killer.kills = Math.max(0, killer.kills - 1);
     }
     const ev: KillEvent = {
@@ -1151,6 +1164,40 @@ export class Room {
     if (!this.deferWinCheck) {
       this.checkWin();
     }
+  }
+
+  /** Joriy xavfsiz zona holati (faqat survival 'playing' fazasida), aks holda null. */
+  getZoneSnap(t: number = this.now()): SurvivalZoneSnap | null {
+    if (!this.isSurvival || !this.zoneTimeline || this.phase !== 'playing') return null;
+    return evaluateSurvivalZone(this.zoneTimeline, t - this.roundStartedAt);
+  }
+
+  /** Zonadan tashqaridagi tirik ishtirokchilarga davriy zarar (zirh yutmaydi, spawn himoyasi ta'sir qilmaydi). */
+  private applyZoneDamage(t: number): void {
+    if (!this.survival || !this.zoneTimeline || t < this.nextZoneDamageAt) return;
+    // Kechikishdan keyin bir necha oraliq o'tib ketgan bo'lsa ham bitta porsiya qo'llanadi
+    this.nextZoneDamageAt = Math.max(this.nextZoneDamageAt + ZONE_DAMAGE_INTERVAL_SEC, t + ZONE_DAMAGE_INTERVAL_SEC * 0.5);
+    const zone = evaluateSurvivalZone(this.zoneTimeline, t - this.roundStartedAt);
+    const amount = Math.max(1, Math.round(zone.dps * ZONE_DAMAGE_INTERVAL_SEC));
+    const prevDefer = this.deferWinCheck;
+    this.deferWinCheck = true;
+    for (const p of this.players.values()) {
+      if (!p.alive || !this.survival.isAliveContender(p.id)) continue;
+      if (!isOutsideSurvivalZone(zone, p.pos.x, p.pos.z)) continue;
+      if (this.phase !== 'playing') break;
+      p.hp -= amount;
+      const hurt: HurtEvent = {
+        attacker: '',
+        damage: amount,
+        from: { x: zone.cx, y: p.pos.y, z: zone.cz },
+        headshot: false,
+      };
+      p.socket?.emit('hurt', hurt);
+      p.brain?.onZoneDamaged?.(zone.cx, zone.cz);
+      if (p.hp <= 0) this.kill(p, p, 'zone', false);
+    }
+    this.deferWinCheck = prevDefer;
+    if (!this.deferWinCheck) this.checkWin();
   }
 
   private updateGrenades(dt: number, t: number) {
@@ -1224,6 +1271,15 @@ export class Room {
     this.phaseEndsAt = 0;
     const roundLootSeed = ((this.secretLootSeed + roundId * 104729) >>> 0) || 1;
     this.loot.resetForRound(roundId, roundLootSeed);
+    // Xavfsiz zona: raundga xos deterministik jadval (klient faqat snapshot oladi)
+    const b = this.world.bounds;
+    const zoneSeed = ((this.secretLootSeed ^ 0x5a17) + roundId * 7919) >>> 0 || 1;
+    const survCfg = this.survival.getConfig();
+    this.zoneTimeline = survCfg.zoneEnabled
+      ? buildSurvivalZoneTimeline(zoneSeed, survCfg.roundDurationSec, Math.max(b.maxX - b.minX, b.maxZ - b.minZ) / 2)
+      : null;
+    this.roundStartedAt = this.now();
+    this.nextZoneDamageAt = this.roundStartedAt + ZONE_DAMAGE_INTERVAL_SEC;
 
     const contenderSet = new Set(contenderIds);
     for (const p of this.players.values()) {
@@ -1403,6 +1459,7 @@ export class Room {
       }
       if (this.survival.getPhase() === 'playing') {
         this.updateGrenades(dt, t);
+        this.applyZoneDamage(t);
       }
       const prevPhase = this.survival.getPhase();
       this.survival.tick(t);
@@ -1513,7 +1570,7 @@ export class Room {
         minPlayers: surv.minPlayers,
         winnerId: surv.winnerId,
         winReason: surv.winReason,
-        survival: surv,
+        survival: { ...surv, zone: this.getZoneSnap(t) },
       };
       this.io.to(this.channel).emit('match', m);
       return;

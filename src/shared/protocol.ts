@@ -174,7 +174,8 @@ export interface KillEvent {
   victim: string;
   victimName: string;
   victimTeam: Team;
-  weapon: WeaponId | 'grenade';
+  /** 'zone' — xavfsiz zonadan tashqarida qolib halok bo'ldi (qotil = qurbon). */
+  weapon: WeaponId | 'grenade' | 'zone';
   headshot: boolean;
 }
 

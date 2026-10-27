@@ -1,6 +1,7 @@
 import {
   SURVIVAL_PHASE_LABELS_UZ,
   SURVIVAL_WIN_REASON_LABELS_UZ,
+  formatZoneStatusUz,
   type SurvivalPhase,
   type SurvivalPlayerRole,
   type SurvivalPlayerStatusSnap,
@@ -156,6 +157,22 @@ function injectSurvivalUIStyles(): void {
     .s07-pill-phase.phase-ended {
       background: rgba(234, 179, 8, 0.28);
       color: #fde047;
+    }
+
+    .s07-pill-zone {
+      color: #7dd3fc;
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+    }
+
+    .s07-pill-zone.shrinking {
+      color: #ffb74d;
+      animation: s07-zone-pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes s07-zone-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
     }
 
     .s07-pill-count {
@@ -557,6 +574,7 @@ export class SurvivalUI {
         ${timeHtml}
         <span class="s07-pill-phase phase-${esc(snap.phase)}">${esc(phaseLabel)}</span>
         <span class="s07-pill-count">${esc(countLabel)}</span>
+        ${snap.phase === 'playing' && snap.zone ? `<span class="s07-pill-zone${snap.zone.shrinking ? ' shrinking' : ''}">${esc(formatZoneStatusUz(snap.zone))}</span>` : ''}
       `;
     }
 

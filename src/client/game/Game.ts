@@ -33,6 +33,8 @@ import { Effects } from './Effects';
 import { buildGrenadeModel } from './GunModels';
 import { esc, Hud, weaponBadgeHtml } from './Hud';
 import { MiniMap, type MiniMapMarker } from './MiniMap';
+import { ZoneWall } from './survival/ZoneWall';
+import { interpolateSurvivalZone, isOutsideSurvivalZone, type SurvivalZoneSnap } from '../../shared/survival';
 import { detectSurface } from './surface';
 import { Input } from './Input';
 import { LocalPlayer } from './LocalPlayer';
@@ -361,6 +363,10 @@ export class Game {
   private lastLocalSwitchAt = -99;
   private maxDpr = 2;
   private miniMap: MiniMap | null = null;
+  /** Survival xavfsiz zona: oxirgi server snapshoti, uning kelgan vaqti va dunyo devori. */
+  private zoneSnap: SurvivalZoneSnap | null = null;
+  private zoneSnapAt = 0;
+  private zoneWall: ZoneWall | null = null;
   /** Avtomatik sifat nazorati (kuchsiz GPU): kadr vaqti yig'indisi va ketma-ket "yomon" soniyalar. */
   private perfAccumMs = 0;
   private perfFrames = 0;
@@ -1466,6 +1472,11 @@ export class Game {
 
   private onMatch(m: MatchState) {
     this.match = m;
+    const zone = m.phase === 'playing' ? m.survival?.zone ?? null : null;
+    if (zone !== this.zoneSnap) {
+      this.zoneSnap = zone;
+      this.zoneSnapAt = performance.now() / 1000;
+    }
     // Raund/match tugaganda snayper pritseli ochiq qolmasin (handleWeapons bu fazada ishlamaydi)
     if (m.phase !== 'playing' && this.me.scoped) this.me.scoped = false;
     if (m.roundId !== undefined && m.roundId > this.me.roundId) {
@@ -1629,7 +1640,9 @@ export class Game {
         );
       }
       const html =
-        e.killer === e.victim
+        e.weapon === 'zone'
+          ? `Xavfsiz zonadan tashqarida qoldingiz ${weaponBadgeHtml('zone', false)}`
+          : e.killer === e.victim
           ? `O'z granatangizdan halok bo'ldingiz ${weaponBadgeHtml('grenade', false)}`
           : `<span class="t-${e.killerTeam}">${esc(e.killerName)}</span> ${weaponBadgeHtml(e.weapon, e.headshot)} orqali sizni yo'q qildi`;
       this.die(html);
@@ -2522,6 +2535,30 @@ export class Game {
     this.vm.update(dt, me.speedH(), me.body.onGround, this.input.mouseDX, this.input.mouseDY);
   }
 
+  /** Mini-xarita uchun joriy (interpolyatsiyalangan) va maqsad aylana. */
+  private currentZoneForMinimap(t: number) {
+    const z = this.zoneSnap!;
+    const cur = interpolateSurvivalZone(z, t - this.zoneSnapAt);
+    return { ...cur, targetCx: z.targetCx, targetCz: z.targetCz, targetRadius: z.targetRadius, shrinking: z.shrinking };
+  }
+
+  /** Zona devori, HUD ogohlantirishi (zonadan tashqarida) — har kadr. */
+  private updateZone(t: number) {
+    const z = this.zoneSnap;
+    if (!z) {
+      this.zoneWall?.update(null, 0, false, 0);
+      this.hud.setZoneWarning(false, 0);
+      return;
+    }
+    if (!this.zoneWall) this.zoneWall = new ZoneWall(this.scene);
+    const cur = interpolateSurvivalZone(z, t - this.zoneSnapAt);
+    const me = this.me;
+    const groundY = sampleTerrainHeight(this.worldDef.terrain, cur.cx, cur.cz);
+    this.zoneWall.update(cur, groundY, z.shrinking, 1 / 60);
+    const outside = me.alive && isOutsideSurvivalZone(cur, me.body.pos.x, me.body.pos.z);
+    this.hud.setZoneWarning(outside, z.dps);
+  }
+
   private updateHud(t: number) {
     const me = this.me;
     this.hud.setHealth(me.alive ? me.hp : 0);
@@ -2538,8 +2575,9 @@ export class Game {
           allies.push({ x: rem.pos.x, z: rem.pos.z, team: rem.team, alive: rem.alive });
         }
       }
-      this.miniMap.update(center, allies);
+      this.miniMap.update(center, allies, this.zoneSnap ? this.currentZoneForMinimap(t) : null);
     }
+    this.updateZone(t);
     if (me.weapon) {
       const a = me.ammo[me.weapon];
       this.hud.setAmmo(me.weapon, a.mag, a.reserve, !!me.reloadWeapon, me.grenades, this.lootPreview ? me.ownedWeapons : undefined);
@@ -2662,6 +2700,9 @@ export class Game {
     for (const [ev, fn] of this.netHandlers) this.socket.off(ev, fn);
     for (const [t, type, fn] of this.domHandlers) t.removeEventListener(type, fn);
     this.input.dispose();
+    this.zoneWall?.dispose();
+    this.zoneWall = null;
+    this.hud.setZoneWarning(false, 0);
     this.chatOpen = false;
     this.hud.setChatOpen(false);
     this.hud.reset();

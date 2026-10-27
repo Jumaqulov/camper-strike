@@ -12,6 +12,7 @@ export const DEFAULT_SURVIVAL_CONFIG: SurvivalConfig = {
   countdownDurationSec: 10,
   roundDurationSec: 180,
   endedDisplayDurationSec: 8,
+  zoneEnabled: true,
 };
 
 export const SURVIVAL_PHASE_LABELS_UZ: Record<SurvivalPhase, string> = {

@@ -1,3 +1,4 @@
+import type { SurvivalZoneSnap } from './zone';
 export type SurvivalPhase = 'waiting' | 'countdown' | 'playing' | 'ended';
 
 export type SurvivalPlayerRole = 'waiting' | 'contender' | 'eliminated' | 'spectator';
@@ -15,6 +16,8 @@ export interface SurvivalConfig {
   countdownDurationSec: number;
   roundDurationSec: number;
   endedDisplayDurationSec: number;
+  /** Xavfsiz zona torayishi yoqilganmi (standart: true). */
+  zoneEnabled: boolean;
 }
 
 export interface SurvivalPlayerStatusSnap {
@@ -46,6 +49,8 @@ export interface SurvivalStateSnap {
   winReason: SurvivalWinReason;
   statusTextUz: string;
   players: SurvivalPlayerStatusSnap[];
+  /** Xavfsiz zona holati (faqat 'playing' fazasida). */
+  zone?: SurvivalZoneSnap | null;
 }
 
 export interface SurvivalRoundEvaluation {
