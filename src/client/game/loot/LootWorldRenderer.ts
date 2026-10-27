@@ -271,6 +271,42 @@ function buildStylizedMedkitGroup(): THREE.Group {
   return group;
 }
 
+// Zirh nimcha / kaska belgilari (umumiy geometriya va materiallar; dispose qilinmaydi)
+const GEAR_VEST_GEO = new THREE.BoxGeometry(0.3, 0.09, 0.22);
+const GEAR_HELMET_GEO = new THREE.SphereGeometry(0.12, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+const GEAR_HELMET_BRIM_GEO = new THREE.CylinderGeometry(0.13, 0.13, 0.025, 14);
+const GEAR_VEST_MAT = new THREE.MeshStandardMaterial({ color: '#3f5a3a', roughness: 0.85 });
+const GEAR_STRAP_MAT = new THREE.MeshStandardMaterial({ color: '#1f2a1d', roughness: 0.9 });
+const GEAR_HELMET_MAT = new THREE.MeshStandardMaterial({ color: '#4b5a3c', roughness: 0.6, metalness: 0.15 });
+for (const g of [GEAR_VEST_GEO, GEAR_HELMET_GEO, GEAR_HELMET_BRIM_GEO]) g.userData.sharedAsset = true;
+for (const m of [GEAR_VEST_MAT, GEAR_STRAP_MAT, GEAR_HELMET_MAT]) m.userData.sharedAsset = true;
+
+function buildStylizedGearGroup(kind: 'armor' | 'helmet'): THREE.Group {
+  const group = new THREE.Group();
+  group.name = `loot_marker_${kind}`;
+  if (kind === 'armor') {
+    const body = new THREE.Mesh(GEAR_VEST_GEO, GEAR_VEST_MAT);
+    body.position.y = 0.045;
+    body.castShadow = true;
+    body.receiveShadow = true;
+    group.add(body);
+    const strap = new THREE.Mesh(GEAR_VEST_GEO, GEAR_STRAP_MAT);
+    strap.scale.set(0.3, 1.1, 1.02);
+    strap.position.y = 0.045;
+    group.add(strap);
+  } else {
+    const dome = new THREE.Mesh(GEAR_HELMET_GEO, GEAR_HELMET_MAT);
+    dome.position.y = 0.03;
+    dome.castShadow = true;
+    dome.receiveShadow = true;
+    group.add(dome);
+    const brim = new THREE.Mesh(GEAR_HELMET_BRIM_GEO, GEAR_STRAP_MAT);
+    brim.position.y = 0.03;
+    group.add(brim);
+  }
+  return group;
+}
+
 function buildStylizedGrenadeGroup(): THREE.Group {
   const cache = getSharedProceduralLootCache();
   const group = new THREE.Group();
@@ -596,6 +632,8 @@ export class LootWorldRenderer {
       root.add(buildStylizedAmmoGroup(ammoWeapon));
     } else if (item.kind === 'medkit') {
       root.add(buildStylizedMedkitGroup());
+    } else if (item.kind === 'armor' || item.kind === 'helmet') {
+      root.add(buildStylizedGearGroup(item.kind));
     } else {
       root.add(buildStylizedGrenadeGroup());
     }

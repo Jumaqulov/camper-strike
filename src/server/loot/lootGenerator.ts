@@ -241,13 +241,19 @@ export function generateRoomContainersAndLoot(
         slotCatalogIds.push(rng() < 0.6 ? 'heal:medkit' : 'throwable:grenade');
       }
     } else if (poiLocalIdx === 1) {
-      // Second container in each POI ensures both medkit and grenade availability in the POI
+      // Second container in each POI ensures both medkit and grenade availability in the POI,
+      // plus a guaranteed piece of gear (vest / helmet alternating per POI) when there is room
       const medkitFirst = rng() < 0.5;
       slotCatalogIds.push(medkitFirst ? 'heal:medkit' : 'throwable:grenade');
       slotCatalogIds.push(medkitFirst ? 'throwable:grenade' : 'heal:medkit');
-      if (targetItemCount >= 3) {
-        const w = weaponOrder[Math.floor(rng() * weaponOrder.length)]!;
-        slotCatalogIds.push(getAmmoCatalogId(w));
+      const gearId: LootCatalogId = poiGroupIdx % 2 === 0 ? 'gear:vest' : 'gear:helmet';
+      if (anchors.length >= 3) {
+        targetItemCount = Math.max(targetItemCount, 3);
+        slotCatalogIds.push(gearId);
+      } else {
+        // Joy kam (2 anchor): jihoz ikkinchi iste'mol buyumi o'rnini oladi — birinchi konteyner
+        // allaqachon aptechka/granata beradi, shuning uchun POI kiti to'liq qoladi
+        slotCatalogIds[1] = gearId;
       }
     } else {
       // Remaining containers in the POI
@@ -273,7 +279,11 @@ export function generateRoomContainersAndLoot(
         slotCatalogIds.push(getAmmoCatalogId(w));
         slotCatalogIds.push(rng() < 0.5 ? 'heal:medkit' : 'throwable:grenade');
         if (targetItemCount >= 3) {
-          slotCatalogIds.push(rng() < 0.5 ? 'throwable:grenade' : 'heal:medkit');
+          // Uchinchi slot: granata/aptechka yoki (30%) zirh/kaska
+          const gearRoll = rng();
+          slotCatalogIds.push(
+            gearRoll < 0.15 ? 'gear:vest' : gearRoll < 0.3 ? 'gear:helmet' : rng() < 0.5 ? 'throwable:grenade' : 'heal:medkit',
+          );
         }
       }
     }

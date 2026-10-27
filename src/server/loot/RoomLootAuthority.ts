@@ -3,8 +3,10 @@ import type { Vec3 } from '../../shared/math';
 import { fullAmmo, WEAPONS, WEAPON_SLOTS, type AmmoState, type WeaponId } from '../../shared/weapons';
 import type { WorldDefinition } from '../../shared/world';
 import {
+  ARMOR_MAX,
   DEFAULT_CONTAINER_EXTRA_MARGIN_M,
   getWeaponCatalogId,
+  HELMET_MAX,
   GROUND_ITEM_PICKUP_RADIUS_M,
   hasLineOfSightToContainer,
   isWithinInteractionDistance,
@@ -41,6 +43,8 @@ export interface ServerPlayerInventory {
   ammo: AmmoState;
   grenades: number;
   medkits: number;
+  armor: number;
+  helmet: number;
 }
 
 export interface LootAuthorityStats {
@@ -255,6 +259,8 @@ export class RoomLootAuthority {
         ammo: emptyAmmo(),
         grenades: 0,
         medkits: 0,
+        armor: 0,
+        helmet: 0,
       };
       this.inventories.set(playerId, inv);
     } else {
@@ -267,6 +273,8 @@ export class RoomLootAuthority {
         ammo: fullAmmo(),
         grenades: GRENADES_PER_LIFE,
         medkits: 0,
+        armor: 0,
+        helmet: 0,
       };
       this.inventories.set(playerId, inv);
     }
@@ -276,7 +284,7 @@ export class RoomLootAuthority {
 
   syncPlayerFromServerPlayer(
     playerId: string,
-    p: { spawnId: number; weapon: WeaponId | null; ammo: AmmoState; grenades: number },
+    p: { spawnId: number; weapon: WeaponId | null; ammo: AmmoState; grenades: number; armor?: number; helmet?: number },
   ): void {
     let inv = this.inventories.get(playerId);
     if (!inv) {
@@ -296,6 +304,8 @@ export class RoomLootAuthority {
     }
     inv.ammo = cloneAmmo(p.ammo);
     inv.grenades = p.grenades;
+    if (p.armor !== undefined) inv.armor = Math.max(0, p.armor);
+    if (p.helmet !== undefined) inv.helmet = Math.max(0, p.helmet);
   }
 
   applyInventoryToServerPlayer(
@@ -305,12 +315,16 @@ export class RoomLootAuthority {
       ammo: AmmoState;
       grenades: number;
       reloadWeapon: WeaponId | null;
+      armor?: number;
+      helmet?: number;
     },
   ): void {
     const inv = this.inventories.get(playerId);
     if (!inv) return;
 
     p.weapon = inv.equippedWeapon;
+    p.armor = inv.armor;
+    p.helmet = inv.helmet;
     for (const w of WEAPON_SLOTS) {
       p.ammo[w] = { mag: inv.ammo[w].mag, reserve: inv.ammo[w].reserve };
     }
@@ -387,6 +401,12 @@ export class RoomLootAuthority {
         quantity: inv.grenades,
       });
     }
+    if (inv.armor > 0) {
+      items.push({ slotIndex: 6, catalogId: 'gear:vest', kind: 'armor', nameUz: LOOT_CATALOG['gear:vest'].nameUz, quantity: inv.armor });
+    }
+    if (inv.helmet > 0) {
+      items.push({ slotIndex: 7, catalogId: 'gear:helmet', kind: 'helmet', nameUz: LOOT_CATALOG['gear:helmet'].nameUz, quantity: inv.helmet });
+    }
 
     return {
       playerId: inv.playerId,
@@ -400,6 +420,8 @@ export class RoomLootAuthority {
       ammo: cloneAmmo(inv.ammo),
       grenades: inv.grenades,
       medkits: inv.medkits,
+      armor: inv.armor,
+      helmet: inv.helmet,
       maxWeaponSlots: MAX_WEAPON_SLOTS,
       maxMedkits: MAX_MEDKITS_PER_PLAYER,
       maxGrenades: this.lootEnabled ? MAX_GRENADES_LOOT_MODE : GRENADES_PER_LIFE,
@@ -935,6 +957,16 @@ export class RoomLootAuthority {
     if (item.kind === 'grenade') {
       if (inv.grenades >= MAX_GRENADES_LOOT_MODE) return 'GRENADES_FULL';
       inv.grenades = Math.min(MAX_GRENADES_LOOT_MODE, inv.grenades + item.quantity);
+      return null;
+    }
+    if (item.kind === 'armor') {
+      if (inv.armor >= ARMOR_MAX) return 'ARMOR_FULL';
+      inv.armor = ARMOR_MAX;
+      return null;
+    }
+    if (item.kind === 'helmet') {
+      if (inv.helmet >= HELMET_MAX) return 'HELMET_FULL';
+      inv.helmet = HELMET_MAX;
       return null;
     }
     return 'INVALID_REQUEST';

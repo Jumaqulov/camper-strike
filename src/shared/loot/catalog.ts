@@ -9,6 +9,14 @@ export const MAX_GRENADES_LOOT_MODE = 3;
 export const DEFAULT_CONTAINER_EXTRA_MARGIN_M = 0.55;
 export const GROUND_ITEM_PICKUP_RADIUS_M = 2.4;
 
+// Zirh va kaska (Stage 09): mustahkamlik ballari va zarar yutish ulushi
+export const ARMOR_MAX = 100;
+export const HELMET_MAX = 100;
+/** Zirh tana/oyoq zararining shu ulushini yutadi (mustahkamlik tugaguncha). */
+export const ARMOR_DAMAGE_ABSORB = 0.4;
+/** Kaska bosh zararining shu ulushini yutadi (mustahkamlik tugaguncha). */
+export const HELMET_HEADSHOT_ABSORB = 0.5;
+
 export const MAX_AMMO_RESERVE: Record<WeaponId, number> = {
   rifle: 180,
   pistol: 96,
@@ -27,6 +35,8 @@ export const LOOT_CATALOG_IDS: readonly LootCatalogId[] = [
   'ammo:sniper',
   'heal:medkit',
   'throwable:grenade',
+  'gear:vest',
+  'gear:helmet',
 ] as const;
 
 export const LOOT_CATALOG: Record<LootCatalogId, LootCatalogEntry> = {
@@ -149,6 +159,28 @@ export const LOOT_CATALOG: Record<LootCatalogId, LootCatalogEntry> = {
     spawnWeight: 20,
     hasGlbAsset: false,
   },
+  'gear:vest': {
+    catalogId: 'gear:vest',
+    kind: 'armor',
+    nameUz: 'Zirh nimcha',
+    shortNameUz: 'Zirh',
+    descriptionUz: "Tana va oyoqlarga tegadigan zararning 40% ini yutadi (100 ball mustahkamlik).",
+    defaultQuantity: 1,
+    maxStack: 1,
+    spawnWeight: 12,
+    hasGlbAsset: false,
+  },
+  'gear:helmet': {
+    catalogId: 'gear:helmet',
+    kind: 'helmet',
+    nameUz: 'Kaska',
+    shortNameUz: 'Kaska',
+    descriptionUz: 'Boshga tegadigan zararning 50% ini yutadi (100 ball mustahkamlik).',
+    defaultQuantity: 1,
+    maxStack: 1,
+    spawnWeight: 12,
+    hasGlbAsset: false,
+  },
 };
 
 export const CONTAINER_KIND_LABELS_UZ: Record<ContainerKind, string> = {
@@ -175,6 +207,8 @@ export const LOOT_ERROR_MESSAGES_UZ: Record<LootErrorCode, string> = {
   AMMO_FULL: "Bu qurol uchun zaxira o'qlar to'la.",
   MEDKITS_FULL: "Tibbiy qutilar (aptechka) limiti to'lgan (maks. 3 ta).",
   GRENADES_FULL: "Granatalar limiti to'lgan (maks. 3 ta).",
+  ARMOR_FULL: "Zirh nimchangiz allaqachon butun (100).",
+  HELMET_FULL: 'Kaskangiz allaqachon butun (100).',
   WEAPON_NOT_OWNED: "Bu qurol hali topilmagan (inventarda yo'q).",
   NO_MEDKITS: 'Sizda tibbiy quti (aptechka) yo‘q.',
   HP_ALREADY_FULL: "Joningiz allaqachon to'la (100 HP).",

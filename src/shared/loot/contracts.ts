@@ -3,7 +3,7 @@ import type { ContainerAssetId } from '../structures/contracts';
 import type { AmmoState, WeaponId } from '../weapons';
 import type { ContainerKind } from '../world';
 
-export type LootItemKind = 'weapon' | 'ammo' | 'medkit' | 'grenade';
+export type LootItemKind = 'weapon' | 'ammo' | 'medkit' | 'grenade' | 'armor' | 'helmet';
 
 export type AmmoType = 'rifle_ammo' | 'pistol_ammo' | 'shotgun_ammo' | 'sniper_ammo';
 
@@ -17,7 +17,9 @@ export type LootCatalogId =
   | 'ammo:shotgun'
   | 'ammo:sniper'
   | 'heal:medkit'
-  | 'throwable:grenade';
+  | 'throwable:grenade'
+  | 'gear:vest'
+  | 'gear:helmet';
 
 export interface LootCatalogEntry {
   catalogId: LootCatalogId;
@@ -103,6 +105,10 @@ export interface PlayerInventorySnap {
   ammo: AmmoState;
   grenades: number;
   medkits: number;
+  /** Zirh nimcha mustahkamligi 0..ARMOR_MAX (0 = yo'q). */
+  armor: number;
+  /** Kaska mustahkamligi 0..HELMET_MAX (0 = yo'q). */
+  helmet: number;
   maxWeaponSlots: number;
   maxMedkits: number;
   maxGrenades: number;
@@ -126,6 +132,8 @@ export type LootErrorCode =
   | 'AMMO_FULL'
   | 'MEDKITS_FULL'
   | 'GRENADES_FULL'
+  | 'ARMOR_FULL'
+  | 'HELMET_FULL'
   | 'WEAPON_NOT_OWNED'
   | 'NO_MEDKITS'
   | 'HP_ALREADY_FULL'

@@ -252,6 +252,12 @@ function injectInventoryUIStyles(): void {
       color: #dcfce7;
     }
 
+    .s06-util-btn.gear-chip.has-gear {
+      border-color: rgba(96, 165, 250, 0.6);
+      background: rgba(30, 64, 120, 0.35);
+      color: #dbeafe;
+    }
+
     .s06-util-btn.unarm-btn.active {
       border-color: #ffd166;
       background: rgba(255, 196, 56, 0.2);
@@ -398,7 +404,7 @@ export class InventoryUI {
       const a = s.ammo[w];
       return `${w}:${a ? a.mag : 0}/${a ? a.reserve : 0}`;
     }).join('|');
-    const renderKey = `${s.inventoryVersion}|${s.equippedWeapon ?? 'none'}|${s.ownedWeapons.join(',')}|${s.medkits}/${s.maxMedkits}|${s.grenades}/${s.maxGrenades}|${ammoKey}`;
+    const renderKey = `${s.inventoryVersion}|${s.equippedWeapon ?? 'none'}|${s.ownedWeapons.join(',')}|${s.medkits}/${s.maxMedkits}|${s.grenades}/${s.maxGrenades}|${s.armor ?? 0}|${s.helmet ?? 0}|${ammoKey}`;
     if (renderKey === this.lastRenderKey) return;
     this.lastRenderKey = renderKey;
 
@@ -460,6 +466,14 @@ export class InventoryUI {
           <span>Bo'sh qo'l<span class="s06-util-key">0</span></span>
           <span class="s06-util-sub">${isHandsEmpty ? 'Faol' : 'Qurolni yechish'}</span>
         </button>
+        <div class="s06-util-btn gear-chip ${(s.armor ?? 0) > 0 ? 'has-gear' : ''}" style="cursor: default;">
+          <span>Zirh ${(s.armor ?? 0) > 0 ? `${s.armor}` : '—'}</span>
+          <span class="s06-util-sub">${(s.armor ?? 0) > 0 ? '−40% zarar' : "Yo'q"}</span>
+        </div>
+        <div class="s06-util-btn gear-chip ${(s.helmet ?? 0) > 0 ? 'has-gear' : ''}" style="cursor: default;">
+          <span>Kaska ${(s.helmet ?? 0) > 0 ? `${s.helmet}` : '—'}</span>
+          <span class="s06-util-sub">${(s.helmet ?? 0) > 0 ? '−50% bosh' : "Yo'q"}</span>
+        </div>
       </div>
     `;
 

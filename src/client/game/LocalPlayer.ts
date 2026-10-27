@@ -35,6 +35,8 @@ export class LocalPlayer {
   scoped = false;
   stamina = 1;
   staminaLocked = false;
+  armor = 0;
+  helmet = 0;
 
   setWorld(world: WorldDefinition): void {
     this.world = world;
@@ -103,6 +105,8 @@ export class LocalPlayer {
     }
     this.stamina = 1;
     this.staminaLocked = false;
+    this.armor = 0;
+    this.helmet = 0;
     this.prediction.resetForSpawn(e.spawnId);
   }
 
@@ -118,6 +122,8 @@ export class LocalPlayer {
       ammo: AmmoState;
       grenades: number;
       medkits: number;
+      armor?: number;
+      helmet?: number;
     },
     t: number = performance.now() / 1000,
     /** true: snapshot'dagi equippedWeapon ni e'tiborsiz qoldirib, lokal qurolni saqlash (yaqinda almashtirilgan). */
@@ -148,6 +154,8 @@ export class LocalPlayer {
     }
     this.grenades = snap.grenades;
     this.medkits = snap.medkits;
+    this.armor = snap.armor ?? 0;
+    this.helmet = snap.helmet ?? 0;
     const prevWeapon = this.weapon;
     const nextWeapon = snap.equippedWeapon;
     // Yaqinda lokal almashtirilgan bo'lsa va snapshot egasi bo'lmagan qurolni ko'rsatmasa, lokalni saqlaymiz

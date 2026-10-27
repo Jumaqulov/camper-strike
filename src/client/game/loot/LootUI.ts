@@ -51,6 +51,8 @@ const ITEM_KIND_ICONS: Record<LootItemKind, string> = {
   ammo: '🟨',
   medkit: '🩹',
   grenade: '💣',
+  armor: '🦺',
+  helmet: '⛑️',
 };
 
 function escapeHtml(s: string): string {
@@ -690,6 +692,12 @@ export class LootUI {
     }
     if (item.kind === 'grenade') {
       return `Portlovchi · ×${item.quantity}`;
+    }
+    if (item.kind === 'armor') {
+      return 'Zirh · tana zarari −40%';
+    }
+    if (item.kind === 'helmet') {
+      return 'Kaska · bosh zarari −50%';
     }
     return `×${item.quantity}`;
   }

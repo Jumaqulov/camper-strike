@@ -2526,6 +2526,7 @@ export class Game {
     const me = this.me;
     this.hud.setHealth(me.alive ? me.hp : 0);
     this.hud.setStamina(me.alive ? me.stamina : 1, me.alive && me.staminaLocked);
+    this.hud.setGear(me.alive ? me.armor : 0, me.alive ? me.helmet : 0);
     if (this.miniMap) {
       // Kuzatuvchi rejimida kamera pozitsiyasi, aks holda o'yinchi; TDM'da faqat jamoadoshlar ko'rinadi
       const sp = !me.alive && this.isSurvival ? this.lastSpectatorPose : null;

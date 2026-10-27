@@ -13,7 +13,7 @@ import { getForestSquarePoiSites } from '../forestSquare';
 import { hasLineOfSightToContainer } from '../loot';
 import { vdist, vnorm, vsub, type Vec3 } from '../math';
 import type { MatchState, PlayerInventorySnap } from '../protocol';
-import { WEAPONS, WEAPON_SLOTS, type WeaponId } from '../weapons';
+import { WEAPONS, WEAPON_SLOTS, damageAt, type WeaponId } from '../weapons';
 import { sampleTerrainHeight } from '../world';
 
 // ---------------- Fake Socket.IO Harness for Room Tests ----------------
@@ -501,6 +501,8 @@ describe('STAGE 07 — Forest Survival Mode, Round Lifecycle, Elimination, Spect
       maxMedkits: 2,
       maxGrenades: 2,
       items: [],
+      armor: 0,
+      helmet: 0,
     };
     me.applyInventorySnap(validSnap, 11);
     assert.equal(me.weapon, 'shotgun');
@@ -1756,6 +1758,142 @@ describe('STAGE 07 — Forest Survival Mode, Round Lifecycle, Elimination, Spect
         assert.equal(replay.ok, true);
         assert.equal(replay.idempotentReplay, true);
       }
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("17. Zirh nimcha tana zararini, kaska bosh zararini kamaytiradi; ikkinchi nimcha ARMOR_FULL", () => {
+    const { io } = createFakeIo();
+    const room = new Room(
+      {
+        name: 'Armor Room',
+        mode: 'forest_survival',
+        mapId: 'forest_square',
+        bots: 0,
+        maxPlayers: 8,
+        timeLimit: 3,
+        scoreLimit: 1,
+        publicLayoutSeed: 6501,
+        countdownSec: 2,
+      },
+      io,
+      () => {},
+    );
+    try {
+      const sock1 = createFakeSocket('p1');
+      const sock2 = createFakeSocket('p2');
+      room.addHuman(sock1.socket, 'Shooter');
+      room.addHuman(sock2.socket, 'Tank');
+      room.onReady('p1', { world: room.worldMeta() });
+      room.onReady('p2', { world: room.worldMeta() });
+      room.advanceTimeForTest(2.5, 0.25);
+      assert.equal(room.phase, 'playing');
+
+      armPlayerFromContainer(room, 'p1', 'arm_p1');
+      const shooter = room.players.get('p1')!;
+      const tank = room.players.get('p2')!;
+
+      // Berilgan turdagi jihozni (nimcha/kaska) biror konteynerdan olishga urinadi va ack qaytaradi
+      const usedContainers = new Set<string>();
+      const pickGear = (kind: 'armor' | 'helmet', reqPrefix: string) => {
+        for (const cntId of room.loot.getAuthoritativeContainerIds()) {
+          if (usedContainers.has(cntId)) continue;
+          const raw = room.loot.getRawContainerForServerTest(cntId)!;
+          const gear = [...raw.items.values()].find((it) => it.kind === kind);
+          if (!gear) continue;
+          usedContainers.add(cntId);
+          tank.pos = findClearPlayerPosNearContainer(room, raw);
+          const openAck = room.onContainerOpen('p2', {
+            requestId: `${reqPrefix}_open`,
+            containerId: cntId,
+            roundId: room.getRoundId(),
+            spawnId: tank.spawnId,
+          });
+          assert.equal(openAck.ok, true, `open ${cntId}: ${openAck.code}`);
+          return room.onLootPickup('p2', {
+            requestId: `${reqPrefix}_pick`,
+            containerId: cntId,
+            itemId: gear.id,
+            roundId: room.getRoundId(),
+            spawnId: tank.spawnId,
+          });
+        }
+        assert.fail(`${kind} buyumi hech bir konteynerda topilmadi`);
+      };
+
+      const vestAck = pickGear('armor', 'vest');
+      assert.equal(vestAck.ok, true, `nimcha olish: ${vestAck.code} ${vestAck.message}`);
+      assert.equal(tank.armor, 100, 'nimcha olingach armor 100');
+      const inv = room.loot.getPlayerInventorySnap('p2')!;
+      assert.equal(inv.armor, 100);
+      assert.ok(inv.items.some((it) => it.catalogId === 'gear:vest'), 'inventar snapshotida nimcha ko‘rinadi');
+
+      // Ikkinchi nimcha olib bo'lmaydi
+      const dup = pickGear('armor', 'vest_dup');
+      assert.equal(dup.ok, false);
+      assert.equal(dup.code, 'ARMOR_FULL');
+
+      const helmAck = pickGear('helmet', 'helm');
+      assert.equal(helmAck.ok, true, `kaska olish: ${helmAck.code} ${helmAck.message}`);
+      assert.equal(tank.helmet, 100, 'kaska olingach helmet 100');
+
+      // Otishma sahnasi: tana va bosh
+      const serviceSite = getForestSquarePoiSites(6501).find((s) => s.id === 'poi_service_station')!;
+      const sx = serviceSite.center.x - 6;
+      const sz = serviceSite.center.z + 6;
+      shooter.pos = { x: sx, y: sampleTerrainHeight(room.world.terrain, sx, sz), z: sz };
+      tank.pos = { x: sx, y: sampleTerrainHeight(room.world.terrain, sx, sz - 3.5), z: sz - 3.5 };
+      shooter.spawnTime = -99;
+      tank.spawnTime = -99;
+      const wDef = WEAPONS[shooter.weapon!];
+      const shootAt = (targetY: number) => {
+        const eye: Vec3 = { x: shooter.pos.x, y: shooter.pos.y + EYE_HEIGHT, z: shooter.pos.z };
+        const aim: Vec3 = { x: tank.pos.x, y: tank.pos.y + targetY, z: tank.pos.z };
+        const dir = vnorm(vsub(aim, eye));
+        shooter.yaw = Math.atan2(-dir.x, -dir.z);
+        shooter.pitch = Math.asin(Math.max(-1, Math.min(1, dir.y)));
+        shooter.lastShot = -99;
+        shooter.ammo[wDef.id].mag = wDef.magSize;
+        room.onShoot('p1', { weapon: wDef.id, origin: eye, dirs: Array.from({ length: wDef.pellets }, () => dir) });
+      };
+
+      tank.hp = MAX_HP;
+      const hp0 = tank.hp;
+      shootAt(1.0); // tana
+      assert.ok(tank.alive, "tana otishmasidan keyin tirik qolishi kerak");
+      const bodyLoss = hp0 - tank.hp;
+      assert.ok(bodyLoss > 0, 'tana otishmasi zarar yetkazishi kerak');
+      assert.ok(tank.armor < 100, `nimcha yemirilishi kerak (armor=${tank.armor})`);
+      assert.equal(tank.helmet, 100, 'tana otishmasi kaskaga tegmaydi');
+      const absorbedBody = 100 - tank.armor;
+      assert.ok(
+        Math.abs(absorbedBody - Math.round((bodyLoss + absorbedBody) * 0.4)) <= 1,
+        `tana zararining ~40% yutilishi kerak (loss=${bodyLoss}, absorbed=${absorbedBody})`,
+      );
+
+      // Bosh otishmasi: kaska xom zararning 50% ini (ko'pi bilan mustahkamligi qadar) yutadi.
+      // Snayper boshga 212 beradi — kaska 100 ni yutsa ham 112 qoladi, o'yinchi o'lishi mumkin (dizayn bo'yicha).
+      tank.hp = MAX_HP;
+      const hp1 = tank.hp;
+      const helmetBefore = tank.helmet;
+      const eyeH: Vec3 = { x: shooter.pos.x, y: shooter.pos.y + EYE_HEIGHT, z: shooter.pos.z };
+      const headAim: Vec3 = { x: tank.pos.x, y: tank.pos.y + 1.5, z: tank.pos.z };
+      const rawHead = damageAt(wDef, vdist(eyeH, headAim), 'head');
+      shootAt(1.5); // bosh
+      const headLoss = hp1 - Math.max(0, tank.hp);
+      assert.ok(headLoss > 0, 'bosh otishmasi zarar yetkazishi kerak');
+      const absorbedHead = helmetBefore - tank.helmet;
+      const expectedAbsorb = Math.min(helmetBefore, Math.round(rawHead * 0.5));
+      assert.ok(
+        Math.abs(absorbedHead - expectedAbsorb) <= 1,
+        `kaska ${expectedAbsorb} yutishi kerak (absorbed=${absorbedHead})`,
+      );
+      assert.ok(
+        Math.abs(headLoss - Math.min(MAX_HP, rawHead - absorbedHead)) <= 1,
+        `bosh zarari ${rawHead - absorbedHead} bo'lishi kerak (loss=${headLoss})`,
+      );
+      assert.equal(tank.armor, 100 - absorbedBody, 'bosh otishmasi nimchaga tegmaydi');
     } finally {
       room.destroy();
     }

@@ -19,7 +19,12 @@ import type {
   RoomInfo, RoomLootSnapshot, RosterEntry, ShootMsg, ShotEvent, Snapshot, SpawnEvent,
   SurvivalConfig, SurvivalPhase, SurvivalStateSnap, UseMedkitAck, UseMedkitReq, WelcomeMsg,
 } from '../shared/protocol';
-import { LOOT_ERROR_MESSAGES_UZ, validateBulletDirectionsAgainstAim } from '../shared/loot';
+import {
+  ARMOR_DAMAGE_ABSORB,
+  HELMET_HEADSHOT_ABSORB,
+  LOOT_ERROR_MESSAGES_UZ,
+  validateBulletDirectionsAgainstAim,
+} from '../shared/loot';
 import { damageAt, emptyAmmo, fullAmmo, isWeaponId, WEAPONS, type AmmoState, type WeaponDef, type WeaponId } from '../shared/weapons';
 import {
   createWorldDefinition, CURRENT_WORLD_VERSION, DEFAULT_PUBLIC_LAYOUT_SEED, DEFAULT_WORLD, extractWorldMeta,
@@ -51,6 +56,9 @@ export interface ServerPlayer extends Body {
   scoped: boolean;
   stamina: number;
   staminaLocked: boolean;
+  /** Zirh nimcha va kaska mustahkamligi (loot rejimi; 0 = yo'q). */
+  armor: number;
+  helmet: number;
   hp: number;
   alive: boolean;
   respawnAt: number;
@@ -284,6 +292,7 @@ export class Room {
       yaw: 0, pitch: 0,
       scoped: false,
       stamina: 1, staminaLocked: false,
+      armor: 0, helmet: 0,
       hp: MAX_HP, alive: false,
       respawnAt: isBot ? 0 : Infinity,
       spawnId: 0, spawnTime: 0,
@@ -503,6 +512,8 @@ export class Room {
     p.scoped = false;
     p.stamina = 1;
     p.staminaLocked = false;
+    p.armor = 0;
+    p.helmet = 0;
     p.hp = MAX_HP;
     p.alive = true;
     p.respawnAt = Infinity;
@@ -1055,6 +1066,24 @@ export class Room {
   private damage(target: ServerPlayer, attacker: ServerPlayer, amount: number, weapon: WeaponId | 'grenade', headshot: boolean, from: Vec3) {
     if (!target.alive || amount <= 0 || this.phase !== 'playing') return;
     if (this.now() - target.spawnTime < SPAWN_PROTECTION) return;
+    // Zirh/kaska: zararning bir qismini yutadi, mustahkamlik shuncha kamayadi (faqat loot rejimida bo'ladi)
+    let absorbed = 0;
+    if (headshot) {
+      if (target.helmet > 0) {
+        absorbed = Math.min(target.helmet, Math.round(amount * HELMET_HEADSHOT_ABSORB));
+        target.helmet -= absorbed;
+      }
+    } else if (target.armor > 0) {
+      absorbed = Math.min(target.armor, Math.round(amount * ARMOR_DAMAGE_ABSORB));
+      target.armor -= absorbed;
+    }
+    if (absorbed > 0 && !target.isBot) {
+      this.loot.syncPlayerFromServerPlayer(target.id, target);
+      const invSnap = this.loot.getPlayerInventorySnap(target.id);
+      if (invSnap) target.socket?.emit('inventory:state', invSnap);
+    }
+    amount -= absorbed;
+    if (amount <= 0) return;
     target.hp -= amount;
 
     // Fizik zarba turtkisi (qurol kuchiga qarab raqibni orqaga itarish)

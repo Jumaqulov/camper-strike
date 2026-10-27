@@ -165,6 +165,17 @@ export class Hud {
     fill.style.width = `${Math.max(0, hp)}%`;
   }
 
+  private lastGearKey = '';
+  /** Zirh va kaska mustahkamligi (0 = yo'q); ikkalasi 0 bo'lsa qator yashirinadi. */
+  setGear(armor: number, helmet: number): void {
+    const key = `${armor}|${helmet}`;
+    if (key === this.lastGearKey) return;
+    this.lastGearKey = key;
+    $('gear-row').classList.toggle('hidden', armor <= 0 && helmet <= 0);
+    $('gear-armor').textContent = armor > 0 ? `🦺 Zirh ${Math.round(armor)}` : '';
+    $('gear-helmet').textContent = helmet > 0 ? `⛑️ Kaska ${Math.round(helmet)}` : '';
+  }
+
   private lastStaminaKey = '';
   /** Sprint chidamliligi chizig'i (0..1); to'liq bo'lsa yashirinadi, tugaganda qizil. */
   setStamina(v: number, locked: boolean): void {
