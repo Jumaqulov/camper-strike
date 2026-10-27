@@ -100,65 +100,135 @@ export class AudioSys {
     gain.gain.exponentialRampToValueAtTime(forest ? 1 : 0.7, c.currentTime + 2.5);
     gain.connect(this.master);
 
-    // 1. Shamol: uzluksiz shovqin → past chastota filtri, chastotasi va kuchi sekin LFO bilan "esadi"
+    const schedule = (fn: () => void, minMs: number, maxMs: number) => {
+      const id = window.setTimeout(() => {
+        if (this.ambient?.timers !== timers) return;
+        fn();
+        schedule(fn, minMs, maxMs);
+      }, minMs + Math.random() * (maxMs - minMs));
+      timers.push(id);
+    };
+
+    // 1. Shamol — uch qatlam:
+    //    a) doimiy past "guvillash" (lowpass shovqin, 0.9 Hz yengil turbulentlik bilan),
+    //    b) gust paytida kuchayadigan "whoosh" (bandpass, chastotasi esish bilan ko'tarilib tushadi,
+    //       stereo'da sekin bir tomondan ikkinchi tomonga o'tadi),
+    //    c) barglar shitirlashi (yuqori chastota, gustga ~0.4 s kechikib javob beradi).
+    //    Gustlar sinus LFO emas — tasodifiy kuch/davomiylikdagi envelope'lar (hujum → ushlab turish → so'nish).
+    const baseLp = forest ? 240 : 360;
+    const baseGain = forest ? 0.045 : 0.07;
+
     const wind = c.createBufferSource();
     wind.buffer = this.noiseBuf;
     wind.loop = true;
     const windLp = c.createBiquadFilter();
     windLp.type = 'lowpass';
-    windLp.frequency.value = forest ? 300 : 420;
-    windLp.Q.value = 0.6;
+    windLp.frequency.value = baseLp;
+    windLp.Q.value = 0.7;
     const windGain = c.createGain();
-    windGain.gain.value = forest ? 0.075 : 0.1;
-    const gustLfo = c.createOscillator();
-    gustLfo.type = 'sine';
-    gustLfo.frequency.value = 0.07;
-    const gustDepth = c.createGain();
-    gustDepth.gain.value = 170;
-    gustLfo.connect(gustDepth).connect(windLp.frequency);
-    const swellLfo = c.createOscillator();
-    swellLfo.type = 'sine';
-    swellLfo.frequency.value = 0.019;
-    const swellDepth = c.createGain();
-    swellDepth.gain.value = forest ? 0.03 : 0.045;
-    swellLfo.connect(swellDepth).connect(windGain.gain);
+    windGain.gain.value = baseGain;
+    const turb = c.createOscillator();
+    turb.type = 'sine';
+    turb.frequency.value = 0.9;
+    const turbDepth = c.createGain();
+    turbDepth.gain.value = 35;
+    turb.connect(turbDepth).connect(windLp.frequency);
     wind.connect(windLp).connect(windGain).connect(gain);
-    wind.start();
-    gustLfo.start();
-    swellLfo.start();
-    nodes.push(wind, windLp, windGain, gustLfo, gustDepth, swellLfo, swellDepth);
+    wind.start(0, Math.random() * 1.5);
+    turb.start();
+    nodes.push(wind, windLp, windGain, turb, turbDepth);
 
+    const whoosh = c.createBufferSource();
+    whoosh.buffer = this.noiseBuf;
+    whoosh.loop = true;
+    const whooshBp = c.createBiquadFilter();
+    whooshBp.type = 'bandpass';
+    whooshBp.frequency.value = 380;
+    whooshBp.Q.value = 0.9;
+    const whooshGain = c.createGain();
+    whooshGain.gain.value = 0.0001;
+    const whooshPan = c.createStereoPanner();
+    whooshPan.pan.value = 0;
+    const flutter = c.createOscillator();
+    flutter.type = 'sine';
+    flutter.frequency.value = 1.3;
+    const flutterDepth = c.createGain();
+    flutterDepth.gain.value = 60;
+    flutter.connect(flutterDepth).connect(whooshBp.frequency);
+    whoosh.connect(whooshBp).connect(whooshGain).connect(whooshPan).connect(gain);
+    whoosh.start(0, Math.random() * 1.5);
+    flutter.start();
+    nodes.push(whoosh, whooshBp, whooshGain, whooshPan, flutter, flutterDepth);
+
+    let leafGain: GainNode | null = null;
     if (forest) {
-      // 2. Uzoqdagi daraxt barglarining shitirlashi: o'rta-yuqori chastotali shovqin, shamol kuchayganda kuchayadi
       const leaves = c.createBufferSource();
       leaves.buffer = this.noiseBuf;
       leaves.loop = true;
+      const leafHp = c.createBiquadFilter();
+      leafHp.type = 'highpass';
+      leafHp.frequency.value = 2400;
+      leafHp.Q.value = 0.5;
       const leafBp = c.createBiquadFilter();
       leafBp.type = 'bandpass';
-      leafBp.frequency.value = 2600;
-      leafBp.Q.value = 0.7;
-      const leafGain = c.createGain();
-      leafGain.gain.value = 0.012;
-      const leafLfo = c.createOscillator();
-      leafLfo.type = 'sine';
-      leafLfo.frequency.value = 0.11;
-      const leafDepth = c.createGain();
-      leafDepth.gain.value = 0.011;
-      leafLfo.connect(leafDepth).connect(leafGain.gain);
-      leaves.connect(leafBp).connect(leafGain).connect(gain);
-      leaves.start(0, Math.random());
-      leafLfo.start();
-      nodes.push(leaves, leafBp, leafGain, leafLfo, leafDepth);
+      leafBp.frequency.value = 3800;
+      leafBp.Q.value = 0.6;
+      leafGain = c.createGain();
+      leafGain.gain.value = 0.006;
+      leaves.connect(leafHp).connect(leafBp).connect(leafGain).connect(gain);
+      leaves.start(0, Math.random() * 1.5);
+      nodes.push(leaves, leafHp, leafBp, leafGain);
+    }
 
-      // 3. Qushlar: tasodifiy joydan, tasodifiy oraliqda chirqillash; vaqti-vaqti bilan uzoqdan qizilishton
-      const schedule = (fn: () => void, minMs: number, maxMs: number) => {
-        const id = window.setTimeout(() => {
-          if (this.ambient?.timers !== timers) return;
-          fn();
-          schedule(fn, minMs, maxMs);
-        }, minMs + Math.random() * (maxMs - minMs));
-        timers.push(id);
+    // Gust envelope: tasodifiy kuch (0.25..1), hujum 0.8–2.5 s, ushlab turish 0.4–2 s, so'nish 2–5 s
+    const gust = () => {
+      const now = c.currentTime;
+      const s = 0.25 + Math.random() * 0.75;
+      const attack = 0.8 + Math.random() * 1.7;
+      const hold = 0.4 + Math.random() * 1.6;
+      const release = 2 + Math.random() * 3;
+      const peakAt = now + attack;
+      const endAt = peakAt + hold;
+      const doneAt = endAt + release;
+      const ramp = (p: AudioParam, from: number, peak: number) => {
+        p.cancelScheduledValues(now);
+        p.setValueAtTime(Math.max(0.0001, p.value), now);
+        p.linearRampToValueAtTime(peak, peakAt);
+        p.setValueAtTime(peak, endAt);
+        p.setTargetAtTime(from, endAt, release / 3);
       };
+      ramp(windGain.gain, baseGain, baseGain + (forest ? 0.11 : 0.13) * s);
+      ramp(windLp.frequency, baseLp, baseLp + 650 * s);
+      ramp(whooshGain.gain, 0.0001, 0.055 * s);
+      ramp(whooshBp.frequency, 380, 380 + 620 * s);
+      // Gust bir tomondan keladi va o'tib ketadi
+      const from = (Math.random() < 0.5 ? -1 : 1) * (0.3 + Math.random() * 0.5);
+      whooshPan.pan.cancelScheduledValues(now);
+      whooshPan.pan.setValueAtTime(from, now);
+      whooshPan.pan.linearRampToValueAtTime(-from * 0.6, doneAt);
+      if (leafGain) {
+        const lg = leafGain.gain;
+        const lag = 0.4;
+        lg.cancelScheduledValues(now);
+        lg.setValueAtTime(Math.max(0.0001, lg.value), now + lag);
+        lg.linearRampToValueAtTime(0.006 + 0.034 * s, peakAt + lag);
+        lg.setValueAtTime(0.006 + 0.034 * s, endAt + lag);
+        lg.setTargetAtTime(0.006, endAt + lag, release / 3);
+      }
+      return (doneAt - now) * 1000;
+    };
+    const gustLoop = () => {
+      const dur = gust();
+      const id = window.setTimeout(() => {
+        if (this.ambient?.timers !== timers) return;
+        gustLoop();
+      }, dur * (0.55 + Math.random() * 0.5) + 1500 + Math.random() * 5000);
+      timers.push(id);
+    };
+    gustLoop();
+
+    if (forest) {
+      // 3. Qushlar: tasodifiy joydan, tasodifiy oraliqda chirqillash; vaqti-vaqti bilan uzoqdan qizilishton
       schedule(() => this.birdChirp(gain), 1500, 6500);
       schedule(() => this.woodpecker(gain), 18000, 45000);
     }
@@ -422,13 +492,31 @@ export class AudioSys {
     const r = Math.random();
     switch (surface) {
       case 'gravel': {
-        // Shag'al: bir nechta mayda tosh g'ichirlashi + past "ezilish"
-        const n = 3 + Math.floor(r * 3);
-        for (let i = 0; i < n; i++) {
-          const f = 1600 + Math.random() * 2200;
-          this.noise(d, t + i * 0.012 + Math.random() * 0.01, 0.03, 'highpass', f, f * 0.7, 1.4, vol * 0.5, 0.002);
+        // Shag'al — ikki faza: tovon zarbasi (zich donador g'ichirlash) va ~80 ms keyin oyoq uchi sirpanishi
+        // (yengilroq, siyrakroq donalar + qisqa "shsh"); ostida past "ezilish" tanasi; gohida tosh dumalashi.
+        const heavy = vol > 0.15; // sprint — ko'proq va kuchliroq donalar
+        this.noise(d, t, 0.07, 'lowpass', 520 + r * 180, 190, 1.0, vol * 0.75, 0.003);
+        this.tone(d, t, 'sine', 95, 60, 0.04, vol * 0.3);
+        const heelGrains = (heavy ? 9 : 6) + Math.floor(Math.random() * 4);
+        for (let i = 0; i < heelGrains; i++) {
+          // Donalar zarba boshida zich, keyin siyraklashadi
+          const dt = Math.pow(Math.random(), 1.6) * 0.045;
+          const f = 1400 + Math.random() * 4200;
+          const g = vol * (0.14 + Math.random() * 0.32);
+          this.noise(d, t + dt, 0.007 + Math.random() * 0.012, 'bandpass', f, f * 0.8, 1.8 + Math.random(), g, 0.001);
         }
-        this.noise(d, t, 0.09, 'lowpass', 700 + r * 300, 250, 1.0, vol * 0.8, 0.003);
+        const toeAt = t + 0.07 + Math.random() * 0.04;
+        const toeGrains = 3 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < toeGrains; i++) {
+          const dt = Math.random() * 0.05;
+          const f = 1800 + Math.random() * 3600;
+          this.noise(d, toeAt + dt, 0.006 + Math.random() * 0.01, 'bandpass', f, f * 0.8, 2.0, vol * (0.07 + Math.random() * 0.16), 0.001);
+        }
+        this.noise(d, toeAt, 0.055, 'bandpass', 2100 + r * 900, 1500, 0.8, vol * 0.2, 0.006);
+        if (Math.random() < 0.22) {
+          // Tepilgan toshcha dumalashi
+          this.tone(d, toeAt + 0.03, 'triangle', 900 + r * 500, 560, 0.045, vol * 0.18);
+        }
         break;
       }
       case 'dirt': {
