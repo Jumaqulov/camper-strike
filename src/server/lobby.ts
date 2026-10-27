@@ -26,8 +26,8 @@ import { Room } from './room';
 
 type Ack<T> = (res: T) => void;
 
+// Dust Arena o'yindan olib tashlangan: faqat o'rmon xaritalari (eski arena faqat test/physics tayanch dunyosi)
 const VALID_MAP_IDS: MapId[] = [
-  'dust_arena',
   'forest_technical',
   'forest_sample',
   'forest_assets_preview',
@@ -53,7 +53,7 @@ export function sanitizeOpts(raw: Partial<CreateRoomOpts> | undefined, owner: st
       ? 'forest_square'
       : typeof raw?.mapId === 'string' && (VALID_MAP_IDS as string[]).includes(raw.mapId)
         ? raw.mapId
-        : 'dust_arena';
+        : 'forest_square';
   const lootPreview = mode === 'forest_survival' || (Boolean(raw?.lootPreview) && mapId === 'forest_square');
   const opts: CreateRoomOpts = {
     name,

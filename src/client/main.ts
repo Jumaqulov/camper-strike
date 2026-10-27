@@ -421,7 +421,7 @@ function renderRooms(rooms: RoomInfo[]): void {
             ? '🏚️ Forest Assets Preview (04A)'
             : r.world?.mapId === 'forest_sample'
               ? "🌲 Forest Preview (96×96)"
-              : '🚐 Dust Arena';
+              : '🌲 O‘rmon xaritasi';
       const lootBadge =
         r.mode === 'forest_survival'
           ? ` · <b style="color:#4ade80;">🌲 Oxirgi tirik qolgan · Qurolsiz boshlash</b>`

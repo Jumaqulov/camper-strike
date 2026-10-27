@@ -155,7 +155,7 @@ export class Room {
     if (this.isSurvival && opts.mapId && opts.mapId !== 'forest_square') {
       throw new Error('Forest Survival rejimi faqat forest_square xaritasida yaratilishi mumkin');
     }
-    const mapId = this.isSurvival ? 'forest_square' : (opts.mapId ?? 'dust_arena');
+    const mapId = this.isSurvival ? 'forest_square' : (opts.mapId ?? 'forest_square');
     this.world = createWorldDefinition({
       mapId,
       worldVersion: CURRENT_WORLD_VERSION,
