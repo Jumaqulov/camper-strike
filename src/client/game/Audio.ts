@@ -109,57 +109,6 @@ export class AudioSys {
       timers.push(id);
     };
 
-    // 1. Shamol — uch qatlam:
-    //    a) doimiy past "guvillash" (lowpass shovqin, 0.9 Hz yengil turbulentlik bilan),
-    //    b) gust paytida kuchayadigan "whoosh" (bandpass, chastotasi esish bilan ko'tarilib tushadi,
-    //       stereo'da sekin bir tomondan ikkinchi tomonga o'tadi),
-    //    c) barglar shitirlashi (yuqori chastota, gustga ~0.4 s kechikib javob beradi).
-    //    Gustlar sinus LFO emas — tasodifiy kuch/davomiylikdagi envelope'lar (hujum → ushlab turish → so'nish).
-    const baseLp = forest ? 240 : 360;
-    const baseGain = forest ? 0.045 : 0.07;
-
-    const wind = c.createBufferSource();
-    wind.buffer = this.noiseBuf;
-    wind.loop = true;
-    const windLp = c.createBiquadFilter();
-    windLp.type = 'lowpass';
-    windLp.frequency.value = baseLp;
-    windLp.Q.value = 0.7;
-    const windGain = c.createGain();
-    windGain.gain.value = baseGain;
-    const turb = c.createOscillator();
-    turb.type = 'sine';
-    turb.frequency.value = 0.9;
-    const turbDepth = c.createGain();
-    turbDepth.gain.value = 35;
-    turb.connect(turbDepth).connect(windLp.frequency);
-    wind.connect(windLp).connect(windGain).connect(gain);
-    wind.start(0, Math.random() * 1.5);
-    turb.start();
-    nodes.push(wind, windLp, windGain, turb, turbDepth);
-
-    const whoosh = c.createBufferSource();
-    whoosh.buffer = this.noiseBuf;
-    whoosh.loop = true;
-    const whooshBp = c.createBiquadFilter();
-    whooshBp.type = 'bandpass';
-    whooshBp.frequency.value = 380;
-    whooshBp.Q.value = 0.9;
-    const whooshGain = c.createGain();
-    whooshGain.gain.value = 0.0001;
-    const whooshPan = c.createStereoPanner();
-    whooshPan.pan.value = 0;
-    const flutter = c.createOscillator();
-    flutter.type = 'sine';
-    flutter.frequency.value = 1.3;
-    const flutterDepth = c.createGain();
-    flutterDepth.gain.value = 60;
-    flutter.connect(flutterDepth).connect(whooshBp.frequency);
-    whoosh.connect(whooshBp).connect(whooshGain).connect(whooshPan).connect(gain);
-    whoosh.start(0, Math.random() * 1.5);
-    flutter.start();
-    nodes.push(whoosh, whooshBp, whooshGain, whooshPan, flutter, flutterDepth);
-
     let leafGain: GainNode | null = null;
     if (forest) {
       const leaves = c.createBufferSource();
@@ -190,22 +139,6 @@ export class AudioSys {
       const peakAt = now + attack;
       const endAt = peakAt + hold;
       const doneAt = endAt + release;
-      const ramp = (p: AudioParam, from: number, peak: number) => {
-        p.cancelScheduledValues(now);
-        p.setValueAtTime(Math.max(0.0001, p.value), now);
-        p.linearRampToValueAtTime(peak, peakAt);
-        p.setValueAtTime(peak, endAt);
-        p.setTargetAtTime(from, endAt, release / 3);
-      };
-      ramp(windGain.gain, baseGain, baseGain + (forest ? 0.11 : 0.13) * s);
-      ramp(windLp.frequency, baseLp, baseLp + 650 * s);
-      ramp(whooshGain.gain, 0.0001, 0.055 * s);
-      ramp(whooshBp.frequency, 380, 380 + 620 * s);
-      // Gust bir tomondan keladi va o'tib ketadi
-      const from = (Math.random() < 0.5 ? -1 : 1) * (0.3 + Math.random() * 0.5);
-      whooshPan.pan.cancelScheduledValues(now);
-      whooshPan.pan.setValueAtTime(from, now);
-      whooshPan.pan.linearRampToValueAtTime(-from * 0.6, doneAt);
       if (leafGain) {
         const lg = leafGain.gain;
         const lag = 0.4;
