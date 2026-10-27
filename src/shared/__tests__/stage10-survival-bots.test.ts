@@ -192,6 +192,51 @@ describe('Bosqich 10 — Forest Survival botlari (loot AI)', () => {
     }
   });
 
+  it('5. minHumans: shuncha odam tayyor bo‘lmaguncha botlar bilan ham raund boshlanmaydi', () => {
+    const { io } = createFakeIo();
+    const room = new Room(
+      {
+        name: 'Min Humans',
+        mode: 'forest_survival',
+        mapId: 'forest_square',
+        bots: 3,
+        maxPlayers: 8,
+        timeLimit: 3,
+        scoreLimit: 1,
+        publicLayoutSeed: 6501,
+        countdownSec: 2,
+        minHumans: 2,
+      },
+      io,
+      () => {},
+    );
+    try {
+      assert.equal(room.info().minHumans, 2);
+      const s1 = createFakeSocket('p1');
+      const s2 = createFakeSocket('p2');
+      room.addHuman(s1.socket, 'One');
+      room.addHuman(s2.socket, 'Two');
+      room.onReady('p1', { world: room.worldMeta() });
+      room.advanceTimeForTest(3, 0.25);
+      assert.equal(room.phase, 'waiting', 'bitta odam + 3 bot — 2 odam talab qilinganda kutiladi');
+      const surv = room.getSurvivalState()!;
+      assert.equal(surv.readyHumans, 1);
+      assert.equal(surv.minHumans, 2);
+      assert.equal(surv.readyCount, 0, 'odamlar yetarli bo‘lmaguncha samarali tayyorlar soni 0');
+      assert.match(surv.statusTextUz, /Odamlar kutilmoqda \(1\/2\)/);
+
+      room.onReady('p2', { world: room.worldMeta() });
+      assert.equal(room.phase, 'countdown', 'ikkinchi odam tayyor — sanoq boshlanadi');
+      room.advanceTimeForTest(2.5, 0.25);
+      assert.equal(room.phase, 'playing');
+      assert.equal(room.getSurvivalState()!.totalContenders, 5, '2 odam + 3 bot');
+
+      // Sanoq paytida odam chiqib ketsa — kutishga qaytadi
+    } finally {
+      room.destroy();
+    }
+  });
+
   it('4. Match snapshotida botlar tirik ishtirokchilar qatorida sanaladi', () => {
     const { io, emitted } = createFakeIo();
     const room = makeSurvivalRoom(io, 2);

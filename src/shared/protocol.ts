@@ -23,6 +23,8 @@ export interface RoomInfo {
   roundId?: number;
   /** Current room phase (Stage 07+). */
   phase?: SurvivalPhase;
+  /** Survival: boshlash uchun kerakli odamlar soni. */
+  minHumans?: number;
 }
 
 export interface CreateRoomOpts {
@@ -38,6 +40,8 @@ export interface CreateRoomOpts {
   lootPreview?: boolean;
   /** Optional survival pre-round countdown duration override in seconds (Stage 07+). */
   countdownSec?: number;
+  /** Survival: raund boshlanishi uchun kerakli tayyor odamlar soni (botlar hisobga olinmaydi), standart 1. */
+  minHumans?: number;
 }
 
 export interface WelcomeMsg {

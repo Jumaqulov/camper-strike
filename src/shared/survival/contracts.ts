@@ -18,6 +18,8 @@ export interface SurvivalConfig {
   endedDisplayDurationSec: number;
   /** Xavfsiz zona torayishi yoqilganmi (standart: true). */
   zoneEnabled: boolean;
+  /** Raund boshlanishi uchun kerakli tayyor odamlar soni (botlar hisobga olinmaydi), kamida 1. */
+  minHumansToStart: number;
 }
 
 export interface SurvivalPlayerStatusSnap {
@@ -39,6 +41,9 @@ export interface SurvivalStateSnap {
   timeLeft: number;
   minPlayers: number;
   readyCount: number;
+  /** Tayyor odamlar soni va boshlash uchun kerakli odamlar soni (botlarsiz). */
+  readyHumans: number;
+  minHumans: number;
   contenderIds: string[];
   aliveIds: string[];
   spectatorIds: string[];

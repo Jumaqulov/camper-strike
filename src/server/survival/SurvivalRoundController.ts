@@ -100,6 +100,9 @@ export class SurvivalRoundController {
     if (partial.zoneEnabled !== undefined) {
       this.config.zoneEnabled = Boolean(partial.zoneEnabled);
     }
+    if (partial.minHumansToStart !== undefined && Number.isFinite(partial.minHumansToStart)) {
+      this.config.minHumansToStart = Math.max(1, Math.floor(partial.minHumansToStart));
+    }
   }
 
   getRoundId(): number {
@@ -180,7 +183,7 @@ export class SurvivalRoundController {
    * (faqat botlar o'zaro raund boshlamaydi), aks holda odamlar + botlar.
    */
   private getEffectiveReadyCount(): number {
-    if (this.getReadyHumanPlayers().length === 0) return 0;
+    if (this.getReadyHumanPlayers().length < Math.max(1, this.config.minHumansToStart)) return 0;
     return this.getReadyContenders().length;
   }
 
@@ -472,10 +475,14 @@ export class SurvivalRoundController {
     }
 
     const spectatorIds = [...spectatorSet];
+    const readyHumans = this.getReadyHumanPlayers().length;
+    const minHumans = Math.max(1, this.config.minHumansToStart);
     const statusTextUz = formatSurvivalStatusTextUz({
       phase: this.phase,
       timeLeft,
       readyCount,
+      readyHumans,
+      minHumans,
       minPlayers: this.config.minPlayersToStart,
       aliveCount,
       totalContenders,
@@ -490,6 +497,8 @@ export class SurvivalRoundController {
       timeLeft,
       minPlayers: this.config.minPlayersToStart,
       readyCount,
+      readyHumans,
+      minHumans,
       contenderIds,
       aliveIds,
       spectatorIds,

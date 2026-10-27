@@ -565,7 +565,9 @@ export class SurvivalUI {
     const phaseLabel = SURVIVAL_PHASE_LABELS_UZ[snap.phase] ?? snap.phase.toUpperCase();
     const countLabel =
       snap.phase === 'waiting' || snap.phase === 'countdown'
-        ? `Tayyor: ${snap.readyCount}/${snap.minPlayers}`
+        ? (snap.minHumans ?? 1) > 1 && (snap.readyHumans ?? 0) < (snap.minHumans ?? 1)
+          ? `Odamlar: ${snap.readyHumans ?? 0}/${snap.minHumans}`
+          : `Tayyor: ${snap.readyCount}/${snap.minPlayers}`
         : `Tirik: ${snap.aliveCount}/${snap.totalContenders}`;
     this.topStatusText = `RAUND #${snap.roundId} · ${phaseLabel} · ${countLabel}`;
 
@@ -596,11 +598,15 @@ export class SurvivalUI {
     if (snap.phase === 'waiting' || snap.phase === 'countdown') {
       const title =
         snap.phase === 'waiting'
-          ? `O'yinchilar kutilmoqda · ${snap.readyCount}/${snap.minPlayers}`
+          ? (snap.minHumans ?? 1) > 1 && (snap.readyHumans ?? 0) < (snap.minHumans ?? 1)
+            ? `Odamlar kutilmoqda · ${snap.readyHumans ?? 0}/${snap.minHumans}`
+            : `O'yinchilar kutilmoqda · ${snap.readyCount}/${snap.minPlayers}`
           : `Raund boshlanmoqda`;
       const subtitle =
         snap.phase === 'waiting'
-          ? `Kamida ${snap.minPlayers} o'yinchi kerak · hamma qurolsiz boshlaydi`
+          ? (snap.minHumans ?? 1) > 1
+            ? `Kamida ${snap.minHumans} odam kerak · hamma qurolsiz boshlaydi`
+            : `Kamida ${snap.minPlayers} o'yinchi kerak · hamma qurolsiz boshlaydi`
           : `Konteynerlarni [E] bilan oching · oxirgi tirik qolgan g'olib`;
 
       this.preRoundBannerText = `${title} — ${subtitle}`;

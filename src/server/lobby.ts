@@ -70,6 +70,10 @@ export function sanitizeOpts(raw: Partial<CreateRoomOpts> | undefined, owner: st
   if (raw?.countdownSec !== undefined && Number.isFinite(Number(raw.countdownSec))) {
     opts.countdownSec = clamp(Number(raw.countdownSec), 1, 60);
   }
+  if (mode === 'forest_survival') {
+    // Boshlash uchun kerakli odamlar soni: 1..maxPlayers (botlar hisobga olinmaydi)
+    opts.minHumans = num(raw?.minHumans, 1, 1, opts.maxPlayers);
+  }
   return opts;
 }
 

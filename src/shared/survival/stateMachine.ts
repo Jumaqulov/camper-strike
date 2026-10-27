@@ -13,6 +13,7 @@ export const DEFAULT_SURVIVAL_CONFIG: SurvivalConfig = {
   roundDurationSec: 180,
   endedDisplayDurationSec: 8,
   zoneEnabled: true,
+  minHumansToStart: 1,
 };
 
 export const SURVIVAL_PHASE_LABELS_UZ: Record<SurvivalPhase, string> = {
@@ -161,12 +162,17 @@ export function formatSurvivalStatusTextUz(
     | 'winnerId'
     | 'winnerName'
     | 'winReason'
-  >,
+  > & { readyHumans?: number; minHumans?: number },
 ): string {
   const secs = Math.max(0, Math.ceil(snap.timeLeft));
 
   switch (snap.phase) {
     case 'waiting': {
+      const minHumans = snap.minHumans ?? 1;
+      const readyHumans = snap.readyHumans ?? snap.readyCount;
+      if (minHumans > 1 && readyHumans < minHumans) {
+        return `Odamlar kutilmoqda (${readyHumans}/${minHumans}) — yana ${minHumans - readyHumans} odam kerak`;
+      }
       const needed = Math.max(0, snap.minPlayers - snap.readyCount);
       if (needed > 0) {
         return `Ishtirokchilar kutilmoqda (${snap.readyCount}/${snap.minPlayers}) — yana ${needed} o‘yinchi kerak`;

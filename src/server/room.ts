@@ -192,6 +192,7 @@ export class Room {
           roundDurationSec: Math.max(5, (opts.timeLimit || 3) * 60),
           endedDisplayDurationSec: MATCH_END_DURATION,
           zoneEnabled: true,
+          minHumansToStart: Math.max(1, Math.floor(opts.minHumans ?? 1)),
         },
       );
     } else {
@@ -289,6 +290,7 @@ export class Room {
       lootEnabled: this.lootEnabled,
       roundId: this.roundId,
       phase: this.phase,
+      minHumans: this.isSurvival ? this.survival?.getConfig().minHumansToStart ?? 1 : undefined,
     };
   }
 

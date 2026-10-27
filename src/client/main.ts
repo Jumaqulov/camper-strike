@@ -366,6 +366,9 @@ function applyModeSelection(mode: string): void {
   const scoreInput = getEl<HTMLInputElement>('room-score');
   const lootPreviewChk = getEl<HTMLInputElement>('room-loot-preview');
 
+  const minHumansField = getEl<HTMLElement>('room-min-humans-field');
+  if (minHumansField) minHumansField.style.display = mode === 'forest_survival' ? '' : 'none';
+
   if (mode === 'forest_survival') {
     if (mapSel) mapSel.value = 'forest_square';
     if (botsInput) {
@@ -436,7 +439,7 @@ function renderRooms(rooms: RoomInfo[]): void {
         <span class="r-mode ${r.mode}">${modeBadgeLabel}</span>
         <div class="r-main">
           <div class="r-name">${esc(r.name)}</div>
-          <div class="r-meta">${mapLabel}${lootBadge} · 👤 ${r.players}/${r.maxPlayers} o'yinchi · 🤖 ${r.bots} bot · ⏱ ${r.timeLimit} daq · 🎯 ${r.mode === 'forest_survival' ? '1 tirik' : r.scoreLimit}</div>
+          <div class="r-meta">${mapLabel}${lootBadge} · 👤 ${r.players}/${r.maxPlayers} o'yinchi · 🤖 ${r.bots} bot · ⏱ ${r.timeLimit} daq · 🎯 ${r.mode === 'forest_survival' ? '1 tirik' : r.scoreLimit}${r.mode === 'forest_survival' && (r.minHumans ?? 1) > 1 ? ` · 🚦 start: ${r.minHumans} odam` : ''}</div>
         </div>
         <button class="btn primary" data-join="${r.id}" ${r.players >= r.maxPlayers ? 'disabled' : ''}>KIRISH</button>
       </div>`;
@@ -708,6 +711,7 @@ function initEvents(): void {
     const maxInput = getEl<HTMLInputElement>('room-max');
     const timeInput = getEl<HTMLInputElement>('room-time');
     const scoreInput = getEl<HTMLInputElement>('room-score');
+    const minHumansInput = getEl<HTMLInputElement>('room-min-humans');
 
     const opts: CreateRoomOpts = {
       name: (rNameInput ? rNameInput.value.trim() : '') || `${settings.name} xonasi`,
@@ -723,6 +727,10 @@ function initEvents(): void {
       mapId: selectedMap,
       lootPreview,
     };
+    if (isSurvival) {
+      // Shuncha odam tayyor bo'lgach raund boshlanadi (botlar hisobga olinmaydi)
+      opts.minHumans = Math.max(1, Math.min(16, Number(minHumansInput?.value ?? 1) || 1));
+    }
 
     socket.emit('createRoom', opts, (res: { ok: boolean; roomId?: string; error?: string }) => {
       if (!res.ok || !res.roomId) return toast(res.error ?? "Xona yaratib bo'lmadi");
