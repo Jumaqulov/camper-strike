@@ -201,9 +201,17 @@ html, body {
 #scope-overlay .scope-v { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: #000; }
 
 #top-bar { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; align-items: stretch; }
+/* Mini-xarita (radar) — yuqori chap burchak; [N] bilan butun xarita markazda */
+#minimap-wrap { position: absolute; top: 14px; left: 16px; width: 184px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+#minimap { display: block; border-radius: 50%; border: 2px solid rgba(217, 155, 82, 0.6); box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5), inset 0 0 18px rgba(0, 0, 0, 0.45); background: rgba(36, 26, 16, 0.85); }
+#minimap-hint { font-size: 10px; letter-spacing: 0.8px; color: #ffd15c; text-transform: uppercase; opacity: 0.85; }
+#minimap-wrap.whole { top: 50%; left: 50%; width: 440px; transform: translate(-50%, -50%); }
+#minimap-wrap.whole #minimap { border-radius: 14px; }
+#hud.survival #minimap-wrap:not(.whole) { top: 14px; }
+
 #dev-stats {
   position: absolute;
-  top: 14px;
+  top: 214px;
   left: 16px;
   background: rgba(12, 16, 22, 0.82);
   border: 1px solid rgba(255, 209, 92, 0.45);

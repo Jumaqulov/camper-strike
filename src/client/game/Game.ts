@@ -31,6 +31,7 @@ import type { PredictionDiagnostics } from './ClientPrediction';
 import { Effects } from './Effects';
 import { buildGrenadeModel } from './GunModels';
 import { esc, Hud, weaponBadgeHtml } from './Hud';
+import { MiniMap, type MiniMapMarker } from './MiniMap';
 import { Input } from './Input';
 import { LocalPlayer } from './LocalPlayer';
 import {
@@ -357,6 +358,7 @@ export class Game {
   /** Lokal qurol almashtirish vaqti: eskirgan inventory:state qurolni orqaga qaytarmasligi uchun. */
   private lastLocalSwitchAt = -99;
   private maxDpr = 2;
+  private miniMap: MiniMap | null = null;
   /** Avtomatik sifat nazorati (kuchsiz GPU): kadr vaqti yig'indisi va ketma-ket "yomon" soniyalar. */
   private perfAccumMs = 0;
   private perfFrames = 0;
@@ -491,6 +493,12 @@ export class Game {
       },
     });
     this.inventoryUi.setVisible(this.lootPreview);
+    try {
+      this.miniMap = new MiniMap(this.worldDef, $('minimap-wrap'));
+    } catch (err) {
+      console.warn('[MiniMap] yaratib bo‘lmadi:', err);
+      this.miniMap = null;
+    }
     this.survivalUi = new SurvivalUI({
       onCycleSpectatorTarget: (delta) => {
         this.spectator.cycleTarget(delta, this.getSpectatableTargets());
@@ -1861,6 +1869,7 @@ export class Game {
         this.socket.emit('switchTeam');
       }
       if (inp.justPressed('KeyV')) this.thirdPerson = !this.thirdPerson;
+      if (inp.justPressed('KeyN')) this.miniMap?.toggleWhole();
     }
 
     // Forest Survival: raund tugagach server kirishlarni rad etadi (canPlayerMove=false). Klient ham harakatni
@@ -2477,6 +2486,19 @@ export class Game {
   private updateHud(t: number) {
     const me = this.me;
     this.hud.setHealth(me.alive ? me.hp : 0);
+    if (this.miniMap) {
+      // Kuzatuvchi rejimida kamera pozitsiyasi, aks holda o'yinchi; TDM'da faqat jamoadoshlar ko'rinadi
+      const sp = !me.alive && this.isSurvival ? this.lastSpectatorPose : null;
+      const center = sp ? { x: sp.x, z: sp.z, yaw: sp.yaw } : { x: me.body.pos.x, z: me.body.pos.z, yaw: me.yaw };
+      const allies: MiniMapMarker[] = [];
+      if (this.mode === 'tdm') {
+        for (const rem of this.remotes.values()) {
+          if (rem.team !== me.team) continue;
+          allies.push({ x: rem.pos.x, z: rem.pos.z, team: rem.team, alive: rem.alive });
+        }
+      }
+      this.miniMap.update(center, allies);
+    }
     if (me.weapon) {
       const a = me.ammo[me.weapon];
       this.hud.setAmmo(me.weapon, a.mag, a.reserve, !!me.reloadWeapon, me.grenades, this.lootPreview ? me.ownedWeapons : undefined);
@@ -2622,6 +2644,8 @@ export class Game {
     this.collisionDebug?.dispose();
     this.collisionDebug = null;
     this.survivalUi.dispose();
+    this.miniMap?.dispose();
+    this.miniMap = null;
     this.lootUi.dispose();
     this.inventoryUi.dispose();
     this.lootWorld.dispose();
