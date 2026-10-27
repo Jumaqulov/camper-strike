@@ -710,7 +710,7 @@ async function worldChecks(prefix: string, A: Client, B: Client) {
   const wb = B.welcome?.world;
   check(`${prefix}.welcome.received`, ok(Boolean(wa && wb)), undefined, { A: wa, B: wb });
   check(`${prefix}.sameRoomId`, ok(Boolean(A.welcome?.room?.id) && A.welcome?.room?.id === B.welcome?.room?.id), `${A.welcome?.room?.id} / ${B.welcome?.room?.id}`);
-  check(`${prefix}.gameplayHash`, ok(wa?.gameplayHash === '0d7cae19287644dc' && wb?.gameplayHash === wa?.gameplayHash), `${wa?.gameplayHash} / ${wb?.gameplayHash}`);
+  check(`${prefix}.gameplayHash`, ok(wa?.gameplayHash === 'd82286ad69e55014' && wb?.gameplayHash === wa?.gameplayHash), `${wa?.gameplayHash} / ${wb?.gameplayHash}`);
   check(`${prefix}.worldVersion`, ok(wa?.worldVersion === 2 && wb?.worldVersion === 2), `${wa?.worldVersion} / ${wb?.worldVersion}`);
   const seen = await waitSeen(A, B);
   check(`${prefix}.seeEachOther(snapshots)`, ok(seen), seen ? undefined : `A snaps=${A.snapHist.length} players=${JSON.stringify(A.lastSnap?.players?.map((p: any) => p.id))} B snaps=${B.snapHist.length} players=${JSON.stringify(B.lastSnap?.players?.map((p: any) => p.id))} ids A=${A.myId} B=${B.myId}`);

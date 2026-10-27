@@ -354,6 +354,10 @@ export function buildWatchpost4x4Prefab(
   const wSouthDoor = placeWallTransform(0, 4, 4, 4, 0);
   const wEastWin = placeWallTransform(4, 4, 4, 0, 0);
   const wNorthWin = placeWallTransform(4, 0, 0, 0, 0);
+  const wWest2 = placeWallTransform(0, 0, 0, 4, 3);
+  const wSouth2 = placeWallTransform(0, 4, 4, 4, 3);
+  const wEast2 = placeWallTransform(4, 4, 4, 0, 3);
+  const wNorth2 = placeWallTransform(4, 0, 0, 0, 3);
 
   const modules: BuildingModulePlacement[] = [
     // 1. Ground floor slab (y = 0)
@@ -394,14 +398,20 @@ export function buildWatchpost4x4Prefab(
       wNorthWin.position.z,
       wNorthWin.rotationY,
     ),
-    // 8-9. Roof gables (y = 3.0)
-    addMod(8, 'wood_roof_gable_01', 0, 3, 2, -Math.PI / 2),
-    addMod(9, 'wood_roof_gable_01', 4, 3, 2, Math.PI / 2),
-    // 10-11. Roof slopes (y = 3.0)
-    addMod(10, 'wood_roof_slope_01', 2, 3, 2, 0),
-    addMod(11, 'wood_roof_slope_01', 2, 3, 2, Math.PI),
+    // 8-9. Roof gables (y = 6.0 — ikkinchi qavat ustida; avval y = 3.0 da bo'lib, kuzatuv maydoni tom ichida qolardi)
+    addMod(8, 'wood_roof_gable_01', 0, 6, 2, -Math.PI / 2),
+    addMod(9, 'wood_roof_gable_01', 4, 6, 2, Math.PI / 2),
+    // 10-11. Roof slopes (y = 6.0)
+    addMod(10, 'wood_roof_slope_01', 2, 6, 2, 0),
+    addMod(11, 'wood_roof_slope_01', 2, 6, 2, Math.PI),
     // 12. Exterior stairs along the west wall from (-0.75, 0, 3.85) along -Z (rotationY = 0) to y = 3.0
     addMod(12, 'wood_stairs_01', -0.75, 0, 3.85, 0),
+    // 13-16. Second-floor observation room walls (y = 3.0): 3 windowed walls to shoot from,
+    // north wall with an open doorway (no leaf) where the stair landing bridge arrives
+    addMod(13, 'wood_wall_window_01', wWest2.position.x, wWest2.position.y, wWest2.position.z, wWest2.rotationY),
+    addMod(14, 'wood_wall_window_01', wSouth2.position.x, wSouth2.position.y, wSouth2.position.z, wSouth2.rotationY),
+    addMod(15, 'wood_wall_window_01', wEast2.position.x, wEast2.position.y, wEast2.position.z, wEast2.rotationY),
+    addMod(16, 'wood_wall_door_01', wNorth2.position.x, wNorth2.position.y, wNorth2.position.z, wNorth2.rotationY),
   ];
 
   const porchSteps: BuildingPorchStepSpec[] = [
@@ -427,12 +437,13 @@ export function buildWatchpost4x4Prefab(
       size: { x: 1.3, y: 0.2, z: 1.0 },
       rotationY: 0,
     },
-    // Top landing balcony at y = 3.0 connecting the top of wood_stairs_01 (-0.75, 3.0, -0.15) to the 2nd floor deck (2, 3.0, 2)
+    // Top landing balcony at y = 3.0 connecting the top of wood_stairs_01 (-0.75, 3.0, -0.15) to the 2nd-floor
+    // north doorway (x in [1.1, 2.9] at z = 0): spans x in [-1.35, 2.65]
     {
       id: `${idPrefix}:upper_deck_landing`,
       buildingId: idPrefix,
-      position: { x: q3(ox + 0.35), y: q3(oy + 2.9), z: q3(oz - 0.65) },
-      size: { x: 3.4, y: 0.2, z: 1.3 },
+      position: { x: q3(ox + 0.65), y: q3(oy + 2.9), z: q3(oz - 0.65) },
+      size: { x: 4.0, y: 0.2, z: 1.3 },
       rotationY: 0,
     },
   ];

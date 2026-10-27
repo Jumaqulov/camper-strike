@@ -10,6 +10,7 @@ import {
   raycastWorld,
   rayVsPlayer,
   type Body,
+  type HitZone,
 } from '../shared/physics';
 import type {
   ChatMsg, ClientState, ContainerOpenAck, ContainerOpenReq, CreateRoomOpts, EquipWeaponAck, EquipWeaponReq,
@@ -675,22 +676,23 @@ export class Room {
       const wall = raycastWorld(this.world, origin, d, def.range);
       let maxT = wall ? wall.t : def.range;
       let hitP: ServerPlayer | null = null;
-      let head = false;
+      let zone: HitZone = 'torso';
       for (const o of this.players.values()) {
         if (!o.alive || !this.isEnemy(p, o)) continue;
         const h = rayVsPlayer(origin, d, o.pos, maxT);
         if (h) {
           maxT = h.t;
           hitP = o;
-          head = h.head;
+          zone = h.zone;
         }
       }
       ends.push({ x: r3(origin.x + d.x * maxT), y: r3(origin.y + d.y * maxT), z: r3(origin.z + d.z * maxT) });
       if (hitP) {
-        const amount = damageAt(def, maxT, head);
+        // Zarar tegish zonasiga qarab: bosh ×headMult, tana ×1, oyoq ×0.7
+        const amount = damageAt(def, maxT, zone);
         const cur = dmg.get(hitP) ?? { dmg: 0, head: false };
         cur.dmg += amount;
-        cur.head = cur.head || head;
+        cur.head = cur.head || zone === 'head';
         dmg.set(hitP, cur);
       }
     }

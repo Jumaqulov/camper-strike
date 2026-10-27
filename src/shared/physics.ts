@@ -801,7 +801,17 @@ export function computeCameraClearDistance(
   return 0;
 }
 
-export function rayVsPlayer(o: Vec3, d: Vec3, feet: Vec3, maxT: number): { t: number; head: boolean } | null {
+/** O'q tekkan tana zonasi: bosh (headMult), tana (1.0x), oyoqlar (LEGS_DAMAGE_MUL). */
+export type HitZone = 'head' | 'torso' | 'legs';
+/** Oyoq nuqtasidan shu balandlikdan pastga tekkan o'q — oyoq zonasi. */
+export const LEGS_HITBOX_TOP = 0.85;
+
+export function rayVsPlayer(
+  o: Vec3,
+  d: Vec3,
+  feet: Vec3,
+  maxT: number,
+): { t: number; head: boolean; zone: HitZone } | null {
   const hr = HEAD_HITBOX.radius;
   const br = BODY_HITBOX.radius;
   const head = rayBox(
@@ -816,8 +826,12 @@ export function rayVsPlayer(o: Vec3, d: Vec3, feet: Vec3, maxT: number): { t: nu
     { x: feet.x + br, y: feet.y + BODY_HITBOX.top, z: feet.z + br },
     maxT,
   );
-  if (head && (!body || head.t <= body.t)) return { t: head.t, head: true };
-  if (body) return { t: body.t, head: false };
+  if (head && (!body || head.t <= body.t)) return { t: head.t, head: true, zone: 'head' };
+  if (body) {
+    // Tegish nuqtasining balandligi bo'yicha tana / oyoq
+    const hitY = o.y + d.y * body.t - feet.y;
+    return { t: body.t, head: false, zone: hitY < LEGS_HITBOX_TOP ? 'legs' : 'torso' };
+  }
   return null;
 }
 

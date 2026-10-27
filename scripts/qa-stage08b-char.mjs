@@ -67,7 +67,7 @@ const IGPU = args.igpu === 'true';
 const IGPU_FLAGS = ['--force_low_power_gpu', '--use-angle=d3d11'];
 const PERF_TAG = `${PERF_MODE}-${HEADFUL ? 'headful' : 'headless'}${IGPU ? '-igpu' : ''}`;
 const SEED = 6501;
-const EXPECTED_HASH = '0d7cae19287644dc';
+const EXPECTED_HASH = 'd82286ad69e55014';
 const EXPECTED_WORLD_VERSION = 2;
 const WEAPONS = ['rifle', 'pistol', 'shotgun', 'sniper'];
 const VIDEO_FPS = 30;
