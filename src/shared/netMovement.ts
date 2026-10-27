@@ -1,4 +1,13 @@
-import { BACKPEDAL_SPEED_MUL, RUN_SPEED, SPRINT_MIN_FORWARD, STRAFE_SPEED_MUL, WALK_SPEED } from './constants';
+import {
+  BACKPEDAL_SPEED_MUL,
+  RUN_SPEED,
+  SPRINT_MIN_FORWARD,
+  STAMINA_REGEN_SECONDS,
+  STAMINA_RELOCK_THRESHOLD,
+  STAMINA_SPRINT_SECONDS,
+  STRAFE_SPEED_MUL,
+  WALK_SPEED,
+} from './constants';
 import { clamp } from './math';
 import { applyWorldMovement, type Body, type WorldMovementOptions } from './physics';
 import type { PlayerInputCmd } from './protocol';
@@ -20,6 +29,10 @@ export interface MovementState extends Body {
   pitch: number;
   weapon: WeaponId | null;
   scoped: boolean;
+  /** Sprint chidamliligi 0..1 (server va klient bashorati bir xil simulyatsiya qiladi); yo'q bo'lsa 1. */
+  stamina?: number;
+  /** Stamina tugagan: STAMINA_RELOCK_THRESHOLD gacha tiklanmaguncha sprint yo'q. */
+  staminaLocked?: boolean;
 }
 
 export function cloneMovementState(state: MovementState): MovementState {
@@ -31,7 +44,47 @@ export function cloneMovementState(state: MovementState): MovementState {
     pitch: state.pitch,
     weapon: state.weapon,
     scoped: state.scoped,
+    stamina: state.stamina ?? 1,
+    staminaLocked: Boolean(state.staminaLocked),
   };
+}
+
+/** Kirish sprintni talab qiladimi (Shift + asosan oldinga harakat). */
+export function wantsSprint(cmd: Pick<PlayerInputCmd, 'moveForward' | 'moveRight' | 'walk'>): boolean {
+  if (!cmd.walk) return false;
+  const fwd = clamp(cmd.moveForward, -1, 1);
+  const right = clamp(cmd.moveRight, -1, 1);
+  const mag = Math.hypot(fwd, right);
+  if (mag <= 0) return false;
+  return fwd / mag > SPRINT_MIN_FORWARD;
+}
+
+/**
+ * Stamina yangilanishi (server va klientda bir xil): sprint qilinsa kamayadi, aks holda tiklanadi.
+ * Qaytaradi: shu qadamda sprint ruxsat etilganmi.
+ */
+export function stepStamina(
+  state: { stamina?: number; staminaLocked?: boolean },
+  sprintRequested: boolean,
+  dt: number,
+): boolean {
+  let st = Number.isFinite(state.stamina) ? clamp(state.stamina as number, 0, 1) : 1;
+  let locked = Boolean(state.staminaLocked);
+  const canSprint = sprintRequested && !locked && st > 0;
+  if (canSprint) {
+    st -= dt / STAMINA_SPRINT_SECONDS;
+    if (st <= 0) {
+      st = 0;
+      locked = true;
+    }
+  } else {
+    st += dt / STAMINA_REGEN_SECONDS;
+    if (st > 1) st = 1;
+    if (locked && st >= STAMINA_RELOCK_THRESHOLD) locked = false;
+  }
+  state.stamina = st;
+  state.staminaLocked = locked;
+  return canSprint;
 }
 
 export function quantizeInputDt(dt: number): number {
@@ -239,7 +292,14 @@ export function computeWishVelocity(
 }
 
 export function stepPlayerMovement(
-  state: Body & { yaw?: number; pitch?: number; weapon?: WeaponId | null; scoped?: boolean },
+  state: Body & {
+    yaw?: number;
+    pitch?: number;
+    weapon?: WeaponId | null;
+    scoped?: boolean;
+    stamina?: number;
+    staminaLocked?: boolean;
+  },
   cmd: PlayerInputCmd,
   world: WorldDefinition,
   opts: WorldMovementOptions = {},
@@ -249,8 +309,10 @@ export function stepPlayerMovement(
   state.weapon = cmd.weapon;
   state.scoped = cmd.weapon === 'sniper' ? Boolean(cmd.scoped) : false;
 
-  const { wx, wz } = computeWishVelocity(cmd);
   const totalDt = quantizeInputDt(cmd.dt);
+  // Stamina: sprint faqat chidamlilik bo'lsa; tugaganda avtomatik yurishga o'tadi
+  const sprintOk = stepStamina(state, wantsSprint(cmd), totalDt);
+  const { wx, wz } = computeWishVelocity(sprintOk === cmd.walk ? cmd : { ...cmd, walk: sprintOk });
   const substeps = Math.max(1, Math.ceil(totalDt / FIXED_MOVE_DT));
   const sdt = totalDt / substeps;
 

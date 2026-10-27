@@ -49,6 +49,8 @@ export interface ServerPlayer extends Body {
   yaw: number;
   pitch: number;
   scoped: boolean;
+  stamina: number;
+  staminaLocked: boolean;
   hp: number;
   alive: boolean;
   respawnAt: number;
@@ -281,6 +283,7 @@ export class Room {
       onGround: true,
       yaw: 0, pitch: 0,
       scoped: false,
+      stamina: 1, staminaLocked: false,
       hp: MAX_HP, alive: false,
       respawnAt: isBot ? 0 : Infinity,
       spawnId: 0, spawnTime: 0,
@@ -498,6 +501,8 @@ export class Room {
     p.yaw = this.opts.mode === 'ffa' || this.opts.mode === 'forest_survival' ? Math.random() * Math.PI * 2 : sp.yaw;
     p.pitch = 0;
     p.scoped = false;
+    p.stamina = 1;
+    p.staminaLocked = false;
     p.hp = MAX_HP;
     p.alive = true;
     p.respawnAt = Infinity;
@@ -1419,6 +1424,8 @@ export class Room {
         reloading: !!p.reloadWeapon,
         spawnId: p.spawnId,
         lastProcessedInputSeq: p.isBot ? 0 : p.authority.lastProcessedSeq,
+        stamina: r3(p.stamina),
+        staminaLocked: p.staminaLocked,
       };
       if (this.isSurvival && this.survival) {
         snapP.survivalRole = this.survival.getPlayerRole(p.id);

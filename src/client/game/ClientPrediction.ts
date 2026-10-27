@@ -222,10 +222,15 @@ export class ClientPrediction {
         errorDist: posErrAtAck,
       };
 
+      const staminaOk =
+        snap.stamina === undefined ||
+        (Math.abs((ackRecord.stateAfter.stamina ?? 1) - snap.stamina) <= 0.02 &&
+          Boolean(ackRecord.stateAfter.staminaLocked) === Boolean(snap.staminaLocked));
       if (
         posErrAtAck <= RECONCILE_SMOOTH_THRESHOLD &&
         velErrAtAck <= 0.08 &&
-        ackRecord.stateAfter.onGround === snap.onGround
+        ackRecord.stateAfter.onGround === snap.onGround &&
+        staminaOk
       ) {
         return {
           accepted: true,
@@ -251,6 +256,10 @@ export class ClientPrediction {
     state.pos = { x: snap.x, y: snap.y, z: snap.z };
     state.vel = { x: snap.vx, y: snap.vy, z: snap.vz };
     state.onGround = snap.onGround;
+    if (snap.stamina !== undefined) {
+      state.stamina = snap.stamina;
+      state.staminaLocked = Boolean(snap.staminaLocked);
+    }
 
     for (let i = 0; i < this.buffer.length; i++) {
       const rec = this.buffer[i];

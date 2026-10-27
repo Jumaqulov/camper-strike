@@ -23,6 +23,14 @@ export const STRAFE_SPEED_MUL = 0.82;
 export const BACKPEDAL_SPEED_MUL = 0.68;
 /** Sprint faqat harakat yo'nalishining oldinga ulushi shu qiymatdan katta bo'lsa ishlaydi. */
 export const SPRINT_MIN_FORWARD = 0.3;
+
+// Stamina (sprint chidamliligi), 0..1
+/** To'liq staminadan bo'shgacha sprint vaqti (s). */
+export const STAMINA_SPRINT_SECONDS = 6;
+/** Bo'shdan to'liqqa tiklanish vaqti (s). */
+export const STAMINA_REGEN_SECONDS = 9;
+/** Stamina tugagach, yana sprint qilish uchun kamida shu darajagacha tiklanishi kerak. */
+export const STAMINA_RELOCK_THRESHOLD = 0.25;
 export const GROUND_ACCEL = 70;
 export const AIR_ACCEL = 14;
 

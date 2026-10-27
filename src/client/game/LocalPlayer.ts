@@ -33,6 +33,8 @@ export class LocalPlayer {
   lastGrenade = -10;
   bloom = 0;
   scoped = false;
+  stamina = 1;
+  staminaLocked = false;
 
   setWorld(world: WorldDefinition): void {
     this.world = world;
@@ -99,6 +101,8 @@ export class LocalPlayer {
       this.medkits = 0;
       this.switchUntil = this.weapon ? t + WEAPONS[this.weapon].switchTime : t;
     }
+    this.stamina = 1;
+    this.staminaLocked = false;
     this.prediction.resetForSpawn(e.spawnId);
   }
 
@@ -170,6 +174,8 @@ export class LocalPlayer {
       pitch: this.pitch,
       weapon: this.weapon,
       scoped: this.scoped,
+      stamina: this.stamina,
+      staminaLocked: this.staminaLocked,
     };
   }
 
@@ -177,6 +183,8 @@ export class LocalPlayer {
     this.body.pos = { x: state.pos.x, y: state.pos.y, z: state.pos.z };
     this.body.vel = { x: state.vel.x, y: state.vel.y, z: state.vel.z };
     this.body.onGround = state.onGround;
+    this.stamina = state.stamina ?? this.stamina;
+    this.staminaLocked = Boolean(state.staminaLocked);
   }
 
   move(dt: number, fwd: number, right: number, jump: boolean, walk: boolean): PlayerInputCmd {

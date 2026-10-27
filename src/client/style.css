@@ -299,6 +299,11 @@ html, body {
 .hp-icon { font-size: 26px; }
 #hp-bar { height: 8px; background: rgba(255, 255, 255, 0.15); border-radius: 4px; overflow: hidden; margin-top: 4px; }
 #hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff4d4d, #ffd24d 50%, #5fd068); background-size: 260px 100%; transition: width 0.2s; }
+/* Stamina (sprint) chizig'i: to'liq bo'lsa yashirin, tugaganda qizil */
+#stamina-bar { height: 4px; margin-top: 5px; background: rgba(255, 255, 255, 0.12); border-radius: 2px; overflow: hidden; transition: opacity 0.35s; }
+#stamina-bar.full { opacity: 0; }
+#stamina-fill { height: 100%; width: 100%; background: #ffd15c; transition: width 0.12s linear, background 0.2s; }
+#stamina-bar.locked #stamina-fill { background: #ff6b5a; }
 
 #team-badge { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 13px; letter-spacing: 2px; padding: 5px 14px; border-radius: 20px; background: rgba(30, 89, 54, 0.85); border: 1.5px solid #f2e8cf; }
 

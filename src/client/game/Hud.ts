@@ -165,6 +165,19 @@ export class Hud {
     fill.style.width = `${Math.max(0, hp)}%`;
   }
 
+  private lastStaminaKey = '';
+  /** Sprint chidamliligi chizig'i (0..1); to'liq bo'lsa yashirinadi, tugaganda qizil. */
+  setStamina(v: number, locked: boolean): void {
+    const pct = Math.round(Math.max(0, Math.min(1, v)) * 100);
+    const key = `${pct}|${locked}`;
+    if (key === this.lastStaminaKey) return;
+    this.lastStaminaKey = key;
+    const bar = $('stamina-bar');
+    bar.classList.toggle('full', pct >= 100);
+    bar.classList.toggle('locked', locked);
+    $('stamina-fill').style.width = `${pct}%`;
+  }
+
   setAmmo(
     weapon: WeaponId | null,
     mag: number,

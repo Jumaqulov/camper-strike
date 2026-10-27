@@ -76,6 +76,9 @@ export interface PlayerSnap {
   spawnId?: number;
   /** Highest input sequence number processed by the server for this spawnId (Stage 05+). */
   lastProcessedInputSeq?: number;
+  /** Sprint chidamliligi 0..1 (avtoritativ; klient bashorati shu bilan sinxronlanadi). */
+  stamina?: number;
+  staminaLocked?: boolean;
   /** Survival role in forest_survival mode (Stage 07+). */
   role?: SurvivalPlayerRole;
   survivalRole?: SurvivalPlayerRole;

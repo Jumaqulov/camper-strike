@@ -234,6 +234,8 @@ export class PlayerMovementAuthority {
       weapon: WeaponId | null;
       scoped?: boolean;
       reloadWeapon?: WeaponId | null;
+      stamina?: number;
+      staminaLocked?: boolean;
     },
     serverDt: number,
     world: WorldDefinition,
