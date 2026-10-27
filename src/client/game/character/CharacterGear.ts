@@ -54,61 +54,91 @@ const LAYOUT_BUDDY: GearLayoutTable = {
   helmet: { pos: [0, 0.12, 0.01], scale: 1.0 },
   // Chest suyagining +Z o'qi orqaga qaraydi — nimcha 180° burilib, cho'ntaklar oldinga chiqadi
   vest: { pos: [0, 0.1, 0], rot: [0, Math.PI, 0], scale: 0.9 },
+  // Granatalar chap kamarda qisqichi tanaga qaragan holda osilib turadi, aptechkalar o'ng kamarda ilmog'i tanaga qaragan
   grenades: [
-    { pos: [-0.27, 0.04, 0.12] },
-    { pos: [-0.29, 0.04, 0.0] },
-    { pos: [-0.27, 0.04, -0.12] },
+    { pos: [-0.27, 0.0, 0.12], rot: [0.12, Math.PI, -0.08], scale: 1.15 },
+    { pos: [-0.29, 0.0, 0.0], rot: [0, Math.PI, -0.1], scale: 1.15 },
+    { pos: [-0.27, 0.0, -0.12], rot: [-0.12, Math.PI, -0.08], scale: 1.15 },
   ],
   medkits: [
-    { pos: [0.27, 0.04, 0.1], rot: [0, Math.PI / 2, 0] },
-    { pos: [0.27, 0.04, -0.08], rot: [0, Math.PI / 2, 0] },
-    { pos: [0.1, 0.05, -0.25], rot: [0, 0, 0] },
+    { pos: [0.27, 0.02, 0.1], rot: [0, Math.PI / 2, 0], scale: 1.15 },
+    { pos: [0.27, 0.02, -0.08], rot: [0, Math.PI / 2, 0], scale: 1.15 },
+    { pos: [0.1, 0.03, -0.25], rot: [0, Math.PI, 0], scale: 1.15 },
   ],
 };
 
 // ---------- Umumiy geometriya / materiallar ----------
-let shared: {
-  helmetDome: THREE.BufferGeometry;
-  helmetBrim: THREE.BufferGeometry;
-  vestFront: THREE.BufferGeometry;
-  vestStrap: THREE.BufferGeometry;
-  vestPouch: THREE.BufferGeometry;
-  grenadeBody: THREE.BufferGeometry;
-  grenadeCap: THREE.BufferGeometry;
-  medkitBox: THREE.BufferGeometry;
-  medkitCross: THREE.BufferGeometry;
-  matHelmet: THREE.MeshStandardMaterial;
-  matVest: THREE.MeshStandardMaterial;
-  matStrap: THREE.MeshStandardMaterial;
-  matGrenade: THREE.MeshStandardMaterial;
-  matGrenadeCap: THREE.MeshStandardMaterial;
-  matMedkit: THREE.MeshStandardMaterial;
-  matCross: THREE.MeshStandardMaterial;
-} | null = null;
+// Barcha jihozlar umumiy geometriya va materiallardan yig'iladi (dispose qilinmaydi, userData.sharedAsset).
+interface GearShared {
+  geo: Record<string, THREE.BufferGeometry>;
+  mat: Record<string, THREE.MeshStandardMaterial>;
+}
 
-function getShared() {
+let shared: GearShared | null = null;
+
+function getShared(): GearShared {
   if (shared) return shared;
-  const mark = <T extends { userData: Record<string, unknown> }>(o: T): T => {
-    o.userData.sharedAsset = true;
-    return o;
+  const g = <T extends THREE.BufferGeometry>(x: T): T => {
+    x.userData.sharedAsset = true;
+    return x;
+  };
+  const m = (opts: THREE.MeshStandardMaterialParameters): THREE.MeshStandardMaterial => {
+    const mat = new THREE.MeshStandardMaterial(opts);
+    mat.userData.sharedAsset = true;
+    return mat;
   };
   shared = {
-    helmetDome: mark(new THREE.SphereGeometry(0.235, 18, 10, 0, Math.PI * 2, 0, Math.PI * 0.52)),
-    helmetBrim: mark(new THREE.CylinderGeometry(0.255, 0.265, 0.035, 18)),
-    vestFront: mark(new THREE.BoxGeometry(0.38, 0.3, 0.05)),
-    vestStrap: mark(new THREE.BoxGeometry(0.06, 0.28, 0.4)),
-    vestPouch: mark(new THREE.BoxGeometry(0.1, 0.08, 0.05)),
-    grenadeBody: mark(new THREE.SphereGeometry(0.052, 12, 9)),
-    grenadeCap: mark(new THREE.CylinderGeometry(0.02, 0.02, 0.04, 8)),
-    medkitBox: mark(new THREE.BoxGeometry(0.14, 0.1, 0.07)),
-    medkitCross: mark(new THREE.BoxGeometry(0.02, 0.06, 0.01)),
-    matHelmet: mark(new THREE.MeshStandardMaterial({ color: '#4b5a3c', roughness: 0.6, metalness: 0.15 })),
-    matVest: mark(new THREE.MeshStandardMaterial({ color: '#3f5a3a', roughness: 0.85 })),
-    matStrap: mark(new THREE.MeshStandardMaterial({ color: '#1f2a1d', roughness: 0.9 })),
-    matGrenade: mark(new THREE.MeshStandardMaterial({ color: '#33502e', roughness: 0.7 })),
-    matGrenadeCap: mark(new THREE.MeshStandardMaterial({ color: '#8a8f86', roughness: 0.45, metalness: 0.4 })),
-    matMedkit: mark(new THREE.MeshStandardMaterial({ color: '#c62828', roughness: 0.6 })),
-    matCross: mark(new THREE.MeshStandardMaterial({ color: '#f5f5f5', roughness: 0.6 })),
+    geo: {
+      // Kaska
+      helmetDome: g(new THREE.SphereGeometry(0.235, 26, 16, 0, Math.PI * 2, 0, Math.PI * 0.56)),
+      helmetRim: g(new THREE.TorusGeometry(0.236, 0.02, 8, 30)),
+      helmetBand: g(new THREE.TorusGeometry(0.238, 0.011, 6, 30)),
+      helmetVisor: g(new THREE.BoxGeometry(0.16, 0.012, 0.07)),
+      helmetStrap: g(new THREE.BoxGeometry(0.012, 0.15, 0.028)),
+      helmetRivet: g(new THREE.SphereGeometry(0.011, 8, 6)),
+      // Nimcha (plita ko'targich)
+      vestPlate: g(new THREE.BoxGeometry(0.36, 0.3, 0.06)),
+      vestMolle: g(new THREE.BoxGeometry(0.3, 0.016, 0.008)),
+      vestShoulder: g(new THREE.BoxGeometry(0.07, 0.03, 0.44)),
+      vestSide: g(new THREE.BoxGeometry(0.04, 0.2, 0.3)),
+      vestPouch: g(new THREE.BoxGeometry(0.08, 0.1, 0.05)),
+      vestPouchFlap: g(new THREE.BoxGeometry(0.085, 0.03, 0.056)),
+      vestBuckle: g(new THREE.BoxGeometry(0.03, 0.018, 0.012)),
+      vestRadio: g(new THREE.BoxGeometry(0.04, 0.09, 0.03)),
+      vestAntenna: g(new THREE.CylinderGeometry(0.003, 0.003, 0.09, 6)),
+      // Granata (ananas tipli)
+      grenadeBody: g(new THREE.SphereGeometry(0.05, 16, 12)),
+      grenadeRingH: g(new THREE.TorusGeometry(0.049, 0.0055, 6, 24)),
+      grenadeRingV: g(new THREE.TorusGeometry(0.052, 0.0045, 6, 24)),
+      grenadeNeck: g(new THREE.CylinderGeometry(0.017, 0.021, 0.03, 10)),
+      grenadeCap: g(new THREE.CylinderGeometry(0.015, 0.015, 0.022, 10)),
+      grenadeLever: g(new THREE.BoxGeometry(0.012, 0.095, 0.018)),
+      grenadeRing: g(new THREE.TorusGeometry(0.014, 0.003, 6, 14)),
+      grenadeClip: g(new THREE.BoxGeometry(0.03, 0.05, 0.01)),
+      // Aptechka (tibbiy sumkacha)
+      medkitBody: g(new THREE.BoxGeometry(0.13, 0.1, 0.07)),
+      medkitFlap: g(new THREE.BoxGeometry(0.135, 0.036, 0.076)),
+      medkitZip: g(new THREE.BoxGeometry(0.122, 0.005, 0.005)),
+      medkitPatch: g(new THREE.CircleGeometry(0.03, 20)),
+      medkitCross: g(new THREE.BoxGeometry(0.012, 0.038, 0.004)),
+      medkitLoop: g(new THREE.BoxGeometry(0.035, 0.085, 0.012)),
+      medkitSnap: g(new THREE.SphereGeometry(0.006, 8, 6)),
+    },
+    mat: {
+      helmet: m({ color: '#4a5a3a', roughness: 0.72, metalness: 0.08 }),
+      helmetBand: m({ color: '#2f3a28', roughness: 0.95 }),
+      strap: m({ color: '#23291f', roughness: 0.95 }),
+      metal: m({ color: '#8d9188', roughness: 0.4, metalness: 0.65 }),
+      metalDark: m({ color: '#4c5049', roughness: 0.5, metalness: 0.5 }),
+      vest: m({ color: '#59663f', roughness: 0.9 }),
+      vestDark: m({ color: '#3f4a2d', roughness: 0.92 }),
+      grenade: m({ color: '#3b5230', roughness: 0.65, metalness: 0.12 }),
+      grenadeGroove: m({ color: '#263620', roughness: 0.7, metalness: 0.1 }),
+      medkit: m({ color: '#b3261e', roughness: 0.88 }),
+      medkitDark: m({ color: '#8a1b15', roughness: 0.9 }),
+      white: m({ color: '#f4f4f0', roughness: 0.7 }),
+      red: m({ color: '#d7342a', roughness: 0.7 }),
+    },
   };
   return shared;
 }
@@ -121,65 +151,176 @@ function applyPoint(o: THREE.Object3D, p: GearPoint): void {
   o.scale.setScalar(s);
 }
 
+function mesh(geo: THREE.BufferGeometry, mat: THREE.Material, castShadow = false): THREE.Mesh {
+  const x = new THREE.Mesh(geo, mat);
+  x.castShadow = castShadow;
+  x.receiveShadow = true;
+  return x;
+}
+
+/** Jangovar kaska: gumbaz, gardish, kamuflyaj tasmasi, old qalpoqcha, iyak tasmalari, parchinlar. */
 export function buildHelmetMesh(): THREE.Group {
   const s = getShared();
   const g = new THREE.Group();
   g.name = 'gear_helmet';
-  const dome = new THREE.Mesh(s.helmetDome, s.matHelmet);
-  dome.castShadow = true;
+  const dome = mesh(s.geo.helmetDome!, s.mat.helmet!, true);
+  dome.scale.set(1, 0.9, 1.07);
   g.add(dome);
-  const brim = new THREE.Mesh(s.helmetBrim, s.matHelmet);
-  brim.position.y = 0.01;
-  g.add(brim);
-  return g;
-}
-
-export function buildVestMesh(): THREE.Group {
-  const s = getShared();
-  const g = new THREE.Group();
-  g.name = 'gear_vest';
-  // Yupqa old va orqa plitalar tanaga yopishib turadi (ryukzak emas, nimcha), yon tasmalar va old cho'ntaklar
-  const front = new THREE.Mesh(s.vestFront, s.matVest);
-  front.position.set(0, 0, 0.2);
-  front.castShadow = true;
-  g.add(front);
-  const back = new THREE.Mesh(s.vestFront, s.matVest);
-  back.position.set(0, 0.02, -0.19);
-  g.add(back);
+  const rim = mesh(s.geo.helmetRim!, s.mat.helmet!);
+  rim.rotation.x = Math.PI / 2;
+  rim.scale.set(1, 1.07, 1);
+  rim.position.y = 0.005;
+  g.add(rim);
+  const band = mesh(s.geo.helmetBand!, s.mat.helmetBand!);
+  band.rotation.x = Math.PI / 2;
+  band.scale.set(0.98, 1.05, 1);
+  band.position.y = 0.075;
+  g.add(band);
+  const visor = mesh(s.geo.helmetVisor!, s.mat.helmet!);
+  visor.position.set(0, -0.002, 0.26);
+  visor.rotation.x = 0.18;
+  g.add(visor);
   for (const sx of [-1, 1]) {
-    const strap = new THREE.Mesh(s.vestStrap, s.matStrap);
-    strap.position.set(sx * 0.2, 0.06, 0);
+    const strap = mesh(s.geo.helmetStrap!, s.mat.strap!);
+    strap.position.set(sx * 0.225, -0.075, 0.03);
+    strap.rotation.z = sx * 0.12;
     g.add(strap);
-    const pouch = new THREE.Mesh(s.vestPouch, s.matStrap);
-    pouch.position.set(sx * 0.1, -0.07, 0.245);
-    g.add(pouch);
+    for (const z of [-0.08, 0.1]) {
+      const rivet = mesh(s.geo.helmetRivet!, s.mat.metalDark!);
+      rivet.position.set(sx * 0.23, 0.04, z);
+      g.add(rivet);
+    }
   }
   return g;
 }
 
+/** Plita ko'targich nimcha: old/orqa plitalar, MOLLE tasmalar, yelka va yon tasmalar, magazin cho'ntaklari, ratsiya. */
+export function buildVestMesh(): THREE.Group {
+  const s = getShared();
+  const g = new THREE.Group();
+  g.name = 'gear_vest';
+  const front = mesh(s.geo.vestPlate!, s.mat.vest!, true);
+  front.position.set(0, 0, 0.2);
+  g.add(front);
+  const back = mesh(s.geo.vestPlate!, s.mat.vest!);
+  back.position.set(0, 0.02, -0.19);
+  g.add(back);
+  // MOLLE tasmalar (old va orqa)
+  for (let i = 0; i < 4; i++) {
+    const y = 0.1 - i * 0.055;
+    const mf = mesh(s.geo.vestMolle!, s.mat.vestDark!);
+    mf.position.set(0, y, 0.234);
+    g.add(mf);
+    const mb = mesh(s.geo.vestMolle!, s.mat.vestDark!);
+    mb.position.set(0, y + 0.02, -0.224);
+    g.add(mb);
+  }
+  for (const sx of [-1, 1]) {
+    const shoulder = mesh(s.geo.vestShoulder!, s.mat.vestDark!);
+    shoulder.position.set(sx * 0.12, 0.165, 0.0);
+    g.add(shoulder);
+    const buckle = mesh(s.geo.vestBuckle!, s.mat.metalDark!);
+    buckle.position.set(sx * 0.12, 0.17, 0.17);
+    g.add(buckle);
+    const side = mesh(s.geo.vestSide!, s.mat.vestDark!);
+    side.position.set(sx * 0.19, -0.03, 0);
+    g.add(side);
+  }
+  // Oldidagi uchta magazin cho'ntagi (qopqoqli)
+  for (const x of [-0.1, 0, 0.1]) {
+    const pouch = mesh(s.geo.vestPouch!, s.mat.vestDark!);
+    pouch.position.set(x, -0.05, 0.255);
+    g.add(pouch);
+    const flap = mesh(s.geo.vestPouchFlap!, s.mat.vest!);
+    flap.position.set(x, 0.005, 0.258);
+    g.add(flap);
+  }
+  // Chap yelkadagi ratsiya va antenna
+  const radio = mesh(s.geo.vestRadio!, s.mat.strap!);
+  radio.position.set(-0.13, 0.08, 0.235);
+  g.add(radio);
+  const antenna = mesh(s.geo.vestAntenna!, s.mat.metalDark!);
+  antenna.position.set(-0.14, 0.17, 0.235);
+  g.add(antenna);
+  return g;
+}
+
+/** "Ananas" tipli qo'l granatasi: segmentli tana, bo'yin, zapal qalpog'i, richag va halqa, kamar qisqichi. */
 export function buildGrenadeMesh(): THREE.Group {
   const s = getShared();
   const g = new THREE.Group();
   g.name = 'gear_grenade';
-  g.add(new THREE.Mesh(s.grenadeBody, s.matGrenade));
-  const cap = new THREE.Mesh(s.grenadeCap, s.matGrenadeCap);
-  cap.position.y = 0.06;
+  const body = mesh(s.geo.grenadeBody!, s.mat.grenade!, true);
+  body.scale.set(1, 1.25, 1);
+  g.add(body);
+  for (const y of [-0.028, 0, 0.028]) {
+    const ring = mesh(s.geo.grenadeRingH!, s.mat.grenadeGroove!);
+    ring.rotation.x = Math.PI / 2;
+    const k = Math.sqrt(Math.max(0.2, 1 - (y / 0.0625) ** 2));
+    ring.scale.set(k, k, 1);
+    ring.position.y = y;
+    g.add(ring);
+  }
+  for (let i = 0; i < 4; i++) {
+    const ring = mesh(s.geo.grenadeRingV!, s.mat.grenadeGroove!);
+    ring.rotation.y = (i * Math.PI) / 4;
+    ring.scale.set(1, 1.2, 1);
+    g.add(ring);
+  }
+  const neck = mesh(s.geo.grenadeNeck!, s.mat.metalDark!);
+  neck.position.y = 0.07;
+  g.add(neck);
+  const cap = mesh(s.geo.grenadeCap!, s.mat.metal!);
+  cap.position.y = 0.094;
   g.add(cap);
+  const lever = mesh(s.geo.grenadeLever!, s.mat.metal!);
+  lever.position.set(0.034, 0.05, 0);
+  lever.rotation.z = -0.22;
+  g.add(lever);
+  const ring = mesh(s.geo.grenadeRing!, s.mat.metal!);
+  ring.position.set(0.012, 0.105, 0.018);
+  ring.rotation.x = Math.PI / 2;
+  g.add(ring);
+  // Kamarga osish qisqichi (orqa tomonda)
+  const clip = mesh(s.geo.grenadeClip!, s.mat.strap!);
+  clip.position.set(-0.04, 0.03, 0);
+  clip.rotation.y = Math.PI / 2;
+  g.add(clip);
   return g;
 }
 
+/** Tibbiy sumkacha: qizil mato tana, qopqoq, zamok chizig'i, oq doira ichida qizil xoch, kamar ilmog'i. */
 export function buildMedkitMesh(): THREE.Group {
   const s = getShared();
   const g = new THREE.Group();
   g.name = 'gear_medkit';
-  g.add(new THREE.Mesh(s.medkitBox, s.matMedkit));
-  const v = new THREE.Mesh(s.medkitCross, s.matCross);
-  v.position.z = 0.036;
-  g.add(v);
-  const h = new THREE.Mesh(s.medkitCross, s.matCross);
-  h.position.z = 0.036;
-  h.rotation.z = Math.PI / 2;
-  g.add(h);
+  const body = mesh(s.geo.medkitBody!, s.mat.medkit!, true);
+  g.add(body);
+  const flap = mesh(s.geo.medkitFlap!, s.mat.medkitDark!);
+  flap.position.set(0, 0.035, 0.004);
+  g.add(flap);
+  const zip = mesh(s.geo.medkitZip!, s.mat.metalDark!);
+  zip.position.set(0, 0.015, 0.037);
+  g.add(zip);
+  const patch = mesh(s.geo.medkitPatch!, s.mat.white!);
+  patch.position.set(0, -0.012, 0.0362);
+  g.add(patch);
+  const crossV = mesh(s.geo.medkitCross!, s.mat.red!);
+  crossV.position.set(0, -0.012, 0.0385);
+  g.add(crossV);
+  const crossH = mesh(s.geo.medkitCross!, s.mat.red!);
+  crossH.position.set(0, -0.012, 0.0385);
+  crossH.rotation.z = Math.PI / 2;
+  g.add(crossH);
+  for (const sx of [-1, 1]) {
+    const snap = mesh(s.geo.medkitSnap!, s.mat.metal!);
+    snap.position.set(sx * 0.045, 0.035, 0.043);
+    g.add(snap);
+  }
+  // Kamar ilmog'i (orqada, yuqoriga ko'tarilgan)
+  const loop = mesh(s.geo.medkitLoop!, s.mat.strap!);
+  loop.position.set(0, 0.02, -0.04);
+  g.add(loop);
   return g;
 }
 
