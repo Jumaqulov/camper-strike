@@ -6,6 +6,7 @@ import {
   type BuildingAssetId,
   type Stage04AMaterialName,
 } from '../../../shared/structures/contracts';
+import { q3 } from '../../../shared/math';
 import {
   deduplicateStage04AGltfMaterials,
   getStage04ASharedMaterial,
@@ -59,8 +60,6 @@ const failedAssets = new Set<BuildingAssetId>();
 let preloadPromise: Promise<void> | null = null;
 let assetsReady = false;
 const readyListeners = new Set<() => void>();
-
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 function countGeoTriangles(geo: THREE.BufferGeometry | null | undefined): number {
   if (!geo) return 0;

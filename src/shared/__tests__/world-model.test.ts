@@ -3,16 +3,14 @@ import { describe, it } from 'node:test';
 import type { Server, Socket } from 'socket.io';
 import { getNav } from '../../server/navgraph';
 import { Room } from '../../server/room';
-import { buildDustArena, MAP } from '../map';
-import { applyMovement, type Body } from '../physics';
+import { applyWorldMovement, type Body } from '../physics';
 import {
-  adaptDustArenaToWorld,
   compilePrefabPlacement,
   computeGameplayHash,
+  createTechnicalTerrainFixture,
   createWorldDefinition,
   CURRENT_WORLD_VERSION,
   DEFAULT_PUBLIC_LAYOUT_SEED,
-  DEFAULT_WORLD,
   extractWorldMeta,
   getChunkCoord,
   validateWorldCompatibility,
@@ -65,64 +63,56 @@ function createFakeSocket(id: string): {
 }
 
 describe('Bosqich 02A — WorldDefinition va deterministik dunyo arxitekturasi', () => {
-  it('buildDustArena() adapteri 100x70 m arena va barcha collider/spawnlarni buzmasdan WorldDefinition ga moslashtiradi', () => {
-    const legacy = buildDustArena(DEFAULT_PUBLIC_LAYOUT_SEED);
-    const world = adaptDustArenaToWorld(legacy, {
+  it('createWorldDefinition() to‘liq WorldDefinition (heightfield relyef, collider, spawn, joylashuv) beradi va harakat deterministik', () => {
+    const world = createWorldDefinition({
+      mapId: 'forest_technical',
       publicLayoutSeed: DEFAULT_PUBLIC_LAYOUT_SEED,
       worldVersion: CURRENT_WORLD_VERSION,
     });
 
-    assert.equal(world.mapId, 'dust_arena');
+    assert.equal(world.mapId, 'forest_technical');
     assert.equal(world.worldVersion, CURRENT_WORLD_VERSION);
     assert.equal(world.publicLayoutSeed, DEFAULT_PUBLIC_LAYOUT_SEED);
-    assert.equal(world.bounds.maxX - world.bounds.minX, 100);
-    assert.equal(world.bounds.maxZ - world.bounds.minZ, 70);
-    assert.equal(world.terrain.kind, 'flat');
-    assert.equal(world.colliders.length, MAP.boxes.length);
-    assert.equal(world.visuals.length, MAP.boxes.length);
-    assert.equal(
-      world.spawnPoints.filter((s) => s.team === 'red').length,
-      MAP.spawns.filter((s) => s.team === 'red').length,
-    );
-    assert.equal(
-      world.spawnPoints.filter((s) => s.team === 'blue').length,
-      MAP.spawns.filter((s) => s.team === 'blue').length,
-    );
-    assert.equal(
-      world.spawnPoints.filter((s) => s.team === 'none').length,
-      MAP.spawns.filter((s) => s.team === 'none').length,
-    );
-    assert.ok(world.locations.length >= 1);
+    assert.equal(world.terrain.kind, 'heightfield');
+    assert.ok(world.bounds.maxX > world.bounds.minX && world.bounds.maxZ > world.bounds.minZ);
+    assert.ok(world.colliders.length > 0);
+    assert.ok(world.visuals.length > 0);
+    assert.ok(world.spawnPoints.length > 0);
+    assert.ok(world.spawnPoints.every((s) => s.id && typeof s.y === 'number'));
+    assert.ok(Array.isArray(world.locations));
     assert.ok(Array.isArray(world.containerLocations));
+    assert.equal(world.gameplayHash, computeGameplayHash(world));
 
-    // Harakat va to'qnashuv eski MAP.boxes bilan bir xil ishlashini tekshirish
-    const b1: Body = { pos: { x: -38, y: 0, z: -22 }, vel: { x: 0, y: 0, z: 0 }, onGround: true };
-    const b2: Body = { pos: { x: -38, y: 0, z: -22 }, vel: { x: 0, y: 0, z: 0 }, onGround: true };
+    // Bir xil dunyoda bir xil kirish -> bir xil harakat (server va klient bashorati uchun shart)
+    const sp = world.spawnPoints[0];
+    const b1: Body = { pos: { x: sp.x, y: sp.y, z: sp.z }, vel: { x: 0, y: 0, z: 0 }, onGround: true };
+    const b2: Body = { pos: { x: sp.x, y: sp.y, z: sp.z }, vel: { x: 0, y: 0, z: 0 }, onGround: true };
     for (let i = 0; i < 30; i++) {
-      applyMovement(b1, 5.5, 2.2, i === 0, 1 / 60, MAP.boxes);
-      applyMovement(b2, 5.5, 2.2, i === 0, 1 / 60, DEFAULT_WORLD.colliders);
+      applyWorldMovement(b1, 5.5, 2.2, i === 0, 1 / 60, world);
+      applyWorldMovement(b2, 5.5, 2.2, i === 0, 1 / 60, world);
     }
     assert.deepEqual(b1, b2);
+    assert.ok(Math.hypot(b1.pos.x - sp.x, b1.pos.z - sp.z) > 0.5, 'O‘yinchi joyidan siljishi shart');
   });
 
   it('bir xil (mapId, worldVersion, publicLayoutSeed) har doim bir xil gameplayHash va joylashuv beradi', () => {
     const w1 = createWorldDefinition({
-      mapId: 'dust_arena',
+      mapId: 'forest_technical',
       worldVersion: 1,
       publicLayoutSeed: 424242,
     });
     const w2 = createWorldDefinition({
-      mapId: 'dust_arena',
+      mapId: 'forest_technical',
       worldVersion: 1,
       publicLayoutSeed: 424242,
     });
     const wDifferentSeed = createWorldDefinition({
-      mapId: 'dust_arena',
+      mapId: 'forest_technical',
       worldVersion: 1,
       publicLayoutSeed: 999999,
     });
     const wDifferentVersion = createWorldDefinition({
-      mapId: 'dust_arena',
+      mapId: 'forest_technical',
       worldVersion: 2,
       publicLayoutSeed: 424242,
     });
@@ -136,7 +126,7 @@ describe('Bosqich 02A — WorldDefinition va deterministik dunyo arxitekturasi',
 
   it("gameplayHash render/vizual descriptorlarga bog'liq emas", () => {
     const w1 = createWorldDefinition({
-      mapId: 'dust_arena',
+      mapId: 'forest_technical',
       worldVersion: 1,
       publicLayoutSeed: 6501,
     });
@@ -330,7 +320,7 @@ describe('Bosqich 02A — WorldDefinition va deterministik dunyo arxitekturasi',
   });
 
   it('validateWorldCompatibility barcha nomutanosiblik holatlarida aniq xabar qaytaradi', () => {
-    const serverMeta = extractWorldMeta(DEFAULT_WORLD);
+    const serverMeta = extractWorldMeta(createTechnicalTerrainFixture());
     assert.deepEqual(validateWorldCompatibility(serverMeta, { ...serverMeta }), { ok: true });
     assert.equal(validateWorldCompatibility(serverMeta, null).ok, false);
     assert.equal(

@@ -316,7 +316,7 @@ export class Hud {
     $('chat-input').classList.toggle('hidden', !open);
   }
 
-  setMatch(m: MatchState, myTeam: Team, leader: number): void {
+  setMatch(m: MatchState, leader: number): void {
     const mm = Math.floor(m.timeLeft / 60);
     const ss = String(m.timeLeft % 60).padStart(2, '0');
     if (m.mode === 'forest_survival') {
@@ -360,7 +360,6 @@ export class Hud {
       blue.className = 'score';
       blue.textContent = `Lider: ${leader}`;
     }
-    void myTeam;
   }
 
   /** HUD joylashuv rejimi: survival'da TDM yuqori paneli va jamoa nishoni yashirinadi, loot rejimida takroriy slotlar olinadi. */

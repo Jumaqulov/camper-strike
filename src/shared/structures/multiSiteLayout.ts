@@ -1,4 +1,4 @@
-import type { Vec3 } from '../math';
+import { q3, type Vec3 } from '../math';
 import {
   DEFAULT_CHUNK_SIZE,
   getChunkCoord,
@@ -24,7 +24,6 @@ import {
 } from './manifests';
 import { placeWallTransform } from './layoutBuilder';
 
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 /**
  * Rotates a 3D point `(pos.x, pos.y, pos.z)` around `pivotOrigin` by `deltaYaw` radians around the Y axis.

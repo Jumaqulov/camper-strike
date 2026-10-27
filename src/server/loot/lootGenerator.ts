@@ -1,4 +1,4 @@
-import type { Vec3 } from '../../shared/math';
+import { q3, type Vec3 } from '../../shared/math';
 import type { ContainerAssetId, WorldItemAnchor } from '../../shared/structures/contracts';
 import { WEAPONS, WEAPON_SLOTS, type WeaponId } from '../../shared/weapons';
 import { createSeededRng, type ContainerKind, type WorldDefinition } from '../../shared/world';
@@ -46,8 +46,6 @@ const KIND_TO_ASSET_ID: Record<ContainerKind, ContainerAssetId> = {
   ammo_box: 'old_toolbox_01',
   camp_chest: 'wooden_loot_crate_01',
 };
-
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 function cloneAnchor(a: WorldItemAnchor): WorldItemAnchor {
   return {

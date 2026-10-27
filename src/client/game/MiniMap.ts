@@ -100,7 +100,6 @@ export class MiniMap {
     const img = lctx.createImageData(cols, rows);
     const data = img.data;
     const isForestSquare = world.mapId === 'forest_square';
-    const heightfield = world.terrain.kind === 'heightfield';
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const x = this.minX + c + 0.5;
@@ -108,26 +107,20 @@ export class MiniMap {
         let cr: number;
         let cg: number;
         let cb: number;
-        if (heightfield) {
-          const y = sampleTerrainHeight(world.terrain, x, z);
-          const slope = sampleTerrainSlopeDeg(world.terrain, x, z);
-          if (isForestSquare) {
-            [cr, cg, cb] = sampleForestSquareTerrainColor(x, y, z, slope, world.publicLayoutSeed);
-          } else {
-            const k = Math.max(0, Math.min(1, (y + 1) / 6));
-            cr = 0.16 + k * 0.18;
-            cg = 0.3 + k * 0.12;
-            cb = 0.1 + k * 0.08;
-            if (slope > 35) {
-              cr = 0.36;
-              cg = 0.37;
-              cb = 0.36;
-            }
-          }
+        const y = sampleTerrainHeight(world.terrain, x, z);
+        const slope = sampleTerrainSlopeDeg(world.terrain, x, z);
+        if (isForestSquare) {
+          [cr, cg, cb] = sampleForestSquareTerrainColor(x, y, z, slope, world.publicLayoutSeed);
         } else {
-          cr = 0.42;
-          cg = 0.36;
-          cb = 0.22;
+          const k = Math.max(0, Math.min(1, (y + 1) / 6));
+          cr = 0.16 + k * 0.18;
+          cg = 0.3 + k * 0.12;
+          cb = 0.1 + k * 0.08;
+          if (slope > 35) {
+            cr = 0.36;
+            cg = 0.37;
+            cb = 0.36;
+          }
         }
         // Xarita o'qilishi uchun yorug'roq va to'yinganroq
         const o = (r * cols + c) * 4;

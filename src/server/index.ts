@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Server } from 'socket.io';
 import { SERVER_PORT } from '../shared/constants';
+import { createWorldDefinition } from '../shared/world';
 import { Lobby } from './lobby';
 import { getNav } from './navgraph';
 import { validateMapSpawns } from './room';
@@ -47,17 +48,19 @@ if (fs.existsSync(distDir)) {
 
 new Lobby(io);
 
-// Botlar uchun navigatsiya to'rini oldindan hisoblab qo'yamiz
+// Standart xarita (forest_square, standart seed) uchun botlar navigatsiya to'rini oldindan hisoblab qo'yamiz —
+// keyin shu seed bilan ochilgan xonalar `getNav` keshidan tayyor to'rni oladi.
 const t0 = performance.now();
-const nav = getNav();
+const defaultWorld = createWorldDefinition({ mapId: 'forest_square' });
+const nav = getNav(defaultWorld);
 console.log(`[nav] ${nav.validList.length} ta tugun, ${(performance.now() - t0).toFixed(0)} ms`);
-const badSpawns = validateMapSpawns();
+const badSpawns = validateMapSpawns(defaultWorld);
 if (badSpawns.length) console.warn('[map] Devor ichida qolgan spawnlar:', badSpawns.join(', '));
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log('');
   console.log('  ====================================');
-  console.log('   STICKMAN STRIKE serveri ishga tushdi');
+  console.log('   CAMPER STRIKE 65 serveri ishga tushdi');
   console.log('  ====================================');
   console.log(`   Shu kompyuterda:   http://localhost:${PORT}`);
   for (const ip of lanIPs()) console.log(`   Lokal tarmoqda:    http://${ip}:${PORT}`);

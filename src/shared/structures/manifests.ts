@@ -1,6 +1,5 @@
-import type { Box, MaterialKind } from '../map';
-import type { Vec3 } from '../math';
-import type { ColliderBox, ColliderTag } from '../world';
+import { q3, type Vec3 } from '../math';
+import type { Box, ColliderBox, ColliderTag, MaterialKind } from '../world';
 import {
   BUILDING_ASSET_IDS,
   BUILDING_GLB_URLS,
@@ -19,7 +18,6 @@ import {
   type Stage04AMaterialName,
 } from './contracts';
 
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 export interface BuildingAssetManifest {
   id: BuildingAssetId;
@@ -1187,7 +1185,7 @@ export function buildInteriorAssetColliders(
   openFraction = 0,
 ): ColliderBox[] {
   const manifest = INTERIOR_MANIFESTS[assetId];
-  const mat: MaterialKind = assetId === 'kitchen_cabinet_01' ? 'crate' : 'crate';
+  const mat: MaterialKind = 'crate';
   const cols = manifest.colliderBoxes.map((box) =>
     localBoxToWorldCollider(
       `${instanceId}:${box.name}:col`,

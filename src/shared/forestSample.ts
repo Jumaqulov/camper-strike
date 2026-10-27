@@ -1,5 +1,5 @@
 import type { Team } from './constants';
-import { clamp, type Vec3 } from './math';
+import { clamp, q3, type Vec3 } from './math';
 import {
   createGroundedRockCollider,
   createGroundedTreeCollider,
@@ -34,7 +34,6 @@ import {
   type WorldLocation,
 } from './world';
 
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 export const FOREST_SAMPLE_SIZE = 96;
 export const FOREST_SAMPLE_HALF = FOREST_SAMPLE_SIZE / 2; // 48

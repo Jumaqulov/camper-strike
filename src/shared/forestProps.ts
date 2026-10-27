@@ -15,11 +15,10 @@
  * of segment AABBs never overhangs the true visual footprint by more than ~0.1 m (no invisible walls),
  * while the log body itself cannot be walked through. Stumps use one AABB (half-extent 0.8 × base radius).
  */
-import type { Vec3 } from './math';
+import { q3, type Vec3 } from './math';
 import { sampleTerrainHeight, sampleTerrainNormal } from './terrain';
 import type { ColliderBox, PlacementTransform, TerrainDescriptor } from './world';
 
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 export const FALLEN_LOG_PREFAB_ID = 'prop:fallen_log';
 export const TREE_STUMP_PREFAB_ID = 'prop:tree_stump';
@@ -102,7 +101,7 @@ function quatApply(q: Quat, v: Vec3): Vec3 {
 function logOrientation(terrain: TerrainDescriptor | undefined, x: number, z: number, yaw: number): Quat {
   const half = yaw * 0.5;
   const yawQ: Quat = { x: 0, y: Math.sin(half), z: 0, w: Math.cos(half) };
-  if (!terrain || terrain.kind === 'flat') return yawQ;
+  if (!terrain) return yawQ;
   const n = sampleTerrainNormal(terrain, x, z);
   const len = Math.hypot(n.x, n.y, n.z) || 1;
   const nx = n.x / len;

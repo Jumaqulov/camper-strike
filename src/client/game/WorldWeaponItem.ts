@@ -100,7 +100,7 @@ export class WorldWeaponItem {
   ): void {
     const y = sampleTerrainHeight(terrain, x, z);
     this.root.position.set(x, y, z);
-    if (alignToSlope && terrain.kind === 'heightfield') {
+    if (alignToSlope) {
       const n = sampleTerrainNormal(terrain, x, z);
       const up = new THREE.Vector3(0, 1, 0);
       const normal = new THREE.Vector3(n.x, n.y, n.z).normalize();

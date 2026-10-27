@@ -34,8 +34,7 @@ import {
   type ForestSquareWorldDefinition,
   type MultiSiteStructureLayout,
 } from './forestSquare';
-import { buildDustArena, type Box, type MapDef, type MaterialKind, type SpawnPoint } from './map';
-import type { Vec3 } from './math';
+import { q3, type Vec3 } from './math';
 import type { Stage04APreviewLayout } from './structures/contracts';
 import {
   buildTechnicalHeightfield,
@@ -47,9 +46,7 @@ import {
   isTerrainWalkable,
   raycastTerrain,
   sampleHeightfieldTriangle,
-  sampleTerrainHeight as sampleTerrainHeightImpl,
-  sampleTerrainNormal as sampleTerrainNormalImpl,
-  sampleTerrainSlopeDeg as sampleTerrainSlopeDegImpl,
+  sampleTerrainHeight,
   type TerrainMeshData,
   type TerrainTriangleSample,
 } from './terrain';
@@ -101,7 +98,6 @@ export {
 };
 
 export type MapId =
-  | 'dust_arena'
   | 'forest_technical'
   | 'forest_sample'
   | 'forest_assets_preview'
@@ -120,9 +116,21 @@ export interface WorldBounds {
   maxZ: number;
 }
 
-export interface FlatTerrainDescriptor {
-  kind: 'flat';
-  baseY: number;
+/** Kollayder/vizual material turi (tekstura va UV masshtabi shu kalit bo'yicha tanlanadi). */
+export type MaterialKind = 'ground' | 'wall' | 'concrete' | 'crate' | 'metal' | 'roof';
+
+/** Eng sodda o'qlarga tekislangan to'qnashuv qutisi (AABB). */
+export interface Box {
+  min: Vec3;
+  max: Vec3;
+  mat: MaterialKind;
+}
+
+export interface SpawnPoint {
+  x: number;
+  z: number;
+  yaw: number;
+  team: Team;
 }
 
 export interface HeightfieldTerrainDescriptor {
@@ -138,7 +146,8 @@ export interface HeightfieldTerrainDescriptor {
   heights: number[];
 }
 
-export type TerrainDescriptor = FlatTerrainDescriptor | HeightfieldTerrainDescriptor;
+/** Barcha xaritalar heightfield relyefga ega (tekis 'flat' relyef eski Dust Arena bilan birga olib tashlangan). */
+export type TerrainDescriptor = HeightfieldTerrainDescriptor;
 
 export type ColliderTag = 'ground' | 'structure' | 'prop' | 'tree' | 'rock' | 'boundary';
 
@@ -275,21 +284,8 @@ export interface CreateWorldOpts {
 
 // ---------------- Deterministic PRNG & Hashing ----------------
 
-/**
- * Deterministic 32-bit PRNG (Mulberry32).
- * Produces identical sequences on client and server for a given integer seed.
- */
-export function createSeededRng(seed: number): () => number {
-  let a = seed | 0;
-  return () => {
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
+/** Mulberry32 PRNG — amalga oshirish `math.ts` da; eski `./world` import yo'li saqlangan. */
+export { createSeededRng } from './math';
 
 /**
  * Pure TypeScript 64-bit FNV-1a hash (two 32-bit halves) for canonical strings.
@@ -324,9 +320,7 @@ export function computeGameplayHash(
     `bounds:${q3(b.minX)},${q3(b.maxX)},${q3(b.minY)},${q3(b.maxY)},${q3(b.minZ)},${q3(b.maxZ)}`,
   );
 
-  if (data.terrain.kind === 'flat') {
-    parts.push(`terrain:flat:${q3(data.terrain.baseY)}`);
-  } else {
+  {
     const t = data.terrain;
     const hStr = t.heights.map((h) => q3(h)).join(',');
     parts.push(
@@ -415,17 +409,8 @@ export function getChunkCoord(x: number, z: number, chunkSize = DEFAULT_CHUNK_SI
   return { cx, cz, key: `${cx}:${cz}` };
 }
 
-export function sampleTerrainHeight(terrain: TerrainDescriptor, x: number, z: number): number {
-  return sampleTerrainHeightImpl(terrain, x, z);
-}
-
-export function sampleTerrainNormal(terrain: TerrainDescriptor, x: number, z: number): Vec3 {
-  return sampleTerrainNormalImpl(terrain, x, z);
-}
-
-export function sampleTerrainSlopeDeg(terrain: TerrainDescriptor, x: number, z: number): number {
-  return sampleTerrainSlopeDegImpl(terrain, x, z);
-}
+/** Relyef namunalash — yagona amalga oshirish `terrain.ts` da; `./world` orqali ham import qilish mumkin. */
+export { sampleTerrainHeight, sampleTerrainNormal, sampleTerrainSlopeDeg } from './terrain';
 
 export interface LocalBoxPart {
   localId: string;
@@ -470,7 +455,7 @@ export function compilePrefabPlacement(
   const { position, yaw, scale } = placement.transform;
   const baseY =
     placement.groundToTerrain && terrain
-      ? sampleTerrainHeightImpl(terrain, position.x, position.z) + position.y
+      ? sampleTerrainHeight(terrain, position.x, position.z) + position.y
       : position.y;
 
   // Support cardinal 90-degree rotations for axis-aligned collider boxes, or unrotated offsets
@@ -642,7 +627,7 @@ export function createTechnicalTerrainFixture(
         batchKey: 'tech:platform_post',
         batchMode: 'static_box',
       },
-      // 3 step-up stairs on the west edge (-X), each 0.38 m high (<= STEP_HEIGHT = 0.45 m)
+      // 3 step-up stairs on the west edge (-X), each 0.38 m high (<= STEP_HEIGHT = 0.55 m)
       {
         localId: 'step_1',
         offset: { x: -4.5, y: 0.19, z: 0 },
@@ -786,7 +771,7 @@ export function createTechnicalTerrainFixture(
   const spawnPoints: SpawnPointDef[] = rawSpawns.map((s) => ({
     id: s.id,
     x: q3(s.x),
-    y: q3(sampleTerrainHeightImpl(terrain, s.x, s.z)),
+    y: q3(sampleTerrainHeight(terrain, s.x, s.z)),
     z: q3(s.z),
     yaw: q3(s.yaw),
     team: s.team,
@@ -854,134 +839,12 @@ export function createTechnicalTerrainFixture(
   };
 }
 
-// ---------------- Legacy Dust Arena Adapter ----------------
-
-function classifyArenaBoxTag(b: Box, index: number): ColliderTag {
-  if (b.mat === 'ground') return 'ground';
-  if (index >= 1 && index <= 4) return 'boundary';
-  if (b.mat === 'crate' || b.mat === 'metal') return 'prop';
-  return 'structure';
-}
-
-/**
- * Adapts the legacy `buildDustArena()` (`MapDef`) into a full `WorldDefinition`
- * while preserving 100% of its colliders, spawns, and bounds.
- */
-export function adaptDustArenaToWorld(
-  arena: MapDef,
-  opts: { publicLayoutSeed?: number; worldVersion?: number; chunkSize?: number } = {},
-): WorldDefinition {
-  const worldVersion = opts.worldVersion ?? CURRENT_WORLD_VERSION;
-  const publicLayoutSeed = opts.publicLayoutSeed ?? DEFAULT_PUBLIC_LAYOUT_SEED;
-  const chunkSize = opts.chunkSize ?? DEFAULT_CHUNK_SIZE;
-
-  const colliders: ColliderBox[] = [];
-  const visuals: VisualDescriptor[] = [];
-
-  arena.boxes.forEach((b, i) => {
-    const objectId = `arena_box_${i}`;
-    const w = b.max.x - b.min.x;
-    const h = b.max.y - b.min.y;
-    const d = b.max.z - b.min.z;
-    const cx = (b.min.x + b.max.x) / 2;
-    const cy = (b.min.y + b.max.y) / 2;
-    const cz = (b.min.z + b.max.z) / 2;
-    const tag = classifyArenaBoxTag(b, i);
-    const compiled = compilePrefabPlacement(
-      {
-        objectId,
-        prefabId: `dust_box_${b.mat}`,
-        transform: {
-          position: { x: cx, y: cy, z: cz },
-          yaw: 0,
-          scale: { x: 1, y: 1, z: 1 },
-        },
-        parts: [
-          {
-            localId: 'main',
-            offset: { x: 0, y: 0, z: 0 },
-            size: { x: w, y: h, z: d },
-            mat: b.mat,
-            colliderTag: tag,
-            hasCollider: true,
-            hasVisual: true,
-            visualCategory: b.mat === 'ground' ? 'ground' : tag === 'prop' ? 'prop' : 'structure',
-            batchKey: `arena:${b.mat}`,
-            batchMode: 'static_box',
-            castShadow: b.mat !== 'ground',
-            receiveShadow: true,
-          },
-        ],
-      },
-      chunkSize,
-    );
-    colliders.push(...compiled.colliders);
-    visuals.push(...compiled.visuals);
-  });
-
-  const spawnPoints: SpawnPointDef[] = arena.spawns.map((s, i) => ({
-    id: `sp_${i}`,
-    x: q3(s.x),
-    y: 0,
-    z: q3(s.z),
-    yaw: q3(s.yaw),
-    team: s.team,
-  }));
-
-  const locations: WorldLocation[] = [
-    {
-      id: 'loc_ranger_lodge',
-      name: 'Ranger Lodge & Gas',
-      kind: 'arena_center',
-      position: { x: 0, y: 0, z: 0 },
-      yaw: 0,
-      radius: 10,
-      enterable: true,
-    },
-  ];
-
-  const containerLocations: ContainerLocation[] = [];
-
-  const bounds: WorldBounds = {
-    minX: arena.bounds.minX,
-    maxX: arena.bounds.maxX,
-    minY: -5,
-    maxY: 30,
-    minZ: arena.bounds.minZ,
-    maxZ: arena.bounds.maxZ,
-  };
-
-  const terrain: TerrainDescriptor = {
-    kind: 'flat',
-    baseY: 0,
-  };
-
-  const baseData = {
-    mapId: 'dust_arena' as const,
-    worldVersion,
-    publicLayoutSeed,
-    bounds,
-    terrain,
-    colliders,
-    spawnPoints,
-    locations,
-    containerLocations,
-  };
-
-  return {
-    ...baseData,
-    name: arena.name,
-    chunkSize,
-    visuals,
-    gameplayHash: computeGameplayHash(baseData),
-  };
-}
-
 /**
  * Factory for creating a deterministic `WorldDefinition` by `mapId`, `worldVersion`, and `publicLayoutSeed`.
  */
 export function createWorldDefinition(opts: CreateWorldOpts = {}): WorldDefinition {
-  const mapId: MapId = opts.mapId ?? 'dust_arena';
+  // Standart xarita lobbi bilan bir xil: forest_square.
+  const mapId: MapId = opts.mapId ?? 'forest_square';
   const worldVersion = opts.worldVersion ?? CURRENT_WORLD_VERSION;
   const publicLayoutSeed = opts.publicLayoutSeed ?? DEFAULT_PUBLIC_LAYOUT_SEED;
   const chunkSize = opts.chunkSize ?? DEFAULT_CHUNK_SIZE;
@@ -995,14 +858,5 @@ export function createWorldDefinition(opts: CreateWorldOpts = {}): WorldDefiniti
   if (mapId === 'forest_assets_preview') {
     return createForestAssetsPreviewWorld({ publicLayoutSeed, worldVersion, chunkSize });
   }
-  if (mapId === 'forest_square') {
-    return createForestSquareWorld({ publicLayoutSeed, worldVersion, chunkSize });
-  }
-
-  // 'dust_arena' is the classic arena.
-  const arena = buildDustArena(publicLayoutSeed);
-  const adapted = adaptDustArenaToWorld(arena, { publicLayoutSeed, worldVersion, chunkSize });
-  return adapted;
+  return createForestSquareWorld({ publicLayoutSeed, worldVersion, chunkSize });
 }
-
-export const DEFAULT_WORLD: WorldDefinition = createWorldDefinition();

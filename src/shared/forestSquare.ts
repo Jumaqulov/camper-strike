@@ -1,5 +1,6 @@
 import { PLAYER_RADIUS } from './constants';
 import { isHardForestPropPrefab } from './forestProps';
+import { q3 } from './math';
 import {
   getForestSquareRoadNetwork,
   sampleForestSquareRoad,
@@ -66,7 +67,6 @@ export {
   type MultiSiteStructureLayout,
 };
 
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 /** Existing Stage 04B rule: decorative (non-tree/rock) visuals within this radius of a spawn are removed. */
 export const SPAWN_VISUAL_FILTER_RADIUS = 1.8;

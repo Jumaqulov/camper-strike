@@ -4,12 +4,13 @@ import type { MovementState } from '../../shared/netMovement';
 import type { Body } from '../../shared/physics';
 import type { PlayerInputCmd, PlayerSnap, SpawnEvent } from '../../shared/protocol';
 import { emptyAmmo, fullAmmo, isMeleeWeapon, WEAPON_SLOTS, WEAPONS, type AmmoState, type WeaponId } from '../../shared/weapons';
-import { DEFAULT_WORLD, type WorldDefinition } from '../../shared/world';
+import type { WorldDefinition } from '../../shared/world';
 import { ClientPrediction, type ReconcileResult } from './ClientPrediction';
 
 /** Lokal o'yinchi: harakat (klient tomonida bashorat va server bilan solishtirish) va qurol holati. */
 export class LocalPlayer {
-  private world: WorldDefinition = DEFAULT_WORLD;
+  /** Harakat bashorati uchun dunyo; `setWorld()` orqali (yoki konstruktorda) o'rnatiladi. */
+  private world: WorldDefinition | null;
   readonly prediction = new ClientPrediction();
   body: Body = { pos: { x: 0, y: 0, z: 0 }, vel: { x: 0, y: 0, z: 0 }, onGround: true };
   yaw = 0;
@@ -38,8 +39,18 @@ export class LocalPlayer {
   armor = 0;
   helmet = 0;
 
+  constructor(world: WorldDefinition | null = null) {
+    this.world = world;
+  }
+
   setWorld(world: WorldDefinition): void {
     this.world = world;
+  }
+
+  /** Harakat/reconcile uchun dunyo o'rnatilgan bo'lishi shart — aks holda aniq xato. */
+  private requireWorld(): WorldDefinition {
+    if (!this.world) throw new Error("LocalPlayer: dunyo o'rnatilmagan (setWorld chaqirilmagan)");
+    return this.world;
   }
 
   setLootPreview(enabled: boolean): void {
@@ -75,7 +86,7 @@ export class LocalPlayer {
       this.roundId = e.roundId;
     }
     this.body.pos = { x: e.x, y: e.y, z: e.z };
-    this.body.vel = { x: 0, y: 0, z: e.z * 0 };
+    this.body.vel = { x: 0, y: 0, z: 0 };
     this.body.onGround = true;
     this.yaw = e.yaw;
     this.pitch = 0;
@@ -210,7 +221,7 @@ export class LocalPlayer {
         yaw: this.yaw,
         pitch: this.pitch,
       },
-      this.world,
+      this.requireWorld(),
     );
     this.applyMovementState(state);
     return cmd;
@@ -218,7 +229,7 @@ export class LocalPlayer {
 
   reconcile(snap: PlayerSnap, serverTick?: number): ReconcileResult {
     const state = this.getMovementState();
-    const res = this.prediction.reconcileSnapshot(state, snap, serverTick, this.world);
+    const res = this.prediction.reconcileSnapshot(state, snap, serverTick, this.requireWorld());
     this.applyMovementState(state);
     return res;
   }

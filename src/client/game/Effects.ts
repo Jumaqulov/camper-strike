@@ -133,7 +133,7 @@ export class Effects {
   private fireGeo = new THREE.SphereGeometry(1, 16, 12);
   private boomLight: THREE.PointLight;
   private boomT = 0;
-  /** Xarita relyefi balandligi (x, z) → y. Berilmasa yer y=0 deb olinadi (dust_arena). */
+  /** Xarita relyefi balandligi (x, z) → y. Berilmasa yer y=0 deb olinadi. */
   groundAt: ((x: number, z: number) => number) | null = null;
 
   constructor(private scene: THREE.Scene) {

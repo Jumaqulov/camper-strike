@@ -15,7 +15,7 @@ import {
   type GrassCategory,
   type GrassVariantId,
 } from './GrassAssetRegistry';
-import { planGrassVariant } from './GrassVariantPlanner';
+import { planGrassVariant, type GrassPlannerContext } from './GrassVariantPlanner';
 
 /**
  * STAGE 08-TERRAIN-VISUAL — High Performance GLB Grass Renderer
@@ -72,10 +72,6 @@ export const GRASS_QUALITY_PRESETS: Record<QualityLevel, GrassQualityPreset> = {
   low: { density: 0.3, grassDist: 30, flowerDist: 26, fernDist: 34, wind: 0.0, receiveShadow: false },
 };
 
-function presetDist(p: GrassQualityPreset, cat: GrassCategory): number {
-  return cat === 'grass' ? p.grassDist : cat === 'flower' ? p.flowerDist : p.fernDist;
-}
-
 /**
  * Masofaviy LOD: o'yinchi atrofidagi `LOD_FULL_DIST` metr ichida barcha o'tlar ko'rsatiladi,
  * undan keyin ulush chiziqli kamayib `LOD_FAR_FRACTION` gacha tushadi (maydon 5x zich bo'lgani
@@ -125,10 +121,15 @@ interface TempInstance {
   scale: number;
 }
 
+/**
+ * @param plannerCtx jonli dunyo daraxtlari/relyefi (`createGrassPlannerContext(world)`); berilmasa
+ *   planner seed bo'yicha dunyoni o'zi qayta quradi (testlar uchun zaxira yo'l).
+ */
 export function createGrassRenderer(
   field: GroundCoverField,
   quality: QualityLevel,
   seed = 6501,
+  plannerCtx?: GrassPlannerContext,
 ): GroundCoverRendererHandle {
   const t0 = performance.now();
   const group = new THREE.Group();
@@ -178,7 +179,7 @@ export function createGrassRenderer(
         const baseYaw = arr[o + 3]!;
         const baseScale = arr[o + 4]!;
 
-        const planned = planGrassVariant(x, y, z, kind, baseYaw, baseScale, seed);
+        const planned = planGrassVariant(x, y, z, kind, baseYaw, baseScale, seed, plannerCtx);
         const vi = variantIndexMap.get(planned.variantId) ?? 0;
         chunkVariantLists[ci][vi].push({
           x,

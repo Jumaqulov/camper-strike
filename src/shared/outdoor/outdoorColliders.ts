@@ -1,8 +1,7 @@
-import type { Vec3 } from '../math';
+import { q3, type Vec3 } from '../math';
 import type { ColliderBox } from '../world';
 import type { OutdoorAssetId, OutdoorPlacement } from './contracts';
 
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 export interface OutdoorLocalColliderSpec {
   name: string;

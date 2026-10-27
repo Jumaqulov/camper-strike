@@ -1,5 +1,5 @@
 import { dirFromAngles, isVec3, type Vec3, vnorm, vsub } from '../math';
-import { rayCollider } from '../physics';
+import { rayBox, rayCollider } from '../physics';
 import { raycastTerrain } from '../terrain';
 import { isWeaponId, type WeaponDef } from '../weapons';
 import type { WorldDefinition } from '../world';
@@ -164,45 +164,6 @@ export function isWithinInteractionDistance(
   return { ok, dist3d, distH };
 }
 
-function rayIntersectsBox(
-  origin: Vec3,
-  dir: Vec3,
-  min: Vec3,
-  max: Vec3,
-  maxT: number,
-): number | null {
-  let tmin = 0;
-  let tmax = maxT;
-  const os = [origin.x, origin.y, origin.z];
-  const ds = [dir.x, dir.y, dir.z];
-  const mins = [min.x, min.y, min.z];
-  const maxs = [max.x, max.y, max.z];
-
-  for (let a = 0; a < 3; a++) {
-    const d = ds[a]!;
-    const o = os[a]!;
-    const mn = mins[a]!;
-    const mx = maxs[a]!;
-    if (Math.abs(d) < 1e-9) {
-      if (o < mn || o > mx) return null;
-      continue;
-    }
-    const inv = 1 / d;
-    let t1 = (mn - o) * inv;
-    let t2 = (mx - o) * inv;
-    if (t1 > t2) {
-      const tmp = t1;
-      t1 = t2;
-      t2 = tmp;
-    }
-    if (t1 > tmin) tmin = t1;
-    if (t2 < tmax) tmax = t2;
-    if (tmin > tmax) return null;
-  }
-
-  return tmin;
-}
-
 export function hasLineOfSightToContainer(
   world: WorldDefinition,
   eye: Vec3,
@@ -229,8 +190,7 @@ export function hasLineOfSightToContainer(
         continue;
       }
       // Aniq shakl (daraxt silindri, tosh ellipsoidi, burilgan quti) bilan — quti burchaklari LOS ni to'smasin
-      const hit = col.hit ? rayCollider(col, eye, dir, maxT) : null;
-      const t = col.hit ? (hit ? hit.t : null) : rayIntersectsBox(eye, dir, col.min, col.max, maxT);
+      const t = (col.hit ? rayCollider(col, eye, dir, maxT) : rayBox(eye, dir, col.min, col.max, maxT))?.t ?? null;
       if (t === null) continue;
 
       if (

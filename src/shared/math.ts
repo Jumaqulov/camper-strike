@@ -61,3 +61,20 @@ export function isVec3(v: unknown): v is Vec3 {
   const o = v as Record<string, unknown>;
   return Number.isFinite(o.x) && Number.isFinite(o.y) && Number.isFinite(o.z);
 }
+
+/** Millimetr aniqlikda yaxlitlash (3 kasr). Deterministik dunyo/snapshot qiymatlari uchun yagona manba. */
+export const q3 = (n: number): number => Math.round(n * 1000) / 1000;
+
+/**
+ * Deterministik 32-bit PRNG (Mulberry32). Berilgan butun urug' uchun klient va serverda
+ * bir xil ketma-ketlik beradi. Dunyo generatsiyasi, o'simlik qoplami va zona jadvali — barchasi shu manbadan.
+ */
+export function createSeededRng(seed: number): () => number {
+  let a = seed | 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}

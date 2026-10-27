@@ -10,6 +10,7 @@ import {
   type PivotSpec,
   type Stage04AMaterialName,
 } from '../../../shared/structures/contracts';
+import { q3 } from '../../../shared/math';
 import type { ContainerKind } from '../../../shared/world';
 import {
   deduplicateStage04AGltfMaterials,
@@ -341,8 +342,6 @@ const fallbackCache = new Map<ContainerAssetId, CachedContainerAssetTemplate>();
 const failedAssets = new Set<ContainerAssetId>();
 let preloadPromise: Promise<void> | null = null;
 const readyListeners = new Set<() => void>();
-
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 function countGeoTriangles(geo: THREE.BufferGeometry | undefined | null): number {
   if (!geo) return 0;

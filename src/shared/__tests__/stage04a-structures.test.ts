@@ -19,11 +19,11 @@ import {
 } from '../../client/game/interiors';
 import { getStage04ASharedMaterial } from '../../client/game/Stage04ASharedMaterials';
 import { buildWorld } from '../../client/game/World';
+import { makeFlatWorld } from './flatWorldFixture';
 import { getNav } from '../../server/navgraph';
 import { validateMapSpawns } from '../../server/room';
 import { PLAYER_HEIGHT, RUN_SPEED, STEP_HEIGHT } from '../constants';
 import {
-  applyMovement,
   applyWorldMovement,
   collidesAt,
   isSpawnPointSafe,
@@ -87,25 +87,9 @@ function parseGlbFile(fullPath: string): Promise<THREE.Group> {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function makeFlatWorldWithColliders(colliders: ColliderBox[]): WorldDefinition {
-  const base = {
-    mapId: 'forest_sample' as const,
-    worldVersion: 1,
-    publicLayoutSeed: 6501,
-    bounds: { minX: -64, maxX: 64, minY: -10, maxY: 40, minZ: -64, maxZ: 64 },
-    terrain: { kind: 'flat' as const, baseY: -5 },
-    colliders,
-    spawnPoints: [],
-    locations: [],
-    containerLocations: [],
-  };
-  return {
-    ...base,
-    name: 'Stage 04A Structure Test World',
-    chunkSize: 32,
-    visuals: [],
-    gameplayHash: computeGameplayHash(base),
-  };
+/** Tekis (barcha balandliklar `baseY`) heightfield dunyo — eski Dust Arena "flat" relyefi o'rniga. */
+function makeFlatWorldWithColliders(colliders: ColliderBox[], baseY = -5): WorldDefinition {
+  return makeFlatWorld(colliders, { size: 128, baseY, mapId: 'forest_sample' });
 }
 
 describe('BOSQICH 04A — Shared Structures, Segmented Colliders & Layout Builder', () => {
@@ -198,10 +182,11 @@ describe('BOSQICH 04A — Shared Structures, Segmented Colliders & Layout Builde
     assert.equal(roomWinPass, null, '4x4 xona g‘arbiy derazasidan ray o‘tishi shart');
   });
 
-  it('2. O‘yinchi (applyMovement, PLAYER_RADIUS = 0.38, PLAYER_HEIGHT = 1.8) 8x4 kulba va 4x4 xonaga kirib-chiqa oladi hamda zinadan y = 3.0m loftga ko‘tariladi', () => {
+  it('2. O‘yinchi (applyWorldMovement, PLAYER_RADIUS = 0.38, PLAYER_HEIGHT = 1.8) 8x4 kulba va 4x4 xonaga kirib-chiqa oladi hamda zinadan y = 3.0m loftga ko‘tariladi', () => {
     const dt = 1 / 60;
     const cabin = buildCabin8x4Prefab({ x: 0, y: 0, z: 0 }, 'walk_cabin');
     const cabinBoxes = compileBuildingPrefabColliders(cabin);
+    const cabinWorld = makeFlatWorldWithColliders(cabinBoxes, 0);
 
     // 2a) Walk from outside (2.1, 0, 5.5) into 8x4 cabin (z < 2.2) and back out (z > 5.0)
     const bodyCabin: Body = {
@@ -211,7 +196,7 @@ describe('BOSQICH 04A — Shared Structures, Segmented Colliders & Layout Builde
     };
 
     for (let i = 0; i < 90; i++) {
-      applyMovement(bodyCabin, 0, -RUN_SPEED, false, dt, cabinBoxes);
+      applyWorldMovement(bodyCabin, 0, -RUN_SPEED, false, dt, cabinWorld);
     }
     assert.ok(
       bodyCabin.pos.z < 2.3 && Math.abs(bodyCabin.pos.y) < 0.05,
@@ -220,7 +205,7 @@ describe('BOSQICH 04A — Shared Structures, Segmented Colliders & Layout Builde
 
     // Walk back out through doorway
     for (let i = 0; i < 90; i++) {
-      applyMovement(bodyCabin, 0, RUN_SPEED, false, dt, cabinBoxes);
+      applyWorldMovement(bodyCabin, 0, RUN_SPEED, false, dt, cabinWorld);
     }
     assert.ok(
       bodyCabin.pos.z > 4.8,
@@ -235,11 +220,11 @@ describe('BOSQICH 04A — Shared Structures, Segmented Colliders & Layout Builde
     };
     // Move west to x ~ 0.52
     for (let i = 0; i < 60; i++) {
-      applyMovement(stairClimber, -RUN_SPEED, 0, false, dt, cabinBoxes);
+      applyWorldMovement(stairClimber, -RUN_SPEED, 0, false, dt, cabinWorld);
     }
     // Move north onto bottom stair landing at z ~ 0.85
     for (let i = 0; i < 45; i++) {
-      applyMovement(stairClimber, 0, -RUN_SPEED, false, dt, cabinBoxes);
+      applyWorldMovement(stairClimber, 0, -RUN_SPEED, false, dt, cabinWorld);
     }
     assert.ok(
       stairClimber.pos.z < 1.15 && stairClimber.pos.y >= 0.19,
@@ -248,7 +233,7 @@ describe('BOSQICH 04A — Shared Structures, Segmented Colliders & Layout Builde
 
     // Climb +X up all 15 steps onto the y = 3.0m loft floor (x in [4.5, 7.5])
     for (let i = 0; i < 75; i++) {
-      applyMovement(stairClimber, RUN_SPEED, 0, false, dt, cabinBoxes);
+      applyWorldMovement(stairClimber, RUN_SPEED, 0, false, dt, cabinWorld);
     }
     assert.ok(
       stairClimber.pos.x > 4.5 && stairClimber.pos.x < 7.8 && Math.abs(stairClimber.pos.y - 3.0) < 0.05,
@@ -273,6 +258,7 @@ describe('BOSQICH 04A — Shared Structures, Segmented Colliders & Layout Builde
         buildInteriorAssetColliders(f.id, f.assetId, f.position, f.rotationY, f.openFraction),
       ),
     ];
+    const roomWorld = makeFlatWorldWithColliders(roomBoxes, 0);
 
     const roomWalker: Body = {
       pos: { x: 1.95, y: 0, z: 5.4 },
@@ -280,14 +266,14 @@ describe('BOSQICH 04A — Shared Structures, Segmented Colliders & Layout Builde
       onGround: true,
     };
     for (let i = 0; i < 36; i++) {
-      applyMovement(roomWalker, 0, -RUN_SPEED, false, dt, roomBoxes);
+      applyWorldMovement(roomWalker, 0, -RUN_SPEED, false, dt, roomWorld);
     }
     assert.ok(
       roomWalker.pos.z < 1.9 && Math.abs(roomWalker.pos.y) < 0.05,
       `O‘yinchi 4x4 xonaga bemalol yurib kira olishi shart (z=${roomWalker.pos.z.toFixed(2)}, y=${roomWalker.pos.y.toFixed(2)})`,
     );
     for (let i = 0; i < 40; i++) {
-      applyMovement(roomWalker, 0, RUN_SPEED, false, dt, roomBoxes);
+      applyWorldMovement(roomWalker, 0, RUN_SPEED, false, dt, roomWorld);
     }
     assert.ok(
       roomWalker.pos.z > 4.8,

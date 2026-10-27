@@ -10,7 +10,9 @@
  * Performs binary-level glTF 2.0 validation:
  *   - 12-byte GLB header (magic 0x46546C67, version 2, byte length)
  *   - JSON chunk (0x4E4F534A) & BIN chunk (0x004E4942) framing
- *   - Byte-for-byte SHA-256 verification against docs/assets/raw/<PACK>/glb/*.glb
+ *   - Byte-for-byte SHA-256 verification against tools/asset-validation/raw/<PACK>/glb/*.glb
+ *     (xom GLB'lar repodan olib tashlangan — ular yo'q bo'lsa SHA taqqoslash
+ *     aniq xabar bilan o'tkazib yuboriladi, qolgan tekshiruvlar bajariladi)
  *   - Accessor min/max vs actual float/uint binary buffer values
  *   - Vertex attributes POSITION, NORMAL, COLOR_0 on every primitive
  *   - Exact triangle & vertex counts
@@ -20,8 +22,10 @@
  *   - Engineering QA checks (wood_stairs_01 3m rise vs 4m handrail, old_bed_01 under_bed collider occlusion,
  *     kitchen_cabinet_01 dual-door pivots & internal anchors)
  *
+ * Manifest inputs (git tarixidan tiklangan): tools/asset-validation/raw/<PACK>/*.json
+ *
  * Generates:
- *   docs/stage04a/assets_manifest_normalized.json
+ *   tools/asset-validation/out/assets_manifest_normalized.json  (git-ignored)
  */
 
 import fs from 'node:fs';
@@ -32,6 +36,23 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '..', '..');
+/** Xom (raw) asset paketlari: manifest JSON'lar shu yerda; glb/ papkalari ixtiyoriy. */
+const RAW_DIR = path.join(__dirname, 'raw');
+const OUT_DIR = path.join(__dirname, 'out');
+let rawGlbSkipNoticeShown = false;
+
+/** Xom GLB mavjud bo'lsa uni o'qiydi; bo'lmasa null (SHA taqqoslash o'tkazib yuboriladi). */
+function tryParseRawGlb(rawPath) {
+  if (fs.existsSync(rawPath)) return parseGlbBinary(rawPath);
+  if (!rawGlbSkipNoticeShown) {
+    rawGlbSkipNoticeShown = true;
+    console.warn(
+      `[Stage 04A] Xom GLB'lar topilmadi (${path.relative(ROOT_DIR, RAW_DIR)}/<PACK>/glb/) — ` +
+        "SHA-256 taqqoslash o'tkazib yuborildi (rawGlbIdentical = null); qolgan tekshiruvlar bajariladi.",
+    );
+  }
+  return null;
+}
 
 const GLB_MAGIC = 0x46546c67; // 'glTF'
 const JSON_CHUNK_TYPE = 0x4e4f534a; // 'JSON'
@@ -542,10 +563,10 @@ function measurePivotMotion(gltf, pivotSpec) {
 }
 
 // Load raw manifests for LOOT-ASSET-01 and INTERIOR-ASSET-01
-const rawLootManifestPath = path.join(ROOT_DIR, 'docs/assets/raw/LOOT-ASSET-01/loot_asset_manifest.json');
-const rawInteriorManifestPath = path.join(ROOT_DIR, 'docs/assets/raw/INTERIOR-ASSET-01/interior_asset_manifest.json');
-const rawCabinSamplePath = path.join(ROOT_DIR, 'docs/assets/raw/BUILDING-ASSET-01/examples/sample_cabin_layout.json');
-const rawRoomSamplePath = path.join(ROOT_DIR, 'docs/assets/raw/INTERIOR-ASSET-01/examples/sample_room_layout.json');
+const rawLootManifestPath = path.join(RAW_DIR, 'LOOT-ASSET-01/loot_asset_manifest.json');
+const rawInteriorManifestPath = path.join(RAW_DIR, 'INTERIOR-ASSET-01/interior_asset_manifest.json');
+const rawCabinSamplePath = path.join(RAW_DIR, 'BUILDING-ASSET-01/examples/sample_cabin_layout.json');
+const rawRoomSamplePath = path.join(RAW_DIR, 'INTERIOR-ASSET-01/examples/sample_room_layout.json');
 
 const rawLootManifest = JSON.parse(fs.readFileSync(rawLootManifestPath, 'utf8'));
 const rawInteriorManifest = JSON.parse(fs.readFileSync(rawInteriorManifestPath, 'utf8'));
@@ -553,7 +574,7 @@ const rawCabinSample = JSON.parse(fs.readFileSync(rawCabinSamplePath, 'utf8'));
 const rawRoomSample = JSON.parse(fs.readFileSync(rawRoomSamplePath, 'utf8'));
 
 /**
- * Expected specifications for BUILDING-ASSET-01 (from docs/assets/raw/BUILDING-ASSET-01/README.md)
+ * Expected specifications for BUILDING-ASSET-01 (sobiq docs/assets/raw/BUILDING-ASSET-01/README.md; qiymatlar shu faylga ko'chirilgan)
  */
 const BUILDING_SPECS = {
   wood_wall_01: {
@@ -781,13 +802,13 @@ function validateAndNormalizeAllAssets() {
     const spec = BUILDING_SPECS[assetId];
     const fileName = `${assetId}.glb`;
     const publicPath = path.join(ROOT_DIR, 'public/models/buildings', fileName);
-    const rawPath = path.join(ROOT_DIR, 'docs/assets/raw/BUILDING-ASSET-01/glb', fileName);
+    const rawPath = path.join(RAW_DIR, 'BUILDING-ASSET-01/glb', fileName);
 
     const parsed = parseGlbBinary(publicPath);
-    const rawParsed = parseGlbBinary(rawPath);
+    const rawParsed = tryParseRawGlb(rawPath);
     const sceneReport = inspectGlbScene(parsed.gltf, parsed.bin);
 
-    const rawBytesMatch = parsed.sha256 === rawParsed.sha256;
+    const rawBytesMatch = rawParsed ? parsed.sha256 === rawParsed.sha256 : null;
     const trianglesMatch = sceneReport.totalTriangles === spec.expectedTriangles;
     const materialsMatch =
       JSON.stringify(sceneReport.materials) === JSON.stringify(spec.expectedMaterials);
@@ -831,7 +852,7 @@ function validateAndNormalizeAllAssets() {
     }
 
     const validationPassed =
-      rawBytesMatch &&
+      rawBytesMatch !== false &&
       trianglesMatch &&
       materialsMatch &&
       hasVertexColors &&
@@ -848,7 +869,7 @@ function validateAndNormalizeAllAssets() {
       pack: 'BUILDING-ASSET-01',
       category: 'building',
       publicUrl: `/models/buildings/${fileName}`,
-      originalManifestSource: 'docs/assets/raw/BUILDING-ASSET-01/README.md',
+      originalManifestSource: 'tools/asset-validation/raw/BUILDING-ASSET-01 (sobiq docs/assets/raw/BUILDING-ASSET-01/README.md)',
       fileSizeBytes: parsed.fileSizeBytes,
       sha256: parsed.sha256,
       rawGlbIdentical: rawBytesMatch,
@@ -890,15 +911,15 @@ function validateAndNormalizeAllAssets() {
     const assetId = rawModel.name;
     const fileName = `${assetId}.glb`;
     const publicPath = path.join(ROOT_DIR, 'public/models/loot', fileName);
-    const rawPath = path.join(ROOT_DIR, 'docs/assets/raw/LOOT-ASSET-01/glb', fileName);
+    const rawPath = path.join(RAW_DIR, 'LOOT-ASSET-01/glb', fileName);
 
     const parsed = parseGlbBinary(publicPath);
-    const rawParsed = parseGlbBinary(rawPath);
+    const rawParsed = tryParseRawGlb(rawPath);
     const sceneReport = inspectGlbScene(parsed.gltf, parsed.bin);
 
-    const rawBytesMatch =
-      parsed.sha256 === rawParsed.sha256 &&
-      parsed.fileSizeBytes === rawModel.verification.glbBytes;
+    // Xom GLB bo'lmasa SHA taqqoslash o'tkazib yuboriladi (null), lekin bayt hajmi manifest bilan solishtiriladi
+    const glbBytesMatch = parsed.fileSizeBytes === rawModel.verification.glbBytes;
+    const rawBytesMatch = rawParsed ? parsed.sha256 === rawParsed.sha256 && glbBytesMatch : null;
     const trianglesMatch = sceneReport.totalTriangles === rawModel.triangles;
     const materialsMatch =
       JSON.stringify(sceneReport.materials) === JSON.stringify(rawModel.materials);
@@ -939,7 +960,8 @@ function validateAndNormalizeAllAssets() {
       JSON.stringify(pivotMeasured.movingMeshes) === JSON.stringify(rawModel.movingMeshes);
 
     const validationPassed =
-      rawBytesMatch &&
+      rawBytesMatch !== false &&
+      glbBytesMatch &&
       trianglesMatch &&
       materialsMatch &&
       hasVertexColors &&
@@ -960,7 +982,7 @@ function validateAndNormalizeAllAssets() {
       pack: 'LOOT-ASSET-01',
       category: 'loot',
       publicUrl: `/models/loot/${fileName}`,
-      originalManifestSource: 'docs/assets/raw/LOOT-ASSET-01/loot_asset_manifest.json',
+      originalManifestSource: 'tools/asset-validation/raw/LOOT-ASSET-01/loot_asset_manifest.json',
       fileSizeBytes: parsed.fileSizeBytes,
       sha256: parsed.sha256,
       rawGlbIdentical: rawBytesMatch,
@@ -1020,15 +1042,15 @@ function validateAndNormalizeAllAssets() {
     const assetId = rawModel.name;
     const fileName = `${assetId}.glb`;
     const publicPath = path.join(ROOT_DIR, 'public/models/interior', fileName);
-    const rawPath = path.join(ROOT_DIR, 'docs/assets/raw/INTERIOR-ASSET-01/glb', fileName);
+    const rawPath = path.join(RAW_DIR, 'INTERIOR-ASSET-01/glb', fileName);
 
     const parsed = parseGlbBinary(publicPath);
-    const rawParsed = parseGlbBinary(rawPath);
+    const rawParsed = tryParseRawGlb(rawPath);
     const sceneReport = inspectGlbScene(parsed.gltf, parsed.bin);
 
-    const rawBytesMatch =
-      parsed.sha256 === rawParsed.sha256 &&
-      parsed.fileSizeBytes === rawModel.verification.glbBytes;
+    // Xom GLB bo'lmasa SHA taqqoslash o'tkazib yuboriladi (null), lekin bayt hajmi manifest bilan solishtiriladi
+    const glbBytesMatch = parsed.fileSizeBytes === rawModel.verification.glbBytes;
+    const rawBytesMatch = rawParsed ? parsed.sha256 === rawParsed.sha256 && glbBytesMatch : null;
     const trianglesMatch = sceneReport.totalTriangles === rawModel.triangles;
     const materialsMatch =
       JSON.stringify(sceneReport.materials) === JSON.stringify(rawModel.materials);
@@ -1138,7 +1160,8 @@ function validateAndNormalizeAllAssets() {
     }
 
     const validationPassed =
-      rawBytesMatch &&
+      rawBytesMatch !== false &&
+      glbBytesMatch &&
       trianglesMatch &&
       materialsMatch &&
       hasVertexColors &&
@@ -1156,7 +1179,7 @@ function validateAndNormalizeAllAssets() {
       pack: 'INTERIOR-ASSET-01',
       category: 'interior',
       publicUrl: `/models/interior/${fileName}`,
-      originalManifestSource: 'docs/assets/raw/INTERIOR-ASSET-01/interior_asset_manifest.json',
+      originalManifestSource: 'tools/asset-validation/raw/INTERIOR-ASSET-01/interior_asset_manifest.json',
       fileSizeBytes: parsed.fileSizeBytes,
       sha256: parsed.sha256,
       rawGlbIdentical: rawBytesMatch,
@@ -1260,12 +1283,12 @@ const manifestPayload = {
   },
   sampleLayouts: {
     cabin8x4: {
-      source: 'docs/assets/raw/BUILDING-ASSET-01/examples/sample_cabin_layout.json',
+      source: 'tools/asset-validation/raw/BUILDING-ASSET-01/examples/sample_cabin_layout.json',
       name: rawCabinSample.name,
       moduleCount: rawCabinSample.modules.length,
     },
     room4x4: {
-      source: 'docs/assets/raw/INTERIOR-ASSET-01/examples/sample_room_layout.json',
+      source: 'tools/asset-validation/raw/INTERIOR-ASSET-01/examples/sample_room_layout.json',
       room: rawRoomSample.room,
       cell: rawRoomSample.cell,
       walkway: rawRoomSample.walkway,
@@ -1276,7 +1299,7 @@ const manifestPayload = {
   assetsById,
 };
 
-const outManifestPath = path.join(ROOT_DIR, 'docs/stage04a/assets_manifest_normalized.json');
+const outManifestPath = path.join(OUT_DIR, 'assets_manifest_normalized.json');
 fs.mkdirSync(path.dirname(outManifestPath), { recursive: true });
 fs.writeFileSync(outManifestPath, JSON.stringify(manifestPayload, null, 2) + '\n', 'utf8');
 

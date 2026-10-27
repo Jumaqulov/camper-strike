@@ -2,7 +2,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
 
-const zipPath = 'C:/Users/Developartwo/.gemini/antigravity/brain/4f81d0e4-a157-4181-b1b9-cc0a31c2f374/.user_uploaded/media_1792680218324_d3628627.zip';
+// GRASS-ASSET-01 paketini (zip) public/models/grass/ ga ochib qo'yadi.
+// Foydalanish: node scripts/extract-grass-assets.mjs <GRASS-ASSET-01.zip>
+const zipPath = process.argv[2] ? path.resolve(process.argv[2]) : '';
+if (!zipPath || !fs.existsSync(zipPath)) {
+  console.error('Foydalanish: node scripts/extract-grass-assets.mjs <GRASS-ASSET-01.zip yo\'li>');
+  console.error("  Zip ichida GRASS-ASSET-01/glb/*.glb, grass_asset_manifest.json, README.md va previews/ bo'lishi kerak.");
+  process.exit(1);
+}
 const tmpDir = path.resolve('tmp-grass');
 
 if (fs.existsSync(tmpDir)) fs.rmSync(tmpDir, { recursive: true, force: true });
@@ -13,7 +20,10 @@ execSync(`powershell -Command "Expand-Archive -LiteralPath '${zipPath}' -Destina
 
 const grassDir = path.resolve('public/models/grass');
 fs.mkdirSync(grassDir, { recursive: true });
-const docsDir = path.resolve('docs/stage08terrain');
+// Manifest validator yoniga (tools/grass-validation), README va previewlar git-ignored out/ ga
+const docsDir = path.resolve('tools/grass-validation');
+const outDir = path.join(docsDir, 'out');
+fs.mkdirSync(outDir, { recursive: true });
 fs.mkdirSync(docsDir, { recursive: true });
 
 const srcGlb = path.join(tmpDir, 'GRASS-ASSET-01', 'glb');
@@ -27,10 +37,10 @@ for (const f of files) {
 }
 
 fs.copyFileSync(path.join(tmpDir, 'GRASS-ASSET-01', 'grass_asset_manifest.json'), path.join(docsDir, 'grass_asset_manifest.json'));
-fs.copyFileSync(path.join(tmpDir, 'GRASS-ASSET-01', 'README.md'), path.join(docsDir, 'README_CLAUDE_GRASS.md'));
+fs.copyFileSync(path.join(tmpDir, 'GRASS-ASSET-01', 'README.md'), path.join(outDir, 'README_CLAUDE_GRASS.md'));
 
 const srcPreviews = path.join(tmpDir, 'GRASS-ASSET-01', 'previews');
-const destPreviews = path.join(docsDir, 'previews');
+const destPreviews = path.join(outDir, 'previews');
 fs.cpSync(srcPreviews, destPreviews, { recursive: true });
 
 fs.rmSync(tmpDir, { recursive: true, force: true });

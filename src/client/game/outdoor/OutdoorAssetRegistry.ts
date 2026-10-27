@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { q3 } from '../../../shared/math';
 import {
   CAMPFIRE_FIRE_ANCHOR_LOCAL,
   OUTDOOR_ASSET_IDS,
@@ -200,8 +201,6 @@ const fallbackCache = new Map<OutdoorAssetId, CachedOutdoorAssetTemplate>();
 const failedAssets = new Set<OutdoorAssetId>();
 let preloadPromise: Promise<void> | null = null;
 const readyListeners = new Set<() => void>();
-
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 function countGeoTriangles(geo: THREE.BufferGeometry | null | undefined): number {
   if (!geo) return 0;

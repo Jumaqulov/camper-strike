@@ -3,6 +3,7 @@ import { clamp, lerp, type Vec3 } from '../../../shared/math';
 import type { WeaponId } from '../../../shared/weapons';
 import { sampleTerrainHeight, type WorldDefinition } from '../../../shared/world';
 import { computeFairThirdPersonCameraDist } from '../ForestRenderer';
+import { TP_MAX_DIST_SPECTATOR, TP_SHOULDER_OFFSET } from '../cameraConstants';
 
 export interface SpectatableTarget {
   id: string;
@@ -116,9 +117,7 @@ export class SpectatorController {
     world: WorldDefinition,
     thirdPerson: boolean,
     fallbackPos: Vec3,
-    fallbackYaw: number,
   ): SpectatorCameraPose {
-    void fallbackYaw;
     const aliveTargets = targets.filter((t) => t.alive);
     this.lastAvailableTargetIds = aliveTargets.map((t) => t.id);
 
@@ -146,12 +145,12 @@ export class SpectatorController {
         const fwdY = Math.sin(target.pitch);
         const fwdZ = -Math.cos(target.yaw) * Math.cos(target.pitch);
         const pivot = {
-          x: target.pos.x + rightX * 0.42,
+          x: target.pos.x + rightX * TP_SHOULDER_OFFSET,
           y: this.smoothedCamY + 0.18,
-          z: target.pos.z + rightZ * 0.42,
+          z: target.pos.z + rightZ * TP_SHOULDER_OFFSET,
         };
         const backDir = { x: -fwdX, y: -fwdY, z: -fwdZ };
-        const dist = computeFairThirdPersonCameraDist(world, pivot, backDir, 2.55);
+        const dist = computeFairThirdPersonCameraDist(world, pivot, backDir, TP_MAX_DIST_SPECTATOR);
         x = pivot.x + backDir.x * dist;
         y = pivot.y + backDir.y * dist;
         z = pivot.z + backDir.z * dist;

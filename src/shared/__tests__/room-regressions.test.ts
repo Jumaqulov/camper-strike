@@ -42,7 +42,7 @@ function createLootFfaRoom(): Room {
   );
 }
 
-describe('Repo audit tuzatishlari', () => {
+describe('Room regressiya testlari (sobiq repo-audit tuzatishlari)', () => {
   it('FFA + lootPreview: restartMatch konteynerlarni yangi raund uchun qayta to\'ldiradi', () => {
     const room = createLootFfaRoom();
     try {

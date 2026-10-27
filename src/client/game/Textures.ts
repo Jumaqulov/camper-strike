@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { MaterialKind } from '../../shared/map';
+import type { MaterialKind } from '../../shared/world';
 
 type Draw = (g: CanvasRenderingContext2D, s: number) => void;
 

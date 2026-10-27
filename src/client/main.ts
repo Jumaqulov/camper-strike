@@ -82,7 +82,6 @@ function getNicknameModalInput(): HTMLInputElement | null {
 function syncPlayerName(name: string): void {
   const trimmed = (name || '').trim().slice(0, 16) || 'Sardor';
   settings.name = trimmed;
-  settings.sensitivity = settings.sens;
   saveSettings(settings);
 
   // #name-input (asosiy menyu inputi)
@@ -275,7 +274,7 @@ function quickPlay(): void {
     const openRoom = res.rooms?.find(
       (r) =>
         r.mode === 'forest_survival' &&
-        ((r as any).playerCount !== undefined ? (r as any).playerCount : r.players) < r.maxPlayers,
+        r.players < r.maxPlayers,
     );
 
     if (openRoom) {
@@ -514,7 +513,6 @@ function initEvents(): void {
     const trimmed = raw.trim().slice(0, 16);
     if (trimmed) {
       settings.name = trimmed;
-      settings.sensitivity = settings.sens;
       saveSettings(settings);
       const lobbyName = getEl('lobby-name');
       if (lobbyName) lobbyName.textContent = trimmed;
@@ -627,7 +625,6 @@ function initEvents(): void {
 
   wireSlider(['menu-set-sens', 'set-sens'], (v) => {
     settings.sens = Math.max(0.1, Math.min(4.0, v));
-    settings.sensitivity = settings.sens;
     saveSettings(settings);
     syncSettingsUI();
   });

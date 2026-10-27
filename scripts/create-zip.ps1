@@ -1,6 +1,15 @@
+# Loyihani (node_modules, dist, .git va h.k. siz) zip arxivga yig'adi.
+# Foydalanish: powershell -File scripts/create-zip.ps1 [-ZipPath D:\camper-strike.zip]
+param(
+    [string]$ZipPath = ""
+)
 $ErrorActionPreference = "Stop"
 
-$zipPath = "D:\stickman-strike-stage08terrain.zip"
+$rootDir = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+if (-not $ZipPath) {
+    $ZipPath = Join-Path (Split-Path $rootDir -Parent) ("camper-strike-" + (Get-Date -Format "yyyyMMdd-HHmm") + ".zip")
+}
+$zipPath = $ZipPath
 if (Test-Path $zipPath) {
     Remove-Item $zipPath -Force
 }
@@ -9,9 +18,8 @@ Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $zip = [System.IO.Compression.ZipFile]::Open($zipPath, [System.IO.Compression.ZipArchiveMode]::Create)
-$rootDir = "D:\Stickman-strike"
 
-$excludeDirs = @("node_modules", "dist", ".git", ".gemini", ".system_generated", "logs", "coverage")
+$excludeDirs = @("node_modules", "dist", ".git", ".gemini", ".claude", ".system_generated", "logs", "coverage", "out", "tmp-grass")
 
 $files = Get-ChildItem -Path $rootDir -Recurse -File | Where-Object {
     if ($_.Extension -ieq ".zip") {

@@ -13,11 +13,11 @@
  * 5. Numerical integrity: no NaN/Infinity, unit normals, upward normal bias (ny >= 0), colors in [0, 1]
  * 6. Geometric integrity: no degenerate zero-area triangles, no collapsed edges, correct bounding box
  * 7. Two-sided winding: pairwise inverted triangle winding for FrontSide geometry-based double-sidedness
- * 8. Manifest conformance: matches docs/stage08terrain/grass_asset_manifest.json (triangles, bbox, dimensions, height spec)
+ * 8. Manifest conformance: matches tools/grass-validation/grass_asset_manifest.json (git tarixidan tiklangan) (triangles, bbox, dimensions, height spec)
  *
  * Generates:
- * - docs/stage08terrain/asset_qa.json
- * - docs/stage08terrain/asset_qa.md
+ * - tools/grass-validation/out/asset_qa.json  (git-ignored)
+ * - tools/grass-validation/out/asset_qa.md
  */
 
 import fs from 'node:fs';
@@ -29,9 +29,9 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '../..');
 
 const MODELS_DIR = path.join(rootDir, 'public/models/grass');
-const MANIFEST_PATH = path.join(rootDir, 'docs/stage08terrain/grass_asset_manifest.json');
-const QA_JSON_PATH = path.join(rootDir, 'docs/stage08terrain/asset_qa.json');
-const QA_MD_PATH = path.join(rootDir, 'docs/stage08terrain/asset_qa.md');
+const MANIFEST_PATH = path.join(__dirname, 'grass_asset_manifest.json');
+const QA_JSON_PATH = path.join(__dirname, 'out', 'asset_qa.json');
+const QA_MD_PATH = path.join(__dirname, 'out', 'asset_qa.md');
 
 // glTF 2.0 constants
 const GLB_MAGIC = 0x46546c67; // 'glTF'
@@ -795,7 +795,7 @@ All assets strictly meet performance, visual, and architectural requirements for
 - **Material Strategy:** Every asset utilizes the single standardized material **\`vegetation\`** configured with \`FrontSide\` (\`doubleSided: false\`), roughness **0.92**, and metalness **0.00**.
 - **Double-Sided Foliage via Geometry:** Each model features an **even triangle count** where 100% of triangles exist in consecutive pairs \`(2k, 2k+1)\` with **inverted winding** and **identical upward-tilted normals** ($n_y \\ge 0$). This ensures two-sided visibility under Three.js standard \`FrontSide\` backface culling without any dark reverse-face artifacts or double-sided lighting performance penalties.
 - **Numerical & Geometric Purity:** Zero NaN/Infinity floats, zero non-unit normals, zero zero-area degenerate triangles (minimum triangle area is $2.22 \\times 10^{-5}\\text{ m}^2$), and zero collapsed edges.
-- **Manifest Alignment:** Bounding boxes, dimensions, triangle counts, and height specs match \`docs/stage08terrain/grass_asset_manifest.json\` within 0.002m tolerance.
+- **Manifest Alignment:** Bounding boxes, dimensions, triangle counts, and height specs match \`tools/grass-validation/grass_asset_manifest.json\` within 0.002m tolerance.
 - **Origin & Root Penetration:** Every plant origin is centered at the root contact \`(0, 0, 0)\` with a intentional $\\sim 1\\text{ cm}$ root penetration ($y_{\\min} \\in [-0.015, -0.009]\\text{ m}$) ensuring blades never float on uneven slopes.
 
 ---

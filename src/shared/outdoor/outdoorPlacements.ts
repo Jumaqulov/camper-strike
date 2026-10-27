@@ -1,4 +1,5 @@
 import { sampleForestSquareRoad } from '../forestSquareRoads';
+import { q3 } from '../math';
 import {
   OUTDOOR_ASSET_IDS,
   OUTDOOR_ASSET_MANIFEST,
@@ -23,7 +24,6 @@ import {
   type VisualDescriptor,
 } from '../world';
 
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 const UNIT_SCALE = { x: 1, y: 1, z: 1 } as const;
 

@@ -12,7 +12,7 @@ import {
   LOOT_ERROR_MESSAGES_UZ,
 } from '../../shared/loot';
 import type {
-  AmmoEvent, ChatMsg, ClientState, ContainerOpenAck, ContainerOpenReq, EquipWeaponAck, EquipWeaponReq,
+  AmmoEvent, ChatMsg, ContainerOpenAck, ContainerOpenReq, EquipWeaponAck, EquipWeaponReq,
   ExplosionEvent, HitConfirm, HurtEvent, KillEvent, LootPickupAck, LootPickupReq, MatchState, PlayerInputBatchMsg,
   PlayerInventorySnap, PlayerSnap, PublicContainerState, PublicLootItem, RosterEntry, RoomLootSnapshot, ShootMsg, ShotEvent,
   Snapshot, SpawnEvent, UseMedkitAck, UseMedkitReq, WelcomeMsg,
@@ -29,7 +29,6 @@ import {
 } from '../../shared/world';
 import { saveSettings, type QualityLevel, type Settings } from '../settings';
 import type { AudioSys } from './Audio';
-import type { PredictionDiagnostics } from './ClientPrediction';
 import { Effects } from './Effects';
 import { buildGrenadeModel, buildGun } from './GunModels';
 import { esc, Hud, weaponBadgeHtml } from './Hud';
@@ -41,40 +40,26 @@ import { interpolateSurvivalZone, isOutsideSurvivalZone, type SurvivalZoneSnap }
 import { detectSurface } from './surface';
 import { Input } from './Input';
 import { LocalPlayer } from './LocalPlayer';
-import {
-  InventoryUI,
-  LootUI,
-  LootWorldRenderer,
-  type InventoryUIDiagnostics,
-  type LootUIDiagnostics,
-  type LootWorldRendererDiagnostics,
-} from './loot';
+import { InventoryUI, LootUI, LootWorldRenderer } from './loot';
 import {
   type SpectatableTarget,
   type SpectatorCameraPose,
   SpectatorController,
-  type SpectatorDiagnostics,
   SurvivalUI,
-  type SurvivalUIDiagnostics,
 } from './survival';
-import { colorFor, Stickman, type CharacterModelDiag } from './Stickman';
-import { getCharacterAssetDiagnostics } from './character/CharacterAssetRegistry';
+import { colorFor, Stickman } from './Stickman';
 import { ViewModel } from './ViewModel';
-import { getBuildingAssetDiagnostics } from './buildings';
-import { getContainerAssetDiagnostics } from './containers';
-import { getForestAssetDiagnostics } from './ForestAssetRegistry';
-import { computeFairThirdPersonCameraDist, type CullingProfileStats } from './ForestRenderer';
-import { getInteriorAssetDiagnostics } from './interiors';
-import {
-  getOutdoorAssetDiagnostics,
-  type OutdoorAssetDiagnosticEntry,
-  type OutdoorRendererDiagnostics,
-} from './outdoor';
-import { getWeaponAssetDiagnostics } from './WeaponAssetRegistry';
-import { getGrassAssetDiagnostics, type GrassAssetDiagnostics } from './grass/GrassAssetRegistry';
-import type { GroundCoverStats } from './GroundCoverRenderer';
+import { computeFairThirdPersonCameraDist } from './ForestRenderer';
 import { buildWorld, type WorldHandles } from './World';
-import { CollisionDebugOverlay, type CollisionDebugInfo } from './debug/CollisionDebugOverlay';
+import { CollisionDebugOverlay } from './debug/CollisionDebugOverlay';
+import {
+  installDevGameTools,
+  type BenchCaptureState,
+  type DevGameHooks,
+  type DevSyntheticInput,
+  type NetSimConfig,
+} from './debug/DevGameTools';
+import { TP_MAX_DIST_LOCAL, TP_SHOULDER_OFFSET, TP_SHOULDER_PAD } from './cameraConstants';
 
 /** Minimal shape of the ground-cover stats exposed (optionally) by the forest world handle (Stage 08-FIX, agent E). */
 interface GroundCoverStatsLite {
@@ -88,10 +73,6 @@ interface GroundCoverStatsLite {
 type WorldHandlesWithGroundCover = WorldHandles & {
   getGroundCoverStats?: () => GroundCoverStatsLite | null | undefined;
 };
-
-/** 3P shoulder offset (m) and the clearance kept between the shoulder pivot and walls. */
-const TP_SHOULDER_OFFSET = 0.42;
-const TP_SHOULDER_PAD = 0.15;
 
 const INTERP_DELAY = 0.1;
 const SEND_INTERVAL = 1 / 30;
@@ -116,191 +97,6 @@ interface BufferedSnap {
   t: number;
   s: Snapshot;
   map: Map<string, PlayerSnap>;
-}
-
-export interface DevCameraOverride {
-  x: number;
-  y: number;
-  z: number;
-  yaw: number;
-  pitch: number;
-}
-
-export interface DevPlayerPoseLock {
-  x: number;
-  y: number;
-  z: number;
-  yaw: number;
-  pitch: number;
-}
-
-declare global {
-  interface Window {
-    __DEV_CAMERA_OVERRIDE__?: DevCameraOverride | null;
-    __DEV_PLAYER_POSE_LOCK__?: DevPlayerPoseLock | null;
-    __DEV_GAME_TOOLS__?: {
-      setWeapon: (w: WeaponId | null) => void;
-      setThirdPerson: (tp: boolean) => void;
-      triggerFireAnim: () => void;
-      triggerReloadAnim: () => void;
-      getPlayerTransform: () => { x: number; y: number; z: number; yaw: number; onGround: boolean };
-      getDiagnostics: () => ReturnType<typeof getWeaponAssetDiagnostics>;
-      getForestDiagnostics: () => ReturnType<typeof getForestAssetDiagnostics>;
-      getWorldMeta: () => WorldMeta;
-      loadTechnicalTerrainFixture: () => WorldMeta;
-      setQuality: (q: QualityLevel) => void;
-      getRenderStats: () => {
-        calls: number;
-        sceneCalls: number;
-        vmCalls: number;
-        triangles: number;
-        sceneTris: number;
-        vmTris: number;
-        geometries: number;
-        textures: number;
-      };
-      getCullingProfile: () => CullingProfileStats | null;
-      resetCullingProfile: () => void;
-      startBenchmarkCapture: () => void;
-      stopBenchmarkCapture: () => {
-        frames: number;
-        durationMs: number;
-        fpsMean: number;
-        fpsMedian: number;
-        fpsP10: number;
-        fps1PctLow: number;
-        frameTimeMedianMs: number;
-        frameTimeP95Ms: number;
-        frameTimeP99Ms: number;
-        cullCpuMedianMs: number;
-        cullCpuP95Ms: number;
-        cullCpuMaxMs: number;
-        gpuTimerSupported: boolean;
-        gpuTimeMedianMs: number | null;
-        gpuTimeP95Ms: number | null;
-        render: {
-          calls: number;
-          sceneCalls: number;
-          vmCalls: number;
-          triangles: number;
-          sceneTris: number;
-          vmTris: number;
-          geometries: number;
-          textures: number;
-        };
-        culling: CullingProfileStats | null;
-        heapUsedMB: number | null;
-        heapTotalMB: number | null;
-      };
-      setPlayerPos: (x: number, z: number, yaw?: number, yOverride?: number, pitch?: number) => {
-        x: number;
-        y: number;
-        z: number;
-        yaw: number;
-        pitch: number;
-        onGround: boolean;
-      };
-      getCameraState: () => { x: number; y: number; z: number; yaw: number; pitch: number; thirdPerson: boolean };
-      getCoverTestFixtures: () => {
-        bush: { x: number; y: number; z: number };
-        spruce: { x: number; y: number; z: number };
-      };
-      setBushCoverVisibleForQaDemo: (visible: boolean) => void;
-      getStage04ADiagnostics: () => {
-        buildings: ReturnType<typeof getBuildingAssetDiagnostics>;
-        interiors: ReturnType<typeof getInteriorAssetDiagnostics>;
-        containers: ReturnType<typeof getContainerAssetDiagnostics>;
-        allLoaded: boolean;
-      };
-      setDevDoorAngle: (angleRad: number | null, targetId?: string) => void;
-      setDevCabinetOpen: (openFraction: number | null) => void;
-      setDevContainersOpen: (
-        openFraction: number | null,
-        containerId?: string,
-        damped?: boolean,
-      ) => void;
-      setDevAnchorHelpers: (visible: boolean) => void;
-      stepInput: (
-        fwd: number,
-        right: number,
-        jump: boolean,
-        dt: number,
-        steps: number,
-      ) => { x: number; y: number; z: number; yaw: number; onGround: boolean };
-      getPredictionDiagnostics: () => PredictionDiagnostics & {
-        authoritativePos: Vec3 | null;
-        predictedPos: Vec3;
-        smoothedPos: Vec3;
-        divergenceM: number;
-        netSim: { rttMs: number; jitterMs: number; dropRate: number };
-      };
-      setNetSim: (opts: { rttMs?: number; jitterMs?: number; dropRate?: number } | null) => void;
-      sendRawStatePacketForAdversarialTest: (state: Partial<ClientState>) => void;
-      setSyntheticInput: (
-        input: {
-          fwd?: number;
-          right?: number;
-          jump?: boolean;
-          walk?: boolean;
-          yaw?: number;
-          pitch?: number;
-        } | null,
-      ) => void;
-      clearPlayerPoseLock: () => void;
-      triggerFire: () => boolean;
-      getLootDiagnostics: () => {
-        lootPreview: boolean;
-        lootSnapshot: RoomLootSnapshot | null;
-        inventorySnap: PlayerInventorySnap | null;
-        lootUi: LootUIDiagnostics;
-        inventoryUi: InventoryUIDiagnostics;
-        worldRenderer: LootWorldRendererDiagnostics;
-      };
-      openContainerById: (containerId: string, requestId?: string) => Promise<ContainerOpenAck>;
-      pickupLootItem: (
-        containerId: string | null,
-        itemId: string,
-        requestId?: string,
-      ) => Promise<LootPickupAck>;
-      equipInventoryWeapon: (weapon: WeaponId | null, requestId?: string) => Promise<EquipWeaponAck>;
-      useMedkitItem: (requestId?: string) => Promise<UseMedkitAck>;
-      requestLootSync: () => Promise<{ loot: RoomLootSnapshot; inventory: PlayerInventorySnap | null }>;
-      sendRawShootPacketForAdversarialTest: (msg: ShootMsg) => void;
-      getSurvivalDiagnostics: () => {
-        isSurvival: boolean;
-        match: MatchState | null;
-        survivalUi: SurvivalUIDiagnostics;
-        spectator: SpectatorDiagnostics;
-      };
-      cycleSpectatorTarget: (delta: number) => string | null;
-      setSpectatorTarget: (targetId: string | null) => void;
-      getOutdoorDiagnostics: () => {
-        assets: Record<string, OutdoorAssetDiagnosticEntry>;
-        renderer: OutdoorRendererDiagnostics | null;
-        allLoaded: boolean;
-      };
-      /** 08-FIX: toggle the F9 collision debug overlay (returns new state). */
-      toggleCollisionDebug?: (on?: boolean) => boolean;
-      /** 08-FIX: last computed collision debug info (null when the overlay is off). */
-      getCollisionDebugInfo?: () => CollisionDebugInfo | null;
-      /** 08-TERRAIN-QA: Ground cover rendering stats (instances, draw calls, triangles). */
-      getGroundCoverStats?: () => GroundCoverStats | null;
-      /** 08-TERRAIN-QA: GLB grass asset cache & fallback diagnostics. */
-      getGrassAssetDiagnostics?: () => GrassAssetDiagnostics;
-      getGameplayHash?: () => string;
-      getWorldVersion?: () => number;
-      getRoomId?: () => string;
-      getOtherPlayerCount?: () => number;
-      getOtherPlayers?: () => Array<{ id: string; name: string; pos: Vec3; weapon: WeaponId | null }>;
-      getContainersCount?: () => number;
-      /** 08B: Camper Buddy asset + per-model animator/weapon-mount diagnostics. */
-      getCharacterDiagnostics?: () => {
-        asset: ReturnType<typeof getCharacterAssetDiagnostics>;
-        local: CharacterModelDiag;
-        remotes: Array<{ id: string } & CharacterModelDiag>;
-      };
-    } | null;
-  }
 }
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -337,16 +133,9 @@ export class Game {
   private lastSentSeq = 0;
   private lastAuthoritativeSnap: PlayerSnap | null = null;
   private lastServerTick = 0;
-  private netSim = { rttMs: 0, jitterMs: 0, dropRate: 0 };
+  private netSim: NetSimConfig = { rttMs: 0, jitterMs: 0, dropRate: 0 };
   private netSimTimers: number[] = [];
-  private devSyntheticInput: {
-    fwd: number;
-    right: number;
-    jump: boolean;
-    walk: boolean;
-    yaw?: number;
-    pitch?: number;
-  } | null = null;
+  private devSyntheticInput: DevSyntheticInput | null = null;
   private ping = 0;
   private pingTimer = 0;
   private disposed = false;
@@ -413,11 +202,9 @@ export class Game {
     geometries: 0,
     textures: 0,
   };
-  private benchCapturing = false;
-  private benchStartMs = 0;
-  private benchFrameTimesMs: number[] = [];
-  private benchCullTimesMs: number[] = [];
-  private benchGpuTimesMs: number[] = [];
+  /** Benchmark yozuvi (DEV asboblari boshqaradi, kadr sikli to'ldiradi). */
+  private bench: BenchCaptureState = { capturing: false, startMs: 0, frameTimesMs: [], cullTimesMs: [], gpuTimesMs: [] };
+  private uninstallDevTools: (() => void) | null = null;
   private gpuTimerExt: { TIME_ELAPSED_EXT: number; GPU_DISJOINT_EXT: number } | null = null;
   private pendingGpuQueries: WebGLQuery[] = [];
   private collisionDebug: CollisionDebugOverlay | null = null;
@@ -530,7 +317,7 @@ export class Game {
     };
     this.audio.setVolume(settings.volume);
     // Ambient fon: o'rmon xaritalarida faqat qushlar (shamol va barg shovqini foydalanuvchi so'rovi bilan olib tashlangan)
-    this.audio.startAmbient(this.worldDef.terrain.kind === 'heightfield' ? 'forest' : 'arena');
+    this.audio.startAmbient('forest');
 
     this.hud.reset();
     this.hud.show(true);
@@ -546,435 +333,103 @@ export class Game {
     this.pingTimer = window.setInterval(() => this.measurePing(), 2000);
     this.measurePing();
     if (import.meta.env.DEV) {
-      window.__DEV_GAME_TOOLS__ = {
-        setWeapon: (w: WeaponId | null) => {
-          this.me.weapon = w;
-          this.prevWeapon = w;
-          this.vm.setWeapon(w);
-          this.myModel.setWeapon(w);
-        },
-        setThirdPerson: (tp: boolean) => {
-          this.thirdPerson = tp;
-        },
-        triggerFireAnim: () => {
-          if (!this.me.weapon) return;
-          this.vm.fire(WEAPONS[this.me.weapon].recoil);
-          this.myModel.muzzleFlash();
-        },
-        triggerReloadAnim: () => {
-          if (!this.me.weapon) return;
-          this.vm.startReload(WEAPONS[this.me.weapon].reloadTime);
-        },
-        getPlayerTransform: () => ({
-          x: this.me.body.pos.x,
-          y: this.me.body.pos.y,
-          z: this.me.body.pos.z,
-          yaw: this.me.yaw,
-          onGround: this.me.body.onGround,
-        }),
-        getDiagnostics: () => getWeaponAssetDiagnostics(),
-        getForestDiagnostics: () => getForestAssetDiagnostics(),
-        getWorldMeta: () => this.getWorldMeta(),
-        loadTechnicalTerrainFixture: () => {
-          this.world.dispose();
-          const techWorld = createTechnicalTerrainFixture();
-          this.worldDef = techWorld;
-          this.world = buildWorld(this.scene, techWorld, this.settings.quality);
-          this.me.setWorld(techWorld);
-          const sp = techWorld.spawnPoints[0];
-          this.me.body.pos = { x: sp.x, y: sp.y, z: sp.z };
-          this.me.body.vel = { x: 0, y: 0, z: 0 };
-          this.me.body.onGround = true;
-          this.me.yaw = sp.yaw;
-          this.me.pitch = 0;
-          this.camY = sp.y + EYE_HEIGHT;
-          return extractWorldMeta(techWorld);
-        },
-        setQuality: (q: QualityLevel) => {
-          this.settings.quality = q;
-          saveSettings(this.settings);
-          this.applyQualityRendererSettings(q);
-          this.world.setQuality?.(q);
-        },
-        getRenderStats: () => ({ ...this.lastRenderStats }),
-        getCullingProfile: () => this.world.getCullingProfile?.() ?? null,
-        resetCullingProfile: () => this.world.resetCullingProfile?.(),
-        startBenchmarkCapture: () => {
-          this.world.resetCullingProfile?.();
-          this.benchFrameTimesMs.length = 0;
-          this.benchCullTimesMs.length = 0;
-          this.benchGpuTimesMs.length = 0;
-          this.benchStartMs = performance.now();
-          this.benchCapturing = true;
-        },
-        stopBenchmarkCapture: () => {
-          this.benchCapturing = false;
-          const durationMs = Math.max(1, performance.now() - this.benchStartMs);
-          const ft = [...this.benchFrameTimesMs].sort((a, b) => a - b);
-          const n = ft.length;
-          const pct = (arr: number[], q: number) =>
-            arr.length === 0 ? 0 : arr[Math.min(arr.length - 1, Math.max(0, Math.floor(arr.length * q)))];
-
-          const frameTimeMedianMs = pct(ft, 0.5);
-          const frameTimeP95Ms = pct(ft, 0.95);
-          const frameTimeP99Ms = pct(ft, 0.99);
-          const fpsMean = n > 0 ? (n * 1000) / durationMs : 0;
-          const fpsMedian = frameTimeMedianMs > 0 ? 1000 / frameTimeMedianMs : 0;
-          // p10 FPS corresponds to p90 frame time; 1% low FPS can be reported both as p99 proxy and as mean of slowest 1% frames
-          const ftP90 = pct(ft, 0.9);
-          const fpsP10 = ftP90 > 0 ? 1000 / ftP90 : 0;
-          const fps1PctLowP99 = frameTimeP99Ms > 0 ? 1000 / frameTimeP99Ms : 0;
-          const slow1PctCount = Math.max(1, Math.floor(n * 0.01));
-          const slowestSlice = ft.slice(n - slow1PctCount);
-          const slow1PctMeanFt = slowestSlice.reduce((sum, v) => sum + v, 0) / slow1PctCount;
-          const fps1PctLowAvg = slow1PctMeanFt > 0 ? 1000 / slow1PctMeanFt : 0;
-
-          const ct = [...this.benchCullTimesMs].sort((a, b) => a - b);
-          const gt = [...this.benchGpuTimesMs].sort((a, b) => a - b);
-          const perfMem = (performance as unknown as { memory?: { usedJSHeapSize: number; totalJSHeapSize: number } }).memory;
-
-          // Pin the measured sustained median FPS / frame-time into the DEV overlay so screenshots
-          // captured immediately after stopBenchmarkCapture() display the exact sustained benchmark numbers
-          if (fpsMedian > 0) {
-            this.devFps = Math.round(fpsMedian);
-            this.devFrameMs = frameTimeMedianMs;
-            this.devFrames = 0;
-            this.devElapsed = -5.0; // Hold pinned benchmark display for 5s while screenshot is captured
-          }
-
-          return {
-            frames: n,
-            durationMs: Number(durationMs.toFixed(1)),
-            fpsMean: Number(fpsMean.toFixed(2)),
-            fpsMedian: Number(fpsMedian.toFixed(2)),
-            fpsP10: Number(fpsP10.toFixed(2)),
-            fps1PctLow: Number(fps1PctLowAvg.toFixed(2)),
-            fps1PctLowP99: Number(fps1PctLowP99.toFixed(2)),
-            frameTimeMedianMs: Number(frameTimeMedianMs.toFixed(3)),
-            frameTimeP95Ms: Number(frameTimeP95Ms.toFixed(3)),
-            frameTimeP99Ms: Number(frameTimeP99Ms.toFixed(3)),
-            cullCpuMedianMs: Number(pct(ct, 0.5).toFixed(4)),
-            cullCpuP95Ms: Number(pct(ct, 0.95).toFixed(4)),
-            cullCpuMaxMs: Number(pct(ct, 1.0).toFixed(4)),
-            gpuTimerSupported: Boolean(this.gpuTimerExt),
-            gpuTimeMedianMs: gt.length > 0 ? Number(pct(gt, 0.5).toFixed(3)) : null,
-            gpuTimeP95Ms: gt.length > 0 ? Number(pct(gt, 0.95).toFixed(3)) : null,
-            render: { ...this.lastRenderStats },
-            culling: this.world.getCullingProfile?.() ?? null,
-            heapUsedMB: perfMem ? Number((perfMem.usedJSHeapSize / (1024 * 1024)).toFixed(2)) : null,
-            heapTotalMB: perfMem ? Number((perfMem.totalJSHeapSize / (1024 * 1024)).toFixed(2)) : null,
-          };
-        },
-        setPlayerPos: (x: number, z: number, yaw = this.me.yaw, yOverride?: number, pitch = 0) => {
-          const y = yOverride ?? sampleTerrainHeight(this.worldDef.terrain, x, z);
-          this.me.alive = true;
-          this.me.hp = 100;
-          this.me.body.pos = { x, y, z };
-          this.me.body.vel = { x: 0, y: 0, z: 0 };
-          this.me.body.onGround = true;
-          this.me.yaw = yaw;
-          this.me.pitch = pitch;
-          this.camY = y + EYE_HEIGHT;
-          this.me.resetPrediction();
-          window.__DEV_PLAYER_POSE_LOCK__ = { x, y, z, yaw, pitch };
-          return {
-            x: this.me.body.pos.x,
-            y: this.me.body.pos.y,
-            z: this.me.body.pos.z,
-            yaw: this.me.yaw,
-            pitch: this.me.pitch,
-            onGround: this.me.body.onGround,
-          };
-        },
-        getCameraState: () => ({
-          x: this.camera.position.x,
-          y: this.camera.position.y,
-          z: this.camera.position.z,
-          yaw: this.camera.rotation.y,
-          pitch: this.camera.rotation.x,
-          thirdPerson: this.thirdPerson,
-        }),
-        getCoverTestFixtures: () => {
-          const allBushes = this.worldDef.visuals.filter((v) => v.batchKey === 'foliage:bush');
-          const trees = this.worldDef.visuals.filter((v) => v.category === 'tree');
-          // Pick the largest bush visible in all quality presets (strideHash < 35) that has a clear
-          // sightline corridor from (bx, bz - 1.4) to (bx, bz + 9.0) so no tree trunk blocks 1P/3P camera
-          let chosenBush = allBushes[0]?.transform.position ?? { x: 8.5, y: 0, z: 13.5 };
-          let bestScale = -1;
-          for (let i = 0; i < allBushes.length; i++) {
-            const strideHash = (i * 41 + 7) % 100;
-            if (strideHash >= 35) continue;
-            const b = allBushes[i];
-            const bx = b.transform.position.x;
-            const bz = b.transform.position.z;
-            if (Math.hypot(bx, bz) < 8 || Math.hypot(bx, bz) > 36) continue;
-            const corridorBlocked = trees.some((t) => {
-              const tx = t.transform.position.x;
-              const tz = t.transform.position.z;
-              return Math.abs(tx - bx) < 1.35 && tz >= bz - 1.4 && tz <= bz + 9.2;
-            });
-            if (!corridorBlocked && b.transform.scale.x > bestScale) {
-              bestScale = b.transform.scale.x;
-              chosenBush = b.transform.position;
-            }
-          }
-
-          const spruces = this.worldDef.visuals.filter((v) => {
-            if (v.batchKey !== 'tree:spruce_broad') return false;
-            const sx = v.transform.position.x;
-            const sz = v.transform.position.z;
-            if (Math.hypot(sx, sz) < 12 || Math.hypot(sx, sz) > 32) return false;
-            const otherTreeBehind = trees.some(
-              (t) =>
-                t !== v &&
-                Math.abs(t.transform.position.x - sx) < 1.5 &&
-                t.transform.position.z >= sz - 1.5 &&
-                t.transform.position.z <= sz + 5.0,
-            );
-            return !otherTreeBehind;
-          });
-          const s = spruces[0]?.transform.position ?? { x: -14.0, y: 0, z: 16.0 };
-          return {
-            bush: { x: chosenBush.x, y: chosenBush.y, z: chosenBush.z },
-            spruce: { x: s.x, y: s.y, z: s.z },
-          };
-        },
-        setBushCoverVisibleForQaDemo: (visible: boolean) => {
-          const b1 = this.scene.getObjectByName('inst_foliage:bush');
-          const b2 = this.scene.getObjectByName('inst_foliage:bush_bark');
-          if (b1) b1.visible = visible;
-          if (b2) b2.visible = visible;
-        },
-        getStage04ADiagnostics: () => {
-          const buildings = getBuildingAssetDiagnostics();
-          const interiors = getInteriorAssetDiagnostics();
-          const containers = getContainerAssetDiagnostics();
-          const allLoaded =
-            Object.values(buildings).every((d) => d.loaded && !d.failed && !d.isFallback) &&
-            Object.values(interiors).every((d) => d.loaded && !d.failed && !d.isFallback) &&
-            Object.values(containers).every((d) => d.loaded && !d.failed && !d.isFallback);
-          return {
-            buildings,
-            interiors,
-            containers,
-            allLoaded,
-          };
-        },
-        setDevDoorAngle: (angleRad: number | null, targetId?: string) => {
-          this.world.stage04a?.buildings.setDevDoorDemoAngle(angleRad, targetId);
-        },
-        setDevCabinetOpen: (openFraction: number | null) => {
-          this.world.stage04a?.interiors.setDevCabinetOpenFraction(openFraction);
-        },
-        setDevContainersOpen: (
-          openFraction: number | null,
-          containerId?: string,
-          damped = false,
-        ) => {
-          this.world.stage04a?.containers.setDevContainersOpenFraction(
-            openFraction,
-            containerId,
-            damped,
-          );
-        },
-        setDevAnchorHelpers: (visible: boolean) => {
-          this.world.stage04a?.interiors.setAnchorHelpersVisible(visible);
-          this.world.stage04a?.containers.setAnchorHelpersVisible(visible);
-        },
-        stepInput: (fwd: number, right: number, jump: boolean, dt: number, steps: number) => {
-          window.__DEV_PLAYER_POSE_LOCK__ = null;
-          for (let i = 0; i < steps; i++) {
-            this.me.move(dt, fwd, right, i === 0 ? jump : false, false);
-            this.sendInput();
-          }
-          this.camY = this.me.body.pos.y + EYE_HEIGHT;
-          return {
-            x: this.me.body.pos.x,
-            y: this.me.body.pos.y,
-            z: this.me.body.pos.z,
-            yaw: this.me.yaw,
-            onGround: this.me.body.onGround,
-          };
-        },
-        getPredictionDiagnostics: () => {
-          const diag = this.me.prediction.getDiagnostics();
-          const pred = {
-            x: Number(this.me.body.pos.x.toFixed(4)),
-            y: Number(this.me.body.pos.y.toFixed(4)),
-            z: Number(this.me.body.pos.z.toFixed(4)),
-          };
-          const smoothedRaw = this.me.smoothedPos();
-          const smoothed = {
-            x: Number(smoothedRaw.x.toFixed(4)),
-            y: Number(smoothedRaw.y.toFixed(4)),
-            z: Number(smoothedRaw.z.toFixed(4)),
-          };
-          const auth = this.lastAuthoritativeSnap
-            ? {
-                x: Number(this.lastAuthoritativeSnap.x.toFixed(4)),
-                y: Number(this.lastAuthoritativeSnap.y.toFixed(4)),
-                z: Number(this.lastAuthoritativeSnap.z.toFixed(4)),
-              }
-            : null;
-          const divergenceM = auth
-            ? Number(Math.hypot(pred.x - auth.x, pred.y - auth.y, pred.z - auth.z).toFixed(4))
-            : 0;
-          return {
-            ...diag,
-            authoritativePos: auth,
-            predictedPos: pred,
-            smoothedPos: smoothed,
-            divergenceM,
-            netSim: { ...this.netSim },
-          };
-        },
-        setNetSim: (opts) => {
-          if (!opts) {
-            this.netSim = { rttMs: 0, jitterMs: 0, dropRate: 0 };
-            return;
-          }
-          this.netSim = {
-            rttMs: Math.max(0, Number(opts.rttMs ?? 0)),
-            jitterMs: Math.max(0, Number(opts.jitterMs ?? 0)),
-            dropRate: clamp(Number(opts.dropRate ?? 0), 0, 0.95),
-          };
-        },
-        sendRawStatePacketForAdversarialTest: (state) => {
-          const payload: ClientState = {
-            spawnId: state.spawnId ?? this.me.spawnId,
-            x: state.x ?? this.me.body.pos.x,
-            y: state.y ?? this.me.body.pos.y,
-            z: state.z ?? this.me.body.pos.z,
-            vx: state.vx ?? 0,
-            vy: state.vy ?? 0,
-            vz: state.vz ?? 0,
-            yaw: state.yaw ?? this.me.yaw,
-            pitch: state.pitch ?? this.me.pitch,
-            onGround: state.onGround ?? true,
-            weapon: state.weapon ?? this.me.weapon,
-            ping: state.ping ?? this.ping,
-          };
-          this.socket.emit('state', payload);
-        },
-        setSyntheticInput: (input) => {
-          if (!input) {
-            this.devSyntheticInput = null;
-            return;
-          }
-          window.__DEV_PLAYER_POSE_LOCK__ = null;
-          this.devSyntheticInput = {
-            fwd: clamp(Number(input.fwd ?? 0), -1, 1),
-            right: clamp(Number(input.right ?? 0), -1, 1),
-            jump: Boolean(input.jump),
-            walk: Boolean(input.walk),
-            ...(input.yaw !== undefined && Number.isFinite(input.yaw) ? { yaw: Number(input.yaw) } : {}),
-            ...(input.pitch !== undefined && Number.isFinite(input.pitch)
-              ? { pitch: clamp(Number(input.pitch), -1.55, 1.55) }
-              : {}),
-          };
-        },
-        clearPlayerPoseLock: () => {
-          window.__DEV_PLAYER_POSE_LOCK__ = null;
-        },
-        triggerFire: () => {
-          const t = performance.now() / 1000;
-          if (!this.me.alive || !this.me.weapon || !this.me.canFire(t)) return false;
-          const ammo = this.me.ammo[this.me.weapon];
-          if (ammo.mag <= 0) return false;
-          this.fireLocal(t);
-          return true;
-        },
-        getLootDiagnostics: () => ({
-          lootPreview: this.lootPreview,
-          lootSnapshot: this.lootSnapshot,
-          inventorySnap: this.inventorySnap,
-          lootUi: this.lootUi.getDiagnostics(),
-          inventoryUi: this.inventoryUi.getDiagnostics(),
-          worldRenderer: this.lootWorld.getDiagnostics(),
-        }),
-        openContainerById: (containerId: string, requestId?: string) =>
-          this.requestOpenContainer(containerId, requestId),
-        pickupLootItem: (containerId: string | null, itemId: string, requestId?: string) =>
-          this.requestPickupItem(containerId, itemId, requestId),
-        equipInventoryWeapon: (weapon: WeaponId | null, requestId?: string) =>
-          this.requestEquipWeapon(weapon, requestId),
-        useMedkitItem: (requestId?: string) => this.requestUseMedkit(requestId),
-        requestLootSync: () =>
-          new Promise<{ loot: RoomLootSnapshot; inventory: PlayerInventorySnap | null }>((resolve) => {
-            this.socket.emit(
-              'loot:sync',
-              {},
-              (res: { loot: RoomLootSnapshot; inventory: PlayerInventorySnap | null }) => {
-                if (res?.loot) this.onLootSnapshot(res.loot);
-                if (res?.inventory) this.onInventoryState(res.inventory);
-                resolve(res);
-              },
-            );
-          }),
-        sendRawShootPacketForAdversarialTest: (msg: ShootMsg) => {
-          this.socket.emit('shoot', msg);
-        },
-        getSurvivalDiagnostics: () => ({
-          isSurvival: this.isSurvival,
-          match: this.match,
-          survivalUi: this.survivalUi.getDiagnostics(),
-          spectator: this.spectator.getDiagnostics(this.getSpectatableTargets()),
-        }),
-        cycleSpectatorTarget: (delta: number) => {
-          const chosen = this.spectator.cycleTarget(delta, this.getSpectatableTargets());
-          return chosen ? chosen.id : null;
-        },
-        setSpectatorTarget: (targetId: string | null) => {
-          this.spectator.setTarget(targetId);
-        },
-        getOutdoorDiagnostics: () => {
-          const assets = getOutdoorAssetDiagnostics();
-          const renderer = this.world.stage04a?.outdoor?.getDiagnostics() ?? null;
-          const allLoaded = Object.values(assets).every((d) => d.loaded && !d.failed && !d.isFallback);
-          return {
-            assets,
-            renderer,
-            allLoaded,
-          };
-        },
-        toggleCollisionDebug: (on?: boolean) => {
-          const dbg = this.collisionDebug;
-          if (!dbg) return false;
-          dbg.setEnabled(on === undefined ? !dbg.isEnabled() : on);
-          return dbg.isEnabled();
-        },
-        getCollisionDebugInfo: () => this.collisionDebug?.getLastInfo() ?? null,
-        getGroundCoverStats: () => this.world.getGroundCoverStats?.() ?? null,
-        getGrassAssetDiagnostics: () => getGrassAssetDiagnostics(),
-        getGameplayHash: () => this.worldDef.gameplayHash,
-        getWorldVersion: () => this.worldDef.worldVersion,
-        getRoomId: () => this.roomId,
-        getOtherPlayerCount: () => this.remotes.size,
-        getOtherPlayers: () =>
-          Array.from(this.remotes.values()).map((r) => ({
-            id: r.id,
-            name: r.name,
-            pos: { x: r.pos.x, y: r.pos.y, z: r.pos.z },
-            weapon: r.weapon,
-          })),
-        getContainersCount: () => this.lootSnapshot?.containers.length ?? 0,
-        getCharacterDiagnostics: () => ({
-          asset: getCharacterAssetDiagnostics(),
-          local: this.myModel.getCharacterDiagnostics(),
-          remotes: Array.from(this.remotes.values()).map((r) => ({
-            id: r.id,
-            ...r.model.getCharacterDiagnostics(),
-          })),
-        }),
-      };
       // 08-FIX: F9 collision debug overlay (DEV only — never constructed in production builds)
       this.collisionDebug = new CollisionDebugOverlay(this.scene, document.body);
+      // DEV asboblari (window.__DEV_GAME_TOOLS__) — alohida modul, Game faqat tor ko'prik beradi
+      this.uninstallDevTools = installDevGameTools(this.devHooks());
     }
     this.raf = requestAnimationFrame(this.frame);
   }
 
   getWorldMeta(): WorldMeta {
     return extractWorldMeta(this.worldDef);
+  }
+
+  /** DEV asboblari (debug/DevGameTools.ts) uchun tor ko'prik: faqat ularga kerakli ichki holat va amallar. */
+  private devHooks(): DevGameHooks {
+    return {
+      scene: this.scene,
+      camera: this.camera,
+      socket: this.socket,
+      me: this.me,
+      vm: this.vm,
+      myModel: this.myModel,
+      settings: this.settings,
+      roomId: this.roomId,
+      isSurvival: this.isSurvival,
+      lootPreview: this.lootPreview,
+      lootUi: this.lootUi,
+      inventoryUi: this.inventoryUi,
+      lootWorld: this.lootWorld,
+      survivalUi: this.survivalUi,
+      spectator: this.spectator,
+      bench: this.bench,
+      gpuTimerSupported: Boolean(this.gpuTimerExt),
+      getWorld: () => this.world,
+      getWorldDef: () => this.worldDef,
+      getWorldMeta: () => this.getWorldMeta(),
+      loadTechnicalTerrainFixture: () => {
+        this.world.dispose();
+        const techWorld = createTechnicalTerrainFixture();
+        this.worldDef = techWorld;
+        this.world = buildWorld(this.scene, techWorld, this.settings.quality);
+        this.me.setWorld(techWorld);
+        const sp = techWorld.spawnPoints[0];
+        this.me.body.pos = { x: sp.x, y: sp.y, z: sp.z };
+        this.me.body.vel = { x: 0, y: 0, z: 0 };
+        this.me.body.onGround = true;
+        this.me.yaw = sp.yaw;
+        this.me.pitch = 0;
+        this.camY = sp.y + EYE_HEIGHT;
+        return extractWorldMeta(techWorld);
+      },
+      applyQuality: (q) => {
+        this.settings.quality = q;
+        saveSettings(this.settings);
+        this.applyQualityRendererSettings(q);
+        this.world.setQuality?.(q);
+      },
+      getRenderStats: () => this.lastRenderStats,
+      pinDevOverlay: (fps, frameMs) => {
+        this.devFps = fps;
+        this.devFrameMs = frameMs;
+        this.devFrames = 0;
+        this.devElapsed = -5.0; // Hold pinned benchmark display for 5s while screenshot is captured
+      },
+      getThirdPerson: () => this.thirdPerson,
+      setThirdPerson: (tp) => {
+        this.thirdPerson = tp;
+      },
+      setPrevWeapon: (w) => {
+        this.prevWeapon = w;
+      },
+      setCamY: (y) => {
+        this.camY = y;
+      },
+      getPing: () => this.ping,
+      getMatch: () => this.match,
+      getLastAuthoritativeSnap: () => this.lastAuthoritativeSnap,
+      getNetSim: () => this.netSim,
+      setNetSim: (v) => {
+        this.netSim = v;
+      },
+      setSyntheticInput: (v) => {
+        this.devSyntheticInput = v;
+      },
+      getLootSnapshot: () => this.lootSnapshot,
+      getInventorySnap: () => this.inventorySnap,
+      getRemotes: () => this.remotes.values(),
+      getCollisionDebug: () => this.collisionDebug,
+      getSpectatableTargets: () => this.getSpectatableTargets(),
+      sendInput: () => this.sendInput(),
+      fireLocal: (t) => this.fireLocal(t),
+      requestOpenContainer: (containerId, requestId) => this.requestOpenContainer(containerId, requestId),
+      requestPickupItem: (containerId, itemId, requestId) => this.requestPickupItem(containerId, itemId, requestId),
+      requestEquipWeapon: (weapon, requestId) => this.requestEquipWeapon(weapon, requestId),
+      requestUseMedkit: (requestId) => this.requestUseMedkit(requestId),
+      onLootSnapshot: (snap) => this.onLootSnapshot(snap),
+      onInventoryState: (inv) => this.onInventoryState(inv),
+    };
   }
 
   private getSpectatableTargets(): SpectatableTarget[] {
@@ -1497,7 +952,7 @@ export class Game {
       this.me.roundId = m.roundId;
     }
     const leader = this.roster.reduce((mx, r) => Math.max(mx, r.kills), 0);
-    this.hud.setMatch(m, this.me.team, leader);
+    this.hud.setMatch(m, leader);
     if (this.isSurvival) {
       this.survivalUi.setVisible(true);
       this.hud.center(null);
@@ -1932,8 +1387,8 @@ export class Game {
           this.devElapsed = 0;
         }
       }
-      if (this.benchCapturing) {
-        this.benchFrameTimesMs.push(rawDtMs);
+      if (this.bench.capturing) {
+        this.bench.frameTimesMs.push(rawDtMs);
       }
     }
     this.update(dt, now / 1000);
@@ -2546,7 +2001,7 @@ export class Game {
 
         const pivot = this.computeShoulderPivot(renderPos.x, this.camY + 0.18, renderPos.z, rightX, rightZ);
         const backDir = { x: -fwdX, y: -fwdY, z: -fwdZ };
-        const maxDist = 2.35;
+        const maxDist = TP_MAX_DIST_LOCAL;
         const fairDist = computeFairThirdPersonCameraDist(this.worldDef, pivot, backDir, maxDist);
         // 08-FIX: camera-only clamp — keep the 3P camera (near plane) out of terrain and colliders.
         // This is purely visual; it never affects the authoritative body.
@@ -2569,7 +2024,6 @@ export class Game {
         this.worldDef,
         this.thirdPerson,
         renderPos,
-        me.yaw,
       );
       this.lastSpectatorPose = specPose;
       if (this.deathAt > 0 && t - this.deathAt < 0.55) {
@@ -2625,10 +2079,10 @@ export class Game {
       !me.alive && this.isSurvival && this.lastSpectatorPose
         ? { x: this.lastSpectatorPose.x, y: this.lastSpectatorPose.y, z: this.lastSpectatorPose.z }
         : me.body.pos;
-    const tCull0 = this.benchCapturing ? performance.now() : 0;
+    const tCull0 = this.bench.capturing ? performance.now() : 0;
     this.world.update?.(cam, cullTargetPos, useThird && !hasDevOv);
-    if (this.benchCapturing) {
-      this.benchCullTimesMs.push(performance.now() - tCull0);
+    if (this.bench.capturing) {
+      this.bench.cullTimesMs.push(performance.now() - tCull0);
     }
     this.vm.visible = me.alive && !scoped && !useThird && !hasDevOv;
     this.vm.update(dt, me.speedH(), me.body.onGround, this.input.mouseDX, this.input.mouseDY);
@@ -2717,7 +2171,7 @@ export class Game {
 
   private render() {
     const r = this.renderer;
-    const gl = this.benchCapturing && this.gpuTimerExt ? (r.getContext() as WebGL2RenderingContext) : null;
+    const gl = this.bench.capturing && this.gpuTimerExt ? (r.getContext() as WebGL2RenderingContext) : null;
     let activeQuery: WebGLQuery | null = null;
     if (gl && this.gpuTimerExt) {
       // Collect any completed GPU queries from prior frames
@@ -2729,7 +2183,7 @@ export class Game {
         this.pendingGpuQueries.shift();
         if (!disjoint) {
           const ns = gl.getQueryParameter(q, gl.QUERY_RESULT) as number;
-          this.benchGpuTimesMs.push(ns / 1e6);
+          this.bench.gpuTimesMs.push(ns / 1e6);
         }
         gl.deleteQuery(q);
       }
@@ -2841,9 +2295,7 @@ export class Game {
     // "Too many active WebGL contexts" ogohlantirishi va eski kontekstlar GC ga qadar yashab qoladi
     this.renderer.forceContextLoss();
     this.renderer.domElement.remove();
-    if (import.meta.env.DEV) {
-      window.__DEV_GAME_TOOLS__ = null;
-      window.__DEV_PLAYER_POSE_LOCK__ = null;
-    }
+    this.uninstallDevTools?.();
+    this.uninstallDevTools = null;
   }
 }

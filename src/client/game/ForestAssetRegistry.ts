@@ -82,7 +82,24 @@ export interface CachedForestAssetTemplate {
 const assetCache = new Map<ForestAssetId, CachedForestAssetTemplate>();
 const failedAssets = new Set<ForestAssetId>();
 let preloadPromise: Promise<void> | null = null;
+/**
+ * Preload tugadi (barcha GLB lar yuklandi YOKI xato berdi). Muvaffaqiyatsiz id lar procedural
+ * fallback bilan qoladi; tinglovchilar baribir chaqiriladi, aks holda keyin obuna bo'lganlar
+ * hech qachon xabar olmas edi.
+ */
+let preloadSettled = false;
 const readyListeners = new Set<() => void>();
+
+function notifyReadyListeners(): void {
+  preloadSettled = true;
+  for (const cb of readyListeners) {
+    try {
+      cb();
+    } catch (e) {
+      console.warn('[ForestAssetRegistry] listener error:', e);
+    }
+  }
+}
 
 // Shared InstancedMesh materials (cached globally and never disposed on room change)
 let sharedBarkMat: THREE.MeshStandardMaterial | null = null;
@@ -577,6 +594,8 @@ function compileForestAsset(assetId: ForestAssetId, root: THREE.Object3D): Cache
 export function preloadForestAssets(): Promise<void> {
   if (preloadPromise) return preloadPromise;
   if (typeof window === 'undefined') {
+    // Node/headless: yuklanadigan narsa yo'q — darhol "settled", hammasi procedural fallback.
+    notifyReadyListeners();
     preloadPromise = Promise.resolve();
     return preloadPromise;
   }
@@ -618,21 +637,17 @@ export function preloadForestAssets(): Promise<void> {
           );
         }),
     ),
-  ).then(() => {
-    for (const cb of readyListeners) {
-      try {
-        cb();
-      } catch (e) {
-        console.warn('[ForestAssetRegistry] listener error:', e);
-      }
-    }
-  });
+  ).then(notifyReadyListeners);
 
   return preloadPromise;
 }
 
+/**
+ * Preload tugagach (yoki allaqachon tugagan bo'lsa darhol) chaqiriladi — yuklangan GLB lar
+ * bilan; yuklanmaganlari procedural fallbackda qoladi.
+ */
 export function onForestAssetsReady(cb: () => void): () => void {
-  if (assetCache.size === FOREST_ASSET_IDS.length) {
+  if (preloadSettled) {
     cb();
     return () => {};
   }
@@ -640,8 +655,9 @@ export function onForestAssetsReady(cb: () => void): () => void {
   return () => readyListeners.delete(cb);
 }
 
+/** Preload tugaganmi (hammasi yuklangan bo'lishi shart emas — xato bergan id lar fallbackda). */
 export function areForestAssetsReady(): boolean {
-  return assetCache.size === FOREST_ASSET_IDS.length;
+  return preloadSettled;
 }
 
 export function getCachedForestAsset(assetId: ForestAssetId): CachedForestAssetTemplate | undefined {

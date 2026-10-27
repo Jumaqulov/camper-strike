@@ -12,6 +12,7 @@ import {
 import { sampleTerrainHeight } from '../shared/world';
 import { WEAPONS, WEAPON_SLOTS, isMeleeWeapon, type WeaponId } from '../shared/weapons';
 import { findLocalPath, standingHeights } from './botLocalPath';
+import { applyAuthoritativeWeaponSwitch } from './combat/weaponSwitchAuthority';
 import type { Room, ServerPlayer } from './room';
 
 /** Bot uchun qurol afzalligi (loot rejimida eng yaxshisini qo'lga oladi). */
@@ -133,7 +134,10 @@ export class BotBrain {
 
   onSpawn(): void {
     // Loot rejimida bot qurolsiz boshlaydi (inventar bo'sh) — tasodifiy qurol faqat klassik rejimda
-    if (!this.room.lootEnabled) this.me.weapon = pickBotWeapon();
+    if (!this.room.lootEnabled) {
+      // Botlarda almashtirish cooldown'i yo'q — fromAutoPickup switchUntil'ni 0 da qoldiradi
+      applyAuthoritativeWeaponSwitch(this.me, pickBotWeapon(), this.room.now(), { fromAutoPickup: true });
+    }
     this.path = [];
     this.pathIdx = 0;
     this.repathAt = 0;
@@ -331,7 +335,7 @@ export class BotBrain {
       if (!this.room.loot.canPlayerUseWeapon(me.id, w)) continue;
       if (!isMeleeWeapon(w) && me.ammo[w].mag + me.ammo[w].reserve <= 0) continue;
       if (me.weapon !== w) {
-        me.weapon = w;
+        applyAuthoritativeWeaponSwitch(me, w, this.room.now(), { fromAutoPickup: true });
         this.room.loot.syncPlayerFromServerPlayer(me.id, me);
       }
       return;
@@ -847,7 +851,7 @@ export class BotBrain {
             (w) => (!lootMode || this.room.loot.canPlayerUseWeapon(me.id, w)) && me.ammo[w].mag + me.ammo[w].reserve > 0,
           );
           // O'q tugadi: boshqa o'qotar qurol bo'lmasa — pichoq
-          me.weapon = alt ?? 'knife';
+          applyAuthoritativeWeaponSwitch(me, alt ?? 'knife', this.room.now(), { fromAutoPickup: true });
           if (lootMode) this.room.loot.syncPlayerFromServerPlayer(me.id, me);
         }
       } else if (!visible && ammo.mag < WEAPONS[activeWeapon].magSize * 0.4 && ammo.reserve > 0) {

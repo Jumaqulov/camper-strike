@@ -2,57 +2,11 @@ import { PLAYER_HEIGHT, PLAYER_RADIUS } from '../shared/constants';
 import type { Vec3 } from '../shared/math';
 import { boxOverlap, collidesAtWorld } from '../shared/physics';
 import { getWorldSpatialIndex } from '../shared/spatialIndex';
-import {
-  DEFAULT_WORLD,
-  isTerrainWalkable,
-  sampleTerrainHeight,
-  type WorldDefinition,
-} from '../shared/world';
+import { MinHeap } from './minHeap';
+import { isTerrainWalkable, sampleTerrainHeight, type WorldDefinition } from '../shared/world';
 
 const NODE_CLEAR_R = PLAYER_RADIUS + 0.2;
 const MAX_NAV_CACHE_SIZE = 16;
-
-class MinHeap {
-  private f: number[] = [];
-  private n: number[] = [];
-  get size() { return this.n.length; }
-  push(node: number, score: number) {
-    this.f.push(score);
-    this.n.push(node);
-    let i = this.n.length - 1;
-    while (i > 0) {
-      const p = (i - 1) >> 1;
-      if (this.f[p] <= this.f[i]) break;
-      this.swap(i, p);
-      i = p;
-    }
-  }
-  pop(): number {
-    const top = this.n[0];
-    const lastF = this.f.pop()!;
-    const lastN = this.n.pop()!;
-    if (this.n.length > 0) {
-      this.f[0] = lastF;
-      this.n[0] = lastN;
-      let i = 0;
-      for (;;) {
-        const l = i * 2 + 1;
-        const r = l + 1;
-        let m = i;
-        if (l < this.n.length && this.f[l] < this.f[m]) m = l;
-        if (r < this.n.length && this.f[r] < this.f[m]) m = r;
-        if (m === i) break;
-        this.swap(i, m);
-        i = m;
-      }
-    }
-    return top;
-  }
-  private swap(a: number, b: number) {
-    [this.f[a], this.f[b]] = [this.f[b], this.f[a]];
-    [this.n[a], this.n[b]] = [this.n[b], this.n[a]];
-  }
-}
 
 /** Botlar uchun yer sathidagi yurish mumkin bo'lgan to'r (grid) + A* yo'l topish. */
 export class NavGraph {
@@ -67,7 +21,7 @@ export class NavGraph {
   /** Eng katta bog'langan komponent tugunlari (bot sayr maqsadlari uchun). */
   readonly roamList: number[];
 
-  constructor(private readonly world: WorldDefinition = DEFAULT_WORLD) {
+  constructor(private readonly world: WorldDefinition) {
     const b = this.world.bounds;
     this.cell = b.maxX - b.minX > 160 ? 4 : 2;
     this.nx = Math.floor((b.maxX - b.minX) / this.cell);
@@ -267,7 +221,7 @@ export class NavGraph {
 }
 
 const navCache = new Map<string, NavGraph>();
-export function getNav(world: WorldDefinition = DEFAULT_WORLD): NavGraph {
+export function getNav(world: WorldDefinition): NavGraph {
   const key = `${world.mapId}:${world.worldVersion}:${world.publicLayoutSeed}:${world.gameplayHash}`;
   let nav = navCache.get(key);
   if (!nav) {

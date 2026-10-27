@@ -8,6 +8,7 @@ import { CamperBuddyAnimator } from './animation/CamperBuddyAnimator';
 import { applyUpperBodyAimPose } from './character/CharacterAimPose';
 import {
   instantiateCamperBuddy,
+  isCharacterAssetReady,
   onCharacterAssetReady,
   preloadCharacterAssets,
   type CamperBuddyInstance,
@@ -183,14 +184,15 @@ export class Stickman {
   private bellyGroup = new THREE.Group();
   private chest = new THREE.Group();
   private headGroup = new THREE.Group();
-  private pupilL: THREE.Mesh;
-  private pupilR: THREE.Mesh;
-  private eyeWhiteL: THREE.Mesh;
-  private eyeWhiteR: THREE.Mesh;
-  private lidL: THREE.Mesh;
-  private lidR: THREE.Mesh;
-  private browL: THREE.Mesh;
-  private browR: THREE.Mesh;
+  /** Procedural yuz qismlari — faqat procedural tana qurilganda mavjud (GLB rejimida null). */
+  private pupilL: THREE.Mesh | null = null;
+  private pupilR: THREE.Mesh | null = null;
+  private eyeWhiteL: THREE.Mesh | null = null;
+  private eyeWhiteR: THREE.Mesh | null = null;
+  private lidL: THREE.Mesh | null = null;
+  private lidR: THREE.Mesh | null = null;
+  private browL: THREE.Mesh | null = null;
+  private browR: THREE.Mesh | null = null;
   private jawGroup = new THREE.Group();
   private propeller = new THREE.Group();
 
@@ -234,6 +236,8 @@ export class Stickman {
   private unsubCharacterReady: (() => void) | null = null;
   private disposed = false;
   private buddyReloadTilt = 0;
+  /** Procedural tana hozir qurilgan va `root` ostida turibdimi (GLB kelganda bo'shatiladi). */
+  private proceduralBuilt = false;
 
   constructor(color: THREE.ColorRepresentation) {
     const hex = '#' + new THREE.Color(color).getHexString();
@@ -241,6 +245,27 @@ export class Stickman {
     this.shirtMat = new THREE.MeshStandardMaterial({ color: hex, roughness: 0.55 });
     this.hatMat = new THREE.MeshStandardMaterial({ color: hex, roughness: 0.45 });
 
+    flashTex ??= flashTexture();
+    this.flash = new THREE.Sprite(
+      new THREE.SpriteMaterial({ map: flashTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }),
+    );
+    this.flash.scale.setScalar(0.65);
+    this.flash.visible = false;
+
+    // 08B: Camper Buddy GLB allaqachon tayyor bo'lsa — procedural tana umuman qurilmaydi (~100 mesh tejaladi).
+    // Aks holda (yuklanmoqda / xato) procedural kemper quriladi va o'yin asset'ni kutmaydi; GLB kelganda
+    // u almashtiriladi va procedural mesh'lar bo'shatiladi.
+    void preloadCharacterAssets();
+    if (isCharacterAssetReady()) this.attachBuddy();
+    if (!this.buddy) {
+      this.buildProceduralBody();
+      this.unsubCharacterReady = onCharacterAssetReady(() => this.attachBuddy());
+    }
+  }
+
+  /** "RV There Yet?" procedural kemper tanasi — faqat GLB mavjud bo'lmaganda quriladi. */
+  private buildProceduralBody(): void {
+    this.proceduralBuilt = true;
     const mesh = (g: THREE.BufferGeometry, m: THREE.Material = this.shirtMat, castsShadow = false) => {
       const x = new THREE.Mesh(g, m);
       x.castShadow = castsShadow;
@@ -462,22 +487,43 @@ export class Stickman {
     // Qurol ushlagich — qo'llar o'rtasida aniq va tabiiy ushlab turiladi
     this.gunHolder.position.set(0.08, -0.02, -0.44);
     this.chest.add(this.gunHolder);
-    flashTex ??= flashTexture();
-    this.flash = new THREE.Sprite(
-      new THREE.SpriteMaterial({ map: flashTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }),
-    );
-    this.flash.scale.setScalar(0.65);
-    this.flash.visible = false;
 
     this.mergeStaticBoneMeshes();
     // Jihoz osmalari statik birlashtirishdan keyin ulanadi (dinamik, alohida mesh'lar)
     this.gear.attach('procedural', this.headGroup, this.chest, this.hips);
     this.setArchetype(Stickman.spawnCounter++ % 6);
+  }
 
-    // 08B: Camper Buddy GLB replaces the procedural body once loaded; until then (or on failure) the
-    // procedural camper stays visible, so the game never waits on the character asset.
-    void preloadCharacterAssets();
-    this.unsubCharacterReady = onCharacterAssetReady(() => this.attachBuddy());
+  /**
+   * Procedural tanani sahnadan olib tashlaydi va o'ziga tegishli resurslarni bo'shatadi: birlashtirilgan
+   * geometriyalar (`ownedGeometries`) va shaxsiy ko'ylak/shlyapa materiallari. Modul darajasidagi
+   * geometriya keshi (`geoCache`) va umumiy materiallar barcha Stickman'lar o'rtasida bo'lishiladi —
+   * ularga tegilmaydi. Bo'sh suyak guruhlari (`body`, `hips`, ...) qoladi: o'lim animatsiyasi `body`
+   * transformini buddy pivotiga ko'chiradi.
+   */
+  private disposeProceduralBody(): void {
+    if (!this.proceduralBuilt) return;
+    this.proceduralBuilt = false;
+    this.root.remove(this.body);
+    // Mesh'larni guruhlardan uzamiz (gunHolder ichidagi muzzle/eject/flash tegilmaydi — ular qurol bilan ko'chadi)
+    const strip = (o: THREE.Object3D): void => {
+      for (const c of [...o.children]) {
+        if (c === this.gunHolder) continue;
+        strip(c);
+        o.remove(c);
+      }
+    };
+    strip(this.body);
+    for (const g of this.ownedGeometries) g.dispose();
+    this.ownedGeometries.length = 0;
+    this.torsoArchetypes.length = 0;
+    this.headArchetypes.length = 0;
+    this.pupilL = this.pupilR = null;
+    this.eyeWhiteL = this.eyeWhiteR = null;
+    this.lidL = this.lidR = null;
+    this.browL = this.browR = null;
+    this.shirtMat.dispose();
+    this.hatMat.dispose();
   }
 
   /** 08B: swaps the procedural body for a Camper Buddy instance (own skeleton, own team material). */
@@ -498,7 +544,6 @@ export class Stickman {
     const mount = new CharacterWeaponMount(socket, inst.root);
     this.buddy = { inst, pivot, anim, mount, head: inst.bones.get('Head') ?? null };
     applyTeamColor(inst, this.teamHex);
-    this.body.visible = false;
     this.gear.attach(
       'buddy',
       inst.bones.get('Head') ?? null,
@@ -510,6 +555,8 @@ export class Stickman {
     this.weapon = null;
     this.gunModel = null;
     this.setWeapon(w);
+    // Procedural tana endi kerak emas — mesh'lar olib tashlanadi, o'ziga tegishli geometriyalar bo'shatiladi.
+    this.disposeProceduralBody();
   }
 
   /** Where the 3P gun, muzzle, eject port and flash live: the hand socket mount, or the chest holder. */
@@ -557,7 +604,7 @@ export class Stickman {
    * into a single vertex-colored Mesh to reduce per-character draw calls by ~65%.
    */
   private mergeStaticBoneMeshes(): void {
-    const dynamicMeshes = new Set<THREE.Object3D>([
+    const dynamicMeshes = new Set<THREE.Object3D | null>([
       this.pupilL,
       this.pupilR,
       this.eyeWhiteL,
@@ -860,6 +907,7 @@ export class Stickman {
   /** Personaj arxetipini (0..5) almashtiradi */
   setArchetype(index: number): void {
     this.archetype = ((index % 6) + 6) % 6;
+    if (this.torsoArchetypes.length < 6) return; // GLB rejimi: procedural arxetiplar yo'q
     for (let i = 0; i < 6; i++) {
       const vis = i === this.archetype;
       this.torsoArchetypes[i].visible = vis;
@@ -1050,8 +1098,8 @@ export class Stickman {
       this.chest.rotation.set(0, 0, 0);
       this.hips.rotation.set(0, 0, 0);
       this.hips.position.y = 0.76;
-      this.pupilL.position.set(-0.042, 0.055, -0.215);
-      this.pupilR.position.set(0.042, 0.025, -0.215);
+      this.pupilL?.position.set(-0.042, 0.055, -0.215);
+      this.pupilR?.position.set(0.042, 0.025, -0.215);
       this.jawGroup.rotation.x = k * 0.35;
 
       switch (this.deathStyle) {
@@ -1220,14 +1268,14 @@ export class Stickman {
 
     const lookX = Math.sin(this.idleT * 2.1) * 0.010 + sw * 0.010 * amp;
     const lookY = Math.cos(this.idleT * 3.4) * 0.005 + doubleSw * 0.006 * amp;
-    this.pupilL.position.set(-0.066 + lookX, 0.042 + lookY, -0.215);
-    this.pupilR.position.set(0.066 + lookX, 0.042 - lookY * 0.5, -0.215);
+    this.pupilL?.position.set(-0.066 + lookX, 0.042 + lookY, -0.215);
+    this.pupilR?.position.set(0.066 + lookX, 0.042 - lookY * 0.5, -0.215);
 
     const blink = Math.sin(this.idleT * 3.8) > 0.97 ? 2.4 : 1.0;
-    this.lidL.scale.y = blink;
-    this.lidR.scale.y = blink;
-    this.browL.position.y = 0.115 + Math.abs(sw) * 0.014 * amp;
-    this.browR.position.y = 0.115 + Math.abs(cw) * 0.014 * amp;
+    if (this.lidL) this.lidL.scale.y = blink;
+    if (this.lidR) this.lidR.scale.y = blink;
+    if (this.browL) this.browL.position.y = 0.115 + Math.abs(sw) * 0.014 * amp;
+    if (this.browR) this.browR.position.y = 0.115 + Math.abs(cw) * 0.014 * amp;
 
     // Qayta o'qlash va o'q uzish tepkisi
     this.recoilKick *= Math.exp(-dt * 14);

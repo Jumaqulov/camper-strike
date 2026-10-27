@@ -3,147 +3,23 @@ import { buildForestSquareTerrain } from '../../../shared/forestSquareTerrain';
 import { createForestSquareWorld } from '../../../shared/forestSquare';
 import { sampleTerrainSlopeDeg } from '../../../shared/terrain';
 import type { GroundCoverKind } from '../../../shared/groundCover';
-import type { HeightfieldTerrainDescriptor } from '../../../shared/world';
+import type { HeightfieldTerrainDescriptor, WorldDefinition } from '../../../shared/world';
 import { GrassTreeGrid } from './GrassTreeGrid';
+import { maxScaleForVariant, type GrassVariantId } from './grassVariantData';
 
-/**
- * 17 Claude GLB models in public/models/grass/
- */
-export type GrassVariantId =
-  | 'grass_short_soft_01'
-  | 'grass_short_dense_01'
-  | 'grass_meadow_wide_01'
-  | 'grass_meadow_thin_01'
-  | 'grass_tall_wild_01'
-  | 'grass_tall_seeded_01'
-  | 'grass_dry_straw_01'
-  | 'grass_olive_tuft_01'
-  | 'grass_shade_dark_01'
-  | 'grass_forest_sparse_01'
-  | 'grass_path_edge_01'
-  | 'grass_wavy_broad_01'
-  | 'flower_white_01'
-  | 'flower_yellow_01'
-  | 'flower_purple_01'
-  | 'fern_small_01'
-  | 'fern_wide_01';
-
-export const GRASS_VARIANT_IDS: readonly GrassVariantId[] = [
-  'grass_short_soft_01',
-  'grass_short_dense_01',
-  'grass_meadow_wide_01',
-  'grass_meadow_thin_01',
-  'grass_tall_wild_01',
-  'grass_tall_seeded_01',
-  'grass_dry_straw_01',
-  'grass_olive_tuft_01',
-  'grass_shade_dark_01',
-  'grass_forest_sparse_01',
-  'grass_path_edge_01',
-  'grass_wavy_broad_01',
-  'flower_white_01',
-  'flower_yellow_01',
-  'flower_purple_01',
-  'fern_small_01',
-  'fern_wide_01',
-] as const;
-
-export type GrassVariantCategory = 'grass' | 'flower' | 'fern';
-
-export function getVariantCategory(variantId: GrassVariantId): GrassVariantCategory {
-  if (variantId.startsWith('fern_')) return 'fern';
-  if (variantId.startsWith('flower_')) return 'flower';
-  return 'grass';
-}
-
-/**
- * Unscaled GLB model heights in meters (from asset manifest).
- */
-export const GRASS_VARIANT_HEIGHT: Readonly<Record<GrassVariantId, number>> = {
-  grass_short_soft_01: 0.17,
-  grass_short_dense_01: 0.15,
-  grass_meadow_wide_01: 0.34,
-  grass_meadow_thin_01: 0.30,
-  grass_tall_wild_01: 0.52,
-  grass_tall_seeded_01: 0.54,
-  grass_dry_straw_01: 0.36,
-  grass_olive_tuft_01: 0.26,
-  grass_shade_dark_01: 0.24,
-  grass_forest_sparse_01: 0.22,
-  grass_path_edge_01: 0.22,
-  grass_wavy_broad_01: 0.30,
-  flower_white_01: 0.26,
-  flower_yellow_01: 0.30,
-  flower_purple_01: 0.42,
-  fern_small_01: 0.34,
-  fern_wide_01: 0.60,
-};
-
-/**
- * Maximum allowed world heights for PvP competitive fairness:
- * - Grass: <= 0.45 m
- * - Flower: <= 0.35 m
- * - Fern: <= 0.60 m
- */
-export const MAX_WORLD_HEIGHT: Readonly<Record<GrassVariantCategory, number>> = {
-  grass: 0.45,
-  flower: 0.35,
-  fern: 0.60,
-};
-
-/**
- * Category scale caps from shared ground cover contract.
- */
-export const CATEGORY_MAX_SCALE: Readonly<Record<GrassVariantCategory, number>> = {
-  grass: 1.4,
-  flower: 1.3,
-  fern: 1.3,
-};
-
-function calculateMaxScale(variantId: GrassVariantId): number {
-  const category = getVariantCategory(variantId);
-  const baseH = GRASS_VARIANT_HEIGHT[variantId];
-  const maxWorldH = MAX_WORLD_HEIGHT[category];
-  const cap = CATEGORY_MAX_SCALE[category];
-  const raw = maxWorldH / baseH;
-  if (raw < cap) {
-    // Floor to 3 decimal places to strictly guarantee baseH * scale <= maxWorldH
-    return Math.floor(raw * 1000) / 1000;
-  }
-  return cap;
-}
-
-/**
- * Precomputed max scale multiplier for each variant based on PvP height caps:
- * - grass_tall_wild_01 (0.52m) -> 0.45 / 0.52 = 0.865
- * - grass_tall_seeded_01 (0.54m) -> 0.45 / 0.54 = 0.833
- * - flower_purple_01 (0.42m) -> 0.35 / 0.42 = 0.833
- * - fern_wide_01 (0.60m) -> 1.0
- * All other models scale up to their respective category caps.
- */
-export const GRASS_VARIANT_MAX_SCALE: Readonly<Record<GrassVariantId, number>> = {
-  grass_short_soft_01: calculateMaxScale('grass_short_soft_01'),
-  grass_short_dense_01: calculateMaxScale('grass_short_dense_01'),
-  grass_meadow_wide_01: calculateMaxScale('grass_meadow_wide_01'),
-  grass_meadow_thin_01: calculateMaxScale('grass_meadow_thin_01'),
-  grass_tall_wild_01: calculateMaxScale('grass_tall_wild_01'),
-  grass_tall_seeded_01: calculateMaxScale('grass_tall_seeded_01'),
-  grass_dry_straw_01: calculateMaxScale('grass_dry_straw_01'),
-  grass_olive_tuft_01: calculateMaxScale('grass_olive_tuft_01'),
-  grass_shade_dark_01: calculateMaxScale('grass_shade_dark_01'),
-  grass_forest_sparse_01: calculateMaxScale('grass_forest_sparse_01'),
-  grass_path_edge_01: calculateMaxScale('grass_path_edge_01'),
-  grass_wavy_broad_01: calculateMaxScale('grass_wavy_broad_01'),
-  flower_white_01: calculateMaxScale('flower_white_01'),
-  flower_yellow_01: calculateMaxScale('flower_yellow_01'),
-  flower_purple_01: calculateMaxScale('flower_purple_01'),
-  fern_small_01: calculateMaxScale('fern_small_01'),
-  fern_wide_01: calculateMaxScale('fern_wide_01'),
-};
-
-export function maxScaleForVariant(variantId: GrassVariantId): number {
-  return GRASS_VARIANT_MAX_SCALE[variantId];
-}
+// Sof ma'lumotlar `grassVariantData.ts` da (registry bilan umumiy); bu yerdan qayta eksport —
+// testlar va eski import yo'llari uchun.
+export {
+  CATEGORY_MAX_SCALE,
+  getVariantCategory,
+  GRASS_VARIANT_HEIGHT,
+  GRASS_VARIANT_IDS,
+  GRASS_VARIANT_MAX_SCALE,
+  maxScaleForVariant,
+  MAX_WORLD_HEIGHT,
+  type GrassVariantCategory,
+  type GrassVariantId,
+} from './grassVariantData';
 
 export interface PlannedGrassInstance {
   variantId: GrassVariantId;
@@ -175,7 +51,35 @@ export function hashInstance(
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
 
-// Internal caches for terrain and tree grids to keep queries sub-microsecond
+/**
+ * Chaqiruvchi beradigan kontekst: jonli dunyo daraxtlari va relyefi. Berilsa planner
+ * `createForestSquareWorld` ni qayta qurmaydi (seed bo'yicha keshlangan zaxira yo'li
+ * faqat kontekstsiz chaqiruvlar — masalan testlar — uchun qoladi).
+ */
+export interface GrassPlannerContext {
+  treeGrid?: GrassTreeGrid;
+  terrain?: HeightfieldTerrainDescriptor;
+}
+
+/**
+ * Jonli `WorldDefinition` dan planner konteksti: `world.visuals` dagi daraxt pozitsiyalari
+ * (`category === 'tree'`) va heightfield relyef. Flat relyefli dunyoda `terrain` undefined qoladi
+ * (seed bo'yicha zaxira yo'l ishlaydi).
+ */
+export function createGrassPlannerContext(world: WorldDefinition): GrassPlannerContext {
+  const treeList: Array<{ x: number; z: number }> = [];
+  for (const v of world.visuals) {
+    if (v.category === 'tree') {
+      treeList.push({ x: v.transform.position.x, z: v.transform.position.z });
+    }
+  }
+  return {
+    treeGrid: new GrassTreeGrid(treeList),
+    terrain: world.terrain,
+  };
+}
+
+// Kontekstsiz chaqiruvlar uchun seed bo'yicha ichki keshlar (so'rovlar mikrosekund darajasida qolsin)
 const treeGridCache = new Map<number, GrassTreeGrid>();
 const terrainCache = new Map<number, HeightfieldTerrainDescriptor>();
 
@@ -191,7 +95,8 @@ export function clearGrassVariantPlannerCache(): void {
   terrainCache.clear();
 }
 
-function getTreeGrid(seed: number): GrassTreeGrid {
+function getTreeGrid(seed: number, ctx?: GrassPlannerContext): GrassTreeGrid {
+  if (ctx?.treeGrid) return ctx.treeGrid;
   let grid = treeGridCache.get(seed);
   if (!grid) {
     try {
@@ -214,7 +119,8 @@ function getTreeGrid(seed: number): GrassTreeGrid {
   return grid;
 }
 
-function getTerrain(seed: number): HeightfieldTerrainDescriptor {
+function getTerrain(seed: number, ctx?: GrassPlannerContext): HeightfieldTerrainDescriptor {
+  if (ctx?.terrain) return ctx.terrain;
   let terrain = terrainCache.get(seed);
   if (!terrain) {
     terrain = buildForestSquareTerrain(seed);
@@ -245,8 +151,8 @@ export function computeRoadInwardDirection(
   return { toRoadX, toRoadZ, roadNormalYaw };
 }
 
-function isCragOrSteepSlope(x: number, z: number, seed: number): boolean {
-  const terrain = getTerrain(seed);
+function isCragOrSteepSlope(x: number, z: number, seed: number, ctx?: GrassPlannerContext): boolean {
+  const terrain = getTerrain(seed, ctx);
   const slopeDeg = sampleTerrainSlopeDeg(terrain, x, z);
   if (slopeDeg > 25) return true;
 
@@ -274,6 +180,7 @@ export function planGrassVariant(
   baseYaw: number,
   baseScale: number,
   seed: number,
+  ctx?: GrassPlannerContext,
 ): PlannedGrassInstance {
   let variantId: GrassVariantId;
   let yaw = baseYaw;
@@ -286,7 +193,7 @@ export function planGrassVariant(
     variantId = 'flower_purple_01';
   } else if (baseKind === 'fern_small') {
     // Zone 2 Fern undergrowth colonies: beneath mature tree canopies and in shady hollows
-    const isUnderstory = y < -1.8 || getTreeGrid(seed).hasTreeWithin(x, z, 2.5);
+    const isUnderstory = y < -1.8 || getTreeGrid(seed, ctx).hasTreeWithin(x, z, 2.5);
     const roll = hashInstance(x, y, z, seed, 0xfe3);
     if (isUnderstory) {
       // 55% fern_small_01, 45% fern_wide_01 for rich undergrowth colonies
@@ -310,7 +217,7 @@ export function planGrassVariant(
         const jitter = (hashInstance(x, y, z, seed, 0x70ad) - 0.5) * 0.3;
         yaw = inward.roadNormalYaw + jitter;
       }
-    } else if (y < -1.8 || getTreeGrid(seed).hasTreeWithin(x, z, 2.2)) {
+    } else if (y < -1.8 || getTreeGrid(seed, ctx).hasTreeWithin(x, z, 2.2)) {
       // Zone 2: Deep Tree Canopy & Shaded Hollows (within 5m of tree bases or hollow y < 0.2)
       // Shade-loving grasses: grass_wavy_broad_01 (38%), grass_shade_dark_01 (34%), grass_forest_sparse_01 (28%)
       const roll = hashInstance(x, y, z, seed, 0x54ad);
@@ -321,7 +228,7 @@ export function planGrassVariant(
       } else {
         variantId = 'grass_forest_sparse_01';
       }
-    } else if (isCragOrSteepSlope(x, z, seed)) {
+    } else if (isCragOrSteepSlope(x, z, seed, ctx)) {
       // Dry crag or steep slope > 25°
       const roll = hashInstance(x, y, z, seed, 0xca6);
       variantId = roll < 0.5 ? 'grass_dry_straw_01' : 'grass_olive_tuft_01';

@@ -11,9 +11,9 @@
  *   1. Starts Vite + Socket.IO dev server (`npm run dev`, if port 5173 is not already active)
  *      and Headless Chrome (1280x720, DPR=1, WebGL hardware/headless rendering).
  *   2. Verifies Multi-Room / Multi-Seed & Legacy Map compatibility via Socket.IO (`forest_square`
- *      across seeds 6501, 7777, 9021 plus `forest_assets_preview`, `forest_sample`, `dust_arena`).
+ *      across seeds 6501, 7777, 9021 plus `forest_assets_preview`, `forest_sample`, `forest_technical`).
  *   3. Launches Client 1 & Client 2 in the same `forest_square` room (seed=6501, bots=0) and verifies:
- *      - `mapId === 'forest_square'`, `publicLayoutSeed === 6501`, `gameplayHash === 'c4064b17f166cd42'`
+ *      - `mapId === 'forest_square'`, `publicLayoutSeed === 6501`, `gameplayHash === '6e4913c3e10347c9'`
  *      - 100% loading of all 28 GLB assets, 0 console errors, 0 network errors
  *      - Live Authoritative Walking Test (`setSyntheticInput` -> server `input` -> `snap` -> `reconcile`,
  *        verifying `currentSeq > 20`, `lastAckedSeq > 15`, `reconcileCount > 5`, distance moved `> 4.0m`,
@@ -317,7 +317,7 @@ function killTree(pid) {
 
 /**
  * Verifies Multi-Room / Multi-Seed (`forest_square` across seeds 6501, 7777, 9021)
- * and Legacy Maps (`forest_assets_preview`, `forest_sample`, `dust_arena`) over Socket.IO.
+ * and Legacy Maps (`forest_assets_preview`, `forest_sample`, `forest_technical`) over Socket.IO.
  */
 async function verifyMultiRoomAndLegacyMaps(serverUrl = 'http://localhost:5173') {
   const testCases = [
@@ -327,7 +327,7 @@ async function verifyMultiRoomAndLegacyMaps(serverUrl = 'http://localhost:5173')
     { name: 'SQ_Seed_9021', mapId: 'forest_square', publicLayoutSeed: 9021 },
     { name: 'Legacy_Stage04A', mapId: 'forest_assets_preview', publicLayoutSeed: 6501 },
     { name: 'Legacy_ForestSample', mapId: 'forest_sample', publicLayoutSeed: 6501 },
-    { name: 'Legacy_DustArena', mapId: 'forest_arena_check', mapIdActual: 'dust_arena', publicLayoutSeed: 6501 },
+    { name: 'Legacy_ForestTechnical', mapId: 'forest_technical', publicLayoutSeed: 6501 },
   ];
 
   const socket = createSocketClient(serverUrl, {
@@ -668,7 +668,7 @@ async function main() {
     if (client1Meta.mapId !== 'forest_square' || client2Meta.mapId !== 'forest_square') {
       throw new Error(`Expected mapId='forest_square', got Client1=${client1Meta.mapId}, Client2=${client2Meta.mapId}`);
     }
-    if (client1Meta.gameplayHash !== 'c4064b17f166cd42' || client2Meta.gameplayHash !== 'c4064b17f166cd42') {
+    if (client1Meta.gameplayHash !== '6e4913c3e10347c9' || client2Meta.gameplayHash !== '6e4913c3e10347c9') {
       throw new Error(
         `GameplayHash mismatch: Client1=${client1Meta.gameplayHash} vs Client2=${client2Meta.gameplayHash}`,
       );

@@ -1,4 +1,4 @@
-import { clamp } from './math';
+import { clamp, q3 } from './math';
 import { sampleForestSquareRoad } from './forestSquareRoads';
 import {
   FOREST_SQUARE_CELL_SIZE,
@@ -10,7 +10,6 @@ import {
 import { DEFAULT_MAX_WALKABLE_SLOPE_DEG } from './terrain';
 import { DEFAULT_PUBLIC_LAYOUT_SEED, type HeightfieldTerrainDescriptor } from './world';
 
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 function smoothstep(edge0: number, edge1: number, x: number): number {
   const t = clamp((x - edge0) / (edge1 - edge0), 0, 1);

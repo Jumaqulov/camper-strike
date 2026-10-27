@@ -381,3 +381,849 @@ html, body {
 #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-120px); background: #b3262e; color: #fff; padding: 12px 22px; border-radius: 10px; font-weight: 700; z-index: 100; transition: transform 0.3s; }
 #toast.show { transform: translateX(-50%) translateY(0); }
 #toast.info { background: #2a6a3a; }
+
+/* ---------- Loot UI (konteyner prompt/panel, LootUI.ts) ---------- */
+#stage06-loot-ui-root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 12;
+  font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+  user-select: none;
+}
+
+/* Interaction Prompt */
+#stage06-loot-prompt {
+  position: absolute;
+  bottom: 165px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: rgba(18, 24, 20, 0.9);
+  border: 1.5px solid rgba(255, 198, 76, 0.72);
+  color: #fff8e7;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  white-space: nowrap;
+  transition: opacity 0.14s ease, transform 0.14s ease;
+}
+
+#stage06-loot-prompt.blocked {
+  background: rgba(44, 18, 18, 0.9);
+  border-color: rgba(255, 96, 96, 0.78);
+  color: #ffd6d6;
+}
+
+#stage06-loot-prompt.empty {
+  background: rgba(24, 28, 34, 0.86);
+  border-color: rgba(168, 179, 194, 0.45);
+  color: #b7c2d0;
+}
+
+#stage06-loot-prompt .key-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 5px;
+  background: linear-gradient(180deg, #ffce54, #e58e08);
+  color: #1c1300;
+  font-weight: 900;
+  font-size: 12px;
+  text-shadow: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Open Container Loot Panel */
+#stage06-container-panel {
+  position: absolute;
+  bottom: 215px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(410px, 90vw);
+  background: rgba(16, 22, 18, 0.92);
+  border: 2px solid rgba(255, 196, 68, 0.68);
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+  color: #f4f6f9;
+}
+
+#stage06-container-panel.is-empty {
+  border-color: rgba(148, 163, 184, 0.45);
+}
+
+.s06-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.s06-panel-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.s06-panel-icon {
+  font-size: 19px;
+  line-height: 1;
+}
+
+.s06-panel-title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: #fff6e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.s06-panel-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.s06-status-badge {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.s06-status-badge.open {
+  background: rgba(46, 204, 113, 0.22);
+  color: #69f0ae;
+  border: 1px solid rgba(105, 240, 174, 0.45);
+}
+
+.s06-status-badge.empty {
+  background: rgba(148, 163, 184, 0.18);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.s06-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 210px;
+  overflow-y: auto;
+}
+
+.s06-empty-msg {
+  padding: 14px 10px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #9aa6b8;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.s06-loot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
+}
+
+.s06-loot-row:hover {
+  background: rgba(255, 196, 68, 0.14);
+  border-color: rgba(255, 196, 68, 0.62);
+}
+
+.s06-loot-row:active {
+  transform: scale(0.99);
+}
+
+.s06-loot-row.primary-pick {
+  background: rgba(255, 188, 44, 0.12);
+  border-color: rgba(255, 198, 76, 0.52);
+}
+
+.s06-loot-row.is-pending {
+  opacity: 0.62;
+  cursor: wait;
+}
+
+.s06-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.s06-slot-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffd56b;
+  flex-shrink: 0;
+}
+
+.s06-item-icon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.s06-item-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.s06-item-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.s06-item-meta {
+  font-size: 11px;
+  font-weight: 600;
+  color: #b4c0cf;
+}
+
+.s06-pickup-btn {
+  border: none;
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  background: linear-gradient(180deg, #ffca47, #e48a07);
+  color: #1b1200;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.s06-pickup-btn:hover {
+  filter: brightness(1.08);
+}
+
+.s06-pickup-btn:disabled {
+  background: rgba(148, 163, 184, 0.28);
+  color: #cbd5e1;
+  cursor: wait;
+}
+
+/* Status / Error Banner */
+#stage06-loot-toast {
+  position: absolute;
+  top: 82px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 7px 16px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+#stage06-loot-toast.kind-info {
+  background: rgba(20, 34, 48, 0.92);
+  border: 1.5px solid rgba(96, 165, 250, 0.75);
+  color: #dbeafe;
+}
+
+#stage06-loot-toast.kind-success {
+  background: rgba(18, 44, 28, 0.92);
+  border: 1.5px solid rgba(74, 222, 128, 0.8);
+  color: #dcfce7;
+}
+
+#stage06-loot-toast.kind-error {
+  background: rgba(54, 18, 22, 0.94);
+  border: 1.5px solid rgba(248, 113, 113, 0.85);
+  color: #fee2e2;
+}
+
+#stage06-loot-toast.kind-loading {
+  background: rgba(44, 34, 14, 0.92);
+  border: 1.5px solid rgba(251, 191, 36, 0.8);
+  color: #fef3c7;
+}
+
+/* ---------- Inventar HUD (InventoryUI.ts) ---------- */
+#stage06-inventory-hud {
+  position: fixed;
+  bottom: 54px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 11;
+  pointer-events: none;
+  font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+  user-select: none;
+}
+
+#stage06-inventory-hud,
+#stage06-inventory-hud button {
+  font-family: 'Bahnschrift', 'Segoe UI', 'Roboto', system-ui, sans-serif;
+}
+
+/* Qurolsiz eslatma: panel ustida kichik, ramkasiz satr */
+#stage06-unarmed-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: 6px;
+  background: rgba(36, 26, 16, 0.6);
+  color: #ffd166;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  white-space: nowrap;
+}
+
+/* Inventar paneli: HUD panellari bilan bir xil to'q yog'och/shisha ko'rinish */
+#stage06-inventory-strip {
+  display: flex;
+  align-items: stretch;
+  gap: 5px;
+  padding: 5px 6px;
+  border-radius: 12px;
+  background: rgba(36, 26, 16, 0.8);
+  border: 2px solid rgba(217, 155, 82, 0.55);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  pointer-events: auto;
+}
+
+.s06-inv-weapons {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.s06-inv-slot {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  min-width: 78px;
+  padding: 3px 7px 3px 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #d8ccb4;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
+  text-align: left;
+}
+
+.s06-inv-slot.locked {
+  opacity: 0.42;
+  cursor: not-allowed;
+  background: rgba(0, 0, 0, 0.25);
+  border-style: dashed;
+}
+
+.s06-inv-slot.owned:hover {
+  background: rgba(255, 196, 68, 0.15);
+  border-color: rgba(255, 196, 68, 0.58);
+}
+
+.s06-inv-slot.equipped {
+  background: linear-gradient(180deg, #ffca4b, #e8920c);
+  border: 1px solid #fff2b2;
+  color: #1b1200;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+  text-shadow: none;
+}
+
+.s06-slot-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.s06-slot-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffd166;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 15px;
+}
+
+.s06-inv-slot.equipped .s06-slot-key {
+  background: rgba(0, 0, 0, 0.55);
+  color: #ffd166;
+}
+
+.s06-slot-state {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  color: #9a8f7a;
+  text-transform: uppercase;
+}
+
+.s06-inv-slot.equipped .s06-slot-state {
+  color: #3a2400;
+}
+
+.s06-slot-name {
+  font-size: 11px;
+  font-weight: 900;
+  color: #fff4dc;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.s06-inv-slot.equipped .s06-slot-name {
+  color: #1b1200;
+}
+
+.s06-slot-sub {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #9a8f7a;
+  font-variant-numeric: tabular-nums;
+}
+
+.s06-inv-slot.owned .s06-slot-sub {
+  color: #e8dcc4;
+}
+
+.s06-inv-slot.equipped .s06-slot-sub {
+  color: #3a2400;
+}
+
+.s06-inv-divider {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.14);
+  margin: 2px 2px;
+}
+
+.s06-inv-utils {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.s06-util-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1px;
+  padding: 3px 7px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff4dc;
+  font-size: 10.5px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+  white-space: nowrap;
+}
+
+.s06-util-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 209, 102, 0.55);
+}
+
+.s06-util-btn.medkit-btn.has-medkit {
+  border-color: rgba(74, 222, 128, 0.55);
+  background: rgba(22, 101, 52, 0.35);
+  color: #dcfce7;
+}
+
+.s06-util-btn.gear-chip.has-gear {
+  border-color: rgba(96, 165, 250, 0.6);
+  background: rgba(30, 64, 120, 0.35);
+  color: #dbeafe;
+}
+
+.s06-util-btn.unarm-btn.active {
+  border-color: #ffd166;
+  background: rgba(255, 196, 56, 0.2);
+  color: #fff7db;
+}
+
+.s06-util-sub {
+  font-size: 10px;
+  font-weight: 700;
+  color: #9a8f7a;
+}
+
+.s06-util-key {
+  display: inline-block;
+  min-width: 14px;
+  padding: 0 4px;
+  margin-left: 4px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffd166;
+  font-size: 10px;
+  line-height: 15px;
+  text-align: center;
+}
+
+/* ---------- Survival HUD (SurvivalUI.ts) ---------- */
+#stage07-survival-hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 13;
+  font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+  user-select: none;
+}
+
+#stage07-survival-hud.hidden,
+#stage07-survival-hud .hidden {
+  display: none !important;
+}
+
+/* 1. Yagona yuqori status paneli (TDM top-bar survival'da yashirin) */
+#stage07-top-pill {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  border-radius: 10px;
+  background: rgba(36, 26, 16, 0.84);
+  border: 2px solid rgba(217, 155, 82, 0.6);
+  color: #fff8e7;
+  font-family: 'Bahnschrift', 'Segoe UI', 'Roboto', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+#stage07-top-pill > span {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#stage07-top-pill > span:last-child {
+  border-right: 0;
+}
+
+.s07-pill-round {
+  background: rgba(255, 196, 68, 0.16);
+  color: #ffd166;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.s07-pill-time {
+  font-size: 20px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: #fff8e7;
+  min-width: 64px;
+  justify-content: center;
+}
+
+.s07-pill-time.urgent {
+  color: #fcd34d;
+}
+
+.s07-pill-phase {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.s07-pill-phase.phase-waiting {
+  background: rgba(148, 163, 184, 0.22);
+  color: #cbd5e1;
+}
+
+.s07-pill-phase.phase-countdown {
+  background: rgba(245, 158, 11, 0.28);
+  color: #fcd34d;
+}
+
+.s07-pill-phase.phase-playing {
+  background: rgba(34, 197, 94, 0.25);
+  color: #86efac;
+}
+
+.s07-pill-phase.phase-ended {
+  background: rgba(234, 179, 8, 0.28);
+  color: #fde047;
+}
+
+.s07-pill-zone {
+  color: #7dd3fc;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.s07-pill-zone.shrinking {
+  color: #ffb74d;
+  animation: s07-zone-pulse 1s ease-in-out infinite;
+}
+
+@keyframes s07-zone-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+.s07-pill-count {
+  color: #f8fafc;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 2. Raund oldi eslatmasi (ixcham, status paneli ostida) */
+#stage07-preround-banner {
+  position: absolute;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(480px, 90vw);
+  padding: 7px 14px;
+  border-radius: 9px;
+  background: rgba(36, 26, 16, 0.78);
+  border: 1.5px solid rgba(217, 155, 82, 0.5);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  color: #fff8e7;
+  font-family: 'Bahnschrift', 'Segoe UI', 'Roboto', system-ui, sans-serif;
+}
+
+#stage07-preround-banner.phase-countdown {
+  border-color: rgba(251, 191, 36, 0.85);
+}
+
+.s07-preround-title {
+  font-size: 13px;
+  font-weight: 900;
+  color: #ffd166;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.s07-preround-sub {
+  margin-top: 2px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #e8dcc4;
+  line-height: 1.3;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* 3. Spectator Panel */
+#stage07-spectator-panel {
+  position: absolute;
+  bottom: 130px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(500px, 92vw);
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: rgba(15, 21, 28, 0.92);
+  border: 1.5px solid rgba(96, 165, 250, 0.68);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #f1f5f9;
+  pointer-events: auto;
+}
+
+#stage07-spec-role {
+  font-size: 12.5px;
+  font-weight: 900;
+  color: #93c5fd;
+  letter-spacing: 0.35px;
+  text-align: center;
+}
+
+#stage07-spec-role.eliminated {
+  color: #fca5a5;
+}
+
+#stage07-spec-killer {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #fde68a;
+  text-align: center;
+}
+
+#stage07-spec-target {
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.s07-spec-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.s07-spec-btn {
+  padding: 5px 11px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f8fafc;
+  font-size: 11.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
+}
+
+.s07-spec-btn:hover {
+  background: rgba(96, 165, 250, 0.24);
+  border-color: #93c5fd;
+}
+
+.s07-spec-btn:active {
+  transform: translateY(1px);
+}
+
+/* 4. Winner / Round-End Overlay */
+#stage07-winner-overlay {
+  position: absolute;
+  top: 135px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(540px, 92vw);
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(22, 29, 23, 0.96), rgba(14, 18, 15, 0.96));
+  border: 2.5px solid #fbbf24;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.75);
+  color: #fffbeb;
+  text-align: center;
+  pointer-events: auto;
+}
+
+.s07-win-header {
+  font-size: 18px;
+  font-weight: 900;
+  color: #fde047;
+  letter-spacing: 0.4px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+}
+
+.s07-win-reason {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fef3c7;
+}
+
+.s07-win-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 12px;
+  text-align: left;
+}
+
+.s07-win-table th {
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  color: #94a3b8;
+  font-weight: 800;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.s07-win-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+.s07-win-table tr.is-winner td {
+  color: #fde047;
+  font-weight: 900;
+  background: rgba(250, 204, 21, 0.1);
+}
+
+.s07-win-table tr.is-me td {
+  outline: 1px solid rgba(251, 191, 36, 0.45);
+}
+
+.s07-win-footer {
+  margin-top: 12px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #cbd5e1;
+}

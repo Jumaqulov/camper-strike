@@ -1,19 +1,19 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { JUMP_SPEED, PLAYER_HEIGHT, PLAYER_RADIUS, STEP_HEIGHT } from '../constants';
-import type { Box } from '../map';
 import {
-  applyMovement,
+  applyWorldMovement,
   boxOverlap,
   collidesAt,
-   moveBody,
   pointInsideBoxes,
   rayBox,
   raycastBoxes,
   rayVsPlayer,
-  stepProjectile,
+  stepProjectileInWorld,
   type Body,
 } from '../physics';
+import type { Box } from '../world';
+import { boxCollider, makeFlatWorld } from './flatWorldFixture';
 
 const groundBox: Box = {
   min: { x: -20, y: -1, z: -20 },
@@ -36,7 +36,8 @@ describe('Shared physics (src/shared/physics.ts)', () => {
     assert.equal(collidesAt(boxes, 2.2, 0.01, 0), true);
   });
 
-  it('settles body onto ground and supports jumping via applyMovement', () => {
+  it('settles body onto flat terrain and supports jumping via applyWorldMovement', () => {
+    const world = makeFlatWorld([]);
     const body: Body = {
       pos: { x: 0, y: 0.5, z: 0 },
       vel: { x: 0, y: 0, z: 0 },
@@ -44,23 +45,28 @@ describe('Shared physics (src/shared/physics.ts)', () => {
     };
 
     for (let i = 0; i < 30; i++) {
-      applyMovement(body, 0, 0, false, 1 / 30, [groundBox]);
+      applyWorldMovement(body, 0, 0, false, 1 / 30, world);
     }
     assert.equal(body.onGround, true);
     assert.ok(Math.abs(body.pos.y) < 1e-3, `Expected y ~ 0, got ${body.pos.y}`);
 
-    applyMovement(body, 0, 0, true, 1 / 30, [groundBox]);
+    applyWorldMovement(body, 0, 0, true, 1 / 30, world);
     assert.equal(body.onGround, false);
     assert.ok(body.pos.y > 0, 'Jumping from ground should increase y');
     assert.ok(body.vel.y > JUMP_SPEED - 1.5, 'Vertical velocity should reflect jump impulse minus one gravity step');
+
+    // Sakrashdan keyin yana yerga qo'nadi
+    for (let i = 0; i < 90; i++) {
+      applyWorldMovement(body, 0, 0, false, 1 / 30, world);
+    }
+    assert.equal(body.onGround, true);
+    assert.ok(Math.abs(body.pos.y) < 1e-3, `Expected landing at y ~ 0, got ${body.pos.y}`);
   });
 
   it('steps up low obstacles (<= STEP_HEIGHT) but stops at tall walls', () => {
-    const lowStep: Box = {
-      min: { x: 1, y: 0, z: -2 },
-      max: { x: 3, y: 0.4, z: 2 },
-      mat: 'concrete',
-    };
+    const lowStepWorld = makeFlatWorld([
+      boxCollider('low_step', { x: 1, y: 0, z: -2 }, { x: 3, y: 0.4, z: 2 }, 'concrete'),
+    ]);
     assert.ok(0.4 <= STEP_HEIGHT);
 
     const climber: Body = {
@@ -69,29 +75,41 @@ describe('Shared physics (src/shared/physics.ts)', () => {
       onGround: true,
     };
     for (let i = 0; i < 10; i++) {
-      applyMovement(climber, 5, 0, false, 1 / 30, [groundBox, lowStep]);
+      applyWorldMovement(climber, 5, 0, false, 1 / 30, lowStepWorld);
     }
     assert.ok(climber.pos.y >= 0.4, `Expected climber to step onto 0.4m box, got y=${climber.pos.y}`);
     assert.ok(climber.pos.x > 1.0, `Expected climber to advance past step edge, got x=${climber.pos.x}`);
 
-    const tallWall: Box = {
-      min: { x: 1, y: 0, z: -2 },
-      max: { x: 3, y: 2.5, z: 2 },
-      mat: 'wall',
-    };
+    const tallWall = boxCollider('tall_wall', { x: 1, y: 0, z: -2 }, { x: 3, y: 2.5, z: 2 }, 'wall');
+    const tallWallWorld = makeFlatWorld([tallWall]);
     const blocked: Body = {
       pos: { x: 0.4, y: 0, z: 0 },
       vel: { x: 0, y: 0, z: 0 },
       onGround: true,
     };
     for (let i = 0; i < 10; i++) {
-      applyMovement(blocked, 5, 0, false, 1 / 30, [groundBox, tallWall]);
+      applyWorldMovement(blocked, 5, 0, false, 1 / 30, tallWallWorld);
     }
     assert.ok(
       blocked.pos.x <= tallWall.min.x - PLAYER_RADIUS + 1e-3,
       `Expected tall wall to block x movement, got x=${blocked.pos.x}`,
     );
     assert.equal(blocked.vel.x, 0);
+    assert.ok(Math.abs(blocked.pos.y) < 1e-3, 'Blocked body stays on the ground');
+  });
+
+  it('clamps the body to world bounds', () => {
+    const world = makeFlatWorld([], { size: 20 });
+    const runner: Body = {
+      pos: { x: 8, y: 0, z: 0 },
+      vel: { x: 0, y: 0, z: 0 },
+      onGround: true,
+    };
+    for (let i = 0; i < 60; i++) {
+      applyWorldMovement(runner, 6, 0, false, 1 / 30, world);
+    }
+    assert.ok(runner.pos.x <= world.bounds.maxX - PLAYER_RADIUS + 1e-6, `Expected bounds clamp, got x=${runner.pos.x}`);
+    assert.ok(runner.pos.x > world.bounds.maxX - PLAYER_RADIUS - 0.5);
   });
 
   it('computes accurate raycast hits, surface normals, and head/body hitboxes', () => {
@@ -125,19 +143,37 @@ describe('Shared physics (src/shared/physics.ts)', () => {
     assert.equal(bodyHit.head, false);
   });
 
-  it('bounces projectiles against collider boxes via stepProjectile and pointInsideBoxes', () => {
+  it('bounces projectiles off terrain and collider boxes via stepProjectileInWorld (pointInsideBoxes)', () => {
     assert.equal(pointInsideBoxes([groundBox], { x: 0, y: -0.5, z: 0 }), true);
     assert.equal(pointInsideBoxes([groundBox], { x: 0, y: 1.0, z: 0 }), false);
 
+    // 1) Yerga tushgan granata qaytadi va relyef ostiga kirmaydi
+    const flat = makeFlatWorld([]);
     const gren = {
       pos: { x: 0, y: 0.3, z: 0 },
       vel: { x: 2, y: -6, z: 0 },
     };
     let bounced = false;
     for (let i = 0; i < 10; i++) {
-      if (stepProjectile(gren, 1 / 30, [groundBox])) bounced = true;
+      if (stepProjectileInWorld(gren, 1 / 30, flat)) bounced = true;
     }
     assert.equal(bounced, true);
-    assert.ok(gren.pos.y >= 0, 'Grenade should not penetrate ground box');
+    assert.ok(gren.pos.y >= 0, 'Grenade should not penetrate terrain');
+
+    // 2) Devorga uchib borgan granata X bo'yicha orqaga qaytadi
+    const wallWorld = makeFlatWorld([
+      boxCollider('wall', { x: 3, y: 0, z: -2 }, { x: 4, y: 3, z: 2 }, 'wall'),
+    ]);
+    const shot = {
+      pos: { x: 0, y: 1.2, z: 0 },
+      vel: { x: 12, y: 0, z: 0 },
+    };
+    let wallBounce = false;
+    for (let i = 0; i < 20; i++) {
+      if (stepProjectileInWorld(shot, 1 / 30, wallWorld)) wallBounce = true;
+    }
+    assert.equal(wallBounce, true);
+    assert.ok(shot.vel.x < 0, `Expected grenade to bounce back from wall, got vel.x=${shot.vel.x}`);
+    assert.ok(shot.pos.x < 3, `Grenade must stay outside the wall box, got x=${shot.pos.x}`);
   });
 });

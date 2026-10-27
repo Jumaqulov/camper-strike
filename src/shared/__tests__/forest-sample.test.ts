@@ -24,7 +24,6 @@ import {
 import {
   createTechnicalTerrainFixture,
   createWorldDefinition,
-  DEFAULT_WORLD,
   sampleTerrainHeight,
   validateWorldCompatibility,
    extractWorldMeta,
@@ -278,10 +277,12 @@ describe("Bosqich 03 — 96×96 Haqiqiy 3D O'rmon (forest_sample) testlari", () 
     assert.equal(isSpawnPointSafe(world, { x: 0, y: gy - 1.0, z: 0 }), false);
   });
 
-  it('14. dust_arena va forest_technical rejimlari buzilmagan hamda ForestRenderer low/medium/high sifatlarda ishlaydi', () => {
-    assert.equal(DEFAULT_WORLD.mapId, 'dust_arena');
-    assert.equal(DEFAULT_WORLD.terrain.kind, 'flat');
-    assert.deepEqual(validateMapSpawns(DEFAULT_WORLD), []);
+  it('14. createWorldDefinition() standart xaritasi forest_square, forest_technical buzilmagan hamda ForestRenderer low/medium/high sifatlarda ishlaydi', () => {
+    // Standart xarita (mapId berilmasa) lobbi standarti bilan bir xil: forest_square, heightfield relyef
+    const def = createWorldDefinition();
+    assert.equal(def.mapId, 'forest_square');
+    assert.equal(def.terrain.kind, 'heightfield');
+    assert.deepEqual(validateMapSpawns(def), []);
 
     const tech = createTechnicalTerrainFixture();
     assert.equal(tech.mapId, 'forest_technical');

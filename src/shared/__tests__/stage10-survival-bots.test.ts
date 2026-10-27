@@ -58,6 +58,33 @@ function makeSurvivalRoom(io: Server, bots: number): Room {
   );
 }
 
+/**
+ * Mulberry32 — kichik urug'langan PRNG. Bot AI (bot.ts) va xona (room.ts: secretLootSeed, spawn
+ * tanlovi, boshlang'ich yaw) `Math.random` dan foydalanadi; loot AI testini takrorlanuvchan qilish
+ * uchun shu generator vaqtincha `Math.random` o'rniga qo'yiladi.
+ */
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Deterministik RNG bilan ishga tushirilgan test tanasi; `Math.random` doim qayta tiklanadi. */
+function withSeededRandom<T>(seed: number, fn: () => T): T {
+  const realRandom = Math.random;
+  Math.random = mulberry32(seed);
+  try {
+    return fn();
+  } finally {
+    Math.random = realRandom;
+  }
+}
+
 describe('Bosqich 10 — Forest Survival botlari (loot AI)', () => {
   it('1. Faqat botlar raund boshlamaydi; tayyor odam kelgach botlar bilan birga ishtirokchi bo‘ladi', () => {
     const { io } = createFakeIo();
@@ -99,7 +126,8 @@ describe('Bosqich 10 — Forest Survival botlari (loot AI)', () => {
     }
   });
 
-  it('2. Botlar konteynerlarni ochib qurol yig‘adi (loot AI) va hech biri zonadan tashqarida o‘lmaydi', () => {
+  it('2. Botlar konteynerlarni ochib qurol yig‘adi (loot AI) va hech biri zonadan tashqarida o‘lmaydi', () => withSeededRandom(0x5eed_1065, () => {
+    // Urug'langan RNG: secretLootSeed, bot spawn/yo'l tanlovi va loot "o'ylash" taymerlari takrorlanuvchan
     const { io, emitted } = createFakeIo();
     const room = makeSurvivalRoom(io, 3);
     try {
@@ -115,9 +143,9 @@ describe('Bosqich 10 — Forest Survival botlari (loot AI)', () => {
       const openedBefore = room.loot.getPublicLootSnapshot().containers.filter((c) => c.opened).length;
       assert.equal(openedBefore, 0);
 
-      // 120 soniyagacha real tick (30 Hz); kamida bitta bot qurollanishi bilan to'xtaymiz
+      // 180 soniyagacha real tick (30 Hz); kamida bitta bot qurollanishi bilan to'xtaymiz
       const bots = [...room.players.values()].filter((p) => p.isBot);
-      for (let i = 0; i < 120; i++) {
+      for (let i = 0; i < 180; i++) {
         p1.pos = { x: 0, y: p1.pos.y, z: 0 };
         p1.hp = MAX_HP;
         room.advanceTimeForTest(1, 1 / 30);
@@ -141,7 +169,7 @@ describe('Bosqich 10 — Forest Survival botlari (loot AI)', () => {
     } finally {
       room.destroy();
     }
-  });
+  }));
 
   it('3. Odam chiqib ketsa botlar raundni davom ettiradi; zonadan tashqarida qolgan odam o‘lsa bot g‘olib bo‘ladi', () => {
     const { io } = createFakeIo();

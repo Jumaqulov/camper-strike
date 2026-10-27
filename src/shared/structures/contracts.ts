@@ -1,4 +1,4 @@
-import type { Vec3 } from '../math';
+import { q3, type Vec3 } from '../math';
 import type { OutdoorPlacement } from '../outdoor/contracts';
 import type {
   ColliderBox,
@@ -294,7 +294,6 @@ export interface PoiSiteBlueprint {
 
 export type MultiSiteStructureLayout = Stage04APreviewLayout;
 
-const q3Contract = (n: number): number => Math.round(n * 1000) / 1000;
 
 function seedOffsetPair(seed: number, salt: number, maxShift: number): { dx: number; dz: number } {
   let h1 = Math.imul(seed ^ (salt * 374761393), 668265263);
@@ -336,7 +335,7 @@ export function getForestSquarePoiSites(seed = 6501): ForestSquarePoiSiteSpec[] 
       name: "O'rmonchi Uyi",
       kind: 'ranger_house',
       center: c1,
-      padElevation: q3Contract(1.4 + ((seed % 5) - 2) * 0.08),
+      padElevation: q3(1.4 + ((seed % 5) - 2) * 0.08),
       flatRadius: 15,
       blendRadius: 26,
       yaw: 0,
@@ -349,7 +348,7 @@ export function getForestSquarePoiSites(seed = 6501): ForestSquarePoiSiteSpec[] 
       name: 'Uylar Guruhi',
       kind: 'cabin_cluster',
       center: c2,
-      padElevation: q3Contract(1.75 + ((seed % 7) - 3) * 0.06),
+      padElevation: q3(1.75 + ((seed % 7) - 3) * 0.06),
       flatRadius: 19,
       blendRadius: 30,
       yaw: 0,
@@ -362,7 +361,7 @@ export function getForestSquarePoiSites(seed = 6501): ForestSquarePoiSiteSpec[] 
       name: "Tashlandiq Yog'och Tilish Maydoni",
       kind: 'lumber_mill',
       center: c3,
-      padElevation: q3Contract(0.95 + ((seed % 5) - 2) * 0.06),
+      padElevation: q3(0.95 + ((seed % 5) - 2) * 0.06),
       flatRadius: 18,
       blendRadius: 29,
       yaw: 0,
@@ -375,7 +374,7 @@ export function getForestSquarePoiSites(seed = 6501): ForestSquarePoiSiteSpec[] 
       name: 'Eski Servis va Ombor',
       kind: 'service_station',
       center: c4,
-      padElevation: q3Contract(0.65 + ((seed % 3) - 1) * 0.06),
+      padElevation: q3(0.65 + ((seed % 3) - 1) * 0.06),
       flatRadius: 18,
       blendRadius: 29,
       yaw: 0,
@@ -388,7 +387,7 @@ export function getForestSquarePoiSites(seed = 6501): ForestSquarePoiSiteSpec[] 
       name: "O'rmon Kempingi",
       kind: 'camp',
       center: c5,
-      padElevation: q3Contract(0.55 + ((seed % 5) - 2) * 0.05),
+      padElevation: q3(0.55 + ((seed % 5) - 2) * 0.05),
       flatRadius: 17,
       blendRadius: 28,
       yaw: 0,
@@ -401,7 +400,7 @@ export function getForestSquarePoiSites(seed = 6501): ForestSquarePoiSiteSpec[] 
       name: 'Qoya Kuzatuv va Xaroba Hududi',
       kind: 'stone_ruins',
       center: c6,
-      padElevation: q3Contract(2.5 + ((seed % 5) - 2) * 0.08),
+      padElevation: q3(2.5 + ((seed % 5) - 2) * 0.08),
       flatRadius: 17,
       blendRadius: 28,
       yaw: 0,

@@ -1,4 +1,4 @@
-import { clamp } from './math';
+import { clamp, q3 } from './math';
 import { getForestSquarePoiSites, type ForestSquarePoiId } from './structures/contracts';
 import { DEFAULT_PUBLIC_LAYOUT_SEED } from './world';
 
@@ -18,7 +18,6 @@ export interface ForestSquareRoadPolyline {
   points: Array<{ x: number; z: number }>;
 }
 
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 function smoothstep(edge0: number, edge1: number, x: number): number {
   const t = clamp((x - edge0) / (edge1 - edge0), 0, 1);

@@ -1,4 +1,4 @@
-import type { Vec3 } from '../math';
+import { q3, type Vec3 } from '../math';
 import { sampleTerrainHeight } from '../terrain';
 import {
   DEFAULT_CHUNK_SIZE,
@@ -30,7 +30,6 @@ import {
   buildInteriorAssetColliders,
 } from './manifests';
 
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 /**
  * Computes the wall module placement transform between grid nodes `(ax, az)` and `(bx, bz)` at elevation `y`.

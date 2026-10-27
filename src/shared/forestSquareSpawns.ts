@@ -1,5 +1,5 @@
 import { PLAYER_HEIGHT, PLAYER_RADIUS, type Team } from './constants';
-import { clamp } from './math';
+import { clamp, q3 } from './math';
 import {
   getForestSquarePoiSites,
   type ForestSquarePoiSiteSpec,
@@ -17,7 +17,6 @@ import {
   type TerrainDescriptor,
 } from './world';
 
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 export const FOREST_SQUARE_SPAWN_BOUND = 118;
 export const MAX_SPAWN_SLOPE_DEG = 28;

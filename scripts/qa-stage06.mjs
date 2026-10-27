@@ -319,7 +319,7 @@ function killTree(pid) {
 
 /**
  * Verifies Multi-Room / Multi-Seed (`forest_square` across seeds 6501, 7777, 9021 with `lootPreview` true/false)
- * and Legacy Maps (`forest_assets_preview`, `forest_sample`, `dust_arena`) over Socket.IO.
+ * and Legacy Maps (`forest_assets_preview`, `forest_sample`, `forest_technical`) over Socket.IO.
  */
 async function verifyMultiRoomAndLegacyMaps(serverUrl = 'http://localhost:5173') {
   const testCases = [
@@ -329,7 +329,7 @@ async function verifyMultiRoomAndLegacyMaps(serverUrl = 'http://localhost:5173')
     { name: 'SQ_Seed_9021_Loot', mapId: 'forest_square', publicLayoutSeed: 9021, lootPreview: true },
     { name: 'Legacy_Stage04A', mapId: 'forest_assets_preview', publicLayoutSeed: 6501, lootPreview: false },
     { name: 'Legacy_ForestSample', mapId: 'forest_sample', publicLayoutSeed: 6501, lootPreview: false },
-    { name: 'Legacy_DustArena', mapId: 'dust_arena', publicLayoutSeed: 6501, lootPreview: false },
+    { name: 'Legacy_ForestTechnical', mapId: 'forest_technical', publicLayoutSeed: 6501, lootPreview: false },
   ];
 
   const socket = createSocketClient(serverUrl, {
@@ -849,7 +849,7 @@ async function main() {
     if (client1Meta.mapId !== 'forest_square' || client2Meta.mapId !== 'forest_square') {
       throw new Error(`Expected mapId='forest_square', got Client1=${client1Meta.mapId}, Client2=${client2Meta.mapId}`);
     }
-    if (client1Meta.gameplayHash !== 'c4064b17f166cd42' || client2Meta.gameplayHash !== 'c4064b17f166cd42') {
+    if (client1Meta.gameplayHash !== '6e4913c3e10347c9' || client2Meta.gameplayHash !== '6e4913c3e10347c9') {
       throw new Error(
         `GameplayHash mismatch: Client1=${client1Meta.gameplayHash} vs Client2=${client2Meta.gameplayHash}`,
       );

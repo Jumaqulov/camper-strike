@@ -3,7 +3,6 @@ export type QualityLevel = 'low' | 'medium' | 'high';
 export interface GameSettings {
   name: string;
   sens: number;
-  sensitivity?: number;
   volume: number;
   fov: number;
   quality: QualityLevel;
@@ -19,7 +18,6 @@ export function loadSettings(): Settings {
   const def: Settings = {
     name: 'Sardor',
     sens: 1.0,
-    sensitivity: 1.0,
     volume: 0.7,
     fov: 80,
     quality: 'medium',
@@ -33,6 +31,7 @@ export function loadSettings(): Settings {
         typeof parsed.name === 'string' && parsed.name.trim().length > 0
           ? parsed.name.trim().slice(0, 16)
           : 'Sardor';
+      // Eski saqlangan `sensitivity` maydoni — faqat migratsiya zaxirasi (joriy kalit: `sens`)
       const rawSens =
         typeof parsed.sens === 'number' && !Number.isNaN(parsed.sens)
           ? parsed.sens
@@ -55,7 +54,6 @@ export function loadSettings(): Settings {
       return {
         name,
         sens,
-        sensitivity: sens,
         volume,
         fov,
         quality,
@@ -70,7 +68,7 @@ export function loadSettings(): Settings {
 
 export function saveSettings(s: Settings): void {
   try {
-    const rawSens = typeof s.sens === 'number' ? s.sens : (typeof s.sensitivity === 'number' ? s.sensitivity : 1.0);
+    const rawSens = typeof s.sens === 'number' ? s.sens : 1.0;
     const sensVal = Math.max(0.1, Math.min(4.0, Number.isNaN(rawSens) ? 1.0 : rawSens));
     const nameVal = s.name && s.name.trim() ? s.name.trim().slice(0, 16) : 'Sardor';
     const volVal = typeof s.volume === 'number' && !Number.isNaN(s.volume) ? Math.max(0, Math.min(1.0, s.volume)) : 0.7;
@@ -79,7 +77,6 @@ export function saveSettings(s: Settings): void {
     const toSave = {
       name: nameVal,
       sens: sensVal,
-      sensitivity: sensVal,
       volume: volVal,
       fov: fovVal,
       quality: qualityVal,

@@ -1,17 +1,11 @@
 import { PLAYER_HEIGHT, PLAYER_RADIUS } from './constants';
-import { clamp, type Vec3 } from './math';
-import type {
-  ColliderBox,
-  FlatTerrainDescriptor,
-  HeightfieldTerrainDescriptor,
-  TerrainDescriptor,
-} from './world';
+import { clamp, q3, type Vec3 } from './math';
+import type { ColliderBox, HeightfieldTerrainDescriptor, TerrainDescriptor } from './world';
 
 export const DEFAULT_MAX_WALKABLE_SLOPE_DEG = 42;
 
 const RAD_TO_DEG = 180 / Math.PI;
 
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 /**
  * Exact triangle-aligned height sampling.
@@ -22,16 +16,10 @@ const q3 = (n: number): number => Math.round(n * 1000) / 1000;
  * This matches the exact triangulation built by `buildTerrainMeshData` in the renderer.
  */
 export function sampleTerrainHeight(terrain: TerrainDescriptor, x: number, z: number): number {
-  if (terrain.kind === 'flat') {
-    return terrain.baseY;
-  }
   return sampleHeightfieldTriangle(terrain, x, z).height;
 }
 
 export function sampleTerrainNormal(terrain: TerrainDescriptor, x: number, z: number): Vec3 {
-  if (terrain.kind === 'flat') {
-    return { x: 0, y: 1, z: 0 };
-  }
   return sampleHeightfieldTriangle(terrain, x, z).normal;
 }
 
@@ -183,27 +171,7 @@ export function raycastTerrain(
   dir: Vec3,
   maxT: number,
 ): TerrainRayHit | null {
-  if (terrain.kind === 'flat') {
-    return raycastFlatTerrain(terrain, origin, dir, maxT);
-  }
   return raycastHeightfieldTerrain(terrain, origin, dir, maxT);
-}
-
-function raycastFlatTerrain(
-  terrain: FlatTerrainDescriptor,
-  origin: Vec3,
-  dir: Vec3,
-  maxT: number,
-): TerrainRayHit | null {
-  if (Math.abs(dir.y) < 1e-8) return null;
-  const t = (terrain.baseY - origin.y) / dir.y;
-  if (t < 0 || t > maxT) return null;
-  return {
-    t,
-    nx: 0,
-    ny: dir.y < 0 ? 1 : -1,
-    nz: 0,
-  };
 }
 
 function raycastHeightfieldTerrain(

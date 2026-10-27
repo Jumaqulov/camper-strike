@@ -1,4 +1,4 @@
-import { clamp } from './math';
+import { clamp, q3 } from './math';
 import { buildFallenLogColliders, buildTreeStumpCollider } from './forestProps';
 import { TREE_SPECIES_BATCH_KEYS, type TreeSpeciesBatchKey } from './forestSample';
 import {
@@ -20,7 +20,6 @@ import {
   type VisualDescriptor,
 } from './world';
 
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 export const FOREST_SQUARE_PLAYABLE_LIMIT = 122;
 

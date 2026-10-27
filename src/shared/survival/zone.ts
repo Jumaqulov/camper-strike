@@ -9,6 +9,8 @@
  * interpolyatsiya qiladi.
  */
 
+import { createSeededRng } from '../math';
+
 export interface SurvivalZoneCircle {
   cx: number;
   cz: number;
@@ -68,15 +70,9 @@ const SHRINK_FRACTIONS = [0.12, 0.1, 0.08, 0.05] as const;
 /** Bosqich bo'yicha zonadan tashqaridagi zarar (hp/s); indeks = boshlangan torayishlar soni. */
 const STAGE_DPS = [2, 4, 7, 11, 15] as const;
 
+/** Umumiy Mulberry32 (`createSeededRng`); urug' 0 bo'lsa 1 ishlatiladi — eski jadval bilan bit-mos. */
 function mulberry32(seed: number): () => number {
-  let a = seed >>> 0 || 1;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
+  return createSeededRng((seed >>> 0) || 1);
 }
 
 /**

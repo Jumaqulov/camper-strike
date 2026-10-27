@@ -568,14 +568,14 @@ describe('STAGE 07 — Forest Survival Mode, Round Lifecycle, Elimination, Spect
   it('3. forest_survival Map & Mode Restrictions (forest_square Only, 0 Bots, No Team Switch)', () => {
     const { io } = createFakeIo();
 
-    // 3a) Creating forest_survival on dust_arena must throw
+    // 3a) Creating forest_survival on a non-forest_square map (forest_sample) must throw
     assert.throws(
       () =>
         new Room(
           {
             name: 'Bad Map Survival',
             mode: 'forest_survival',
-            mapId: 'dust_arena',
+            mapId: 'forest_sample',
             bots: 4,
             maxPlayers: 8,
             timeLimit: 3,
@@ -592,7 +592,7 @@ describe('STAGE 07 — Forest Survival Mode, Round Lifecycle, Elimination, Spect
       {
         name: 'Survival Sanitize',
         mode: 'forest_survival',
-        mapId: 'dust_arena',
+        mapId: 'forest_sample',
         bots: 12,
         maxPlayers: 1,
       },
@@ -1629,7 +1629,7 @@ describe('STAGE 07 — Forest Survival Mode, Round Lifecycle, Elimination, Spect
       assert.equal(spec.cycleTarget(-1, targets)?.id, 'p2');
 
       const fallbackPos: Vec3 = { x: 0, y: 2, z: 0 };
-      const poseFollowP2 = spec.updateCameraPose(0.016, targets, room.world, true, fallbackPos, 0);
+      const poseFollowP2 = spec.updateCameraPose(0.016, targets, room.world, true, fallbackPos);
       assert.equal(poseFollowP2.mode, 'follow');
       assert.equal(poseFollowP2.targetId, 'p2');
       assert.equal(poseFollowP2.targetName, 'Bravo');
@@ -1643,7 +1643,6 @@ describe('STAGE 07 — Forest Survival Mode, Round Lifecycle, Elimination, Spect
         room.world,
         false,
         fallbackPos,
-        0,
       );
       assert.equal(poseAfterP2Death.mode, 'follow');
       assert.equal(poseAfterP2Death.targetId, 'p1');
@@ -1652,7 +1651,7 @@ describe('STAGE 07 — Forest Survival Mode, Round Lifecycle, Elimination, Spect
       // 15d) All targets die (0 alive) -> switches to overview mode
       targets[0]!.alive = false;
       targets[2]!.alive = false;
-      const poseOverview = spec.updateCameraPose(0.5, targets, room.world, true, fallbackPos, 0);
+      const poseOverview = spec.updateCameraPose(0.5, targets, room.world, true, fallbackPos);
       assert.equal(poseOverview.mode, 'overview');
       assert.equal(poseOverview.targetId, null);
       assert.equal(spec.getTargetId(), null);

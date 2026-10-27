@@ -83,8 +83,7 @@ export interface PlayerSnap {
   /** Sprint chidamliligi 0..1 (avtoritativ; klient bashorati shu bilan sinxronlanadi). */
   stamina?: number;
   staminaLocked?: boolean;
-  /** Survival role in forest_survival mode (Stage 07+). */
-  role?: SurvivalPlayerRole;
+  /** Survival roli (forest_survival rejimi, Stage 07+). */
   survivalRole?: SurvivalPlayerRole;
   spectateTargetId?: string | null;
   /** Modelda ko'rinadigan jihozlar (kaska, nimcha, granata/aptechka soni) — `packGearState` bit maydoni. */
@@ -151,7 +150,6 @@ export interface RosterEntry {
   deaths: number;
   ping: number;
   alive?: boolean;
-  role?: SurvivalPlayerRole;
   survivalRole?: SurvivalPlayerRole;
   placement?: number;
 }

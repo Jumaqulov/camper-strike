@@ -1,0 +1,146 @@
+{
+  "room": "sample_room_4x4",
+  "units": "meters",
+  "upAxis": "+Y",
+  "cell": {
+    "x": [
+      0,
+      4
+    ],
+    "z": [
+      0,
+      4
+    ]
+  },
+  "roof": "Preview uchun olib tashlangan",
+  "walkway": {
+    "x": [
+      0.95,
+      2.45
+    ],
+    "z": [
+      1.1,
+      3.87
+    ]
+  },
+  "objects": [
+    {
+      "file": "BUILDING-ASSET-01/glb/wood_floor_01.glb",
+      "position": [
+        2,
+        0,
+        2
+      ],
+      "rotationY": 0
+    },
+    {
+      "file": "BUILDING-ASSET-01/glb/wood_wall_window_01.glb",
+      "position": [
+        0,
+        0,
+        2
+      ],
+      "rotationY": -1.571
+    },
+    {
+      "file": "BUILDING-ASSET-01/glb/wood_wall_door_01.glb",
+      "position": [
+        2,
+        0,
+        4
+      ],
+      "rotationY": 0
+    },
+    {
+      "file": "BUILDING-ASSET-01/glb/wood_door_01.glb",
+      "position": [
+        2,
+        0,
+        4
+      ],
+      "rotationY": 0,
+      "door_pivot_rotationY": 1.35
+    },
+    {
+      "file": "BUILDING-ASSET-01/glb/wood_wall_01.glb",
+      "position": [
+        4,
+        0,
+        2
+      ],
+      "rotationY": 1.571
+    },
+    {
+      "file": "BUILDING-ASSET-01/glb/wood_wall_01.glb",
+      "position": [
+        2,
+        0,
+        0
+      ],
+      "rotationY": -3.142
+    },
+    {
+      "file": "wooden_shelf_01.glb",
+      "position": [
+        0.7,
+        0,
+        0.335
+      ],
+      "rotationY": 0
+    },
+    {
+      "file": "old_bed_01.glb",
+      "position": [
+        2.84,
+        0,
+        0.61
+      ],
+      "rotationY": 0
+    },
+    {
+      "file": "old_sofa_01.glb",
+      "position": [
+        0.535,
+        0,
+        1.45
+      ],
+      "rotationY": 1.571
+    },
+    {
+      "file": "kitchen_cabinet_01.glb",
+      "position": [
+        0.41,
+        0,
+        3
+      ],
+      "rotationY": 1.571
+    },
+    {
+      "file": "wooden_table_01.glb",
+      "position": [
+        3.46,
+        0,
+        2
+      ],
+      "rotationY": -1.571
+    },
+    {
+      "file": "wooden_chair_01.glb",
+      "position": [
+        2.75,
+        0,
+        1.75
+      ],
+      "rotationY": 1.571
+    },
+    {
+      "file": "wooden_chair_01.glb",
+      "position": [
+        3.45,
+        0,
+        3.05
+      ],
+      "rotationY": 3.142
+    }
+  ]
+}

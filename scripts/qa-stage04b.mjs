@@ -13,7 +13,7 @@
  *      confirming `mapId === 'forest_square'`, identical `gameplayHash`, 0 console errors, 0 HTTP/network errors,
  *      and 100% loading of all 28 GLB assets (4 weapon + 7 forest + 8 building + 6 interior + 3 container).
  *   3. Verifies Multi-Room / Multi-Seed & Legacy Map compatibility via Socket.IO (`forest_square` across seeds
- *      6501, 7777, 9021 plus `forest_assets_preview`, `forest_sample`, `dust_arena`).
+ *      6501, 7777, 9021 plus `forest_assets_preview`, `forest_sample`, `forest_technical`).
  *   4. Captures 12 deterministic 1280x720 PNG screenshots in `docs/screenshots/stage04b/`:
  *      - 01_topdown_256x256_6_pois.png
  *      - 02_road_network_and_crossroads.png
@@ -314,7 +314,7 @@ function killTree(pid) {
 
 /**
  * Verifies Multi-Room / Multi-Seed (`forest_square` across seeds 6501, 7777, 9021)
- * and Legacy Maps (`forest_assets_preview`, `forest_sample`, `dust_arena`) over Socket.IO.
+ * and Legacy Maps (`forest_assets_preview`, `forest_sample`, `forest_technical`) over Socket.IO.
  */
 async function verifyMultiRoomAndLegacyMaps(serverUrl = 'http://localhost:5173') {
   const testCases = [
@@ -324,7 +324,7 @@ async function verifyMultiRoomAndLegacyMaps(serverUrl = 'http://localhost:5173')
     { name: 'SQ_Seed_9021', mapId: 'forest_square', publicLayoutSeed: 9021 },
     { name: 'Legacy_Stage04A', mapId: 'forest_assets_preview', publicLayoutSeed: 6501 },
     { name: 'Legacy_ForestSample', mapId: 'forest_sample', publicLayoutSeed: 6501 },
-    { name: 'Legacy_DustArena', mapId: 'dust_arena', publicLayoutSeed: 6501 },
+    { name: 'Legacy_ForestTechnical', mapId: 'forest_technical', publicLayoutSeed: 6501 },
   ];
 
   const socket = createSocketClient(serverUrl, {

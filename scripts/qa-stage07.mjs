@@ -288,7 +288,7 @@ function killTree(pid) {
 
 /**
  * Verifies Stage 07 `forest_survival` mode across seeds 6501, 7777, 9021,
- * invalid map rejection (`forest_survival` on `dust_arena`), and classic modes over Socket.IO.
+ * invalid map rejection (`forest_survival` on `forest_sample`), and classic modes over Socket.IO.
  */
 async function verifyStage07ProtocolAndModes(serverUrl = 'http://localhost:5173') {
   const socket = createSocketClient(serverUrl, {
@@ -321,15 +321,15 @@ async function verifyStage07ProtocolAndModes(serverUrl = 'http://localhost:5173'
       socket.emit(
         'createRoom',
         {
-          name: 'Invalid_Survival_Dust',
+          name: 'Invalid_Survival_Sample',
           mode: 'forest_survival',
-          mapId: 'dust_arena',
+          mapId: 'forest_sample',
         },
         resolve,
       );
     });
     if (invalidMapRes?.ok !== false) {
-      throw new Error(`Expected forest_survival on dust_arena to be rejected, got: ${JSON.stringify(invalidMapRes)}`);
+      throw new Error(`Expected forest_survival on forest_sample to be rejected, got: ${JSON.stringify(invalidMapRes)}`);
     }
 
     const testCases = [
@@ -337,7 +337,7 @@ async function verifyStage07ProtocolAndModes(serverUrl = 'http://localhost:5173'
       { name: 'Surv_Seed_7777', mode: 'forest_survival', mapId: 'forest_square', publicLayoutSeed: 7777, lootPreview: true },
       { name: 'Surv_Seed_9021', mode: 'forest_survival', mapId: 'forest_square', publicLayoutSeed: 9021, lootPreview: true },
       { name: 'Classic_FFA_Forest', mode: 'ffa', mapId: 'forest_square', publicLayoutSeed: 6501, lootPreview: false },
-      { name: 'Classic_TDM_Dust', mode: 'tdm', mapId: 'dust_arena', publicLayoutSeed: 6501, lootPreview: false },
+      { name: 'Classic_TDM_Technical', mode: 'tdm', mapId: 'forest_technical', publicLayoutSeed: 6501, lootPreview: false },
     ];
 
     const results = [];

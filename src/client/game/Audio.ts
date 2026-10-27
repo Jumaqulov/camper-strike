@@ -198,7 +198,12 @@ export class AudioSys {
     }
   }
 
-  private dest(pos?: P3): AudioNode | null {
+  /**
+   * Chiqish tuguni: pozitsiyasiz — master, pozitsiyali — bir martalik panner. Panner `ttlSec` dan keyin
+   * master'dan uziladi (aks holda har otish/qadam uchun yaratilgan tugunlar grafda abadiy qoladi);
+   * uzunroq ovozlar kattaroq ttl bersin. Doimiy (ambient) manbalar buni ishlatmaydi — ular `spatial()` da.
+   */
+  private dest(pos?: P3, ttlSec = 4): AudioNode | null {
     const c = this.ctx;
     if (!c) return null;
     if (!pos) return this.master;
@@ -218,6 +223,13 @@ export class AudioSys {
       p.setPosition(pos.x, pos.y, pos.z);
     }
     p.connect(this.master);
+    window.setTimeout(() => {
+      try {
+        p.disconnect();
+      } catch {
+        /* e'tibor bermaymiz */
+      }
+    }, Math.max(0.5, ttlSec) * 1000);
     return p;
   }
 
@@ -366,7 +378,8 @@ export class AudioSys {
   }
 
   reload(duration: number, pos?: P3): void {
-    const d = this.dest(pos);
+    // Qayta o'qlash davomiyligi qurolga bog'liq (2.8 s gacha) — panner oxirgi klikdan keyin ham yashasin
+    const d = this.dest(pos, duration + 1.5);
     if (!d) return;
     const t = this.ctx!.currentTime;
     this.click(d, t + 0.05, 1500, 0.25);

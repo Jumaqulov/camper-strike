@@ -36,7 +36,6 @@ export function detectSurface(world: WorldDefinition, x: number, y: number, z: n
   }
 
   // 2. Yer yuzasi
-  if (world.terrain.kind !== 'heightfield') return 'dirt';
   if (sampleTerrainSlopeDeg(world.terrain, x, z) > 35) return 'stone';
   if (world.mapId === 'forest_square') {
     const seed = world.publicLayoutSeed;

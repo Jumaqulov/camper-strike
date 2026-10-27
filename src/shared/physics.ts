@@ -9,7 +9,6 @@ import {
   PLAYER_RADIUS,
   STEP_HEIGHT,
 } from './constants';
-import type { Box } from './map';
 import type { Vec3 } from './math';
 import { getWorldSpatialIndex } from './spatialIndex';
 import {
@@ -20,7 +19,7 @@ import {
   sampleTerrainNormal,
   sampleTerrainSlopeDeg,
 } from './terrain';
-import type { ColliderBox, WorldDefinition } from './world';
+import type { Box, ColliderBox, WorldDefinition } from './world';
 
 export interface Body {
   pos: Vec3; // oyoq nuqtasi
@@ -78,10 +77,8 @@ export function collidesAtWorld(
   ) {
     return true;
   }
-  if (world.terrain.kind === 'heightfield') {
-    const groundY = sampleTerrainHeight(world.terrain, x, z);
-    if (y < groundY - 1e-3) return true;
-  }
+  const groundY = sampleTerrainHeight(world.terrain, x, z);
+  if (y < groundY - 1e-3) return true;
   const candidates = getWorldSpatialIndex(world).queryAABB(x - r, z - r, x + r, z + r, y, y + h);
   for (const b of candidates) {
     if (boxOverlap(x, y, z, r, h, b)) return true;
@@ -152,77 +149,6 @@ export function isSpawnPointSafe(
   }
 
   return true;
-}
-
-function moveAxis(body: Body, axis: 'x' | 'z', d: number, boxes: Box[], canStep: boolean) {
-  if (d === 0) return;
-  const p = body.pos;
-  const r = PLAYER_RADIUS;
-  const h = PLAYER_HEIGHT;
-  p[axis] += d;
-  for (const b of boxes) {
-    if (!boxOverlap(p.x, p.y, p.z, r, h, b)) continue;
-    const rise = b.max.y - p.y;
-    if (canStep && rise > 0 && rise <= STEP_HEIGHT && !collidesAt(boxes, p.x, b.max.y + 0.001, p.z)) {
-      p.y = b.max.y + 0.001; // zinaga chiqish
-      continue;
-    }
-    if (d > 0) p[axis] = b.min[axis] - r - 1e-4;
-    else p[axis] = b.max[axis] + r + 1e-4;
-    body.vel[axis] = 0;
-  }
-}
-
-/** AABB to'qnashuvli harakat (o'qlar bo'yicha alohida, kichik qadamlar bilan). */
-export function moveBody(body: Body, dt: number, boxes: Box[]): void {
-  const p = body.pos;
-  const v = body.vel;
-  const maxComp = Math.max(Math.abs(v.x), Math.abs(v.y), Math.abs(v.z));
-  const steps = Math.max(1, Math.ceil((maxComp * dt) / 0.2));
-  const sdt = dt / steps;
-  body.onGround = false;
-  for (let s = 0; s < steps; s++) {
-    // Y
-    p.y += v.y * sdt;
-    for (const b of boxes) {
-      if (!boxOverlap(p.x, p.y, p.z, PLAYER_RADIUS, PLAYER_HEIGHT, b)) continue;
-      if (v.y <= 0) {
-        p.y = b.max.y;
-        body.onGround = true;
-      } else {
-        p.y = b.min.y - PLAYER_HEIGHT - 1e-4;
-      }
-      v.y = 0;
-    }
-    moveAxis(body, 'x', v.x * sdt, boxes, body.onGround);
-    moveAxis(body, 'z', v.z * sdt, boxes, body.onGround);
-  }
-}
-
-/** Kiritilgan yo'nalish (dunyo koordinatalarida, m/s) bo'yicha tezlanish + gravitatsiya + to'qnashuv. */
-export function applyMovement(body: Body, wishX: number, wishZ: number, jump: boolean, dt: number, boxes: Box[]): void {
-  const v = body.vel;
-  const hasInput = wishX !== 0 || wishZ !== 0;
-  if (body.onGround || hasInput) {
-    const accel = body.onGround ? GROUND_ACCEL : AIR_ACCEL;
-    const dx = wishX - v.x;
-    const dz = wishZ - v.z;
-    const dl = Math.hypot(dx, dz);
-    const maxDelta = accel * dt;
-    if (dl > maxDelta) {
-      v.x += (dx / dl) * maxDelta;
-      v.z += (dz / dl) * maxDelta;
-    } else {
-      v.x = wishX;
-      v.z = wishZ;
-    }
-  }
-  if (jump && body.onGround) {
-    v.y = JUMP_SPEED;
-    body.onGround = false;
-  }
-  v.y = Math.max(v.y - GRAVITY * dt, -45);
-  moveBody(body, dt, boxes);
 }
 
 // ---------- Terrain + Structure World Movement (Stage 02B) ----------
@@ -359,7 +285,7 @@ function moveAxisInWorld(
   }
 
   // Terrain slope blocking when moving uphill on heightfield terrain
-  if (world.terrain.kind === 'heightfield' && !steppedOnStructure) {
+  if (!steppedOnStructure) {
     const newGroundY = sampleTerrainHeight(world.terrain, p.x, p.z);
     const onStructure = isStandingOnCollider(p, r, boxes) !== null && p.y > newGroundY + 0.08;
     if (!onStructure && newGroundY > prevGroundY + 1e-5 && p.y <= newGroundY + 0.25) {
@@ -389,27 +315,6 @@ export function moveBodyInWorld(
   opts: WorldMovementOptions = {},
 ): void {
   if (dt <= 0) return;
-
-  // Preserve 100% identical behavior on flat legacy arenas (e.g. dust_arena)
-  if (world.terrain.kind === 'flat') {
-    moveBody(body, dt, world.colliders);
-    const r = PLAYER_RADIUS;
-    if (body.pos.x < world.bounds.minX + r) {
-      body.pos.x = world.bounds.minX + r;
-      body.vel.x = 0;
-    } else if (body.pos.x > world.bounds.maxX - r) {
-      body.pos.x = world.bounds.maxX - r;
-      body.vel.x = 0;
-    }
-    if (body.pos.z < world.bounds.minZ + r) {
-      body.pos.z = world.bounds.minZ + r;
-      body.vel.z = 0;
-    } else if (body.pos.z > world.bounds.maxZ - r) {
-      body.pos.z = world.bounds.maxZ - r;
-      body.vel.z = 0;
-    }
-    return;
-  }
 
   const maxWalkableSlopeDeg = opts.maxWalkableSlopeDeg ?? DEFAULT_MAX_WALKABLE_SLOPE_DEG;
   const p = body.pos;
@@ -565,25 +470,6 @@ export function applyWorldMovement(
   world: WorldDefinition,
   opts: WorldMovementOptions = {},
 ): void {
-  if (world.terrain.kind === 'flat') {
-    applyMovement(body, wishX, wishZ, jump, dt, world.colliders);
-    const r = PLAYER_RADIUS;
-    if (body.pos.x < world.bounds.minX + r) {
-      body.pos.x = world.bounds.minX + r;
-      body.vel.x = 0;
-    } else if (body.pos.x > world.bounds.maxX - r) {
-      body.pos.x = world.bounds.maxX - r;
-      body.vel.x = 0;
-    }
-    if (body.pos.z < world.bounds.minZ + r) {
-      body.pos.z = world.bounds.minZ + r;
-      body.vel.z = 0;
-    } else if (body.pos.z > world.bounds.maxZ - r) {
-      body.pos.z = world.bounds.maxZ - r;
-      body.vel.z = 0;
-    }
-    return;
-  }
 
   const v = body.vel;
   const hasInput = wishX !== 0 || wishZ !== 0;
@@ -870,14 +756,12 @@ export function raycastWorld(
     }
   }
 
-  if (world.terrain.kind === 'heightfield') {
-    const th = raycastTerrain(world.terrain, origin, dir, limit);
-    if (th && th.t <= limit) {
-      bestHit = th;
-      bestKind = 'terrain';
-      bestColliderId = undefined;
-      limit = th.t;
-    }
+  const th = raycastTerrain(world.terrain, origin, dir, limit);
+  if (th && th.t <= limit) {
+    bestHit = th;
+    bestKind = 'terrain';
+    bestColliderId = undefined;
+    limit = th.t;
   }
 
   if (!bestHit) return null;
@@ -1008,60 +892,137 @@ export function rayVsPlayer(
 
 const GR = 0.08;
 
+function pointHitsBox(b: Box, p: Vec3): boolean {
+  return (
+    p.x + GR > b.min.x && p.x - GR < b.max.x &&
+    p.y + GR > b.min.y && p.y - GR < b.max.y &&
+    p.z + GR > b.min.z && p.z - GR < b.max.z
+  );
+}
+
 function pointHits(boxes: Box[], p: Vec3): boolean {
   for (const b of boxes) {
-    if (
-      p.x + GR > b.min.x && p.x - GR < b.max.x &&
-      p.y + GR > b.min.y && p.y - GR < b.max.y &&
-      p.z + GR > b.min.z && p.z - GR < b.max.z
-    ) return true;
+    if (pointHitsBox(b, p)) return true;
   }
   return false;
+}
+
+/**
+ * Nuqta (radiusi `pad` bo'lgan sharcha) kollayderning aniq `hit` shakli ichidami?
+ * Shakl konvensiyalari `rayCollider` bilan bir xil (silindr — quti y oralig'i; OBB/gable — `localBoxToWorldCollider`
+ * lokal o'qlari X' = (cos, 0, −sin), Z' = (sin, 0, cos)). `hit` bo'lmasa — AABB (`pad` bilan kengaytirilgan).
+ */
+export function pointInsideCollider(col: ColliderBox, p: Vec3, pad = GR): boolean {
+  if (
+    p.x + pad <= col.min.x || p.x - pad >= col.max.x ||
+    p.y + pad <= col.min.y || p.y - pad >= col.max.y ||
+    p.z + pad <= col.min.z || p.z - pad >= col.max.z
+  ) return false;
+  const h = col.hit;
+  if (!h) return true;
+  switch (h.kind) {
+    case 'cylinder': {
+      const dx = p.x - h.cx;
+      const dz = p.z - h.cz;
+      const r = h.r + pad;
+      return dx * dx + dz * dz < r * r;
+    }
+    case 'ellipsoid': {
+      const ex = (p.x - h.cx) / (h.rx + pad);
+      const ey = (p.y - h.cy) / (h.ry + pad);
+      const ez = (p.z - h.cz) / (h.rz + pad);
+      return ex * ex + ey * ey + ez * ez < 1;
+    }
+    case 'obb': {
+      const cos = Math.cos(h.yaw);
+      const sin = Math.sin(h.yaw);
+      const wx = p.x - h.cx;
+      const wz = p.z - h.cz;
+      const lx = wx * cos - wz * sin;
+      const lz = wx * sin + wz * cos;
+      return Math.abs(lx) < h.hx + pad && Math.abs(p.y - h.cy) < h.hy + pad && Math.abs(lz) < h.hz + pad;
+    }
+    case 'gable': {
+      const cos = Math.cos(h.yaw);
+      const sin = Math.sin(h.yaw);
+      const wx = p.x - h.cx;
+      const wz = p.z - h.cz;
+      const lx = wx * cos - wz * sin;
+      const lz = wx * sin + wz * cos;
+      if (Math.abs(lz) >= h.hz + pad || p.y <= h.baseY - pad) return false;
+      // Qiya qirra: |x|·hgt + hx·y <= hx·apexY (normallashtirilgan masofa `pad` dan kichik bo'lsin)
+      const hgt = Math.max(1e-6, h.apexY - h.baseY);
+      const inv = 1 / Math.hypot(hgt, h.hx);
+      return (Math.abs(lx) * hgt + h.hx * p.y - h.hx * h.apexY) * inv < pad;
+    }
+    default:
+      return true;
+  }
+}
+
+/** Issiq yo'lda ajratishsiz ishlash uchun umumiy normal buferi. */
+const shapeNormal = { x: 0, y: 0, z: 0 };
+
+/**
+ * Shakl tegishi uchun sakrash normali: silindr — radial XZ, ellipsoid — gradient.
+ * OBB/gable/AABB uchun false (o'q bo'yicha eski AABB normali ishlatiladi).
+ */
+function shapeBounceNormal(col: ColliderBox, p: Vec3, out: { x: number; y: number; z: number }): boolean {
+  const h = col.hit;
+  if (!h) return false;
+  if (h.kind === 'cylinder') {
+    const dx = p.x - h.cx;
+    const dz = p.z - h.cz;
+    const l = Math.hypot(dx, dz);
+    if (l < 1e-9) return false;
+    out.x = dx / l;
+    out.y = 0;
+    out.z = dz / l;
+    return true;
+  }
+  if (h.kind === 'ellipsoid') {
+    const nx = (p.x - h.cx) / (h.rx * h.rx);
+    const ny = (p.y - h.cy) / (h.ry * h.ry);
+    const nz = (p.z - h.cz) / (h.rz * h.rz);
+    const l = Math.hypot(nx, ny, nz);
+    if (l < 1e-9) return false;
+    out.x = nx / l;
+    out.y = ny / l;
+    out.z = nz / l;
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Kollayderlar orasidan nuqta tegib turganini topadi; aniq `hit` shakli bo'lsa faqat shakl ichida bo'lsa hisoblanadi
+ * (daraxt AABB sining bo'sh burchagi granatani qaytarmaydi). Shakl normali `shapeNormal` ga yoziladi.
+ * Qaytaradi: 0 — tegmadi, 1 — AABB/OBB/gable (o'q normali), 2 — silindr/ellipsoid (shakl normali).
+ */
+function probeColliders(cols: ColliderBox[], p: Vec3): 0 | 1 | 2 {
+  for (const c of cols) {
+    if (!pointHitsBox(c, p)) continue;
+    if (!c.hit) return 1;
+    if (!pointInsideCollider(c, p)) continue;
+    return shapeBounceNormal(c, p, shapeNormal) ? 2 : 1;
+  }
+  return 0;
 }
 
 export function pointInsideBoxes(boxes: Box[], p: Vec3): boolean {
   return pointHits(boxes, p);
 }
 
-/** Granatani bir qadam harakatlantiradi. Qattiq urilish bo'lsa true qaytaradi. */
-export function stepProjectile(g: { pos: Vec3; vel: Vec3 }, dt: number, boxes: Box[]): boolean {
-  g.vel.y -= GRAVITY * dt;
-  const speed = Math.hypot(g.vel.x, g.vel.y, g.vel.z);
-  const steps = Math.max(1, Math.ceil((speed * dt) / 0.1));
-  const sdt = dt / steps;
-  let bounced = false;
-  for (let s = 0; s < steps; s++) {
-    for (const axis of ['x', 'y', 'z'] as const) {
-      const old = g.pos[axis];
-      g.pos[axis] += g.vel[axis] * sdt;
-      if (pointHits(boxes, g.pos)) {
-        g.pos[axis] = old;
-        if (Math.abs(g.vel[axis]) > 2) bounced = true;
-        if (axis === 'y') {
-          g.vel.y *= -0.35;
-          g.vel.x *= 0.7;
-          g.vel.z *= 0.7;
-          if (Math.abs(g.vel.y) < 1) g.vel.y = 0;
-        } else {
-          g.vel[axis] *= -0.45;
-        }
-      }
-    }
-  }
-  return bounced;
-}
-
 /**
- * World-aware grenade physics step supporting both AABB colliders and heightfield terrain.
+ * Dunyo bilan ishlaydigan granata qadami: relyef (heightfield) + kollayderlar.
+ * Aniq `hit` shakli bor kollayderlarda (daraxt silindri, tosh ellipsoidi, OBB, gable) AABB faqat keng faza —
+ * granata shaklning o'zi ichiga kirgandagina qaytadi.
  */
 export function stepProjectileInWorld(
   g: { pos: Vec3; vel: Vec3 },
   dt: number,
   world: WorldDefinition,
 ): boolean {
-  if (world.terrain.kind === 'flat') {
-    return stepProjectile(g, dt, world.colliders);
-  }
   g.vel.y -= GRAVITY * dt;
   const speed = Math.hypot(g.vel.x, g.vel.y, g.vel.z);
   const steps = Math.max(1, Math.ceil((speed * dt) / 0.1));
@@ -1074,8 +1035,28 @@ export function stepProjectileInWorld(
       g.pos[axis] += g.vel[axis] * sdt;
       const groundY = sampleTerrainHeight(world.terrain, g.pos.x, g.pos.z);
       const hitTerrain = g.pos.y - GR < groundY;
-      if (hitTerrain || pointHits(candidates, g.pos)) {
+      const probe = hitTerrain ? 1 : probeColliders(candidates, g.pos);
+      if (probe !== 0) {
         g.pos[axis] = old;
+        if (probe === 2) {
+          // Silindr/ellipsoid: tezlikni shakl normali bo'yicha qaytaramiz (faqat ichkariga harakat bo'lsa)
+          const n = shapeNormal;
+          const vn = g.vel.x * n.x + g.vel.y * n.y + g.vel.z * n.z;
+          if (vn < 0) {
+            if (-vn > 2) bounced = true;
+            const groundLike = Math.abs(n.y) >= 0.5;
+            const k = (1 + (groundLike ? 0.35 : 0.45)) * vn;
+            g.vel.x -= k * n.x;
+            g.vel.y -= k * n.y;
+            g.vel.z -= k * n.z;
+            if (groundLike) {
+              g.vel.x *= 0.7;
+              g.vel.z *= 0.7;
+              if (Math.abs(g.vel.y) < 1) g.vel.y = 0;
+            }
+          }
+          continue;
+        }
         if (Math.abs(g.vel[axis]) > 2) bounced = true;
         if (axis === 'y') {
           g.vel.y *= -0.35;

@@ -812,8 +812,8 @@ describe('BOSQICH 08A — OUTDOOR-ASSET-01 (8 GLB Models, 42 Placements, Collide
     handles2.dispose();
   });
 
-  it('10. Stage 07-QA va eski xaritalar (dust_arena, forest_sample, forest_assets_preview) hamda Forest Survival Room regressiya tekshiruvi', () => {
-    // 10a) Legacy maps build and render cleanly (provide headless canvas stub for dust_arena's addRoadSign / addGravestone)
+  it('10. Stage 07-QA va eski xaritalar (forest_technical, forest_sample, forest_assets_preview) hamda Forest Survival Room regressiya tekshiruvi', () => {
+    // 10a) Legacy maps build and render cleanly (provide headless canvas stub for forest_technical's createTextures())
     const prevDoc = (globalThis as Record<string, unknown>).document;
     if (!prevDoc) {
       const ctxStub = new Proxy(
@@ -839,7 +839,7 @@ describe('BOSQICH 08A — OUTDOOR-ASSET-01 (8 GLB Models, 42 Placements, Collide
       };
     }
     try {
-      for (const mapId of ['dust_arena', 'forest_sample', 'forest_assets_preview'] as const) {
+      for (const mapId of ['forest_technical', 'forest_sample', 'forest_assets_preview'] as const) {
         const w = createWorldDefinition({ mapId, publicLayoutSeed: 6501 });
         assert.equal(w.mapId, mapId);
         const s = new THREE.Scene();

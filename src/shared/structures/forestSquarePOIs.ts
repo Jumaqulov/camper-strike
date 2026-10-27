@@ -1,4 +1,4 @@
-import type { Vec3 } from '../math';
+import { q3, type Vec3 } from '../math';
 import {
   buildForestSquareOutdoorPlacements,
   buildOutdoorVisualDescriptors,
@@ -55,7 +55,6 @@ import {
   rotateFurniturePlacements,
 } from './multiSiteLayout';
 
-const q3 = (n: number): number => Math.round(n * 1000) / 1000;
 
 export interface ForestSquarePOILayoutOptions {
   cabinetOpenFraction?: number;

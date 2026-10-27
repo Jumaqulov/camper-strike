@@ -5,12 +5,10 @@ import { WorldWeaponItem } from '../../client/game/WorldWeaponItem';
 import { getNav } from '../../server/navgraph';
 import { validateMapSpawns } from '../../server/room';
 import { PLAYER_HEIGHT, PLAYER_RADIUS, RUN_SPEED, STEP_HEIGHT } from '../constants';
-import { MAP } from '../map';
 import { vnorm, vsub, type Vec3 } from '../math';
 import {
-  applyMovement,
   applyWorldMovement,
-   boxOverlap,
+  boxOverlap,
   collidesAtWorld,
   isSpawnPointSafe,
   queryNearbyColliders,
@@ -28,7 +26,6 @@ import {
   createTechnicalTerrainFixture,
   createWorldDefinition,
   DEFAULT_MAX_WALKABLE_SLOPE_DEG,
-  DEFAULT_WORLD,
   isTerrainWalkable,
   sampleHeightfieldTriangle,
   sampleTerrainHeight,
@@ -36,19 +33,29 @@ import {
   sampleTerrainSlopeDeg,
   type ColliderBox,
 } from '../world';
+import { boxCollider, makeFlatWorld } from './flatWorldFixture';
 
 describe('Bosqich 02B — Heightfield Terrain, Fizika va Spatial Index testlari', () => {
-  it('1. Tekis yerdagi harakat eski buildDustArena() / MAP.boxes natijasi bilan 100% mos', () => {
-    const bLegacy: Body = { pos: { x: -38, y: 0, z: -22 }, vel: { x: 0, y: 0, z: 0 }, onGround: true };
-    const bWorld: Body = { pos: { x: -38, y: 0, z: -22 }, vel: { x: 0, y: 0, z: 0 }, onGround: true };
+  it('1. Tekis heightfield (barcha balandliklar 0) ustidagi harakat deterministik, yerga qo‘nadi va yon devorga tiqilmaydi', () => {
+    const flat = makeFlatWorld([boxCollider('wall', { x: -35, y: 0, z: -24 }, { x: -34, y: 3, z: -10 }, 'concrete')]);
+    const run = (): Body => {
+      const b: Body = { pos: { x: -38, y: 0, z: -22 }, vel: { x: 0, y: 0, z: 0 }, onGround: true };
+      for (let i = 0; i < 60; i++) {
+        applyWorldMovement(b, 5.2, 2.8, i === 10, 1 / 60, flat);
+      }
+      return b;
+    };
+    const a = run();
+    const b = run();
+    assert.deepEqual(a, b);
 
-    for (let i = 0; i < 60; i++) {
-      const jump = i === 10;
-      applyMovement(bLegacy, 5.2, 2.8, jump, 1 / 60, MAP.boxes);
-      applyWorldMovement(bWorld, 5.2, 2.8, jump, 1 / 60, DEFAULT_WORLD);
-    }
-
-    assert.deepEqual(bWorld, bLegacy);
+    // Sakrashdan keyin yana tekis yerga qo'ngan
+    assert.equal(a.onGround, true);
+    assert.ok(Math.abs(a.pos.y) < 1e-3, `Expected y ~ 0 on flat terrain, got ${a.pos.y}`);
+    // +Z bo'yicha bemalol yurgan, +X bo'yicha esa devorga (x = -35) yetib to'xtagan
+    assert.ok(a.pos.z > -22 + 1.5, `Expected forward progress on z, got ${a.pos.z}`);
+    assert.ok(a.pos.x <= -35 - PLAYER_RADIUS + 1e-3, `Wall must block x, got ${a.pos.x}`);
+    assert.ok(a.pos.x > -35 - PLAYER_RADIUS - 0.2, 'Body should rest against the wall');
   });
 
   it('2. Render va fizika uchburchak interpolatsiyasi aynan bir xil balandlik va normal qaytaradi', () => {
@@ -340,20 +347,28 @@ describe('Bosqich 02B — Heightfield Terrain, Fizika va Spatial Index testlari'
       rBrute.map((c) => c.id),
     );
 
-    // Raycast spatial vs brute-force raycastBoxes on Dust Arena
+    // Raycast spatial vs brute-force raycastBoxes on a flat world with plain AABB colliders
+    // (gorizontal nurlar — tekis relyef hech qachon urilmaydi, faqat kollayderlar solishtiriladi)
+    const flat = makeFlatWorld([
+      boxCollider('crate_a', { x: -31, y: 0, z: -18 }, { x: -29.6, y: 1.4, z: -16.6 }, 'crate', 'prop'),
+      boxCollider('wall_b', { x: -3, y: 0, z: -12 }, { x: 3, y: 4, z: -11 }, 'wall'),
+      boxCollider('bunker_c', { x: 14, y: 0, z: 10 }, { x: 22, y: 5, z: 18 }, 'concrete'),
+    ]);
     const rayOrigins: Vec3[] = [
-      { x: -35, y: 1.5, z: -20 },
+      { x: -35, y: 0.5, z: -20 },
       { x: 0, y: 1.5, z: -25 },
       { x: 25, y: 2.0, z: 15 },
     ];
     const rayDirs: Vec3[] = [
-      vnorm({ x: 1, y: -0.05, z: 0.4 }),
+      vnorm({ x: 1, y: 0, z: 0.4 }),
       vnorm({ x: 0.2, y: 0, z: 1 }),
-      vnorm({ x: -1, y: 0.02, z: -0.5 }),
+      vnorm({ x: -1, y: 0, z: -0.5 }),
     ];
     for (let i = 0; i < rayOrigins.length; i++) {
-      const hitWorld = raycastWorld(DEFAULT_WORLD, rayOrigins[i], rayDirs[i], 100);
-      const hitBrute = raycastBoxes(DEFAULT_WORLD.colliders, rayOrigins[i], rayDirs[i], 100);
+      const hitWorld = raycastWorld(flat, rayOrigins[i], rayDirs[i], 100);
+      const hitBrute = raycastBoxes(flat.colliders, rayOrigins[i], rayDirs[i], 100);
+      assert.ok(hitBrute, `Brute-force ray ${i} must hit a collider`);
+      assert.equal(hitWorld?.kind, 'collider');
       assert.equal(hitWorld?.t, hitBrute?.t);
       assert.equal(hitWorld?.nx, hitBrute?.nx);
       assert.equal(hitWorld?.ny, hitBrute?.ny);
@@ -361,7 +376,7 @@ describe('Bosqich 02B — Heightfield Terrain, Fizika va Spatial Index testlari'
     }
 
     // Ikki xil WorldDefinition mustaqil spatial indexga ega
-    const worldA = createWorldDefinition({ mapId: 'dust_arena', publicLayoutSeed: 101 });
+    const worldA = createWorldDefinition({ mapId: 'forest_technical', publicLayoutSeed: 101 });
     const worldB = createWorldDefinition({ mapId: 'forest_sample', publicLayoutSeed: 202 });
     assert.notEqual(getWorldSpatialIndex(worldA), getWorldSpatialIndex(worldB));
   });
@@ -370,8 +385,7 @@ describe('Bosqich 02B — Heightfield Terrain, Fizika va Spatial Index testlari'
     const fixture = createTechnicalTerrainFixture();
     const deckCol = fixture.colliders.find((c) => c.id === 'tech_platform_01:deck:col')!;
 
-    // Barcha standart va texnik spawn nuqtalar xavfsiz bo'lishi shart
-    assert.deepEqual(validateMapSpawns(DEFAULT_WORLD), []);
+    // Texnik fixture spawn nuqtalari xavfsiz bo'lishi shart
     assert.deepEqual(validateMapSpawns(fixture), []);
 
     // 1) Yer ustidagi spawn — xavfsiz
@@ -383,7 +397,6 @@ describe('Bosqich 02B — Heightfield Terrain, Fizika va Spatial Index testlari'
 
     // 3) Havoda osilib turgan spawn (tayanchi yo'q, masalan y = 10) — xavfsiz emas
     assert.equal(isSpawnPointSafe(fixture, { x: 0, y: 10, z: 0 }), false);
-    assert.equal(isSpawnPointSafe(DEFAULT_WORLD, { x: 0, y: 10, z: 10 }), false);
 
     // 4) Yer ichidagi spawn — xavfsiz emas
     assert.equal(isSpawnPointSafe(fixture, { x: 0, y: groundY0 - 0.5, z: 0 }), false);

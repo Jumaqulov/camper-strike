@@ -1104,9 +1104,9 @@ describe('STAGE 06 — Server-Authoritative Loot, Containers, Inventory, Unarmed
     }
   });
 
-  it('8. Legacy TDM / FFA Regression Check (lootPreview: false on forest_square & dust_arena)', () => {
+  it('8. Legacy TDM / FFA Regression Check (lootPreview: false on forest_square & forest_sample)', () => {
     const { io } = createFakeIo();
-    for (const mapId of ['forest_square', 'dust_arena'] as const) {
+    for (const mapId of ['forest_square', 'forest_sample'] as const) {
       const room = new Room(
         {
           name: `Legacy ${mapId} Room`,

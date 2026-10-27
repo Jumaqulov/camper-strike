@@ -10,81 +10,30 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
  * environments never crash the game.
  */
 
-export const GRASS_VARIANT_IDS = [
-  'grass_short_soft_01',
-  'grass_short_dense_01',
-  'grass_meadow_wide_01',
-  'grass_meadow_thin_01',
-  'grass_tall_wild_01',
-  'grass_tall_seeded_01',
-  'grass_dry_straw_01',
-  'grass_olive_tuft_01',
-  'grass_shade_dark_01',
-  'grass_forest_sparse_01',
-  'grass_path_edge_01',
-  'grass_wavy_broad_01',
-  'flower_white_01',
-  'flower_yellow_01',
-  'flower_purple_01',
-  'fern_small_01',
-  'fern_wide_01',
-] as const;
+import {
+  getCategoryIndex,
+  getVariantCategory,
+  GRASS_VARIANT_HEIGHT,
+  GRASS_VARIANT_IDS,
+  MAX_WORLD_HEIGHT,
+  type GrassCategory,
+  type GrassVariantId,
+} from './grassVariantData';
 
-export type GrassVariantId = (typeof GRASS_VARIANT_IDS)[number];
-
-export type GrassCategory = 'grass' | 'flower' | 'fern';
-
-export function getVariantCategory(variantId: GrassVariantId): GrassCategory {
-  if (variantId.startsWith('flower_')) return 'flower';
-  if (variantId.startsWith('fern_')) return 'fern';
-  return 'grass';
-}
-
-export function getCategoryIndex(category: GrassCategory): number {
-  switch (category) {
-    case 'grass':
-      return 0;
-    case 'flower':
-      return 1;
-    case 'fern':
-      return 2;
-  }
-}
-
-/** Base (unscaled) model heights in metres according to manifest. */
-export const VARIANT_BASE_HEIGHTS: Record<GrassVariantId, number> = {
-  grass_short_soft_01: 0.17,
-  grass_short_dense_01: 0.15,
-  grass_meadow_wide_01: 0.34,
-  grass_meadow_thin_01: 0.30,
-  grass_tall_wild_01: 0.52,
-  grass_tall_seeded_01: 0.54,
-  grass_dry_straw_01: 0.36,
-  grass_olive_tuft_01: 0.26,
-  grass_shade_dark_01: 0.24,
-  grass_forest_sparse_01: 0.22,
-  grass_path_edge_01: 0.22,
-  grass_wavy_broad_01: 0.30,
-  flower_white_01: 0.26,
-  flower_yellow_01: 0.30,
-  flower_purple_01: 0.42,
-  fern_small_01: 0.34,
-  fern_wide_01: 0.60,
-};
-
-/** PvP fair height caps (grass <= 0.45m, flower <= 0.35m, fern <= 0.60m). */
-export const CATEGORY_HEIGHT_LIMITS: Record<GrassCategory, number> = {
-  grass: 0.45,
-  flower: 0.35,
-  fern: 0.60,
-};
-
-export function getMaxScaleForVariant(variantId: GrassVariantId): number {
-  const cat = getVariantCategory(variantId);
-  const maxH = CATEGORY_HEIGHT_LIMITS[cat];
-  const baseH = VARIANT_BASE_HEIGHTS[variantId];
-  return Math.min(1.3, maxH / baseH);
-}
+// Variant id/kategoriya/balandlik jadvallari `grassVariantData.ts` da (planner bilan umumiy).
+// Eski nomlar moslik uchun qayta eksport qilinadi.
+export {
+  getCategoryIndex,
+  getVariantCategory,
+  GRASS_VARIANT_HEIGHT,
+  GRASS_VARIANT_HEIGHT as VARIANT_BASE_HEIGHTS,
+  GRASS_VARIANT_IDS,
+  MAX_WORLD_HEIGHT,
+  MAX_WORLD_HEIGHT as CATEGORY_HEIGHT_LIMITS,
+  maxScaleForVariant as getMaxScaleForVariant,
+  type GrassCategory,
+  type GrassVariantId,
+} from './grassVariantData';
 
 export interface CachedGrassAsset {
   variantId: GrassVariantId;
@@ -371,7 +320,7 @@ function createFernFallbackGeometry(targetH: number, isWide: boolean): THREE.Buf
 }
 
 export function createProceduralFallback(variantId: GrassVariantId): THREE.BufferGeometry {
-  const h = VARIANT_BASE_HEIGHTS[variantId] ?? 0.25;
+  const h = GRASS_VARIANT_HEIGHT[variantId] ?? 0.25;
   const cat = getVariantCategory(variantId);
 
   switch (cat) {
@@ -506,7 +455,7 @@ async function loadSingleVariant(
   variantId: GrassVariantId,
 ): Promise<CachedGrassAsset> {
   const category = getVariantCategory(variantId);
-  const baseH = VARIANT_BASE_HEIGHTS[variantId] ?? 0.25;
+  const baseH = GRASS_VARIANT_HEIGHT[variantId] ?? 0.25;
 
   try {
     if (typeof window === 'undefined' && !customLoaderFactory) {
@@ -632,7 +581,7 @@ export function getGrassAssetDiagnostics(): GrassAssetDiagnostics {
       variants[id] = {
         isFallback: true,
         triangles: 0,
-        baseHeight: VARIANT_BASE_HEIGHTS[id] ?? 0.25,
+        baseHeight: GRASS_VARIANT_HEIGHT[id] ?? 0.25,
       };
     }
   }
@@ -663,7 +612,7 @@ export function getGrassAsset(variantId: GrassVariantId): CachedGrassAsset {
   // Immediate procedural fallback
   const category = getVariantCategory(variantId);
   const fallbackGeo = createProceduralFallback(variantId);
-  const baseH = VARIANT_BASE_HEIGHTS[variantId] ?? 0.25;
+  const baseH = GRASS_VARIANT_HEIGHT[variantId] ?? 0.25;
   const asset: CachedGrassAsset = {
     variantId,
     category,

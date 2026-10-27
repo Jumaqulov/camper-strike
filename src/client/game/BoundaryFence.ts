@@ -187,7 +187,9 @@ export function buildBoundaryFence(world: WorldDefinition): BoundaryFenceHandle 
   signMesh.receiveShadow = false;
   group.add(signMesh);
 
-  // Chegara panjarasi 60 m dan uzoqda ko'rinmasin (culling: aylana hech qachon butunlay ko'rinmaydi)
+  // Panjara xaritani halqa bo'ylab o'raydi: instanced mesh ning bounding sphere si kamerani doim
+  // o'z ichiga oladi, shuning uchun three.js frustum tekshiruvi hech qachon kesmaydi — uni o'chirib,
+  // har kadrdagi bekor hisobni tejaymiz. Masofaviy yashirish yo'q (4 ta arzon draw call, update hook ham yo'q).
   postMesh.frustumCulled = false;
   railMesh.frustumCulled = false;
   signMesh.frustumCulled = false;

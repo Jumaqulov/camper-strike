@@ -3,7 +3,7 @@ import {
   EYE_HEIGHT, GRENADE_DAMAGE, GRENADE_FUSE, GRENADE_RADIUS, GRENADE_THROW_SPEED, GRENADES_PER_LIFE, MATCH_END_DURATION,
   MAX_HP, RESPAWN_TIME, SPAWN_PROTECTION, TEAM_NAMES, TICK_RATE, type Team,
 } from '../shared/constants';
-import { clamp, isVec3, spreadDir, vdist, vnorm, vsub, type Vec3 } from '../shared/math';
+import { clamp, isVec3, q3, spreadDir, vdist, vnorm, vsub, type Vec3 } from '../shared/math';
 import {
   isSpawnPointSafe,
   pointInsideBoxes,
@@ -40,8 +40,8 @@ import {
   type WeaponId,
 } from '../shared/weapons';
 import {
-  createWorldDefinition, CURRENT_WORLD_VERSION, DEFAULT_PUBLIC_LAYOUT_SEED, DEFAULT_WORLD, extractWorldMeta,
-  validateWorldCompatibility, type WorldDefinition, type WorldMeta,
+  createWorldDefinition, CURRENT_WORLD_VERSION, DEFAULT_PUBLIC_LAYOUT_SEED, extractWorldMeta,
+  sampleTerrainHeight, validateWorldCompatibility, type SpawnPointDef, type WorldDefinition, type WorldMeta,
 } from '../shared/world';
 import { BotBrain, pickBotName } from './bot';
 import {
@@ -107,8 +107,15 @@ export interface ServerPlayer extends Body {
   authority: PlayerMovementAuthority;
 }
 
-const r3 = (n: number) => Math.round(n * 1000) / 1000;
 let roomSeq = 0;
+
+type LootGateRejectCode = 'PLAYER_NOT_FOUND' | 'ROUND_NOT_ACTIVE';
+
+/** Xom so'rovdan satr maydonini o'qiydi; yo'q yoki satr bo'lmasa — ''. */
+function readStringField(rawReq: unknown, key: string): string {
+  const v = (rawReq as Record<string, unknown> | null | undefined)?.[key];
+  return typeof v === 'string' ? v : '';
+}
 
 export class Room {
   readonly id: string;
@@ -116,7 +123,10 @@ export class Room {
   readonly nav: NavGraph;
   readonly isSurvival: boolean;
   readonly lootEnabled: boolean;
-  readonly lootPreview: boolean;
+  /** @deprecated Stage 06 qoldig'i — har doim `lootEnabled` bilan bir xil; protokol maydoni uchun saqlanadi. */
+  get lootPreview(): boolean {
+    return this.lootEnabled;
+  }
   readonly loot: RoomLootAuthority;
   readonly survival: SurvivalRoundController | null;
   private secretLootSeed: number;
@@ -176,7 +186,6 @@ export class Room {
     this.nav = getNav(this.world);
     this.secretLootSeed = Math.floor(Math.random() * 0x7fffffff) + 1;
     this.lootEnabled = this.isSurvival || (Boolean(opts.lootPreview) && mapId === 'forest_square');
-    this.lootPreview = this.lootEnabled;
     this.loot = new RoomLootAuthority(this.world, this.secretLootSeed, this.id, this.lootEnabled, this.roundId);
 
     if (this.isSurvival) {
@@ -524,8 +533,27 @@ export class Room {
 
   // ---------------- Spawn ----------------
 
-  private pickSpawn(p: ServerPlayer) {
-    const cands = this.world.spawnPoints.filter((s) => (this.opts.mode === 'tdm' ? s.team === p.team : true));
+  /** Spawn nuqtalari umuman yo'q bo'lsa — dunyo chegaralari markazi (terrain balandligida); bir marta ogohlantiradi. */
+  private fallbackSpawnWarned = false;
+
+  private fallbackSpawn(p: ServerPlayer): SpawnPointDef {
+    const b = this.world.bounds;
+    const x = (b.minX + b.maxX) / 2;
+    const z = (b.minZ + b.maxZ) / 2;
+    const y = sampleTerrainHeight(this.world.terrain, x, z);
+    if (!this.fallbackSpawnWarned) {
+      this.fallbackSpawnWarned = true;
+      console.warn(`[room ${this.id}] "${this.world.mapId}" xaritasida spawn nuqtasi yo'q — chegaralar markazi ishlatiladi`);
+    }
+    return { id: 'fallback_center', x, y, z, yaw: 0, team: p.team };
+  }
+
+  private pickSpawn(p: ServerPlayer): SpawnPointDef {
+    const all = this.world.spawnPoints;
+    let cands = this.opts.mode === 'tdm' ? all.filter((s) => s.team === p.team) : all;
+    // Jamoa spawnlari bo'lmasa — barcha spawnlar; ular ham bo'lmasa — xavfsiz markaz
+    if (cands.length === 0) cands = all;
+    if (cands.length === 0) return this.fallbackSpawn(p);
     const others = [...this.players.values()].filter((o) => o !== p && o.alive);
     const scored = cands.map((s) => {
       let minEnemy = 999;
@@ -772,7 +800,7 @@ export class Room {
         }
       }
       if (!melee || hitP || ends.length === 0) {
-        ends.push({ x: r3(origin.x + d.x * maxT), y: r3(origin.y + d.y * maxT), z: r3(origin.z + d.z * maxT) });
+        ends.push({ x: q3(origin.x + d.x * maxT), y: q3(origin.y + d.y * maxT), z: q3(origin.z + d.z * maxT) });
       }
       if (hitP) {
         // Zarar tegish zonasiga qarab: bosh ×headMult, tana ×1, oyoq ×0.7
@@ -787,7 +815,7 @@ export class Room {
           if ((fx * ax + fz * az) / al < KNIFE_BACKSTAB_DOT) amount *= KNIFE_BACKSTAB_MUL;
           // Yelpig'ichdagi birinchi tegish — bitta zarba
           ends.length = 0;
-          ends.push({ x: r3(origin.x + d.x * maxT), y: r3(origin.y + d.y * maxT), z: r3(origin.z + d.z * maxT) });
+          ends.push({ x: q3(origin.x + d.x * maxT), y: q3(origin.y + d.y * maxT), z: q3(origin.z + d.z * maxT) });
           dmg.set(hitP, { dmg: amount, head: zone === 'head' });
           break;
         }
@@ -914,64 +942,74 @@ export class Room {
 
   // ---------------- Stage 06 & 07: Loot & Inventar ----------------
 
-  onContainerOpen(id: string, rawReq: ContainerOpenReq | unknown, ack?: (res: ContainerOpenAck) => void): ContainerOpenAck {
+  /**
+   * Loot so'rovlari uchun umumiy darvoza: o'yinchi topilmasa/bot/tayyor emas — PLAYER_NOT_FOUND,
+   * survivalda raund faol bo'lmasa (tirik o'yinchi uchun) — ROUND_NOT_ACTIVE. Aks holda o'yinchini qaytaradi.
+   */
+  private lootRequestGate(
+    id: string,
+    rawReq: unknown,
+  ): { p: ServerPlayer; code?: undefined } | { p: ServerPlayer | null; code: LootGateRejectCode; requestId: string } {
     const p = this.players.get(id);
     if (!p || p.isBot || !p.ready) {
-      const res: ContainerOpenAck = {
-        ok: false,
-        requestId: typeof (rawReq as { requestId?: unknown })?.requestId === 'string' ? (rawReq as { requestId: string }).requestId : '',
-        containerId: typeof (rawReq as { containerId?: unknown })?.containerId === 'string' ? (rawReq as { containerId: string }).containerId : '',
-        code: 'PLAYER_NOT_FOUND',
-        message: LOOT_ERROR_MESSAGES_UZ.PLAYER_NOT_FOUND,
-      };
-      ack?.(res);
-      return res;
+      return { p: null, code: 'PLAYER_NOT_FOUND', requestId: readStringField(rawReq, 'requestId') };
     }
     if (this.isSurvival && this.phase !== 'playing' && p.alive) {
+      return { p, code: 'ROUND_NOT_ACTIVE', requestId: readStringField(rawReq, 'requestId') };
+    }
+    return { p };
+  }
+
+  /**
+   * Buyum olish natijasini e'lon qiladi: konteynerdan olinsa — faqat shu konteyner (`container:state`),
+   * yerdan olinsa (`res.container` yo'q) — groundItems o'zgargani uchun to'liq `loot:snapshot`.
+   */
+  private broadcastPickupResult(res: LootPickupAck): void {
+    if (res.container) {
+      this.io.to(this.channel).emit('container:state', res.container);
+    } else {
+      this.io.to(this.channel).emit('loot:snapshot', this.loot.getPublicLootSnapshot());
+    }
+  }
+
+  onContainerOpen(id: string, rawReq: ContainerOpenReq | unknown, ack?: (res: ContainerOpenAck) => void): ContainerOpenAck {
+    const gate = this.lootRequestGate(id, rawReq);
+    if (gate.code) {
       const res: ContainerOpenAck = {
         ok: false,
-        requestId: typeof (rawReq as { requestId?: unknown })?.requestId === 'string' ? (rawReq as { requestId: string }).requestId : '',
-        containerId: typeof (rawReq as { containerId?: unknown })?.containerId === 'string' ? (rawReq as { containerId: string }).containerId : '',
-        code: 'ROUND_NOT_ACTIVE',
-        message: LOOT_ERROR_MESSAGES_UZ.ROUND_NOT_ACTIVE,
+        requestId: gate.requestId,
+        containerId: readStringField(rawReq, 'containerId'),
+        code: gate.code,
+        message: LOOT_ERROR_MESSAGES_UZ[gate.code],
       };
       ack?.(res);
       return res;
     }
+    const p = gate.p;
     this.loot.syncPlayerFromServerPlayer(p.id, p);
     const res = this.loot.openContainer(p, rawReq);
     if (res.ok && !res.idempotentReplay && res.container) {
+      // Ochish faqat shu konteynerni o'zgartiradi — to'liq loot:snapshot shart emas
       this.io.to(this.channel).emit('container:state', res.container);
-      this.io.to(this.channel).emit('loot:snapshot', this.loot.getPublicLootSnapshot());
     }
     ack?.(res);
     return res;
   }
 
   onLootPickup(id: string, rawReq: LootPickupReq | unknown, ack?: (res: LootPickupAck) => void): LootPickupAck {
-    const p = this.players.get(id);
-    if (!p || p.isBot || !p.ready) {
+    const gate = this.lootRequestGate(id, rawReq);
+    if (gate.code) {
       const res: LootPickupAck = {
         ok: false,
-        requestId: typeof (rawReq as { requestId?: unknown })?.requestId === 'string' ? (rawReq as { requestId: string }).requestId : '',
-        itemId: typeof (rawReq as { itemId?: unknown })?.itemId === 'string' ? (rawReq as { itemId: string }).itemId : '',
-        code: 'PLAYER_NOT_FOUND',
-        message: LOOT_ERROR_MESSAGES_UZ.PLAYER_NOT_FOUND,
+        requestId: gate.requestId,
+        itemId: readStringField(rawReq, 'itemId'),
+        code: gate.code,
+        message: LOOT_ERROR_MESSAGES_UZ[gate.code],
       };
       ack?.(res);
       return res;
     }
-    if (this.isSurvival && this.phase !== 'playing' && p.alive) {
-      const res: LootPickupAck = {
-        ok: false,
-        requestId: typeof (rawReq as { requestId?: unknown })?.requestId === 'string' ? (rawReq as { requestId: string }).requestId : '',
-        itemId: typeof (rawReq as { itemId?: unknown })?.itemId === 'string' ? (rawReq as { itemId: string }).itemId : '',
-        code: 'ROUND_NOT_ACTIVE',
-        message: LOOT_ERROR_MESSAGES_UZ.ROUND_NOT_ACTIVE,
-      };
-      ack?.(res);
-      return res;
-    }
+    const p = gate.p;
     this.loot.syncPlayerFromServerPlayer(p.id, p);
     const prevWeapon = p.weapon;
     const res = this.loot.pickupItem(p, rawReq);
@@ -992,39 +1030,27 @@ export class Room {
       if (p.weapon) {
         p.socket?.emit('ammo', { weapon: p.weapon, mag: p.ammo[p.weapon].mag, reserve: p.ammo[p.weapon].reserve });
       }
-      if (res.container) {
-        this.io.to(this.channel).emit('container:state', res.container);
-      }
-      this.io.to(this.channel).emit('loot:snapshot', this.loot.getPublicLootSnapshot());
+      this.broadcastPickupResult(res);
     }
     ack?.(res);
     return res;
   }
 
   onEquipWeapon(id: string, rawReq: EquipWeaponReq | unknown, ack?: (res: EquipWeaponAck) => void): EquipWeaponAck {
-    const p = this.players.get(id);
-    if (!p || p.isBot || !p.ready) {
+    const gate = this.lootRequestGate(id, rawReq);
+    if (gate.code) {
       const res: EquipWeaponAck = {
         ok: false,
-        requestId: typeof (rawReq as { requestId?: unknown })?.requestId === 'string' ? (rawReq as { requestId: string }).requestId : '',
-        equippedWeapon: null,
-        code: 'PLAYER_NOT_FOUND',
-        message: LOOT_ERROR_MESSAGES_UZ.PLAYER_NOT_FOUND,
+        requestId: gate.requestId,
+        // PLAYER_NOT_FOUND: o'yinchi yo'q — null; ROUND_NOT_ACTIVE: joriy qurol
+        equippedWeapon: gate.p ? gate.p.weapon : null,
+        code: gate.code,
+        message: LOOT_ERROR_MESSAGES_UZ[gate.code],
       };
       ack?.(res);
       return res;
     }
-    if (this.isSurvival && this.phase !== 'playing' && p.alive) {
-      const res: EquipWeaponAck = {
-        ok: false,
-        requestId: typeof (rawReq as { requestId?: unknown })?.requestId === 'string' ? (rawReq as { requestId: string }).requestId : '',
-        equippedWeapon: p.weapon,
-        code: 'ROUND_NOT_ACTIVE',
-        message: LOOT_ERROR_MESSAGES_UZ.ROUND_NOT_ACTIVE,
-      };
-      ack?.(res);
-      return res;
-    }
+    const p = gate.p;
     this.loot.syncPlayerFromServerPlayer(p.id, p);
     const res = this.loot.equipWeapon(id, p.alive, rawReq);
     if (res.ok && !res.idempotentReplay) {
@@ -1041,27 +1067,18 @@ export class Room {
   }
 
   onUseMedkit(id: string, rawReq: UseMedkitReq | unknown, ack?: (res: UseMedkitAck) => void): UseMedkitAck {
-    const p = this.players.get(id);
-    if (!p || p.isBot || !p.ready) {
+    const gate = this.lootRequestGate(id, rawReq);
+    if (gate.code) {
       const res: UseMedkitAck = {
         ok: false,
-        requestId: typeof (rawReq as { requestId?: unknown })?.requestId === 'string' ? (rawReq as { requestId: string }).requestId : '',
-        code: 'PLAYER_NOT_FOUND',
-        message: LOOT_ERROR_MESSAGES_UZ.PLAYER_NOT_FOUND,
+        requestId: gate.requestId,
+        code: gate.code,
+        message: LOOT_ERROR_MESSAGES_UZ[gate.code],
       };
       ack?.(res);
       return res;
     }
-    if (this.isSurvival && this.phase !== 'playing' && p.alive) {
-      const res: UseMedkitAck = {
-        ok: false,
-        requestId: typeof (rawReq as { requestId?: unknown })?.requestId === 'string' ? (rawReq as { requestId: string }).requestId : '',
-        code: 'ROUND_NOT_ACTIVE',
-        message: LOOT_ERROR_MESSAGES_UZ.ROUND_NOT_ACTIVE,
-      };
-      ack?.(res);
-      return res;
-    }
+    const p = gate.p;
     this.loot.syncPlayerFromServerPlayer(p.id, p);
     const { ack: res, newHp } = this.loot.useMedkit({ id, alive: p.alive, hp: p.hp }, rawReq);
     if (res.ok && !res.idempotentReplay) {
@@ -1250,7 +1267,6 @@ export class Room {
     });
     if (res.ok && !res.idempotentReplay && res.container) {
       this.io.to(this.channel).emit('container:state', res.container);
-      this.io.to(this.channel).emit('loot:snapshot', this.loot.getPublicLootSnapshot());
     }
     return res;
   }
@@ -1273,10 +1289,7 @@ export class Room {
         p.weapon = prevWeapon;
         applyAuthoritativeWeaponSwitch(p, pickedWeapon, this.now(), { fromAutoPickup: true });
       }
-      if (res.container) {
-        this.io.to(this.channel).emit('container:state', res.container);
-      }
-      this.io.to(this.channel).emit('loot:snapshot', this.loot.getPublicLootSnapshot());
+      this.broadcastPickupResult(res);
     }
     return res;
   }
@@ -1358,7 +1371,7 @@ export class Room {
 
   private explode(g: ServerGrenadeRecord) {
     if (!isValidGrenadeRecord(g)) return;
-    this.io.to(this.channel).emit('explosion', { x: r3(g.pos.x), y: r3(g.pos.y), z: r3(g.pos.z) });
+    this.io.to(this.channel).emit('explosion', { x: q3(g.pos.x), y: q3(g.pos.y), z: q3(g.pos.z) });
     // Xonadan chiqib ketgan o'yinchining granatasi ham zarar beradi (departed ro'yxatidan olinadi)
     const owner = this.players.get(g.owner) ?? this.departed.get(g.owner);
     if (this.departed.has(g.owner) && !this.grenades.some((o) => o !== g && o.owner === g.owner)) {
@@ -1635,9 +1648,9 @@ export class Room {
       if (!p.ready) continue;
       const snapP: PlayerSnap = {
         id: p.id,
-        x: r3(p.pos.x), y: r3(p.pos.y), z: r3(p.pos.z),
-        vx: r3(p.vel.x), vy: r3(p.vel.y), vz: r3(p.pos ? p.vel.z : 0),
-        yaw: r3(p.yaw), pitch: r3(p.pitch),
+        x: q3(p.pos.x), y: q3(p.pos.y), z: q3(p.pos.z),
+        vx: q3(p.vel.x), vy: q3(p.vel.y), vz: q3(p.vel.z),
+        yaw: q3(p.yaw), pitch: q3(p.pitch),
         hp: Math.max(0, Math.round(p.hp)),
         alive: p.alive,
         weapon: p.weapon,
@@ -1645,7 +1658,7 @@ export class Room {
         reloading: !!p.reloadWeapon,
         spawnId: p.spawnId,
         lastProcessedInputSeq: p.isBot ? 0 : p.authority.lastProcessedSeq,
-        stamina: r3(p.stamina),
+        stamina: q3(p.stamina),
         staminaLocked: p.staminaLocked,
         gear: packGearState({
           helmet: p.helmet > 0,
@@ -1661,11 +1674,11 @@ export class Room {
       players.push(snapP);
     }
     const snap: Snapshot = {
-      t: r3(t),
+      t: q3(t),
       serverTick: this.serverTick,
       roundId: this.loot.getRoundId(),
       players,
-      grenades: this.grenades.map((g) => ({ id: g.id, x: r3(g.pos.x), y: r3(g.pos.y), z: r3(g.pos.z) })),
+      grenades: this.grenades.map((g) => ({ id: g.id, x: q3(g.pos.x), y: q3(g.pos.y), z: q3(g.pos.z) })),
     };
     this.io.to(this.channel).volatile.emit('snap', snap);
   }
@@ -1726,7 +1739,7 @@ export class Room {
 }
 
 /** Xarita spawnlarini tekshirish (dasturchilar uchun). */
-export function validateMapSpawns(world: WorldDefinition = DEFAULT_WORLD): string[] {
+export function validateMapSpawns(world: WorldDefinition): string[] {
   const bad: string[] = [];
   for (const s of world.spawnPoints) {
     if (!isSpawnPointSafe(world, s)) bad.push(`${s.team} (${s.x}, ${s.z})`);

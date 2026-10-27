@@ -1,56 +1,84 @@
-# 🚐 RV Strike — Route 65: RV Valley (3D LAN Multiplayer Shooter)
+# Camper Strike 65 — 3D LAN Multiplayer FPS
 
-**"RV There Yet?"** o'yini uslubidagi quvnoq, karikatura grafikali va boy fizikaga ega **3D LAN (lokal tarmoq) multiplayer shooter** o'yini. Do'stlaringiz bilan bir xil Wi-Fi / LAN tarmog'ida yoki aqlli botlarga qarshi **1-shaxs (FPS)** hamda **3-shaxs (TPS)** ko'rinishida jang qiling!
+**Mabutts Valley · Route 65** o'rmon vodiysida o'tadigan, karikatura uslubidagi **3D LAN (lokal tarmoq) multiplayer shooter**. Do'stlaringiz bilan bir xil Wi-Fi / LAN tarmog'ida yoki botlarga qarshi **1-shaxs (FPS)** va **3-shaxs (TPS)** ko'rinishida jang qiling: klassik jamoaviy jang, hamma-hammaga qarshi yoki toraygan zona ichida oxirgi tirik qolgan g'olib bo'ladigan **Forest Survival** raundlari.
 
-**Texnologiyalar:** `TypeScript` · `Three.js` (WebGL 3D grafika) · `Socket.IO` (real vaqtli tarmoq) · `Express` · `Vite` · `Web Audio API` (protsedural 3D tovushlar)
-
----
-
-## ✨ Asosiy Imkoniyatlar
-
-### 🏕️ 1. "Route 65: RV Valley" 3D Xaritasi va Muhiti
-- **Mabutts Valley va Mt. Yurbuttsk manzarasi:** Quyosh botishi ("Golden Hour") yoritilishi, baland qoyali tog'lar, qarag'ay o'rmonlari, yog'och ko'priklar va shag'al yo'llar.
-- **Lager va RV obyektlari:** 70-yillar uslubidagi Winnebago kemper-furgonlari, `"MABUTTS GAS & COLD BREW"` benzin shoxobchasi, yonib turgan gulxanlar (`Campfire`), piknik stollari va taktik pana joylar.
-
-### 🤠 2. Olti Xil Kulgili 3D Sayohatchi-Kemper Personajlari
-Har bir o'yinchi va bot o'ziga xos baqaloq **"Bean / Scout Camper"** qomatiga, jinsi kombinzonga va 6 xil kolleksion bosh kiyim hamda ko'zoynakka ega:
-1. **Classic RV Trucker:** Baland *Trucker* kepkasi, qora quyosh ko'zoynagi va baroq mo'ylov.
-2. **Wilderness Scout:** Sariq skaut kepkasi, bo'yinda qizil galstuk (*bandana*) va nishonlar taqilgan tasma.
-3. **Propeller Beanie Goofball:** Tepasida **aylanib turadigan 3D parrakli (propeller)** shapka va qalin dumaloq ko'zoynak.
-4. **Texas RV Cowboy:** Keng kovboy shlyapasi, ko'krakda oltin Sherif yulduzi va uzun mo'ylov.
-5. **Backcountry Fisherman:** Baliqchi panama shlyapasi (*Bucket hat*), to'q sariq nimcha va tutab turgan sigaret.
-6. **Mt. Yurbuttsk Winter Camper:** Oq bublikli (*Pom-Pom*) qishki shapka, peshonada chang'i ko'zoynagi va qalin soqol.
-
-### 🔫 3. Silliq 3D Qurollar va Realistik Ballistika Fizikasi
-Barcha qurollar `THREE.ExtrudeGeometry` (3D faskali silliq konturlar) va silindrik geometriya asosida qurilgan:
-- **Avtomat (`Rifle`):** Egilgan "banana" magazin, kollimator (*red-dot*) nishoni, yog'och qundoq va harakatlanuvchi xrom zatvor.
-- **To'pponcha (`Pistol`):** `.44 Magnum` 6-otishli xrom revolver — aylanuvchi baraban va yong'oq yog'ochli dasta.
-- **Drobovik (`Shotgun`):** 12-kalibrli pompali ov miltig'i — yon tomonida qizil patronlar va tortiladigan yog'och pompa.
-- **Snayper (`Sniper`):** Taktik ov miltig'i — zumrad linzali katta optik pritsel, yig'ilgan *bipod* oyoqchalari va harakatlanuvchi zatvor dastasi.
-- **3D Ananas-Granata (`Grenade`):** Bo'rtma segmentli korpus, xavfsizlik dastasi va halqaga ega parchalovchi granata.
-
-**Qurol fizikasi:**
-- **3D Gilzalar (`ShellCasing`):** O'q uzilganda quroldan jez yoki qizil drobovik gilzalari aylanib otilib chiqadi va yerga urilib sakraydi.
-- **Mexanik harakatlar:** Otganda zatvor, revolver barabani va drobovik pompasi ishlaydi; qayta o'qlaganda (`R`) magazin pastga tushib almashadi.
-- **Ballistik trasserlar va tutun:** Snayper o'qidan havoda bug' chizig'i (`vapor trail`), drobovikdan olovli sochma izlar va stvol uchidan porox tutuni chiqadi.
-- **Prujinali Tepki (`Recoil Recovery`) va Fizik Turtki (`Knockback`):** Otish to'xtaganda kamera pritseli silliq joyiga qaytadi; og'ir qurol yoki granata tekkanda raqibni fizik zarba bilan orqaga uchiradi.
-
-### 💀 4. Qurol Tushishi (`Weapon Drop`) va 6 Xil Kreativ O'lim Animatsiyasi
-- **Qurol qo'ldan tushishi:** O'yinchi o'lgan zahoti qo'lidagi 3D qurol havoga aylanib otilib chiqadi, yerga urilib sakraydi va jasad yonida qoladi.
-- **Kontekstga mos yiqilishlar:**
-  - *Boshga o'q tekkanda (`Headshot`):* Boshi keskin orqaga ketib, tanasi orqaga uchib yiqiladi.
-  - *Granata / Drobovik zarbasida:* Havoga baland otilib, charxpalak (*cartwheel*) bo'lib aylanib tushadi.
-  - *Oddiy jangda:* Oldinga yuztuban (*faceplant*) qulash, `270°` aylanib tiz cho'kib yonboshga yiqilish, chap yonboshga g'ujanak bo'lib qulash yoki oyoqlari shpagat ochilib yiqilish animatsiyalari.
-
-### 🎯 5. 3D Vizual Killchat va Kamera Rejimlari
-- **3D Killchat:** Killchatda ortiqcha yozuvlarsiz, `Three.js` orqali 3D burchak ostida render qilingan qurol tasvirlari va *Headshot* nishoni ko'rinadi.
-- **1-shaxs / 3-shaxs Kamera (`V` tugmasi):** O'yin davomida `V` tugmasini bosib, yelka ustidan ko'rinadigan **3-shaxs (TPS)** va klassik **1-shaxs (FPS)** rejimlari o'rtasida erkin almashish mumkin.
+**Texnologiyalar:** `TypeScript` · `Three.js` (WebGL 3D grafika, GLB modellar) · `Socket.IO` (real vaqtli tarmoq) · `Express` · `Vite` · `Web Audio API` (100% protsedural ovoz)
 
 ---
 
-## 🚀 Ishga Tushirish
+## O'yin rejimlari
 
-**Talab:** [Node.js](https://nodejs.org) `^20.19.0 || >=22.12.0` (`package-lock.json` dagi Vite 8 `engines.node` talabi bo'yicha; Node 18 qo'llab-quvvatlanmaydi).
+| Rejim | Tavsif | Standart limit |
+|---|---|---|
+| `tdm` | Jamoaviy deathmatch (qizil vs ko'k), respawn bilan | 50 ochko |
+| `ffa` | Hamma-hammaga qarshi (Free For All) | 25 o'ldirish |
+| `forest_survival` | Oxirgi tirik qolgan g'olib (last-man-standing) raundlari `forest_square` xaritasida: hamma **qurolsiz** boshlaydi, loot konteynerlaridan qurol/o'q/zirh yig'adi, xavfsiz zona bosqichma-bosqich torayadi (zona tashqarisida **5 ta zarar bosqichi**), halok bo'lganlar kuzatuvchi (spectator) rejimiga o'tadi, raund tugagach yangi raund avtomatik boshlanadi | 1 raund g'olibi |
+
+Forest Survival tafsilotlari:
+- **Loot:** yog'och qutilar, metall shkaflar, asboblar qutilari (`E` bilan ochiladi); ichidan o'qotar qurollar (slot 1–4), o'q-dorilar, **zirh nimcha** va **kaska**, **aptechkalar** (`H`) va granatalar chiqadi.
+- **`minHumans`:** xona sozlamasi — kamida shuncha odam tayyor bo'lmaguncha raund boshlanmaydi (faqat botlar raund boshlamaydi).
+- **Kuzatuvchi rejimi:** halok bo'lgan o'yinchi tirik ishtirokchilarni kuzatadi; raund oxirida g'olib e'lon qilinadi.
+
+## Xaritalar
+
+| Xarita | Tavsif |
+|---|---|
+| `forest_square` (standart) | 256×256 m relyefli (heightfield) o'rmon vodiysi: 6 ta POI (o'rmonchi uyi, kemping uychalari, yog'och ombori, servis stansiyasi, lager, qoyadagi kuzatuv posti), yo'l tarmog'i, ~565 ta to'qnashuvli daraxt, toshlar, butalar va o't qoplami |
+| `forest_sample` | Kichik o'rmon namunasi (bitta uycha, test/preview) |
+| `forest_assets_preview` | Barcha GLB assetlarni ko'rib chiqish uchun ko'rgazma xaritasi |
+
+> Eski "Dust Arena" xaritasi o'yindan va kod bazasidan butunlay olib tashlangan (`src/shared/map.ts`, tekis `flat` relyef turi va eski AABB harakat funksiyalari o'chirilgan); barcha xaritalar heightfield relyefli.
+
+Dunyo `publicLayoutSeed` dan **deterministik** yaratiladi: server va klient bir xil relyef, binolar, kollayderlar va spawn nuqtalarini hisoblaydi; `gameplayHash` xonaga ulanishda solishtiriladi (mos kelmasa klient qabul qilinmaydi).
+
+## Botlar
+
+- Forest Survival: 0–8 bot (standart 3); klassik rejimlar (`tdm`/`ffa`): 0–16 bot (standart 4).
+- Chat buyruqlari: `/addbot` — bot qo'shish, `/removebot` (yoki `/kickbot`) — bitta botni olib tashlash; pauza menyusida ham tugmalar bor.
+- Botlar A* navigatsiya to'ri bilan yuradi, binolar ichiga kiradi va loot rejimida **o'zi konteyner ochib qurol yig'adi** (loot AI), zona torayganda markazga intiladi.
+
+## Qurollar va jang
+
+| Slot | Qurol | Izoh |
+|---|---|---|
+| `1` | Avtomat (`rifle`) | 30 o'qli magazin, tez otish |
+| `2` | To'pponcha (`pistol`) | 12 o'q |
+| `3` | Drobovik (`shotgun`) | sochma, yaqin masofa |
+| `4` | Snayper (`sniper`) | `RMB` optik pritsel, 85 zarar |
+| `5` | Jangovar pichoq (`knife`) | **har doim mavjud**, o'q talab qilmaydi; orqadan zarba ×2.2 (backstab) |
+| `G` | Granata | har hayotda cheklangan soni, loot rejimida konteynerlardan |
+
+- Loot rejimida (`forest_survival`) o'qotar qurollar faqat konteynerlardan topiladi; klassik rejimlarda to'liq arsenal bilan spawn bo'linadi.
+- Zarar zonalari: **bosh / tana / oyoq** (har qurolda o'z koeffitsiyenti); zirh nimcha va kaska zararning bir qismini yutadi.
+
+## Boshqaruv tugmalari
+
+| Tugma | Amal |
+|---|---|
+| `W` `A` `S` `D` | Harakatlanish |
+| `Sichqoncha` | Atrofga qarash / nishonga olish |
+| `Chap tugma (LMB)` | O'q uzish / pichoq bilan urish |
+| `O'ng tugma (RMB)` | Snayper optik pritseli (zoom) |
+| `V` | 1-shaxs / 3-shaxs kamerasini almashtirish |
+| `Space` | Sakrash |
+| `Shift` | Sprint (chidamlilik — stamina bilan cheklangan) |
+| `R` | Qayta o'qlash |
+| `1–5`, `G'ildirak`, `Q` | Qurol almashtirish (`Q` — oldingi qurol) |
+| `0` | Qurolni yig'ishtirish (holster; loot rejimida) |
+| `E` | Konteynerni ochish / yerdagi buyumni olish |
+| `H` | Aptechka ishlatish |
+| `G` | Granata uloqtirish |
+| `Tab` | Hisob jadvali (scoreboard) |
+| `N` | Mini-xarita: radar ↔ butun xarita |
+| `Enter` yoki `T` | Chat yozish |
+| `M` | Jamoani almashtirish (`tdm` rejimida) |
+| `Esc` | Pauza va sozlamalar menyusi |
+
+---
+
+## Ishga tushirish
+
+**Talab:** [Node.js](https://nodejs.org) `^20.19.0 || >=22.12.0` (`package.json` → `engines`; Vite 8 talabi, Node 18 qo'llab-quvvatlanmaydi).
 
 ```bash
 npm install      # paketlarni o'rnatish (birinchi marta)
@@ -69,7 +97,7 @@ Lokal tarmoqda:    http://192.168.0.8:3000
 
 > **Windows Firewall eslatmasi:** Birinchi marta ishga tushirganda Windows "Node.js" uchun tarmoq ruxsatini so'rasa, **Private networks** katakchasini belgilab ruxsat bering.
 
-### 🛠️ Dasturlash (Dev) Rejimi
+### Dasturlash (Dev) rejimi
 
 ```bash
 npm run dev
@@ -77,78 +105,91 @@ npm run dev
 
 Express/Socket.IO serveri (`http://localhost:3000`) va Vite HMR dev serveri (`http://localhost:5173`) bir vaqtda ishga tushadi.
 
-```bash
-npm run typecheck   # TypeScript turlarini tekshirish
-npm run build       # Production uchun dist/ papkasiga yig'ish
-```
+### npm skriptlari
 
----
-
-## 🎮 Boshqaruv Tugmalari
-
-| Tugma | Amal |
+| Skript | Vazifa |
 |---|---|
-| `W` `A` `S` `D` | Harakatlanish |
-| `Sichqoncha` | Atrofga qarash / Nishonga olish |
-| `Chap tugma (LMB)` | O'q uzish |
-| `O'ng tugma (RMB)` | Snayper optik pritseli (`Zoom`) |
-| `V` | **3-shaxs / 1-shaxs kamerasini almashtirish** |
-| `Space` | Sakrash |
-| `Shift` | Sprint (oldinga tez yugurish; yon va orqaga yurish sekinroq) |
-| `R` | Qayta o'qlash (`Reload`) |
-| `1–4`, `G'ildirak`, `Q` | Qurol almashtirish (`Q` — oldingi qurol) |
-| `G` | Granata uloqtirish |
-| `Tab` | Hisob jadvali (`Scoreboard`) |
-| `Enter` yoki `T` | Chat yozish |
-| `M` | Jamoani almashtirish (`TDM` rejimida) |
-| `Esc` | Pauza va sozlamalar menyusi |
+| `npm run dev` | Server (`tsx watch`) + Vite dev server birga |
+| `npm run build` | Klientni `dist/` ga production build qilish |
+| `npm start` | Build + serverni ishga tushirish |
+| `npm run serve` | Faqat serverni ishga tushirish (tayyor `dist/` bilan) |
+| `npm run typecheck` | TypeScript turlarini tekshirish (`tsc --noEmit`) |
+| `npm test` | Birlik/integratsiya testlari (`tsx --test`, shared/server/client) |
+| `npm run test:perf` | Server tick va dunyo generatsiyasi performans testlari |
+| `npm run validate:assets` | `public/models` dagi GLB assetlarni manifestlarga qarshi tekshirish (`tools/`) |
 
-**Chat buyruqlari:**
-- `/addbot` — xonaga yangi bot qo'shish
-- `/removebot` (yoki `/kickbot`) — bitta botni olib tashlash
+Brauzer orqali o'tkaziladigan QA harnesslari (`scripts/qa-stage*.mjs`) haqida — `scripts/README.md`.
 
 ---
 
-## 📂 Loyiha Tuzilishi
+## Arxitektura
+
+- **Server-avtoritativ harakat:** klient o'z harakatini darhol bashorat qiladi (client prediction), server esa kirish buyruqlarini (`seq` bilan) qayta simulyatsiya qilib tasdiqlaydi; farq bo'lsa klient serverga moslashadi (reconciliation). Tezlik/`dt` chegaralari server tomonida tekshiriladi (anti-cheat).
+- **Avtoritativ jang, loot va survival:** o'q uzish (raycast + bosh/tana/oyoq xitbokslari), zarar, zirh, granata portlashi, konteyner ochish/buyum olish (poyga holatlari — race-condition — serverda hal qilinadi), raund holati va zona torayishi faqat serverda hisoblanadi.
+- **Tarmoq:** server `30 Hz` da snapshot yuboradi; klient boshqa o'yinchilar va granatalarni `100 ms` bufer bilan silliq interpolyatsiya qiladi.
+- **Deterministik dunyo:** `src/shared` dagi dunyo generatori server va klientda bir xil ishlaydi (`publicLayoutSeed` → relyef, POI'lar, kollayderlar, spawnlar, `gameplayHash`); loot tarkibi esa faqat serverdagi maxfiy seed'dan yaratiladi.
+- **Grafika:** 55 ta GLB model (`public/models`): binolar 8, personaj 1 (skinned "Camper Buddy" — yuklanmasa protsedural zaxira model), o'rmon 7, o't/gullar 17, interyer 6, loot 3, tashqi muhit 8, qurollar 5. Instanced rendering, kuchsiz GPU'lar uchun **adaptiv sifat** (FPS pasaysa sifat avtomatik tushadi).
+- **Ovoz:** barcha tovushlar (otishma, qadamlar, zarba, portlash, UI) Web Audio API orqali **protsedural** yaratiladi — repoda birorta audio fayl yo'q.
+
+---
+
+## Loyiha tuzilishi
 
 ```text
 src/
-  shared/                  # Klient va server uchun umumiy modullar
-    constants.ts           # O'yin konstantalari (tezlik, fizika, vaqt)
-    map.ts                 # "Route 65: RV Valley" xaritasi kolliziyalari va spawn nuqtalari
-    math.ts                # Vektor va matematik funksiyalar
-    physics.ts             # AABB kolliziya, raycast, xitbokslar va granata fizikasi
-    protocol.ts            # Socket.IO tarmoq xabarlari interfeyslari
-    weapons.ts             # Qurollar xususiyatlari (zarar, tezlik, magazin, tepki)
-  server/                  # Node.js avtoritativ o'yin serveri
-    index.ts               # Express + Socket.IO server va LAN IP aniqlash
-    lobby.ts               # Xonalar ro'yxati va boshqaruvi
-    room.ts                # O'yin sikli (30 Hz), zarar, fizik knockback, o'lim, match
-    bot.ts                 # Muvozanatlangan Bot AI (ko'rish, nishon, reaksiya, harakat)
-    navgraph.ts            # Botlar uchun A* navigatsiya grafigi
-  client/                  # Three.js brauzer klienti
-    main.ts                # Asosiy menyu va Lobby interfeysi
-    settings.ts            # Sozlamalarni saqlash (sezgirlik, ovoz, FOV)
-    style.css              # UI, HUD va 3D Killchat dizayni
+  shared/                       # Klient va server uchun umumiy, deterministik modullar
+    constants.ts                # O'yin konstantalari (rejimlar, tick rate, HP, fizika, vaqtlar)
+    math.ts                     # Vektor/burchak matematikasi, kvantlash (q3)
+    physics.ts                  # AABB kollayderlar, raycast, xitbokslar, harakat va granata fizikasi
+    netMovement.ts              # Harakat simulyatsiyasi (server va klient bashorati bir xil), sprint/stamina
+    protocol.ts                 # Socket.IO xabarlari (lobby, snapshot, loot, survival, chat) interfeyslari
+    weapons.ts                  # Qurollar jadvali (zarar, magazin, tepki, pichoq backstab)
+    world.ts                    # WorldDefinition, xaritalar ro'yxati, seeded RNG, gameplayHash va moslik tekshiruvi
+    terrain.ts                  # Heightfield relyef: balandlik namunalari, nishablik, mesh ma'lumotlari
+    forestSquare*.ts            # forest_square xaritasi: relyef, yo'llar, o'simliklar, 36 spawn nuqtasi
+    forestSample.ts             # forest_sample xaritasi va o'rmon generatori yordamchilari
+    forestProps.ts, groundCover.ts, spatialIndex.ts   # Qattiq prop kollayderlar, o't qoplami, fazoviy indeks
+    structures/                 # Modulli binolar: POI maketlari, devor/tom/zina manifestlari, layout builder
+    outdoor/                    # Tashqi muhit obyektlari (belgi ustunlari, gulxan, bochka...) joylashuvi va kollayderlari
+    loot/                       # Loot katalogi (qurol, o'q, zirh, kaska, aptechka), kontraktlar, LOS tekshiruvi
+    survival/                   # Forest Survival: konfiguratsiya, raund holat mashinasi, zona torayishi
+    __tests__/, __perf__/       # Birlik testlari va performans testlari (tsx --test)
+  server/                       # Node.js avtoritativ o'yin serveri
+    index.ts                    # Express + Socket.IO server, dist/ ni tarqatish, LAN IP aniqlash
+    lobby.ts                    # Xonalar ro'yxati, xona yaratish parametrlari (rejim, xarita, botlar, limitlar)
+    room.ts                     # O'yin sikli (30 Hz): harakat tasdiqlash, jang, zarar, o'lim, match holati
+    movementAuthority.ts        # Kirish buyruqlari navbati, dt/tezlik chegaralari, qayta sinxronlash
+    bot.ts, botLocalPath.ts     # Bot AI (ko'rish, nishon, otish, loot AI) va mahalliy yo'l topish
+    navgraph.ts, minHeap.ts     # Botlar uchun yurish to'ri va A* yo'l topish
+    combat/                     # Granata partiyasi va qurol almashtirish vaqtini server tomonida tekshirish
+    loot/                       # Konteyner/buyum generatori (maxfiy seed) va xona loot avtoriteti
+    survival/                   # Forest Survival raund kontrolleri (kutish → sanoq → o'yin → yakun)
+  client/                       # Three.js brauzer klienti
+    main.ts                     # Asosiy menyu, lobby, xona yaratish/ulanish, assetlarni oldindan yuklash
+    settings.ts                 # Sozlamalar (ism, sezgirlik, ovoz, FOV, sifat) — localStorage
+    style.css, menu/            # UI/HUD uslublari va kunduzgi kemping menyusi vizuallari
     game/
-      Game.ts              # Asosiy o'yin sikli, 1P/3P kamera, tarmoq interpolyatsiyasi
-      World.ts             # 3D RV Valley dunyosi, tog'lar, kemperlar, daraxtlar
-      Stickman.ts          # 6 xil "RV There Yet?" 3D kemper modellari va 6 xil o'lim animatsiyasi
-      GunModels.ts         # 3D faskali qurol modellari va 3D WebGL ikonka generatori
-      ViewModel.ts         # 1-shaxs qo'l va mexanik qurol animatsiyalari
-      Effects.ts           # 3D gilzalar, tushgan qurollar fizikasi, trasserlar, qon va portlash
-      Hud.ts               # HUD, 3D Killchat, hisob jadvali va pritsel
-      Audio.ts             # Web Audio API orqali protsedural 3D ovoz effektlari
-      Textures.ts          # Protsedural Canvas teksturalari
-      Input.ts             # Klaviatura va Pointer Lock boshqaruvi
-      LocalPlayer.ts       # Klient tomonidagi harakat va qurol taymerlari
+      Game.ts                   # Asosiy o'yin sikli, kamera (1P/3P), tarmoq interpolyatsiyasi, kirish qayta ishlash
+      LocalPlayer.ts            # Lokal o'yinchi: harakat bashorati, qurol taymerlari
+      ClientPrediction.ts       # Server bilan solishtirish (reconciliation) va silliq tuzatish
+      World.ts                  # Dunyo sahnasi: relyef, binolar, o'rmon, obyektlar, kollayderlarni yig'ish
+      ForestRenderer.ts, forestSquareSceneHelpers.ts, GroundCoverRenderer.ts, BoundaryFence.ts
+                                # O'rmon, o't qoplami va xarita chegarasi render qilish
+      Stickman.ts, ViewModel.ts # Boshqa o'yinchilar modeli (Camper Buddy / zaxira) va 1-shaxs qo'l-qurol
+      GunModels.ts, WeaponAssetRegistry.ts   # GLB qurol modellari, protsedural zaxira va 3D ikonkalar
+      Effects.ts, Textures.ts   # Gilzalar, trasserlar, portlash, qon; protsedural canvas teksturalar
+      Hud.ts, MiniMap.ts        # HUD, killfeed, hisob jadvali, pritsel; radar / butun xarita
+      Audio.ts, surface.ts      # Protsedural 3D ovozlar, yuza turiga qarab qadam tovushi
+      Input.ts                  # Klaviatura va Pointer Lock boshqaruvi
+      animation/, character/    # Camper Buddy skinned personaj: animator, lokomotsiya, qurol va jihoz biriktirish
+      buildings/, interiors/, outdoor/, containers/, grass/, terrain/
+                                # GLB asset registrlari va instanced renderlar (binolar, mebel, tashqi obyektlar,
+                                # loot konteynerlari, 17 o't varianti, relyef materiali)
+      loot/, survival/          # Loot UI (konteyner, inventar, yerdagi buyumlar) va survival UI (zona devori, kuzatuvchi)
+      debug/                    # DEV-only kolliziya debug overlay (F9)
+public/
+  models/                       # 55 ta GLB: buildings/ characters/ forest/ grass/ interior/ loot/ outdoor/ weapons/
+  ui/menu/                      # Menyu rasmlari
+scripts/                        # Brauzer QA harnesslari, benchmark, asset yordamchilari (scripts/README.md)
+tools/                          # GLB asset validatorlari (npm run validate:assets) va ularning manifestlari
 ```
-
----
-
-## ⚙️ Tarmoq va Fizika Arxitekturasi
-
-- **Klient harakati:** O'yinchining yurishi va sakrashi klientda darhol hisoblanadi (LAN tarmog'ida kechikishsiz silliq boshqaruv).
-- **Avtoritativ jang:** O'q uzish (`raycast` + bosh/tana xitbokslari), zarar hisoblash, fizik zarba turtkisi (`knockback`), granata portlashi va o'lim to'liq server tomonidan tekshiriladi.
-- **Silliq interpolyatsiya:** Server `30 Hz` chastotada `Snapshot` yuboradi; klient boshqa o'yinchilar va granatalarni `100 ms` bufer bilan silliq interpolyatsiya qiladi.
-- **100% Mustaqil (Zero External Assets):** Barcha 3D modellar, teksturalar va tovush effektlari kod orqali protsedural tarzda yaratiladi — hech qanday tashqi `.glb` yoki `.mp3` fayllar talab qilinmaydi.

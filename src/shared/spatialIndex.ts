@@ -1,6 +1,5 @@
-import type { Box } from './map';
 import type { Vec3 } from './math';
-import type { ColliderBox, WorldDefinition } from './world';
+import type { Box, ColliderBox, WorldDefinition } from './world';
 
 export interface SpatialGridOptions {
   cellSize?: number;

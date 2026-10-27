@@ -13,6 +13,7 @@ import type { Vec3 } from '../shared/math';
 import { collidesAtWorld } from '../shared/physics';
 import { getWorldSpatialIndex } from '../shared/spatialIndex';
 import { sampleTerrainHeight, type WorldDefinition } from '../shared/world';
+import { MinHeap } from './minHeap';
 
 export const LOCAL_PATH_CELL_M = 0.8;
 /** Mahalliy yo'l qamrovi (markazdan katak soni): 16 × 0.8 = 12.8 m. */
@@ -20,54 +21,6 @@ const RADIUS_CELLS = 16;
 const MAX_DROP_M = 1.2;
 const CLEAR_R = PLAYER_RADIUS * 0.85;
 const MAX_EXPANSIONS = 2500;
-
-class MinHeap {
-  private f: number[] = [];
-  private n: number[] = [];
-  get size(): number {
-    return this.n.length;
-  }
-  push(node: number, score: number): void {
-    this.f.push(score);
-    this.n.push(node);
-    let i = this.n.length - 1;
-    while (i > 0) {
-      const p = (i - 1) >> 1;
-      if (this.f[p]! <= this.f[i]!) break;
-      this.swap(i, p);
-      i = p;
-    }
-  }
-  pop(): number {
-    const top = this.n[0]!;
-    const lastF = this.f.pop()!;
-    const lastN = this.n.pop()!;
-    if (this.n.length > 0) {
-      this.f[0] = lastF;
-      this.n[0] = lastN;
-      let i = 0;
-      for (;;) {
-        const l = i * 2 + 1;
-        const r = l + 1;
-        let m = i;
-        if (l < this.n.length && this.f[l]! < this.f[m]!) m = l;
-        if (r < this.n.length && this.f[r]! < this.f[m]!) m = r;
-        if (m === i) break;
-        this.swap(i, m);
-        i = m;
-      }
-    }
-    return top;
-  }
-  private swap(a: number, b: number): void {
-    const tf = this.f[a]!;
-    this.f[a] = this.f[b]!;
-    this.f[b] = tf;
-    const tn = this.n[a]!;
-    this.n[a] = this.n[b]!;
-    this.n[b] = tn;
-  }
-}
 
 /** (x,z) ustunidagi turish mumkin bo'lgan balandliklar: terrain va shu ustundagi kollayder tepalari (refY ± 3 m). */
 export function standingHeights(world: WorldDefinition, x: number, z: number, refY: number): number[] {

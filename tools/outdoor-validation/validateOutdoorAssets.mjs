@@ -3,8 +3,8 @@
  * BOSQICH 08A — OUTDOOR-ASSET-01 Binary GLB & Manifest QA Validator
  *
  * Inspects all 8 new outdoor GLB assets in `public/models/outdoor/` against
- * `docs/stage08a/outdoor_asset_manifest.json` and verifies the full 36-GLB
- * workspace inventory across:
+ * `tools/outdoor-validation/outdoor_asset_manifest.json` (git tarixidan tiklangan
+ * OUTDOOR-ASSET-01 manifesti) and verifies the stage-08A GLB inventory across:
  *   - public/models/outdoor/   (8 GLB — OUTDOOR-ASSET-01)
  *   - public/models/forest/    (7 GLB — FOREST-ASSET-01)
  *   - public/models/weapons/   (4 GLB — WEAPON-ASSET-01)
@@ -29,7 +29,11 @@
  *   - Zero embedded cameras, lights, animations, skins, or external textures
  *
  * Generates:
- *   docs/stage08a/assets_qa.json
+ *   tools/outdoor-validation/out/assets_qa.json  (git-ignored QA report)
+ *
+ * Eslatma: keyingi bosqichlarda qo'shilgan GLB'lar (grass/, characters/, knife.glb)
+ * `extraWorkspaceGlbs` bo'limida faqat hisobga olinadi — ular bu validatorning
+ * o'tish sharti emas.
  */
 
 import fs from 'node:fs';
@@ -651,7 +655,7 @@ function validatePreviousInventory() {
 }
 
 function main() {
-  const manifestPath = path.join(ROOT_DIR, 'docs/stage08a/outdoor_asset_manifest.json');
+  const manifestPath = path.join(__dirname, 'outdoor_asset_manifest.json');
   const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 
   const errors = [];
@@ -867,6 +871,18 @@ function main() {
   }
 
   const totalWorkspaceGlbs = inventoryReport.verifiedExistingCount + modelReports.length;
+  // Stage 08A dan keyin qo'shilgan GLB'lar (faqat ma'lumot uchun; o'tish sharti emas)
+  const stage08aKnown = new Set([
+    ...Object.entries(PREVIOUS_GLB_INVENTORY).flatMap(([cat, files]) => files.map((f) => `${cat}/${f}`)),
+    ...modelReports.map((m) => `outdoor/${m.fileName}`),
+  ]);
+  const modelsRoot = path.join(ROOT_DIR, 'public/models');
+  const allWorkspaceGlbs = fs
+    .readdirSync(modelsRoot, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .flatMap((d) => fs.readdirSync(path.join(modelsRoot, d.name)).filter((f) => f.endsWith('.glb')).map((f) => `${d.name}/${f}`))
+    .sort();
+  const extraWorkspaceGlbs = allWorkspaceGlbs.filter((f) => !stage08aKnown.has(f));
   const allPassed =
     errors.length === 0 &&
     modelReports.length === 8 &&
@@ -879,7 +895,7 @@ function main() {
     assetPack: manifest.assetPack,
     generatedAt: new Date().toISOString(),
     validatorScript: 'tools/outdoor-validation/validateOutdoorAssets.mjs',
-    manifestPath: 'docs/stage08a/outdoor_asset_manifest.json',
+    manifestPath: 'tools/outdoor-validation/outdoor_asset_manifest.json',
     allPassed,
     summary: {
       outdoorModelsVerified: modelReports.length,
@@ -892,6 +908,7 @@ function main() {
       totalOutdoorAnchorNodes: totalAnchorNodes,
       previousGlbCount: inventoryReport.verifiedExistingCount,
       totalWorkspaceGlbCount: totalWorkspaceGlbs,
+      actualWorkspaceGlbCount: allWorkspaceGlbs.length,
       zeroCamerasLightsAnimationsSkins: modelReports.every((m) => m.noCamerasLightsAnimationsSkins),
       allVertexColorsPresent: modelReports.every((m) => m.vertexAttributes.valid),
     },
@@ -901,11 +918,13 @@ function main() {
       previousExisting: inventoryReport,
       outdoorStage08aCount: modelReports.length,
       totalGlbFiles: totalWorkspaceGlbs,
+      actualGlbFiles: allWorkspaceGlbs.length,
+      extraWorkspaceGlbs,
     },
     errors,
   };
 
-  const outPath = path.join(ROOT_DIR, 'docs/stage08a/assets_qa.json');
+  const outPath = path.join(__dirname, 'out', 'assets_qa.json');
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, JSON.stringify(qaReport, null, 2) + '\n', 'utf8');
 
@@ -916,6 +935,7 @@ function main() {
   console.log(
     `[Stage 08A QA] Workspace GLB inventory: ${inventoryReport.verifiedExistingCount} existing + ${modelReports.length} outdoor = ${totalWorkspaceGlbs} total GLB files.`
   );
+  console.log(`[Stage 08A QA] Stage-08A dan keyin qo'shilgan GLB'lar: ${extraWorkspaceGlbs.length} ta (jami public/models: ${allWorkspaceGlbs.length}).`);
   console.log(`[Stage 08A QA] Wrote QA report to: ${outPath}`);
   console.log(`[Stage 08A QA] allPassed = ${allPassed}`);
 

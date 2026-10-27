@@ -40,9 +40,9 @@ import {
 } from '../world';
 
 describe('BOSQICH 04B — forest_square (256×256 m, 6 POI, Multi-Biome Forest & Navigation QA)', () => {
-  it('1. forest_square haqiqiy 256×256 dunyo (Dust Arena emas!)', () => {
+  it('1. forest_square haqiqiy 256×256 dunyo (kichik forest_sample emas!)', () => {
     const world = createWorldDefinition({ mapId: 'forest_square', publicLayoutSeed: 6501 });
-    const dustWorld = createWorldDefinition({ mapId: 'dust_arena', publicLayoutSeed: 6501 });
+    const sampleWorld = createWorldDefinition({ mapId: 'forest_sample', publicLayoutSeed: 6501 });
 
     assert.equal(world.mapId, 'forest_square');
     assert.equal(FOREST_SQUARE_SIZE, 256);
@@ -65,9 +65,9 @@ describe('BOSQICH 04B — forest_square (256×256 m, 6 POI, Multi-Biome Forest &
       assert.equal(world.terrain.heights.length, 129 * 129);
     }
 
-    // Fundamentally distinct from dust_arena
-    assert.notEqual(world.gameplayHash, dustWorld.gameplayHash);
-    assert.notEqual(world.colliders.length, dustWorld.colliders.length);
+    // Fundamentally distinct from the small forest_sample world
+    assert.notEqual(world.gameplayHash, sampleWorld.gameplayHash);
+    assert.notEqual(world.colliders.length, sampleWorld.colliders.length);
     assert.ok(
       world.colliders.length > 1000,
       `forest_square colliderlar soni 1000 dan ko'p bo'lishi shart (actual=${world.colliders.length})`,
@@ -76,7 +76,7 @@ describe('BOSQICH 04B — forest_square (256×256 m, 6 POI, Multi-Biome Forest &
     // World compatibility handshake check
     const meta = extractWorldMeta(world);
     assert.equal(validateWorldCompatibility(meta, meta).ok, true);
-    assert.equal(validateWorldCompatibility(meta, extractWorldMeta(dustWorld)).ok, false);
+    assert.equal(validateWorldCompatibility(meta, extractWorldMeta(sampleWorld)).ok, false);
   });
 
   it('2. Seed determinizmi va 5+ xil seed barqarorligi', () => {

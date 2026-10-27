@@ -5,3 +5,11 @@ dist
 .DS_Store
 Thumbs.db
 /.claude
+docs/**/*.png
+docs/**/*.jpg
+docs/**/*.webm
+docs/**/*.mp4
+docs/**/qa_shots/
+docs/**/qa_videos/
+docs/**/trial/
+tools/**/out/
