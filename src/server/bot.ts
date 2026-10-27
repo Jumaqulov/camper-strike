@@ -10,12 +10,12 @@ import {
   type PublicLootItem,
 } from '../shared/loot';
 import { sampleTerrainHeight } from '../shared/world';
-import { WEAPONS, WEAPON_SLOTS, type WeaponId } from '../shared/weapons';
+import { WEAPONS, WEAPON_SLOTS, isMeleeWeapon, type WeaponId } from '../shared/weapons';
 import { findLocalPath, standingHeights } from './botLocalPath';
 import type { Room, ServerPlayer } from './room';
 
 /** Bot uchun qurol afzalligi (loot rejimida eng yaxshisini qo'lga oladi). */
-const BOT_WEAPON_PREFERENCE: WeaponId[] = ['rifle', 'sniper', 'shotgun', 'pistol'];
+const BOT_WEAPON_PREFERENCE: WeaponId[] = ['rifle', 'sniper', 'shotgun', 'pistol', 'knife'];
 /** Loot buyumlari ustuvorligi (konteyner ichidan olish tartibi). */
 const LOOT_KIND_PRIORITY: Record<PublicLootItem['kind'], number> = {
   weapon: 0,
@@ -281,7 +281,8 @@ export class BotBrain {
     if (!inv) return 0;
     const w = me.weapon;
     if (!w || inv.ownedWeapons.length === 0) return 2;
-    const ammoTotal = me.ammo[w].mag + me.ammo[w].reserve;
+    // Pichoq bilan ham o'qotar qurol shoshilinch kerak
+    const ammoTotal = isMeleeWeapon(w) ? 0 : me.ammo[w].mag + me.ammo[w].reserve;
     if (ammoTotal <= 0) return 2;
     if (
       inv.armor <= 0 ||
@@ -328,7 +329,7 @@ export class BotBrain {
     if (me.reloadWeapon) return;
     for (const w of BOT_WEAPON_PREFERENCE) {
       if (!this.room.loot.canPlayerUseWeapon(me.id, w)) continue;
-      if (me.ammo[w].mag + me.ammo[w].reserve <= 0) continue;
+      if (!isMeleeWeapon(w) && me.ammo[w].mag + me.ammo[w].reserve <= 0) continue;
       if (me.weapon !== w) {
         me.weapon = w;
         this.room.loot.syncPlayerFromServerPlayer(me.id, me);
@@ -587,7 +588,8 @@ export class BotBrain {
     const def = WEAPONS[activeWeapon];
     const speed = RUN_SPEED * def.speedMul;
     const lootMode = this.room.lootEnabled;
-    const canFight = !!me.weapon && me.ammo[me.weapon].mag + me.ammo[me.weapon].reserve > 0;
+    const meleeNow = isMeleeWeapon(me.weapon);
+    const canFight = !!me.weapon && (meleeNow || me.ammo[me.weapon].mag + me.ammo[me.weapon].reserve > 0);
     const zt = lootMode ? this.zoneTarget() : null;
     // Zona chetiga 2 m qolganda ham ichkariga yo'l olamiz
     const outsideZone = !!zt && !this.insideCircle(me.pos, zt, 2);
@@ -615,7 +617,9 @@ export class BotBrain {
       const roughErr = Math.abs(angleDiff(me.yaw, yaw));
       const d = vdist(me.pos, tgt.pos);
       const tol = Math.max(0.05, 0.6 / Math.max(d, 1)) + (1 - this.skill) * 0.07;
-      if (t >= this.reactionUntil && t >= this.nextFireAt && err < tol + 0.06 && roughErr < 0.35) {
+      // Pichoq faqat 1.6 m ichida tegadi
+      const inMeleeReach = !meleeNow || d < 1.65;
+      if (inMeleeReach && t >= this.reactionUntil && t >= this.nextFireAt && err < tol + 0.06 && roughErr < 0.35) {
         const extraSpread = 0.055 + (1 - this.skill) * 0.065;
         if (this.room.botFire(me, extraSpread)) {
           let extra: number;
@@ -643,11 +647,19 @@ export class BotBrain {
         this.strafeDir = Math.random() < 0.5 ? -1 : 1;
         this.strafeUntil = t + 0.6 + Math.random() * 1.2;
       }
-      if (activeWeapon !== 'sniper') {
+      if (activeWeapon !== 'sniper' && !meleeNow) {
         wishX = -fz * this.strafeDir * speed * 0.48;
         wishZ = fx * this.strafeDir * speed * 0.48;
       }
-      if (activeWeapon === 'shotgun' && d > 7) {
+      if (meleeNow) {
+        // Pichoq bilan nishonga yugurib boramiz (1.2 m gacha), ozgina yon siljish
+        if (d > 1.2) {
+          wishX += fx * speed;
+          wishZ += fz * speed;
+        }
+        wishX += -fz * this.strafeDir * speed * 0.2;
+        wishZ += fx * this.strafeDir * speed * 0.2;
+      } else if (activeWeapon === 'shotgun' && d > 7) {
         wishX += fx * speed * 0.7;
         wishZ += fz * speed * 0.7;
       } else if (d < 4) {
@@ -827,17 +839,16 @@ export class BotBrain {
 
     // --- O'q-dorilar ---
     const ammo = me.ammo[activeWeapon];
-    if (!me.reloadWeapon && me.weapon) {
+    if (!me.reloadWeapon && me.weapon && !meleeNow) {
       if (ammo.mag === 0) {
         if (ammo.reserve > 0) this.room.startReload(me);
         else {
           const alt = WEAPON_SLOTS.find(
             (w) => (!lootMode || this.room.loot.canPlayerUseWeapon(me.id, w)) && me.ammo[w].mag + me.ammo[w].reserve > 0,
           );
-          if (alt) {
-            me.weapon = alt;
-            if (lootMode) this.room.loot.syncPlayerFromServerPlayer(me.id, me);
-          }
+          // O'q tugadi: boshqa o'qotar qurol bo'lmasa — pichoq
+          me.weapon = alt ?? 'knife';
+          if (lootMode) this.room.loot.syncPlayerFromServerPlayer(me.id, me);
         }
       } else if (!visible && ammo.mag < WEAPONS[activeWeapon].magSize * 0.4 && ammo.reserve > 0) {
         this.room.startReload(me);

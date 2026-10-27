@@ -495,6 +495,7 @@ describe('STAGE 07 — Forest Survival Mode, Round Lifecycle, Elimination, Spect
         pistol: { mag: 0, reserve: 0 },
         shotgun: { mag: 6, reserve: 18 },
         sniper: { mag: 0, reserve: 0 },
+        knife: { mag: 0, reserve: 0 },
       },
       grenades: 1,
       medkits: 1,

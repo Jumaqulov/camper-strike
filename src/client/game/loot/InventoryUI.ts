@@ -3,7 +3,7 @@ import {
   MAX_MEDKITS_PER_PLAYER,
   type PlayerInventorySnap,
 } from '../../../shared/loot';
-import { WEAPONS, WEAPON_SLOTS, type WeaponId } from '../../../shared/weapons';
+import { KNIFE, KNIFE_SLOT_KEY, WEAPONS, WEAPON_SLOTS, type WeaponId } from '../../../shared/weapons';
 
 export interface InventoryUICallbacks {
   onSelectWeapon: (weapon: WeaponId | null) => void;
@@ -451,6 +451,13 @@ export class InventoryUI {
     this.stripEl.innerHTML = `
       <div class="s06-inv-weapons">
         ${weaponsHtml}
+        <button type="button" class="s06-inv-slot owned ${s.equippedWeapon === KNIFE ? 'equipped' : ''}" data-weapon="${KNIFE}">
+          <div class="s06-slot-top">
+            <span class="s06-slot-name"><span class="s06-slot-key">${KNIFE_SLOT_KEY}</span> ${escapeHtml(WEAPONS.knife.name)}</span>
+            <span class="s06-slot-state">${s.equippedWeapon === KNIFE ? "Qo'lda" : 'Har doim'}</span>
+          </div>
+          <div class="s06-slot-sub">∞ · yaqin masofa</div>
+        </button>
       </div>
       <div class="s06-inv-divider"></div>
       <div class="s06-inv-utils">

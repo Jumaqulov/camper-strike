@@ -307,6 +307,15 @@ export class AudioSys {
     return { d: entry, dist, k };
   }
 
+  /** Pichoq hilpirashi (havoni kesish): qisqa shovqin "vush". */
+  knifeSwing(pos?: P3): void {
+    const chain = this.shotDest(pos);
+    if (!chain) return;
+    const t = this.ctx!.currentTime;
+    this.noise(chain.d, t, 0.16, 'bandpass', 700, 2600, 1.2, 0.45, 0.03);
+    this.noise(chain.d, t + 0.04, 0.1, 'highpass', 3000, 6000, 0.8, 0.18, 0.02);
+  }
+
   gunshot(w: WeaponId, pos?: P3): void {
     const chain = this.shotDest(pos);
     if (!chain) return;

@@ -70,6 +70,7 @@ function emptyAmmo(): AmmoState {
     pistol: { mag: 0, reserve: 0 },
     shotgun: { mag: 0, reserve: 0 },
     sniper: { mag: 0, reserve: 0 },
+    knife: { mag: 0, reserve: 0 },
   };
 }
 
@@ -79,6 +80,7 @@ function cloneAmmo(ammo: AmmoState): AmmoState {
     pistol: { mag: ammo.pistol.mag, reserve: ammo.pistol.reserve },
     shotgun: { mag: ammo.shotgun.mag, reserve: ammo.shotgun.reserve },
     sniper: { mag: ammo.sniper.mag, reserve: ammo.sniper.reserve },
+    knife: { mag: 0, reserve: 0 },
   };
 }
 
@@ -299,7 +301,7 @@ export class RoomLootAuthority {
       if (this.lootEnabled || inv.ownedWeapons.size === 0) {
         inv.equippedWeapon = null;
       }
-    } else if (inv.ownedWeapons.has(p.weapon)) {
+    } else if (p.weapon === 'knife' || inv.ownedWeapons.has(p.weapon)) {
       inv.equippedWeapon = p.weapon;
     }
     inv.ammo = cloneAmmo(p.ammo);
@@ -350,6 +352,8 @@ export class RoomLootAuthority {
   }
 
   canPlayerUseWeapon(playerId: string, weapon: WeaponId | null): boolean {
+    // Pichoq har doim mavjud (loot buyumi emas, slot egallamaydi)
+    if (weapon === 'knife') return true;
     const inv = this.inventories.get(playerId);
     if (!inv) {
       return !this.lootEnabled && weapon !== null;
@@ -936,7 +940,8 @@ export class RoomLootAuthority {
           MAX_AMMO_RESERVE[w],
           inv.ammo[w].reserve + (item.initialReserve ?? WEAPONS[w].magSize),
         );
-        if (inv.equippedWeapon === null) {
+        if (inv.equippedWeapon === null || inv.equippedWeapon === 'knife') {
+          // Qo'l bo'sh yoki pichoq ushlab turgan bo'lsa — topilgan o'qotar qurol darhol qo'lga olinadi
           inv.equippedWeapon = w;
         }
       } else {
@@ -985,7 +990,8 @@ export class RoomLootAuthority {
     if (!this.lootEnabled) return null;
     const inv = this.inventories.get(playerId);
     if (!inv) return null;
-    const w = equipped && inv.ownedWeapons.has(equipped) ? equipped : [...inv.ownedWeapons][0] ?? null;
+    // Pichoq yerga tushmaydi; pichoq qo'lda bo'lsa egalik qilingan birinchi o'qotar qurol tushadi
+    const w = equipped && equipped !== 'knife' && inv.ownedWeapons.has(equipped) ? equipped : [...inv.ownedWeapons][0] ?? null;
     if (!w) return null;
     const catalogId = getWeaponCatalogId(w);
     const entry = LOOT_CATALOG[catalogId];

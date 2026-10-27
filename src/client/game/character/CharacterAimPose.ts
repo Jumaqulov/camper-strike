@@ -155,6 +155,8 @@ const POSES: Record<WeaponId, PoseSet> = {
   shotgun: { blade: LONG_GUN_BLADE_YAW, right: toQuats(LONG_R), left: toQuats(SHOTGUN_L), leftReload: toQuats(LONG_RELOAD_L) },
   sniper: { blade: LONG_GUN_BLADE_YAW, right: toQuats(LONG_R), left: toQuats(SNIPER_L), leftReload: toQuats(LONG_RELOAD_L) },
   pistol: { blade: PISTOL_BLADE_YAW, right: toQuats(PISTOL_R), left: toQuats(PISTOL_L), leftReload: toQuats(PISTOL_RELOAD_L) },
+  // Pichoq bir qo'lda to'pponcha kabi ushlanadi
+  knife: { blade: PISTOL_BLADE_YAW, right: toQuats(PISTOL_R), left: toQuats(PISTOL_L), leftReload: toQuats(PISTOL_RELOAD_L) },
 };
 
 /** Character-space socket targets the baked poses were solved for (pitch 0); for tests/diagnostics. */

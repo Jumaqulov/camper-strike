@@ -33,6 +33,8 @@ export const WEAPON_GRIP_OFFSETS: Readonly<Record<WeaponId, Readonly<THREE.Vecto
   shotgun: new THREE.Vector3(0, -0.035, 0.1),
   // AWP thumbhole grip behind the trigger guard (z[-0.054, 0.046], y ≥ -0.08)
   sniper: new THREE.Vector3(0, -0.075, 0.09),
+  // Pichoq: GLB origin dastaning markazida (z[-0.05, 0.062]) — qo'l biroz pastroq ushlaydi
+  knife: new THREE.Vector3(0, -0.01, 0.01),
 };
 
 /** Gun-local points where the left palm lands with the baked pose (diagnostics / tests). */
@@ -41,6 +43,7 @@ export const WEAPON_SUPPORT_OFFSETS: Readonly<Record<WeaponId, Readonly<THREE.Ve
   pistol: new THREE.Vector3(-0.025, -0.105, 0.035),
   shotgun: new THREE.Vector3(-0.015, 0, -0.075),
   sniper: new THREE.Vector3(-0.015, -0.06, -0.085),
+  knife: new THREE.Vector3(-0.025, -0.105, 0.035),
 };
 
 export const RECOIL_PITCH_GAIN = 0.26;

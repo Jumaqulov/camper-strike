@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { WEAPON_SLOTS, type WeaponId } from '../../shared/weapons';
+import { ALL_WEAPON_IDS, type WeaponId } from '../../shared/weapons';
 
 export type WeaponLodVariant = '1p' | '3p';
 
@@ -9,6 +9,7 @@ export const WEAPON_GLB_URLS: Record<WeaponId, string> = {
   pistol: '/models/weapons/pistol.glb',
   shotgun: '/models/weapons/shotgun.glb',
   sniper: '/models/weapons/awp.glb',
+  knife: '/models/weapons/knife.glb',
 };
 
 interface WeaponCalibration {
@@ -53,6 +54,15 @@ const CALIBRATION: Record<WeaponId, WeaponCalibration> = {
     // Bolt rotation axis on the AWP receiver centerline
     slidePivot: new THREE.Vector3(0, 0.067, 0.017),
     magPivot: new THREE.Vector3(0, -0.02, -0.115),
+  },
+  knife: {
+    // GLB allaqachon metr birligida, origin dastada, uchi −Z da (0.25 m); harakatlanuvchi qism yo'q
+    scale: 1.0,
+    offset: new THREE.Vector3(0, 0, 0),
+    muzzle: new THREE.Vector3(0, 0.002, -0.25),
+    ejectPort: new THREE.Vector3(0, 0, 0),
+    slidePivot: new THREE.Vector3(0, 0, 0),
+    magPivot: new THREE.Vector3(0, 0, 0),
   },
 };
 
@@ -113,6 +123,12 @@ const stylizedMaterials: Record<string, THREE.MeshStandardMaterial> = {
     roughness: 0.16,
     emissive: '#0c5266',
     emissiveIntensity: 0.45,
+  }),
+  edge_shine: new THREE.MeshStandardMaterial({
+    name: 'stylized_edge_shine',
+    color: '#dfe6ec',
+    metalness: 0.55,
+    roughness: 0.22,
   }),
   sight_dot: new THREE.MeshStandardMaterial({
     name: 'stylized_sight_dot',
@@ -209,6 +225,8 @@ function classifyMeshPart(weapon: WeaponId, mesh: THREE.Mesh): PartBucket {
     case 'sniper':
       if (has(['bolt_handle', 'bolt_knob', 'bolt_shroud', 'bolt'])) return 'slide';
       if (has(['magazine', 'mag', 'mag_base', 'mag_floorplate'])) return 'mag';
+      return 'static';
+    case 'knife':
       return 'static';
   }
 }
@@ -500,7 +518,7 @@ export function preloadWeaponAssets(): Promise<void> {
 
   const loader = new GLTFLoader();
   preloadPromise = Promise.all(
-    WEAPON_SLOTS.map(
+    ALL_WEAPON_IDS.map(
       (weapon) =>
         new Promise<void>((resolve) => {
           if (templateCache.has(weapon)) {
@@ -543,7 +561,7 @@ export function preloadWeaponAssets(): Promise<void> {
 }
 
 export function onWeaponAssetsReady(cb: () => void): () => void {
-  if (templateCache.size === WEAPON_SLOTS.length) {
+  if (templateCache.size === ALL_WEAPON_IDS.length) {
     cb();
     return () => {};
   }
@@ -587,7 +605,7 @@ export function getWeaponAssetDiagnostics(): Record<
   }
 > {
   const out = {} as ReturnType<typeof getWeaponAssetDiagnostics>;
-  for (const w of WEAPON_SLOTS) {
+  for (const w of ALL_WEAPON_IDS) {
     const tpl = templateCache.get(w);
     out[w] = {
       loaded: Boolean(tpl),

@@ -1,6 +1,6 @@
 import type { GameMode, Team } from '../../shared/constants';
 import type { ChatMsg, KillEvent, MatchState, RosterEntry } from '../../shared/protocol';
-import { WEAPONS, WEAPON_SLOTS, type WeaponId } from '../../shared/weapons';
+import { KNIFE, KNIFE_SLOT_KEY, WEAPONS, WEAPON_SLOTS, isMeleeWeapon, type WeaponId } from '../../shared/weapons';
 import { getWeaponIcons3D } from './GunModels';
 import { onWeaponAssetsReady } from './WeaponAssetRegistry';
 
@@ -15,6 +15,7 @@ export const WEAPON_SHORT: Record<WeaponId | 'grenade', string> = {
   pistol: "TO'PPONCHA",
   shotgun: 'DROBOVIK',
   sniper: 'SNAYPER',
+  knife: 'PICHOQ',
   grenade: 'GRANATA',
 };
 
@@ -102,6 +103,12 @@ export const WEAPON_SVG: Record<WeaponId | 'grenade', string> = {
     <rect x="96" y="10.5" width="7" height="6" rx="1" fill="#464f57" stroke="#181c20" stroke-width="1.3"/>
   </svg>`,
 
+  knife: `<svg class="w-svg" viewBox="0 0 96 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 18L30 11V21L6 20Z" fill="#6b4423" stroke="#1a120b" stroke-width="1.5"/>
+    <rect x="29" y="8" width="5" height="16" rx="1" fill="#2b3138" stroke="#1a120b" stroke-width="1.5"/>
+    <path d="M34 11H70L92 16L70 21H34Z" fill="#c3ccd4" stroke="#1a120b" stroke-width="1.5"/>
+    <path d="M38 16H66" stroke="#8a949d" stroke-width="2" stroke-linecap="round"/>
+  </svg>`,
   grenade: `<svg class="w-svg w-svg-grenade" viewBox="0 0 36 32" fill="none" xmlns="http://www.w3.org/2000/svg">
     <!-- Fuse va Dasta (Spoon lever & Pull ring) -->
     <rect x="15" y="3" width="6" height="5" rx="1" fill="#b8c2cc" stroke="#181c20" stroke-width="1.3"/>
@@ -224,25 +231,30 @@ export class Hud {
       $('ammo-mag').classList.remove('low');
       $('ammo-reserve').textContent = '—';
       $('grenades').innerHTML = `${weaponIconHtml('grenade')} <span>GRANATA [G] ×${grenades}</span>`;
-      $('weapon-slots').innerHTML = WEAPON_SLOTS.map((w, i) => {
-        const owned = !ownedWeapons || ownedWeapons.has(w);
-        return `<span class="slot ${owned ? '' : 'locked'}" style="${owned ? '' : 'opacity:0.32;filter:grayscale(1);'}"><b>${i + 1}</b>${weaponIconHtml(w)}</span>`;
-      }).join('');
+      $('weapon-slots').innerHTML = this.slotsHtml(null, ownedWeapons);
       $('reload-hint').classList.add('hidden');
       return;
     }
 
     const def = WEAPONS[weapon];
+    const melee = isMeleeWeapon(weapon);
     $('weapon-name').innerHTML = `${weaponIconHtml(weapon)} <span>${def.name}${reloading ? " — o'qlanmoqda..." : ''}</span>`;
-    $('ammo-mag').textContent = String(mag);
-    $('ammo-mag').classList.toggle('low', mag <= Math.ceil(def.magSize * 0.25));
-    $('ammo-reserve').textContent = String(reserve);
+    $('ammo-mag').textContent = melee ? '∞' : String(mag);
+    $('ammo-mag').classList.toggle('low', !melee && mag <= Math.ceil(def.magSize * 0.25));
+    $('ammo-reserve').textContent = melee ? '—' : String(reserve);
     $('grenades').innerHTML = `${weaponIconHtml('grenade')} <span>GRANATA [G] ×${grenades}</span>`;
-    $('weapon-slots').innerHTML = WEAPON_SLOTS.map((w, i) => {
+    $('weapon-slots').innerHTML = this.slotsHtml(weapon, ownedWeapons);
+    $('reload-hint').classList.toggle('hidden', melee || !(mag === 0 && reserve > 0 && !reloading));
+  }
+
+  /** Qurol slotlari: 1-4 o'qotar (egalik bo'yicha), 5 pichoq (har doim mavjud). */
+  private slotsHtml(active: WeaponId | null, ownedWeapons?: ReadonlySet<WeaponId>): string {
+    const slots = WEAPON_SLOTS.map((w, i) => {
       const owned = !ownedWeapons || ownedWeapons.has(w);
-      return `<span class="slot ${w === weapon ? 'active' : ''} ${owned ? '' : 'locked'}" style="${owned ? '' : 'opacity:0.32;filter:grayscale(1);'}"><b>${i + 1}</b>${weaponIconHtml(w)}</span>`;
-    }).join('');
-    $('reload-hint').classList.toggle('hidden', !(mag === 0 && reserve > 0 && !reloading));
+      return `<span class="slot ${w === active ? 'active' : ''} ${owned ? '' : 'locked'}" style="${owned ? '' : 'opacity:0.32;filter:grayscale(1);'}"><b>${i + 1}</b>${weaponIconHtml(w)}</span>`;
+    });
+    slots.push(`<span class="slot ${active === KNIFE ? 'active' : ''}"><b>${KNIFE_SLOT_KEY}</b>${weaponIconHtml(KNIFE)}</span>`);
+    return slots.join('');
   }
 
   setCrosshair(gapPx: number, visible: boolean): void {

@@ -11,6 +11,8 @@ const HOLD: Record<WeaponId, THREE.Vector3> = {
   pistol: new THREE.Vector3(0.17, -0.125, -0.34),
   shotgun: new THREE.Vector3(0.20, -0.135, -0.37),
   sniper: new THREE.Vector3(0.20, -0.155, -0.38),
+  // Pichoq: pastroq va yaqinroq, biroz o'ngda — teskari ushlash (uchi oldinga)
+  knife: new THREE.Vector3(0.17, -0.135, -0.3),
 };
 
 const watchBandMat = new THREE.MeshStandardMaterial({ color: '#382919', roughness: 0.7 });
@@ -37,6 +39,8 @@ export class ViewModel {
   private reloadT = 0;
   private reloadDur = 0;
   private throwT = 0;
+  /** Pichoq sanchish animatsiyasi vaqti (0 = yo'q). */
+  private stabT = 0;
   private grenade: THREE.Group;
   private unarmed = false;
   private ownedGeometries: THREE.BufferGeometry[] = [];
@@ -139,12 +143,14 @@ export class ViewModel {
 
     // O'ng qo'l: dastadan pastga-orqaga
     const gripR =
-      w === 'pistol'
+      w === 'pistol' || w === 'knife'
         ? new THREE.Vector3(0, -0.045, 0.025)
         : w === 'shotgun'
           ? new THREE.Vector3(0, -0.038, 0.095)
           : new THREE.Vector3(0, -0.048, 0.065);
     buildArm(gripR, gripR.clone().add(new THREE.Vector3(0.08, -0.22, 0.34)), false);
+    // Pichoq bir qo'lda ushlanadi — chap qo'l ko'rinmaydi
+    if (w === 'knife') return;
     // Chap qo'l: old tirsaklagich / pompa qismidan
     const gripL =
       w === 'pistol'
@@ -193,7 +199,11 @@ export class ViewModel {
     this.reloadT = 0;
   }
 
-  fire(recoil: number): void {
+  fire(recoil: number, melee = false): void {
+    if (melee) {
+      this.stabT = 0.001;
+      return;
+    }
     this.kick = Math.min(1.6, this.kick + 0.68 + recoil * 9);
     this.kickRoll = (Math.random() - 0.5) * (0.12 + recoil * 1.8);
     this.actionT = 0.001; // Zatvor / pompa siklini boshlash
@@ -274,6 +284,18 @@ export class ViewModel {
       }
     }
 
+    if (this.stabT > 0) {
+      // Sanchish: oldinga tez siltash (0.32 s), uchi biroz pastga, bilak burilishi bilan
+      this.stabT += dt;
+      const p = Math.min(1, this.stabT / 0.32);
+      const s = Math.sin(p * Math.PI);
+      const lunge = Math.sin(Math.min(1, p * 1.6) * Math.PI);
+      z -= lunge * 0.17;
+      y += s * 0.03;
+      rx -= s * 0.5;
+      rz += s * 0.3;
+      if (p >= 1) this.stabT = 0;
+    }
     if (this.switchT > 0) {
       this.switchT = Math.max(0, this.switchT - dt);
       const k = this.switchT / this.switchDur;

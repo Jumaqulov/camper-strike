@@ -3,7 +3,7 @@ import { clamp, dirFromAngles, spreadDir, type Vec3 } from '../../shared/math';
 import type { MovementState } from '../../shared/netMovement';
 import type { Body } from '../../shared/physics';
 import type { PlayerInputCmd, PlayerSnap, SpawnEvent } from '../../shared/protocol';
-import { emptyAmmo, fullAmmo, WEAPON_SLOTS, WEAPONS, type AmmoState, type WeaponId } from '../../shared/weapons';
+import { emptyAmmo, fullAmmo, isMeleeWeapon, WEAPON_SLOTS, WEAPONS, type AmmoState, type WeaponId } from '../../shared/weapons';
 import { DEFAULT_WORLD, type WorldDefinition } from '../../shared/world';
 import { ClientPrediction, type ReconcileResult } from './ClientPrediction';
 
@@ -253,20 +253,21 @@ export class LocalPlayer {
     return def.spread + this.bloom + moveK * def.moveSpread + air;
   }
 
+  /** Pichoq har doim mavjud; o'qotar qurollar inventar bo'yicha. */
   ownsWeapon(w: WeaponId): boolean {
-    return this.ownedWeapons.has(w);
+    return isMeleeWeapon(w) || this.ownedWeapons.has(w);
   }
 
   canFire(t: number): boolean {
-    if (!this.weapon || !this.ownedWeapons.has(this.weapon)) return false;
+    if (!this.weapon || !this.ownsWeapon(this.weapon)) return false;
     return this.alive && t >= this.switchUntil && this.reloadWeapon === null && t - this.lastShot >= WEAPONS[this.weapon].fireInterval;
   }
 
   /** O'q uzadi va pellet yo'nalishlarini qaytaradi. */
   fire(t: number): Vec3[] {
-    if (!this.weapon || !this.ownedWeapons.has(this.weapon)) return [];
+    if (!this.weapon || !this.ownsWeapon(this.weapon)) return [];
     const def = WEAPONS[this.weapon];
-    this.ammo[this.weapon].mag--;
+    if (!isMeleeWeapon(this.weapon)) this.ammo[this.weapon].mag--;
     this.lastShot = t;
     const spread = this.currentSpread();
     const aim = this.aimDir();
@@ -277,7 +278,8 @@ export class LocalPlayer {
   }
 
   startReload(t: number): boolean {
-    if (!this.alive || this.reloadWeapon || !this.weapon || !this.ownedWeapons.has(this.weapon)) return false;
+    if (!this.alive || this.reloadWeapon || !this.weapon || !this.ownsWeapon(this.weapon)) return false;
+    if (isMeleeWeapon(this.weapon)) return false;
     const def = WEAPONS[this.weapon];
     const a = this.ammo[this.weapon];
     if (a.mag >= def.magSize || a.reserve <= 0) return false;
@@ -304,7 +306,7 @@ export class LocalPlayer {
 
   switchTo(w: WeaponId | null, t: number): boolean {
     if (w === this.weapon || !this.alive) return false;
-    if (w !== null && !this.ownedWeapons.has(w)) return false;
+    if (w !== null && !this.ownsWeapon(w)) return false;
     this.weapon = w;
     this.reloadWeapon = null;
     this.scoped = false;

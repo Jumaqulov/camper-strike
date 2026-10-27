@@ -82,6 +82,8 @@ function getSharedProceduralLootCache(): SharedProceduralLootCache {
     }),
   );
   const ammoStripeMats: Record<WeaponId, THREE.MeshStandardMaterial> = {
+    // Pichoq uchun o'q yo'q — faqat tip to'liqligi uchun (hech qachon chizilmaydi)
+    knife: markShared(new THREE.MeshStandardMaterial({ name: 'loot_ammo_knife_mat', color: '#777777' })),
     rifle: markShared(
       new THREE.MeshStandardMaterial({
         name: 'loot_ammo_rifle_mat',

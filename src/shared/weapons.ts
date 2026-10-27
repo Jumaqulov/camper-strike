@@ -1,11 +1,24 @@
-export type WeaponId = 'rifle' | 'pistol' | 'shotgun' | 'sniper';
+export type WeaponId = 'rifle' | 'pistol' | 'shotgun' | 'sniper' | 'knife';
 export type EquippedWeapon = WeaponId | null;
 
 /** Qurolsiz (bo'sh qo'l) holatdagi harakat tezligi multiplikatori */
 export const UNARMED_SPEED_MUL = 1.0;
 
-/** 1-4 tugmalari tartibi */
+/** 1-4 tugmalari tartibi (o'qotar qurollar; loot/ammo/inventar slotlari shular). */
 export const WEAPON_SLOTS: WeaponId[] = ['rifle', 'pistol', 'shotgun', 'sniper'];
+/** Pichoq: 5-tugma, har doim mavjud (loot/inventar slotini egallamaydi, o'q talab qilmaydi). */
+export const KNIFE: WeaponId = 'knife';
+export const KNIFE_SLOT_KEY = 5;
+/** Barcha qurol identifikatorlari (o'qotar + pichoq). */
+export const ALL_WEAPON_IDS: WeaponId[] = [...WEAPON_SLOTS, KNIFE];
+/** Orqadan urilgan pichoq zarbasi multiplikatori (45 → 99). */
+export const KNIFE_BACKSTAB_MUL = 2.2;
+/** Qurbon orqasida hisoblanish uchun: qurbonning old yo'nalishi bilan hujumchi tomon vektori ko'paytmasi. */
+export const KNIFE_BACKSTAB_DOT = -0.35;
+
+export function isMeleeWeapon(w: WeaponId | null | undefined): boolean {
+  return w === 'knife';
+}
 
 export interface WeaponDef {
   id: WeaponId;
@@ -53,12 +66,18 @@ export const WEAPONS: Record<WeaponId, WeaponDef> = {
     reloadTime: 2.8, spread: 0.09, moveSpread: 0.1, bloom: 0, maxBloom: 0, pellets: 1, range: 300,
     auto: false, zoomFov: 22, recoil: 0.06, falloffStart: 300, minDamageMul: 1, speedMul: 0.85, switchTime: 0.65,
   },
+  knife: {
+    // Yaqin masofa: 1.6 m, tanaga 45, boshga 67, orqadan 99 (KNIFE_BACKSTAB_MUL); o'q yo'q, tez almashadi, biroz tezroq yuradi
+    id: 'knife', name: 'Pichoq', damage: 45, headMult: 1.5, fireInterval: 0.5, magSize: 0, reserve: 0,
+    reloadTime: 0, spread: 0.12, moveSpread: 0, bloom: 0, maxBloom: 0, pellets: 1, range: 1.6,
+    auto: true, recoil: 0, falloffStart: 100, minDamageMul: 1, speedMul: 1.05, switchTime: 0.25,
+  },
 };
 
 export const GRENADE_LABEL = 'Granata';
 
 export function isWeaponId(x: unknown): x is WeaponId {
-  return typeof x === 'string' && (WEAPON_SLOTS as string[]).includes(x);
+  return typeof x === 'string' && (ALL_WEAPON_IDS as string[]).includes(x);
 }
 
 /** Oyoqlarga tekkan o'q zarari (tana zarariga nisbatan). */
@@ -85,12 +104,12 @@ export type AmmoState = Record<WeaponId, { mag: number; reserve: number }>;
 
 export function fullAmmo(): AmmoState {
   const a = {} as AmmoState;
-  for (const id of WEAPON_SLOTS) a[id] = { mag: WEAPONS[id].magSize, reserve: WEAPONS[id].reserve };
+  for (const id of ALL_WEAPON_IDS) a[id] = { mag: WEAPONS[id].magSize, reserve: WEAPONS[id].reserve };
   return a;
 }
 
 export function emptyAmmo(): AmmoState {
   const a = {} as AmmoState;
-  for (const id of WEAPON_SLOTS) a[id] = { mag: 0, reserve: 0 };
+  for (const id of ALL_WEAPON_IDS) a[id] = { mag: 0, reserve: 0 };
   return a;
 }

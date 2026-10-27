@@ -991,6 +991,11 @@ export class Stickman {
     this.nameTag.scale.set(1.12 * sc, 0.28 * sc, 1);
   }
 
+  /** Pichoq zarbasi: olovsiz, qo'l siltash. */
+  meleeSwing(): void {
+    this.recoilKick = 1.0;
+  }
+
   muzzleFlash(): void {
     this.flashT = 0.055;
     this.flash.visible = true;

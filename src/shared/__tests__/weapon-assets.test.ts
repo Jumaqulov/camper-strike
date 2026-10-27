@@ -11,7 +11,7 @@ import {
   WEAPON_GLB_URLS,
 } from '../../client/game/WeaponAssetRegistry';
 import { WorldWeaponItem } from '../../client/game/WorldWeaponItem';
-import { WEAPON_SLOTS, type WeaponId } from '../weapons';
+import { ALL_WEAPON_IDS, WEAPON_SLOTS, type WeaponId } from '../weapons';
 
 function parseGlbNodeNames(filePath: string): { nodeNames: string[]; materialNames: string[] } {
   const buf = fs.readFileSync(filePath);
@@ -77,9 +77,10 @@ describe('ASSET-01 — GLB qurol modellari, kesh, animatsiya qismlari va WorldWe
       pistol: ['slide', 'frame', 'muzzle', 'grip'],
       shotgun: ['receiver', 'barrel', 'pump', 'stock'],
       sniper: ['stock', 'receiver', 'bolt_handle', 'magazine'],
+      knife: ['blade', 'guard', 'handle', 'pommel'],
     };
 
-    for (const w of WEAPON_SLOTS) {
+    for (const w of ALL_WEAPON_IDS) {
       const relUrl = WEAPON_GLB_URLS[w].replace(/^\//, '');
       const fullPath = path.join(publicDir, relUrl);
       assert.ok(fs.existsSync(fullPath), `${fullPath} mavjud bo'lishi shart`);

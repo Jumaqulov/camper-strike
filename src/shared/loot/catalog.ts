@@ -22,6 +22,7 @@ export const MAX_AMMO_RESERVE: Record<WeaponId, number> = {
   pistol: 96,
   shotgun: 42,
   sniper: 35,
+  knife: 0,
 };
 
 export const LOOT_CATALOG_IDS: readonly LootCatalogId[] = [
@@ -229,6 +230,8 @@ export function getWeaponCatalogId(w: WeaponId): LootCatalogId {
       return 'weapon:shotgun';
     case 'sniper':
       return 'weapon:sniper';
+    case 'knife':
+      throw new Error('knife is not a loot item');
   }
 }
 
@@ -242,5 +245,7 @@ export function getAmmoCatalogId(w: WeaponId): LootCatalogId {
       return 'ammo:shotgun';
     case 'sniper':
       return 'ammo:sniper';
+    case 'knife':
+      throw new Error('knife has no ammo');
   }
 }

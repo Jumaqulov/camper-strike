@@ -26,7 +26,19 @@ import {
   LOOT_ERROR_MESSAGES_UZ,
   validateBulletDirectionsAgainstAim,
 } from '../shared/loot';
-import { damageAt, emptyAmmo, fullAmmo, isWeaponId, WEAPONS, type AmmoState, type WeaponDef, type WeaponId } from '../shared/weapons';
+import {
+  KNIFE_BACKSTAB_DOT,
+  KNIFE_BACKSTAB_MUL,
+  damageAt,
+  emptyAmmo,
+  fullAmmo,
+  isMeleeWeapon,
+  isWeaponId,
+  WEAPONS,
+  type AmmoState,
+  type WeaponDef,
+  type WeaponId,
+} from '../shared/weapons';
 import {
   createWorldDefinition, CURRENT_WORLD_VERSION, DEFAULT_PUBLIC_LAYOUT_SEED, DEFAULT_WORLD, extractWorldMeta,
   validateWorldCompatibility, type WorldDefinition, type WorldMeta,
@@ -697,6 +709,23 @@ export class Room {
     return this.fire(p, def, eye, dirs, 1);
   }
 
+  /** Pichoq zarbasi yelpig'ichi: avtoritativ yaw/pitch dan markaz, ±7° yon va 5° pastroq yo'nalishlar. */
+  private meleeFan(p: ServerPlayer): Vec3[] {
+    const out: Vec3[] = [];
+    for (const [dy, dp] of [
+      [0, 0],
+      [0.12, 0],
+      [-0.12, 0],
+      [0, -0.09],
+    ] as const) {
+      const yaw = p.yaw + dy;
+      const pitch = p.pitch + dp;
+      const cp = Math.cos(pitch);
+      out.push({ x: -Math.sin(yaw) * cp, y: Math.sin(pitch), z: -Math.cos(yaw) * cp });
+    }
+    return out;
+  }
+
   private fire(p: ServerPlayer, def: WeaponDef, origin: Vec3, dirs: Vec3[], intervalTolerance: number): boolean {
     if (this.phase !== 'playing') return false;
     const t = this.now();
@@ -713,16 +742,22 @@ export class Room {
     }
     p.fireCreditAt = t;
     if (p.fireCredit < 1 - 1e-6) return false;
-    const ammo = p.ammo[def.id];
-    if (ammo.mag <= 0) return false;
-    ammo.mag--;
+    const melee = isMeleeWeapon(def.id);
+    if (!melee) {
+      const ammo = p.ammo[def.id];
+      if (ammo.mag <= 0) return false;
+      ammo.mag--;
+    }
     p.fireCredit -= 1;
     p.lastShot = t;
     p.spawnTime = -99; // o'q uzgan zahoti spawn himoyasi tugaydi
 
+    // Pichoq: nishon olish yo'nalishi atrofida yelpig'ich (markaz, ±7° yon, −5° past) — yaqin masofada tegizish oson;
+    // faqat bitta (eng yaqin) nishonga bir marta zarar beriladi
+    const castDirs = melee ? this.meleeFan(p) : dirs;
     const ends: Vec3[] = [];
     const dmg = new Map<ServerPlayer, { dmg: number; head: boolean }>();
-    for (const d of dirs) {
+    for (const d of castDirs) {
       const wall = raycastWorld(this.world, origin, d, def.range);
       let maxT = wall ? wall.t : def.range;
       let hitP: ServerPlayer | null = null;
@@ -736,10 +771,26 @@ export class Room {
           zone = h.zone;
         }
       }
-      ends.push({ x: r3(origin.x + d.x * maxT), y: r3(origin.y + d.y * maxT), z: r3(origin.z + d.z * maxT) });
+      if (!melee || hitP || ends.length === 0) {
+        ends.push({ x: r3(origin.x + d.x * maxT), y: r3(origin.y + d.y * maxT), z: r3(origin.z + d.z * maxT) });
+      }
       if (hitP) {
         // Zarar tegish zonasiga qarab: bosh ×headMult, tana ×1, oyoq ×0.7
-        const amount = damageAt(def, maxT, zone);
+        let amount = damageAt(def, maxT, zone);
+        if (melee) {
+          // Orqadan zarba: qurbonning old yo'nalishi hujumchidan teskari tomonga qaragan bo'lsa
+          const fx = -Math.sin(hitP.yaw);
+          const fz = -Math.cos(hitP.yaw);
+          const ax = p.pos.x - hitP.pos.x;
+          const az = p.pos.z - hitP.pos.z;
+          const al = Math.hypot(ax, az) || 1;
+          if ((fx * ax + fz * az) / al < KNIFE_BACKSTAB_DOT) amount *= KNIFE_BACKSTAB_MUL;
+          // Yelpig'ichdagi birinchi tegish — bitta zarba
+          ends.length = 0;
+          ends.push({ x: r3(origin.x + d.x * maxT), y: r3(origin.y + d.y * maxT), z: r3(origin.z + d.z * maxT) });
+          dmg.set(hitP, { dmg: amount, head: zone === 'head' });
+          break;
+        }
         const cur = dmg.get(hitP) ?? { dmg: 0, head: false };
         cur.dmg += amount;
         cur.head = cur.head || zone === 'head';

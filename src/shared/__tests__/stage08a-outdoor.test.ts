@@ -184,7 +184,7 @@ function findClearPlayerPosNearContainer(
 }
 
 describe('BOSQICH 08A — OUTDOOR-ASSET-01 (8 GLB Models, 42 Placements, Colliders & Batched Renderer)', () => {
-  it('1. 8 ta Outdoor GLB va jami 36 ta GLB fayl butunligi, uchburchaklar soni, mesh nomlari hamda anchorlar tekshiruvi', async () => {
+  it('1. 8 ta Outdoor GLB va jami 37 ta GLB fayl butunligi, uchburchaklar soni, mesh nomlari hamda anchorlar tekshiruvi', async () => {
     assert.equal(OUTDOOR_ASSET_IDS.length, 8);
 
     // 1a) Shared outdoor module must not import Three.js
@@ -270,7 +270,7 @@ describe('BOSQICH 08A — OUTDOOR-ASSET-01 (8 GLB Models, 42 Placements, Collide
     // 1c) Verify all 36 GLB files across all 6 subdirectories in public/models/ exist on disk
     const expectedSubdirs: Record<string, number> = {
       forest: 7,
-      weapons: 4,
+      weapons: 5,
       buildings: 8,
       interior: 6,
       loot: 3,
@@ -288,7 +288,7 @@ describe('BOSQICH 08A — OUTDOOR-ASSET-01 (8 GLB Models, 42 Placements, Collide
       );
       totalGlbFiles += glbs.length;
     }
-    assert.equal(totalGlbFiles, 36, 'Loyihada jami 36 ta .glb fayl bo‘lishi shart');
+    assert.equal(totalGlbFiles, 37, 'Loyihada jami 37 ta .glb fayl bo‘lishi shart');
   });
 
   it('2. 6 ta POI va Markaziy Chorraha bo‘ylab 42 ta OutdoorPlacement joylashuvi va yerga moslashuvi (grounding)', () => {

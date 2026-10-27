@@ -18,7 +18,7 @@ import type {
   Snapshot, SpawnEvent, UseMedkitAck, UseMedkitReq, WelcomeMsg,
 } from '../../shared/protocol';
 import { unpackGearState } from '../../shared/protocol';
-import { WEAPONS, WEAPON_SLOTS, type WeaponId } from '../../shared/weapons';
+import { ALL_WEAPON_IDS, KNIFE, KNIFE_SLOT_KEY, WEAPONS, WEAPON_SLOTS, isMeleeWeapon, type WeaponId } from '../../shared/weapons';
 import {
   createTechnicalTerrainFixture,
   createWorldDefinition,
@@ -1587,6 +1587,16 @@ export class Game {
 
   private onShot(e: ShotEvent) {
     const rem = this.remotes.get(e.shooter);
+    if (isMeleeWeapon(e.weapon)) {
+      rem?.model.meleeSwing();
+      this.audio.knifeSwing(e.origin);
+      const end = e.ends[0];
+      if (end) {
+        const dist = Math.hypot(end.x - e.origin.x, end.y - e.origin.y, end.z - e.origin.z);
+        if (dist < WEAPONS.knife.range - 0.05) this.fx.bloodHit(v3(end));
+      }
+      return;
+    }
     // Masofaviy model hali qurolsiz bo'lsa (loot rejimida snapshot kechikishi) muzzle anchor'i ajratilgan —
     // bunda server bergan ko'z nuqtasidan foydalanamiz, aks holda trasser xarita markazidan chiqardi.
     const vis = rem && rem.model.root.visible && rem.model.hasWeapon();
@@ -1862,7 +1872,7 @@ export class Game {
       gear.position.set(0, 0, 4);
       g.add(gear);
       let k = 0;
-      for (const w of WEAPON_SLOTS) {
+      for (const w of ALL_WEAPON_IDS) {
         for (const variant of ['3p', '1p'] as const) {
           const gun = buildGun(w, variant);
           gun.group.position.set(-3 - k * 1.2, 0, 0);
@@ -2205,8 +2215,9 @@ export class Game {
       return;
     }
 
-    // Qurol almashtirish
+    // Qurol almashtirish: 1-4 o'qotar, 5 pichoq (har doim mavjud), g'ildirak va Q
     let slot = -1;
+    let pick: WeaponId | null = null;
     WEAPON_SLOTS.forEach((_w, i) => {
       if (inp.justPressed('Digit' + (i + 1))) slot = i;
     });
@@ -2214,19 +2225,20 @@ export class Game {
     if (slot >= 0 && !notPlaying && this.lootUi.getActiveContainerId() && this.lootUi.triggerSlotPickup(slot)) {
       return;
     }
+    if (slot >= 0) pick = WEAPON_SLOTS[slot];
+    if (inp.justPressed('Digit' + KNIFE_SLOT_KEY)) pick = KNIFE;
     if (inp.wheel !== 0) {
-      const owned = WEAPON_SLOTS.filter((w) => me.ownsWeapon(w));
+      const owned = ALL_WEAPON_IDS.filter((w) => me.ownsWeapon(w));
       if (owned.length > 0) {
         const curIdx = me.weapon ? owned.indexOf(me.weapon) : -1;
-        const nextW = owned[(curIdx + Math.sign(inp.wheel) + owned.length) % owned.length];
-        slot = WEAPON_SLOTS.indexOf(nextW);
+        pick = owned[(curIdx + Math.sign(inp.wheel) + owned.length) % owned.length];
       }
     }
     if (inp.justPressed('KeyQ') && this.prevWeapon && me.ownsWeapon(this.prevWeapon)) {
-      slot = WEAPON_SLOTS.indexOf(this.prevWeapon);
+      pick = this.prevWeapon;
     }
-    if (slot >= 0 && !notPlaying) {
-      const w = WEAPON_SLOTS[slot];
+    if (pick && !notPlaying) {
+      const w = pick;
       if (!me.ownsWeapon(w)) {
         this.lootUi.showStatus(LOOT_ERROR_MESSAGES_UZ.WEAPON_NOT_OWNED, 'error', 2000);
       } else {
@@ -2268,18 +2280,19 @@ export class Game {
     // Qayta o'qlash
     if (inp.justPressed('KeyR') && !notPlaying && me.startReload(t)) this.beginReloadFx();
 
-    // O'q uzish
+    // O'q uzish (pichoq: o'q talab qilmaydi, ushlab turilsa ketma-ket zarba)
     const def = WEAPONS[me.weapon];
-    const ammo = me.ammo[me.weapon];
+    const melee = isMeleeWeapon(me.weapon);
+    const ammo = me.ammo[me.weapon] ?? { mag: 0, reserve: 0 };
     const trigger = def.auto ? inp.buttons[0] : inp.clicks[0];
     if (trigger && !notPlaying && me.canFire(t)) {
-      if (ammo.mag > 0) this.fireLocal(t);
+      if (melee || ammo.mag > 0) this.fireLocal(t);
       else if (inp.clicks[0]) {
         this.audio.empty();
         if (me.startReload(t)) this.beginReloadFx();
       }
     }
-    if (ammo.mag === 0 && ammo.reserve > 0 && !notPlaying && !me.reloadWeapon && t - me.lastShot > 0.3 && t >= me.switchUntil) {
+    if (!melee && ammo.mag === 0 && ammo.reserve > 0 && !notPlaying && !me.reloadWeapon && t - me.lastShot > 0.3 && t >= me.switchUntil) {
       if (me.startReload(t)) this.beginReloadFx();
     }
   }
@@ -2306,6 +2319,25 @@ export class Game {
     this.sendInput();
     const msg: ShootMsg = { weapon: activeWeapon, origin, dirs };
     this.socket.emit('shoot', msg);
+    if (isMeleeWeapon(activeWeapon)) {
+      // Pichoq zarbasi: hilpirash ovozi, 1-shaxs sanchish animatsiyasi, 3-shaxs qo'l siltash; trasser/olov yo'q
+      this.audio.knifeSwing();
+      this.vm.fire(0, true);
+      this.myModel.meleeSwing();
+      const d = dirs[0]!;
+      let maxT = def.range;
+      let hitPlayer = false;
+      for (const rem of this.remotes.values()) {
+        if (!rem.alive || !rem.model.root.visible || !this.isEnemy(rem)) continue;
+        const h = rayVsPlayer(origin, d, rem.pos, maxT);
+        if (h) {
+          maxT = h.t;
+          hitPlayer = true;
+        }
+      }
+      if (hitPlayer) this.fx.bloodHit(new THREE.Vector3(origin.x + d.x * maxT, origin.y + d.y * maxT, origin.z + d.z * maxT));
+      return;
+    }
     this.audio.gunshot(activeWeapon);
     this.vm.fire(def.recoil);
     this.myModel.muzzleFlash();

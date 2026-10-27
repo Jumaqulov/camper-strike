@@ -699,6 +699,17 @@ export function buildProceduralGun(w: WeaponId): GunModel {
       ejectPort = new THREE.Vector3(0.048, 0.030, 0.02);
       break;
     }
+    case 'knife': {
+      // ================== PICHOQ (GLB yuklanmaguncha oddiy zaxira: tig', gard, dasta) ==================
+      const blade = box(g, 0.004, 0.034, 0.19, receiverSteel, 0, -0.002, -0.155);
+      blade.name = 'blade';
+      box(g, 0.028, 0.044, 0.012, receiverDark, 0, 0, -0.054);
+      box(g, 0.026, 0.034, 0.11, walnutDark, 0, 0, 0.006);
+      box(g, 0.028, 0.036, 0.008, receiverDark, 0, 0, 0.064);
+      muzzle = new THREE.Vector3(0, 0.002, -0.25);
+      ejectPort = new THREE.Vector3(0, 0, 0);
+      break;
+    }
   }
 
   g.traverse((o) => {
@@ -903,10 +914,10 @@ export function getWeaponIcons3D(): Record<WeaponId | 'grenade', string> {
     scene.add(bottomFill);
 
     const cam = new THREE.PerspectiveCamera(24, 1, 0.05, 20);
-    const items: (WeaponId | 'grenade')[] = ['rifle', 'pistol', 'shotgun', 'sniper', 'grenade'];
+    const items: (WeaponId | 'grenade')[] = ['rifle', 'pistol', 'shotgun', 'sniper', 'knife', 'grenade'];
 
     for (const id of items) {
-      const W = id === 'grenade' ? 124 : id === 'pistol' ? 196 : 292;
+      const W = id === 'grenade' ? 124 : id === 'pistol' ? 196 : id === 'knife' ? 210 : 292;
       renderer.setSize(W, H);
       const aspect = W / H;
       cam.aspect = aspect;
