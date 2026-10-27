@@ -135,6 +135,14 @@ export class Room {
   private zoneTimeline: SurvivalZoneTimeline | null = null;
   private roundStartedAt = 0;
   private nextZoneDamageAt = 0;
+  /** Bir tickda ko'pi bilan bitta bot mahalliy (0.8 m) yo'l hisoblaydi — tick vaqti sakramasin. */
+  private localPathBudget = 1;
+
+  takeLocalPathBudget(): boolean {
+    if (this.localPathBudget <= 0) return false;
+    this.localPathBudget--;
+    return true;
+  }
   private chatHistory: ChatMsg[] = [];
   /** Xonadan chiqib ketgan, lekin hali portlamagan granatasi bor o'yinchilar (granata zarar berishi uchun). */
   private departed = new Map<string, ServerPlayer>();
@@ -1519,6 +1527,7 @@ export class Room {
     const rawElapsed = rawDt <= 0 ? dt : rawDt;
     this.lastTick = t;
     this.serverTick++;
+    this.localPathBudget = 1;
 
     if (this.isSurvival && this.survival) {
       if (this.survival.getPhase() === 'playing') {

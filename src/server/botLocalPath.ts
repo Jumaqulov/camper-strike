@@ -4,6 +4,9 @@
  *
  * Har katak uchun turish balandligi (terrain yoki kollayder usti) tanlanadi; qo'shni kataklar orasida
  * ko'tarilish STEP_HEIGHT dan oshmasin, tushish 1.2 m gacha bo'lsin.
+ *
+ * Narx: binary-heap A*, katak balandliklari va kollayder tekshiruvlari bitta qidiruv ichida keshlanadi,
+ * kengaytirish soni 2500 bilan chegaralangan (server tickida ~2–4 ms).
  */
 import { PLAYER_HEIGHT, PLAYER_RADIUS, STEP_HEIGHT } from '../shared/constants';
 import type { Vec3 } from '../shared/math';
@@ -16,6 +19,55 @@ export const LOCAL_PATH_CELL_M = 0.8;
 const RADIUS_CELLS = 16;
 const MAX_DROP_M = 1.2;
 const CLEAR_R = PLAYER_RADIUS * 0.85;
+const MAX_EXPANSIONS = 2500;
+
+class MinHeap {
+  private f: number[] = [];
+  private n: number[] = [];
+  get size(): number {
+    return this.n.length;
+  }
+  push(node: number, score: number): void {
+    this.f.push(score);
+    this.n.push(node);
+    let i = this.n.length - 1;
+    while (i > 0) {
+      const p = (i - 1) >> 1;
+      if (this.f[p]! <= this.f[i]!) break;
+      this.swap(i, p);
+      i = p;
+    }
+  }
+  pop(): number {
+    const top = this.n[0]!;
+    const lastF = this.f.pop()!;
+    const lastN = this.n.pop()!;
+    if (this.n.length > 0) {
+      this.f[0] = lastF;
+      this.n[0] = lastN;
+      let i = 0;
+      for (;;) {
+        const l = i * 2 + 1;
+        const r = l + 1;
+        let m = i;
+        if (l < this.n.length && this.f[l]! < this.f[m]!) m = l;
+        if (r < this.n.length && this.f[r]! < this.f[m]!) m = r;
+        if (m === i) break;
+        this.swap(i, m);
+        i = m;
+      }
+    }
+    return top;
+  }
+  private swap(a: number, b: number): void {
+    const tf = this.f[a]!;
+    this.f[a] = this.f[b]!;
+    this.f[b] = tf;
+    const tn = this.n[a]!;
+    this.n[a] = this.n[b]!;
+    this.n[b] = tn;
+  }
+}
 
 /** (x,z) ustunidagi turish mumkin bo'lgan balandliklar: terrain va shu ustundagi kollayder tepalari (refY ± 3 m). */
 export function standingHeights(world: WorldDefinition, x: number, z: number, refY: number): number[] {
@@ -25,22 +77,6 @@ export function standingHeights(world: WorldDefinition, x: number, z: number, re
     if (x >= b.min.x && x <= b.max.x && z >= b.min.z && z <= b.max.z) out.push(b.max.y);
   }
   return out;
-}
-
-/** Berilgan (x,z) da `fromY` dan qadam bilan o'tish mumkin bo'lgan eng yaqin turish balandligi; yo'q bo'lsa null. */
-function reachableHeight(world: WorldDefinition, x: number, z: number, fromY: number): number | null {
-  let best: number | null = null;
-  let bestD = Infinity;
-  for (const h of standingHeights(world, x, z, fromY)) {
-    const rise = h - fromY;
-    if (rise > STEP_HEIGHT + 0.02 || rise < -MAX_DROP_M) continue;
-    const d = Math.abs(rise);
-    if (d >= bestD) continue;
-    if (collidesAtWorld(world, x, h + 0.05, z, CLEAR_R, PLAYER_HEIGHT - 0.1)) continue;
-    best = h;
-    bestD = d;
-  }
-  return best;
 }
 
 /**
@@ -62,34 +98,70 @@ export function findLocalPath(world: WorldDefinition, from: Vec3, to: Vec3): Vec
   const yAt = new Float32Array(n);
   const came = new Int32Array(n).fill(-1);
   const closed = new Uint8Array(n);
-  const start = idx(RADIUS_CELLS, RADIUS_CELLS);
-  gScore[start] = 0;
-  yAt[start] = from.y;
 
-  // Oddiy binary-heap o'rniga kichik ochiq ro'yxat (≤1089 katak) — har 1.5 s da bot uchun yetarli tez
-  const open: number[] = [start];
+  // Qidiruv ichidagi keshlar: har katak uchun balandliklar bir marta, har (katak, balandlik) uchun kollayder bir marta
+  const heightsCache = new Map<number, number[]>();
+  const collideCache = new Map<number, boolean>();
+  const heightsOf = (i: number, wx: number, wz: number, refY: number): number[] => {
+    let h = heightsCache.get(i);
+    if (!h) {
+      h = standingHeights(world, wx, wz, refY);
+      heightsCache.set(i, h);
+    }
+    return h;
+  };
+  const blockedAt = (i: number, wx: number, wz: number, h: number): boolean => {
+    const key = i * 4096 + (Math.round(h * 20) & 4095);
+    let b = collideCache.get(key);
+    if (b === undefined) {
+      b = collidesAtWorld(world, wx, h + 0.05, wz, CLEAR_R, PLAYER_HEIGHT - 0.1);
+      collideCache.set(key, b);
+    }
+    return b;
+  };
+  const reachable = (i: number, wx: number, wz: number, fromY: number): number | null => {
+    let best: number | null = null;
+    let bestD = Infinity;
+    for (const h of heightsOf(i, wx, wz, fromY)) {
+      const rise = h - fromY;
+      if (rise > STEP_HEIGHT + 0.02 || rise < -MAX_DROP_M) continue;
+      const d = Math.abs(rise);
+      if (d >= bestD) continue;
+      if (blockedAt(i, wx, wz, h)) continue;
+      best = h;
+      bestD = d;
+    }
+    return best;
+  };
+
+  const start = idx(RADIUS_CELLS, RADIUS_CELLS);
+  // Boshlang'ich balandlik: bot turgan joyga eng yaqin turish sathi (havoda/pol ostida bo'lsa ham)
+  let startY = from.y;
+  {
+    let bestD = 1.5;
+    for (const h of heightsOf(start, from.x, from.z, from.y)) {
+      const d = Math.abs(h - from.y);
+      if (d < bestD) {
+        bestD = d;
+        startY = h;
+      }
+    }
+  }
+  gScore[start] = 0;
+  yAt[start] = startY;
+
   const h = (i: number) => {
     const ix = i % size;
     const iz = Math.floor(i / size);
     return Math.hypot(ix - toIx, iz - toIz) * cell;
   };
   const goal = idx(toIx, toIz);
+  const heap = new MinHeap();
+  heap.push(start, h(start));
   let found = -1;
-  let guard = 0;
-  while (open.length && guard++ < 4000) {
-    // eng kichik f = g + h
-    let bi = 0;
-    let bf = Infinity;
-    for (let k = 0; k < open.length; k++) {
-      const f = gScore[open[k]!]! + h(open[k]!);
-      if (f < bf) {
-        bf = f;
-        bi = k;
-      }
-    }
-    const cur = open[bi]!;
-    open[bi] = open[open.length - 1]!;
-    open.pop();
+  let expansions = 0;
+  while (heap.size > 0 && expansions++ < MAX_EXPANSIONS) {
+    const cur = heap.pop();
     if (closed[cur]) continue;
     closed[cur] = 1;
     if (cur === goal) {
@@ -99,6 +171,7 @@ export function findLocalPath(world: WorldDefinition, from: Vec3, to: Vec3): Vec
     const cx = cur % size;
     const cz = Math.floor(cur / size);
     const cy = yAt[cur]!;
+    const curG = gScore[cur]!;
     for (let dz = -1; dz <= 1; dz++) {
       for (let dx = -1; dx <= 1; dx++) {
         if (!dx && !dz) continue;
@@ -109,20 +182,20 @@ export function findLocalPath(world: WorldDefinition, from: Vec3, to: Vec3): Vec
         if (closed[ni]) continue;
         const wx = ox + nx * cell;
         const wz = oz + nz * cell;
-        const ny = reachableHeight(world, wx, wz, cy);
+        const ny = reachable(ni, wx, wz, cy);
         if (ny === null) continue;
         // Diagonal o'tishda ikkala yon katak ham bo'sh bo'lsin (burchak kesib o'tmaslik)
         if (dx && dz) {
-          if (reachableHeight(world, ox + cx * cell, wz, cy) === null) continue;
-          if (reachableHeight(world, wx, oz + cz * cell, cy) === null) continue;
+          if (reachable(idx(cx, nz), ox + cx * cell, wz, cy) === null) continue;
+          if (reachable(idx(nx, cz), wx, oz + cz * cell, cy) === null) continue;
         }
-        const step = Math.hypot(dx, dz) * cell + Math.abs(ny - cy) * 0.5;
-        const g = gScore[cur]! + step;
+        const step = (dx && dz ? 1.41421356 : 1) * cell + Math.abs(ny - cy) * 0.5;
+        const g = curG + step;
         if (g < gScore[ni]!) {
           gScore[ni] = g;
           yAt[ni] = ny;
           came[ni] = cur;
-          open.push(ni);
+          heap.push(ni, g + h(ni));
         }
       }
     }
@@ -136,6 +209,6 @@ export function findLocalPath(world: WorldDefinition, from: Vec3, to: Vec3): Vec
   rev.reverse();
   // Oxirgi nuqta — maqsadning o'zi (katak markazi emas)
   if (rev.length) rev[rev.length - 1] = { x: to.x, y: rev[rev.length - 1]!.y, z: to.z };
-  else rev.push({ x: to.x, y: from.y, z: to.z });
+  else rev.push({ x: to.x, y: startY, z: to.z });
   return rev;
 }

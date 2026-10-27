@@ -30,10 +30,11 @@ import { saveSettings, type QualityLevel, type Settings } from '../settings';
 import type { AudioSys } from './Audio';
 import type { PredictionDiagnostics } from './ClientPrediction';
 import { Effects } from './Effects';
-import { buildGrenadeModel } from './GunModels';
+import { buildGrenadeModel, buildGun } from './GunModels';
 import { esc, Hud, weaponBadgeHtml } from './Hud';
 import { MiniMap, type MiniMapMarker } from './MiniMap';
 import { ZoneWall } from './survival/ZoneWall';
+import { createLootPrewarmGroup } from './loot/LootWorldRenderer';
 import { interpolateSurvivalZone, isOutsideSurvivalZone, type SurvivalZoneSnap } from '../../shared/survival';
 import { detectSurface } from './surface';
 import { Input } from './Input';
@@ -367,6 +368,10 @@ export class Game {
   private zoneSnap: SurvivalZoneSnap | null = null;
   private zoneSnapAt = 0;
   private zoneWall: ZoneWall | null = null;
+  /** Shader/tekstura isitish guruhi (bir necha kadr chiziladi, keyin olib tashlanadi) va kadr hisoblagichi. */
+  private prewarmGroup: THREE.Group | null = null;
+  private prewarmFrames = 0;
+  private frameNo = 0;
   /** Avtomatik sifat nazorati (kuchsiz GPU): kadr vaqti yig'indisi va ketma-ket "yomon" soniyalar. */
   private perfAccumMs = 0;
   private perfFrames = 0;
@@ -528,6 +533,7 @@ export class Game {
     this.hud.reset();
     this.hud.show(true);
     this.hud.setLayout(this.isSurvival, this.lootPreview);
+    this.startPrewarm();
     this.hud.setTeamBadge('none', this.mode);
     $('pause-room-name').textContent = welcome.room.name;
     $('top-bar').querySelectorAll('.score').forEach((e) => ((e as HTMLElement).className = 'score ' + e.id.replace('score-', '')));
@@ -1832,6 +1838,46 @@ export class Game {
     this.vm.setAspect(w / h);
   }
 
+  /**
+   * O'yin o'rtasidagi "bir-bir qotish"larning asosiy manbai — birinchi marta ko'ringan material/tekstura uchun
+   * shader kompilyatsiyasi va GPU ga yuklash (konteyner ochilganda qurol modeli, zona devori, 3-shaxs qurollari).
+   * Hammasini o'yin boshida ko'rinmas joyda bir necha kadr chizib, oldindan isitamiz.
+   */
+  private startPrewarm(): void {
+    try {
+      const g = new THREE.Group();
+      g.name = 'prewarm';
+      if (this.lootPreview) g.add(createLootPrewarmGroup());
+      let k = 0;
+      for (const w of WEAPON_SLOTS) {
+        for (const variant of ['3p', '1p'] as const) {
+          const gun = buildGun(w, variant);
+          gun.group.position.set(-3 - k * 1.2, 0, 0);
+          k++;
+          g.add(gun.group);
+        }
+      }
+      if (this.isSurvival) {
+        const wall = new ZoneWall(this.scene);
+        wall.update({ cx: 0, cz: 0, radius: 6 }, -400, true, 0);
+        this.scene.remove(wall.root);
+        g.add(wall.root);
+      }
+      g.position.set(0, -400, 0);
+      g.traverse((o) => {
+        o.frustumCulled = false;
+      });
+      this.scene.add(g);
+      this.prewarmGroup = g;
+      this.prewarmFrames = 0;
+      this.renderer.compile(this.scene, this.camera);
+    } catch (err) {
+      console.warn('[prewarm] o\'tkazib yuborildi:', err);
+      if (this.prewarmGroup) this.scene.remove(this.prewarmGroup);
+      this.prewarmGroup = null;
+    }
+  }
+
   // ================= O'yin sikli =================
 
   private frame = () => {
@@ -1842,6 +1888,11 @@ export class Game {
     const rawDt = rawDtMs / 1000;
     const dt = Math.min(0.05, rawDt);
     this.last = now;
+    this.frameNo++;
+    if (this.prewarmGroup && ++this.prewarmFrames > 3) {
+      this.scene.remove(this.prewarmGroup);
+      this.prewarmGroup = null;
+    }
     this.trackPerformance(rawDtMs, now);
     if (import.meta.env.DEV) {
       if (this.devElapsed < 0) {
@@ -2564,7 +2615,8 @@ export class Game {
     this.hud.setHealth(me.alive ? me.hp : 0);
     this.hud.setStamina(me.alive ? me.stamina : 1, me.alive && me.staminaLocked);
     this.hud.setGear(me.alive ? me.armor : 0, me.alive ? me.helmet : 0);
-    if (this.miniMap) {
+    // Mini-xarita (canvas 2D, matnli) har kadr emas: o'rta sifatda har 2-, past sifatda har 3-kadrda
+    if (this.miniMap && this.frameNo % (this.settings.quality === 'low' ? 3 : 2) === 0) {
       // Kuzatuvchi rejimida kamera pozitsiyasi, aks holda o'yinchi; TDM'da faqat jamoadoshlar ko'rinadi
       const sp = !me.alive && this.isSurvival ? this.lastSpectatorPose : null;
       const center = sp ? { x: sp.x, z: sp.z, yaw: sp.yaw } : { x: me.body.pos.x, z: me.body.pos.z, yaw: me.yaw };

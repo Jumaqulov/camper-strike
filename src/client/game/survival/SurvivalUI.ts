@@ -395,6 +395,12 @@ export class SurvivalUI {
   private winnerOverlayVisible = false;
   private topStatusText = '';
   private preRoundBannerText = '';
+  // DOM faqat mazmun o'zgarganda yangilanadi (update() har kadr chaqiriladi — innerHTML har kadr qimmat)
+  private lastRootHidden: boolean | null = null;
+  private lastPillKey = '';
+  private lastBannerKey = '';
+  private lastSpecKey = '';
+  private lastWinKey = '';
 
   constructor(callbacks: SurvivalUICallbacks) {
     this.callbacks = callbacks;
@@ -540,12 +546,16 @@ export class SurvivalUI {
       this.winnerOverlayVisible = false;
       this.topStatusText = '';
       this.preRoundBannerText = '';
-      if (this.rootEl) this.rootEl.className = 'hidden';
+      if (this.rootEl && this.lastRootHidden !== true) {
+        this.rootEl.className = 'hidden';
+        this.lastRootHidden = true;
+      }
       return;
     }
 
-    if (this.rootEl) {
+    if (this.rootEl && this.lastRootHidden !== false) {
       this.rootEl.className = '';
+      this.lastRootHidden = false;
     }
 
     const myStatus = this.resolveMyStatus(snap, this.myId);
@@ -559,7 +569,11 @@ export class SurvivalUI {
         : `Tirik: ${snap.aliveCount}/${snap.totalContenders}`;
     this.topStatusText = `RAUND #${snap.roundId} · ${phaseLabel} · ${countLabel}`;
 
-    if (this.topPillEl) {
+    const pillKey = `${snap.roundId}|${snap.phase}|${snap.timeLeft}|${countLabel}|${
+      snap.phase === 'playing' && snap.zone ? `${formatZoneStatusUz(snap.zone)}|${snap.zone.shrinking ? 1 : 0}` : ''
+    }`;
+    if (this.topPillEl && pillKey !== this.lastPillKey) {
+      this.lastPillKey = pillKey;
       // Vaqt segmenti: countdown/ended — soniya, playing — mm:ss, waiting — ko'rsatilmaydi
       let timeHtml = '';
       if (snap.phase === 'countdown' || snap.phase === 'ended') {
@@ -590,7 +604,9 @@ export class SurvivalUI {
           : `Konteynerlarni [E] bilan oching · oxirgi tirik qolgan g'olib`;
 
       this.preRoundBannerText = `${title} — ${subtitle}`;
-      if (this.preRoundBannerEl) {
+      const bannerKey = `${snap.phase}|${title}`;
+      if (this.preRoundBannerEl && bannerKey !== this.lastBannerKey) {
+        this.lastBannerKey = bannerKey;
         this.preRoundBannerEl.className = `phase-${snap.phase}`;
         this.preRoundBannerEl.innerHTML = `
           <div class="s07-preround-title">${esc(title)}</div>
@@ -599,7 +615,8 @@ export class SurvivalUI {
       }
     } else {
       this.preRoundBannerText = '';
-      if (this.preRoundBannerEl) {
+      if (this.preRoundBannerEl && this.lastBannerKey !== 'hidden') {
+        this.lastBannerKey = 'hidden';
         this.preRoundBannerEl.className = 'hidden';
         this.preRoundBannerEl.innerHTML = '';
       }
@@ -609,7 +626,12 @@ export class SurvivalUI {
     const showSpectator = this.myRole === 'eliminated' || this.myRole === 'spectator';
     this.spectatorBannerVisible = showSpectator;
 
-    if (this.spectatorPanelEl) {
+    const pose = this.spectatorPose;
+    const specKey = `${showSpectator ? 1 : 0}|${this.myRole}|${myStatus?.placement ?? ''}|${this.killerHtml}|${
+      myStatus?.eliminatedBy ?? ''
+    }|${pose ? `${pose.targetId}|${pose.targetName ?? ''}|${Math.round(pose.targetHp)}|${pose.thirdPerson ? 1 : 0}` : ''}`;
+    if (this.spectatorPanelEl && specKey !== this.lastSpecKey) {
+      this.lastSpecKey = specKey;
       if (showSpectator) {
         this.spectatorPanelEl.className = '';
         if (this.specRoleEl) {
@@ -657,7 +679,13 @@ export class SurvivalUI {
     const showWinner = snap.phase === 'ended';
     this.winnerOverlayVisible = showWinner;
 
-    if (this.winnerOverlayEl) {
+    const winKey = showWinner
+      ? `1|${snap.winnerId}|${snap.winnerName}|${snap.winReason}|${snap.timeLeft}|${snap.players
+          .map((p) => `${p.id}:${p.role}:${p.alive ? 1 : 0}:${p.kills}:${p.deaths}:${p.placement ?? ''}`)
+          .join(',')}`
+      : '0';
+    if (this.winnerOverlayEl && winKey !== this.lastWinKey) {
+      this.lastWinKey = winKey;
       if (showWinner) {
         this.winnerOverlayEl.className = '';
         const isDraw = snap.winnerId === null || snap.winnerName === 'draw' || !snap.winnerName;
@@ -770,6 +798,11 @@ export class SurvivalUI {
     this.winnerOverlayVisible = false;
     this.topStatusText = '';
     this.preRoundBannerText = '';
+    this.lastRootHidden = null;
+    this.lastPillKey = '';
+    this.lastBannerKey = '';
+    this.lastSpecKey = '';
+    this.lastWinKey = '';
 
     if (this.rootEl) this.rootEl.className = 'hidden';
     if (this.topPillEl) this.topPillEl.innerHTML = '';

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { PublicContainerState, PublicLootItem, RoomLootSnapshot } from '../../../shared/loot';
 import type { Vec3 } from '../../../shared/math';
-import type { WeaponId } from '../../../shared/weapons';
+import { WEAPON_SLOTS, type WeaponId } from '../../../shared/weapons';
 import type { WorldDefinition } from '../../../shared/world';
 import type { ContainerVisualsSceneHandles } from '../containers';
 import { WorldWeaponItem } from '../WorldWeaponItem';
@@ -307,6 +307,31 @@ function buildStylizedGearGroup(kind: 'armor' | 'helmet'): THREE.Group {
   return group;
 }
 
+/**
+ * Shader/tekstura oldindan isitish uchun har xil loot buyumidan bittadan: o'yin boshida bir necha kadr
+ * ko'rinmas joyda chizilib, keyin o'yin o'rtasida birinchi konteyner ochilganda kompilyatsiya qotishi bo'lmaydi.
+ */
+export function createLootPrewarmGroup(): THREE.Group {
+  const g = new THREE.Group();
+  g.name = 'loot_prewarm';
+  let i = 0;
+  const place = (o: THREE.Object3D) => {
+    o.position.set((i++ % 6) * 1.5, 0, Math.floor(i / 6) * 1.5);
+    g.add(o);
+  };
+  for (const w of WEAPON_SLOTS) {
+    place(new WorldWeaponItem({ weapon: w, pose: 'flat', scale: WEAPON_INSIDE_CONTAINER_SCALE, highlighted: false }).root);
+    place(buildStylizedAmmoGroup(w));
+  }
+  place(buildStylizedMedkitGroup());
+  place(buildStylizedGrenadeGroup());
+  place(buildStylizedGearGroup('armor'));
+  place(buildStylizedGearGroup('helmet'));
+  const cache = getSharedProceduralLootCache();
+  place(new THREE.Mesh(cache.itemHighlightRingGeo, cache.itemHighlightRingMat));
+  return g;
+}
+
 function buildStylizedGrenadeGroup(): THREE.Group {
   const cache = getSharedProceduralLootCache();
   const group = new THREE.Group();
@@ -522,7 +547,13 @@ export class LootWorldRenderer {
     if (this.disposed) return;
     const safeDt = Number.isFinite(dt) && dt > 0 ? dt : 0;
     this.animTime += safeDt;
-    this.lastCameraPos = { x: cameraPos.x, y: cameraPos.y, z: cameraPos.z };
+    if (this.lastCameraPos) {
+      this.lastCameraPos.x = cameraPos.x;
+      this.lastCameraPos.y = cameraPos.y;
+      this.lastCameraPos.z = cameraPos.z;
+    } else {
+      this.lastCameraPos = { x: cameraPos.x, y: cameraPos.y, z: cameraPos.z };
+    }
 
     this.containerHandles?.updateDampedAnimations(safeDt);
 

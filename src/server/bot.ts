@@ -699,6 +699,12 @@ export class BotBrain {
         this.repathAt = 0;
       }
       // Loot/zona maqsadida yo'l tugasa qayta hisoblamaymiz — to'g'ri yurish (pastda) maqsadga yetkazadi
+      const wantsLocalPath =
+        !!goalOverride && Math.hypot(goalOverride.x - me.pos.x, goalOverride.z - me.pos.z) < 12;
+      if (wantsLocalPath && t >= this.repathAt && !this.room.takeLocalPathBudget()) {
+        // Bu tickning yo'l byudjeti boshqa botga ketdi — keyingi tickda urinamiz (joriy yo'l saqlanadi)
+        this.repathAt = t + 0.04;
+      }
       if (t >= this.repathAt || (this.pathIdx >= this.path.length && !goalOverride)) {
         let goal: Vec3;
         const hunting = canFight && this.lastSeenPos && t - this.lastSeenAt < 8;
@@ -714,7 +720,7 @@ export class BotBrain {
           goal = this.pickRoamGoal();
         }
         this.pathIsLocal = false;
-        if (goalOverride && Math.hypot(goal.x - me.pos.x, goal.z - me.pos.z) < 12) {
+        if (wantsLocalPath) {
           // Yaqin maqsad (konteyner oldi / zona nuqtasi): mayda mahalliy yo'l — binolar ichi va zinalar
           this.path = findLocalPath(this.room.world, me.pos, goal);
           this.pathIsLocal = this.path.length > 0;
