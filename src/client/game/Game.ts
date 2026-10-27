@@ -6,6 +6,7 @@ import { MAX_INPUT_BATCH_SIZE } from '../../shared/netMovement';
 import { computeCameraClearDistance, raycastWorld, rayVsPlayer } from '../../shared/physics';
 import {
   DEFAULT_CONTAINER_EXTRA_MARGIN_M,
+  GROUND_ITEM_PICKUP_RADIUS_M,
   hasLineOfSightToContainer,
   isWithinInteractionDistance,
   LOOT_ERROR_MESSAGES_UZ,
@@ -13,7 +14,7 @@ import {
 import type {
   AmmoEvent, ChatMsg, ClientState, ContainerOpenAck, ContainerOpenReq, EquipWeaponAck, EquipWeaponReq,
   ExplosionEvent, HitConfirm, HurtEvent, KillEvent, LootPickupAck, LootPickupReq, MatchState, PlayerInputBatchMsg,
-  PlayerInventorySnap, PlayerSnap, PublicContainerState, RosterEntry, RoomLootSnapshot, ShootMsg, ShotEvent,
+  PlayerInventorySnap, PlayerSnap, PublicContainerState, PublicLootItem, RosterEntry, RoomLootSnapshot, ShootMsg, ShotEvent,
   Snapshot, SpawnEvent, UseMedkitAck, UseMedkitReq, WelcomeMsg,
 } from '../../shared/protocol';
 import { WEAPONS, WEAPON_SLOTS, type WeaponId } from '../../shared/weapons';
@@ -1611,7 +1612,8 @@ export class Game {
       rem.model.triggerDeath(e.headshot, e.weapon);
       if (rem.model.root.visible) {
         this.fx.bloodHit(rem.pos.clone().add(new THREE.Vector3(0, 1.3, 0)), true);
-        if (rem.weapon) this.fx.dropWeapon(rem.pos, rem.yaw, rem.weapon);
+        // Loot rejimida qurol haqiqiy yer buyumi sifatida tushadi (server), kosmetik uchish shart emas
+        if (rem.weapon && !this.lootPreview) this.fx.dropWeapon(rem.pos, rem.yaw, rem.weapon);
       }
     }
     if (e.victim === this.myId) {
@@ -1619,7 +1621,7 @@ export class Game {
         return;
       }
       this.myModel.triggerDeath(e.headshot, e.weapon);
-      if (this.me.weapon) {
+      if (this.me.weapon && !this.lootPreview) {
         this.fx.dropWeapon(
           new THREE.Vector3(this.me.body.pos.x, this.me.body.pos.y, this.me.body.pos.z),
           this.me.yaw,
@@ -2033,6 +2035,38 @@ export class Game {
         bestCnt = cnt;
         bestDistH = distH;
       }
+    }
+
+    // Yerda yotgan buyumlar (o'lgan o'yinchi quroli): eng yaqini, konteynerdan yaqinroq bo'lsa ustun
+    let bestGround: PublicLootItem | null = null;
+    let bestGroundDist = Infinity;
+    for (const gi of this.lootSnapshot.groundItems) {
+      const dx = gi.position.x - pos.x;
+      const dz = gi.position.z - pos.z;
+      const distH = Math.hypot(dx, dz);
+      if (distH > 4.0 || Math.abs(gi.position.y - pos.y) > 1.8) continue;
+      const toX = gi.position.x - eye.x;
+      const toY = gi.position.y + 0.15 - eye.y;
+      const toZ = gi.position.z - eye.z;
+      const len3 = Math.hypot(toX, toY, toZ) || 1;
+      const dot = (toX * aim.x + toY * aim.y + toZ * aim.z) / len3;
+      if (distH > 1.6 && dot < 0.3) continue;
+      if (distH < bestGroundDist) {
+        bestGroundDist = distH;
+        bestGround = gi;
+      }
+    }
+    if (bestGround && (!bestCnt || bestGroundDist < bestDistH)) {
+      const canPick = bestGroundDist <= GROUND_ITEM_PICKUP_RADIUS_M;
+      this.lootUi.setTargetPrompt({
+        container: null,
+        groundItem: bestGround,
+        canInteract: canPick,
+        distanceM: bestGroundDist,
+        blockedReasonUz: canPick ? undefined : `Yaqinroq boring (${bestGroundDist.toFixed(1)} m)`,
+      });
+      this.lootWorld.setHighlightedTarget(null, canPick ? bestGround.id : null);
+      return;
     }
 
     if (!bestCnt) {

@@ -1088,10 +1088,13 @@ export class Room {
     victim.deaths++;
     resetServerWeaponSwitchState(victim);
     if (!victim.isBot) {
+      // Loot rejimida qo'ldagi qurol (joriy o'qlari bilan) yerga tushadi — g'olib uni olishi mumkin
+      const dropped = this.loot.dropWeaponOnDeath(victim.id, victim.weapon, victim.pos, victim.yaw);
       this.loot.onPlayerDeath(victim.id);
       // Klientdagi inventar paneli o'lgan o'yinchining eski yuklamasini ko'rsatib turmasin
       const invSnap = this.loot.getPlayerInventorySnap(victim.id);
       if (invSnap) victim.socket?.emit('inventory:state', invSnap);
+      if (dropped) this.io.to(this.channel).emit('loot:snapshot', this.loot.getPublicLootSnapshot());
     }
     if (this.isSurvival && this.survival) {
       victim.respawnAt = Infinity;

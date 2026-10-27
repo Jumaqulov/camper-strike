@@ -15,7 +15,10 @@ export interface LootUICallbacks {
 }
 
 export interface TargetContainerPrompt {
-  container: PublicContainerState;
+  /** Nishon konteyner (yerdagi buyum bo'lsa null). */
+  container: PublicContainerState | null;
+  /** Yerda yotgan buyum (o'lgan o'yinchi quroli) — konteyner o'rniga. */
+  groundItem?: PublicLootItem | null;
   canInteract: boolean;
   distanceM: number;
   blockedReasonUz?: string;
@@ -507,7 +510,14 @@ export class LootUI {
 
   triggerPrimaryInteract(): boolean {
     if (this.currentPrompt?.canInteract) {
+      const groundItem = this.currentPrompt.groundItem;
+      if (groundItem) {
+        if (this.pendingItemIds.has(groundItem.id)) return false;
+        this.callbacks.onPickupItem(null, groundItem.id);
+        return true;
+      }
       const targetContainer = this.currentPrompt.container;
+      if (!targetContainer) return false;
       if (!targetContainer.opened) {
         this.callbacks.onOpenContainer(targetContainer.id);
         return true;
@@ -616,7 +626,11 @@ export class LootUI {
       return;
     }
 
-    const label = p.container.labelUz || CONTAINER_KIND_LABELS_UZ[p.container.kind] || 'Konteyner';
+    const label = p.groundItem
+      ? p.groundItem.nameUz
+      : p.container
+        ? p.container.labelUz || CONTAINER_KIND_LABELS_UZ[p.container.kind] || 'Konteyner'
+        : 'Buyum';
     let plainText = '';
     let html = '';
     let variantClass = '';
@@ -626,6 +640,14 @@ export class LootUI {
       plainText = `⚠ ${label} — ${reason}`;
       html = `<span>⚠ ${escapeHtml(label)} — ${escapeHtml(reason)}</span>`;
       variantClass = 'blocked';
+    } else if (p.groundItem) {
+      const distStr = p.distanceM.toFixed(1);
+      const ammo = p.groundItem.initialMag !== undefined ? ` · ${p.groundItem.initialMag}/${p.groundItem.initialReserve ?? 0} o'q` : '';
+      plainText = `[E] ${label} — Yerdan olish (${distStr} m)${ammo}`;
+      html = `<span class="key-pill">E</span><span>${escapeHtml(label)} — Yerdan olish (${distStr} m)${escapeHtml(ammo)}</span>`;
+    } else if (!p.container) {
+      plainText = '';
+      html = '';
     } else if (!p.container.opened) {
       const distStr = p.distanceM.toFixed(1);
       plainText = `[E] ${label} — Ochish (${distStr} m)`;

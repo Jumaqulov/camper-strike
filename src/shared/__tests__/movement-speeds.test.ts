@@ -38,7 +38,7 @@ describe('Harakat tezliklari — yurish / sprint / yon / orqaga', () => {
     const st: { stamina?: number; staminaLocked?: boolean } = { stamina: 1, staminaLocked: false };
     const dt = 1 / 60;
     let sprintFrames = 0;
-    for (let i = 0; i < 60 * 10; i++) if (stepStamina(st, true, dt)) sprintFrames++;
+    for (let i = 0; i < 60 * 10 && !st.staminaLocked; i++) if (stepStamina(st, true, dt)) sprintFrames++;
     const sprintSec = sprintFrames * dt;
     assert.ok(Math.abs(sprintSec - STAMINA_SPRINT_SECONDS) < 0.1, `sprint davomiyligi ${sprintSec.toFixed(2)} s`);
     assert.equal(st.staminaLocked, true, 'tugagach qulflanadi');

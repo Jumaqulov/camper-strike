@@ -5,6 +5,7 @@ import type { WorldDefinition } from '../../shared/world';
 import {
   DEFAULT_CONTAINER_EXTRA_MARGIN_M,
   getWeaponCatalogId,
+  GROUND_ITEM_PICKUP_RADIUS_M,
   hasLineOfSightToContainer,
   isWithinInteractionDistance,
   LOOT_CATALOG,
@@ -21,6 +22,7 @@ import {
   type ContainerOpenAck,
   type EquipWeaponAck,
   type InventoryEntrySnap,
+  type LootErrorCode,
   type LootPickupAck,
   type PlayerInventorySnap,
   type PublicContainerState,
@@ -96,6 +98,7 @@ function clonePublicLootItem(item: PublicLootItem): PublicLootItem {
 }
 
 const MAX_IDEMPOTENCY_CACHE_ENTRIES = 512;
+const MAX_GROUND_ITEMS = 32;
 
 export class RoomLootAuthority {
   private readonly containers: Map<string, ServerContainerRecord>;
@@ -107,6 +110,7 @@ export class RoomLootAuthority {
   private readonly medkitIdempotency = new Map<string, { ack: UseMedkitAck; newHp: number }>();
   private roundId: number;
   private nextInventoryVersion = 0;
+  private dropSeq = 0;
   private version = 1;
 
   readonly stats: LootAuthorityStats = {
@@ -716,6 +720,44 @@ export class RoomLootAuthority {
       }
     }
 
+    // Yerda yotgan buyum (o'lgan o'yinchining quroli): konteynersiz olish
+    if (!cnt && !req.containerId) {
+      const ground = this.groundItems.get(req.itemId);
+      if (ground) {
+        const gd = isWithinInteractionDistance(player.pos, ground.position, GROUND_ITEM_PICKUP_RADIUS_M);
+        if (!gd.ok) {
+          this.stats.rejectedPickupDistance++;
+          return {
+            ok: false, requestId: req.requestId, itemId: req.itemId, containerId: null,
+            roundId: this.roundId, spawnId: currentSpawnId,
+            code: 'OUT_OF_RANGE', message: LOOT_ERROR_MESSAGES_UZ.OUT_OF_RANGE,
+          };
+        }
+        const gErr = this.applyItemToInventory(inv, ground);
+        if (gErr) {
+          return {
+            ok: false, requestId: req.requestId, itemId: req.itemId, containerId: null,
+            roundId: this.roundId, spawnId: currentSpawnId,
+            code: gErr, message: LOOT_ERROR_MESSAGES_UZ[gErr],
+            inventory: this.getPlayerInventorySnap(player.id)!,
+          };
+        }
+        this.groundItems.delete(ground.id);
+        this.version++;
+        inv.inventoryVersion = ++this.nextInventoryVersion;
+        this.stats.itemsPickedUp++;
+        const gack: LootPickupAck = {
+          ok: true, requestId: req.requestId, itemId: ground.id, containerId: null,
+          roundId: this.roundId, spawnId: currentSpawnId,
+          pickedItem: clonePublicLootItem(ground),
+          inventory: this.getPlayerInventorySnap(player.id)!,
+          lootVersion: this.version,
+        };
+        this.setCacheEntry(this.pickupIdempotency, cacheKey, gack);
+        return gack;
+      }
+    }
+
     if (!cnt) {
       return {
         ok: false,
@@ -811,87 +853,20 @@ export class RoomLootAuthority {
     }
 
     // Validate inventory capacity & apply item
-    if (item.kind === 'weapon') {
-      const w = item.weaponId ?? LOOT_CATALOG[item.catalogId].weaponId!;
-      if (!inv.ownedWeapons.has(w)) {
-        inv.ownedWeapons.add(w);
-        inv.ammo[w].mag = item.initialMag ?? WEAPONS[w].magSize;
-        inv.ammo[w].reserve = Math.min(
-          MAX_AMMO_RESERVE[w],
-          inv.ammo[w].reserve + (item.initialReserve ?? WEAPONS[w].magSize),
-        );
-        if (inv.equippedWeapon === null) {
-          inv.equippedWeapon = w;
-        }
-      } else {
-        if (inv.ammo[w].reserve >= MAX_AMMO_RESERVE[w]) {
-          return {
-            ok: false,
-            requestId: req.requestId,
-            itemId: req.itemId,
-            containerId: cnt.id,
-            roundId: this.roundId,
-            spawnId: currentSpawnId,
-            code: 'WEAPON_ALREADY_OWNED',
-            message: LOOT_ERROR_MESSAGES_UZ.WEAPON_ALREADY_OWNED,
-            container: this.getPublicContainerState(cnt.id)!,
-            inventory: this.getPlayerInventorySnap(player.id)!,
-          };
-        }
-        inv.ammo[w].reserve = Math.min(
-          MAX_AMMO_RESERVE[w],
-          inv.ammo[w].reserve + WEAPONS[w].magSize,
-        );
-      }
-    } else if (item.kind === 'ammo') {
-      const w = item.ammoWeapon ?? LOOT_CATALOG[item.catalogId].ammoWeapon!;
-      if (inv.ammo[w].reserve >= MAX_AMMO_RESERVE[w]) {
-        return {
-          ok: false,
-          requestId: req.requestId,
-          itemId: req.itemId,
-          containerId: cnt.id,
-          roundId: this.roundId,
-          spawnId: currentSpawnId,
-          code: 'AMMO_FULL',
-          message: LOOT_ERROR_MESSAGES_UZ.AMMO_FULL,
-          container: this.getPublicContainerState(cnt.id)!,
-          inventory: this.getPlayerInventorySnap(player.id)!,
-        };
-      }
-      inv.ammo[w].reserve = Math.min(MAX_AMMO_RESERVE[w], inv.ammo[w].reserve + item.quantity);
-    } else if (item.kind === 'medkit') {
-      if (inv.medkits >= MAX_MEDKITS_PER_PLAYER) {
-        return {
-          ok: false,
-          requestId: req.requestId,
-          itemId: req.itemId,
-          containerId: cnt.id,
-          roundId: this.roundId,
-          spawnId: currentSpawnId,
-          code: 'MEDKITS_FULL',
-          message: LOOT_ERROR_MESSAGES_UZ.MEDKITS_FULL,
-          container: this.getPublicContainerState(cnt.id)!,
-          inventory: this.getPlayerInventorySnap(player.id)!,
-        };
-      }
-      inv.medkits = Math.min(MAX_MEDKITS_PER_PLAYER, inv.medkits + item.quantity);
-    } else if (item.kind === 'grenade') {
-      if (inv.grenades >= MAX_GRENADES_LOOT_MODE) {
-        return {
-          ok: false,
-          requestId: req.requestId,
-          itemId: req.itemId,
-          containerId: cnt.id,
-          roundId: this.roundId,
-          spawnId: currentSpawnId,
-          code: 'GRENADES_FULL',
-          message: LOOT_ERROR_MESSAGES_UZ.GRENADES_FULL,
-          container: this.getPublicContainerState(cnt.id)!,
-          inventory: this.getPlayerInventorySnap(player.id)!,
-        };
-      }
-      inv.grenades = Math.min(MAX_GRENADES_LOOT_MODE, inv.grenades + item.quantity);
+    const applyErr = this.applyItemToInventory(inv, item);
+    if (applyErr) {
+      return {
+        ok: false,
+        requestId: req.requestId,
+        itemId: req.itemId,
+        containerId: cnt.id,
+        roundId: this.roundId,
+        spawnId: currentSpawnId,
+        code: applyErr,
+        message: LOOT_ERROR_MESSAGES_UZ[applyErr],
+        container: this.getPublicContainerState(cnt.id)!,
+        inventory: this.getPlayerInventorySnap(player.id)!,
+      };
     }
 
     // Atomically mutate container & inventory state
@@ -918,6 +893,92 @@ export class RoomLootAuthority {
 
     this.setCacheEntry(this.pickupIdempotency, cacheKey, ack);
     return ack;
+  }
+
+  /**
+   * Buyumni inventarga qo'llaydi (sig'im tekshiruvi bilan). Xato kodi yoki null (muvaffaqiyat).
+   * Konteyner va yerdagi buyumlar uchun umumiy.
+   */
+  private applyItemToInventory(inv: ServerPlayerInventory, item: PublicLootItem): LootErrorCode | null {
+    if (item.kind === 'weapon') {
+      const w = item.weaponId ?? LOOT_CATALOG[item.catalogId].weaponId!;
+      if (!inv.ownedWeapons.has(w)) {
+        inv.ownedWeapons.add(w);
+        inv.ammo[w].mag = item.initialMag ?? WEAPONS[w].magSize;
+        inv.ammo[w].reserve = Math.min(
+          MAX_AMMO_RESERVE[w],
+          inv.ammo[w].reserve + (item.initialReserve ?? WEAPONS[w].magSize),
+        );
+        if (inv.equippedWeapon === null) {
+          inv.equippedWeapon = w;
+        }
+      } else {
+        if (inv.ammo[w].reserve >= MAX_AMMO_RESERVE[w]) return 'WEAPON_ALREADY_OWNED';
+        inv.ammo[w].reserve = Math.min(
+          MAX_AMMO_RESERVE[w],
+          inv.ammo[w].reserve + (item.initialMag ?? 0) + (item.initialReserve ?? WEAPONS[w].magSize),
+        );
+      }
+      return null;
+    }
+    if (item.kind === 'ammo') {
+      const w = item.ammoWeapon ?? LOOT_CATALOG[item.catalogId].ammoWeapon!;
+      if (inv.ammo[w].reserve >= MAX_AMMO_RESERVE[w]) return 'AMMO_FULL';
+      inv.ammo[w].reserve = Math.min(MAX_AMMO_RESERVE[w], inv.ammo[w].reserve + item.quantity);
+      return null;
+    }
+    if (item.kind === 'medkit') {
+      if (inv.medkits >= MAX_MEDKITS_PER_PLAYER) return 'MEDKITS_FULL';
+      inv.medkits = Math.min(MAX_MEDKITS_PER_PLAYER, inv.medkits + item.quantity);
+      return null;
+    }
+    if (item.kind === 'grenade') {
+      if (inv.grenades >= MAX_GRENADES_LOOT_MODE) return 'GRENADES_FULL';
+      inv.grenades = Math.min(MAX_GRENADES_LOOT_MODE, inv.grenades + item.quantity);
+      return null;
+    }
+    return 'INVALID_REQUEST';
+  }
+
+  /**
+   * O'yinchi o'lganda qo'lidagi qurolini (joriy magazin va zaxira o'q bilan) yerga tashlaydi.
+   * Faqat loot rejimida. Qaytaradi: yaratilgan buyum yoki null.
+   */
+  dropWeaponOnDeath(playerId: string, equipped: WeaponId | null, pos: Vec3, yaw: number): PublicLootItem | null {
+    if (!this.lootEnabled) return null;
+    const inv = this.inventories.get(playerId);
+    if (!inv) return null;
+    const w = equipped && inv.ownedWeapons.has(equipped) ? equipped : [...inv.ownedWeapons][0] ?? null;
+    if (!w) return null;
+    const catalogId = getWeaponCatalogId(w);
+    const entry = LOOT_CATALOG[catalogId];
+    const id = `drop:r${this.roundId}:${++this.dropSeq}`;
+    const item: PublicLootItem = {
+      id,
+      catalogId,
+      kind: 'weapon',
+      nameUz: entry.nameUz,
+      weaponId: w,
+      quantity: 1,
+      initialMag: inv.ammo[w].mag,
+      initialReserve: inv.ammo[w].reserve,
+      containerId: null,
+      position: { x: pos.x, y: pos.y, z: pos.z },
+      yaw,
+    };
+    // Qurol endi yerda — o'lgan o'yinchining inventaridan chiqadi (spawn'da baribir tozalanadi)
+    inv.ownedWeapons.delete(w);
+    inv.ammo[w] = { mag: 0, reserve: 0 };
+    if (inv.equippedWeapon === w) inv.equippedWeapon = null;
+    this.groundItems.set(id, item);
+    // Yerdagi buyumlar soni cheklangan: eng eskisi o'chadi
+    while (this.groundItems.size > MAX_GROUND_ITEMS) {
+      const oldest = this.groundItems.keys().next().value;
+      if (oldest === undefined) break;
+      this.groundItems.delete(oldest);
+    }
+    this.version++;
+    return item;
   }
 
   equipWeapon(playerId: string, alive: boolean, rawReq: unknown): EquipWeaponAck {

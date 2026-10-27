@@ -1658,4 +1658,106 @@ describe('STAGE 07 — Forest Survival Mode, Round Lifecycle, Elimination, Spect
       room.destroy();
     }
   });
+
+  it("16. O'lgan o'yinchining quroli (joriy o'qlari bilan) yerga tushadi va g'olib uni yerdan oladi", () => {
+    const { io, emitted } = createFakeIo();
+    const room = new Room(
+      {
+        name: 'Weapon Drop Room',
+        mode: 'forest_survival',
+        mapId: 'forest_square',
+        bots: 0,
+        maxPlayers: 8,
+        timeLimit: 3,
+        scoreLimit: 1,
+        publicLayoutSeed: 6501,
+        countdownSec: 2,
+      },
+      io,
+      () => {},
+    );
+    try {
+      const sock1 = createFakeSocket('p1');
+      const sock2 = createFakeSocket('p2');
+      const sock3 = createFakeSocket('p3');
+      room.addHuman(sock1.socket, 'Winner');
+      room.addHuman(sock2.socket, 'Victim');
+      room.addHuman(sock3.socket, 'Bystander');
+      room.onReady('p1', { world: room.worldMeta() });
+      room.onReady('p2', { world: room.worldMeta() });
+      room.onReady('p3', { world: room.worldMeta() });
+      room.advanceTimeForTest(2.5, 0.25);
+      assert.equal(room.phase, 'playing');
+
+      armPlayerFromContainer(room, 'p1', 'drop_p1');
+      const victimArm = armPlayerFromContainer(room, 'p2', 'drop_p2');
+      const p1 = room.players.get('p1')!;
+      const p2 = room.players.get('p2')!;
+      const victimWeapon = p2.weapon;
+      assert.ok(victimWeapon, 'qurbon qurollangan bo‘lishi kerak');
+      const victimMagBefore = p2.ammo[victimWeapon!].mag;
+
+      assert.equal(room.loot.getPublicLootSnapshot().groundItems.length, 0);
+      eliminateTargetWithGunfire(room, 'p1', 'p2');
+      assert.equal(p2.alive, false);
+      assert.equal(room.phase, 'playing', 'uchinchi o‘yinchi tirik — raund davom etadi');
+
+      const snap = room.loot.getPublicLootSnapshot();
+      assert.equal(snap.groundItems.length, 1, 'qurbonning quroli yerga tushishi shart');
+      const dropped = snap.groundItems[0]!;
+      assert.equal(dropped.kind, 'weapon');
+      assert.equal(dropped.weaponId, victimArm.weaponId);
+      assert.equal(dropped.containerId, null);
+      assert.ok(Math.hypot(dropped.position.x - p2.pos.x, dropped.position.z - p2.pos.z) < 0.01, 'qurol qurbon joyida');
+      assert.equal(dropped.initialMag, victimMagBefore, 'joriy magazin saqlanadi');
+      assert.ok(
+        emitted.some((e) => e.event === 'loot:snapshot'),
+        'yangi yer buyumi loot:snapshot bilan e‘lon qilinadi',
+      );
+      const victimInv = room.loot.getPlayerInventorySnap('p2')!;
+      assert.ok(!victimInv.ownedWeapons.includes(victimArm.weaponId), 'qurbonning inventaridan qurol chiqadi');
+
+      // Uzoqdan olib bo'lmaydi
+      p1.pos = { x: dropped.position.x + 6, y: dropped.position.y, z: dropped.position.z };
+      const far = room.onLootPickup('p1', {
+        requestId: 'drop_pick_far',
+        containerId: null,
+        itemId: dropped.id,
+        roundId: room.getRoundId(),
+        spawnId: p1.spawnId,
+      });
+      assert.equal(far.ok, false);
+      assert.equal(far.code, 'OUT_OF_RANGE');
+
+      // Yaqin kelib olish
+      p1.pos = { x: dropped.position.x + 0.8, y: dropped.position.y, z: dropped.position.z };
+      const ownedBefore = room.loot.getPlayerInventorySnap('p1')!.ownedWeapons.includes(victimArm.weaponId);
+      const near = room.onLootPickup('p1', {
+        requestId: 'drop_pick_near',
+        containerId: null,
+        itemId: dropped.id,
+        roundId: room.getRoundId(),
+        spawnId: p1.spawnId,
+      });
+      if (ownedBefore) {
+        assert.ok(near.ok || near.code === 'WEAPON_ALREADY_OWNED', `ack=${JSON.stringify(near.code)}`);
+      } else {
+        assert.equal(near.ok, true, `yerdan olish muvaffaqiyatli bo‘lishi shart: ${near.code} ${near.message}`);
+        assert.ok(room.loot.getPlayerInventorySnap('p1')!.ownedWeapons.includes(victimArm.weaponId));
+        assert.equal(room.loot.getPublicLootSnapshot().groundItems.length, 0, 'olingan buyum yerdan yo‘qoladi');
+        // Idempotent takror
+        const replay = room.onLootPickup('p1', {
+          requestId: 'drop_pick_near',
+          containerId: null,
+          itemId: dropped.id,
+          roundId: room.getRoundId(),
+          spawnId: p1.spawnId,
+        });
+        assert.equal(replay.ok, true);
+        assert.equal(replay.idempotentReplay, true);
+      }
+    } finally {
+      room.destroy();
+    }
+  });
 });
