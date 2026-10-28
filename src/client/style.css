@@ -1328,3 +1328,136 @@ html, body {
   background: linear-gradient(90deg, #f3b62a, #ffd94f);
   transition: width 0.5s linear;
 }
+
+/* "Tong otguncha" natijasi: pergamentda qiyinlik, mukofotlar va tun statistikasi.
+   Varaq balandroq — yuqoriroq osiladi, ekranga sig'masa o'zi aylantiriladi. Matn tiniq: burilish yo'q, soya yo'q. */
+#stage07-winner-overlay.is-night-summary {
+  top: clamp(48px, 11vh, 120px);
+  width: min(620px, 94vw);
+  max-height: calc(100vh - clamp(48px, 11vh, 120px) - 12px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.s07-night-board,
+.s07-night-board * { text-shadow: none; }
+.s07-night-diff {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 2px 0 8px;
+  padding: 2px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(90, 60, 20, 0.3);
+  background: rgba(90, 60, 20, 0.1);
+  color: #5a3a08;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.s07-night-diff b { font-weight: 900; color: #2b1b08; }
+.s07-night-diff.is-easy { background: rgba(63, 157, 76, 0.16); border-color: rgba(39, 106, 51, 0.4); }
+.s07-night-diff.is-easy b { color: #1f5a2a; }
+.s07-night-diff.is-hard { background: rgba(190, 50, 30, 0.13); border-color: rgba(122, 29, 18, 0.4); }
+.s07-night-diff.is-hard b { color: #7a1d12; }
+
+/* MVP — "Tun qahramoni": bo'yalgan oltin taxtacha */
+.s07-mvp {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  padding: 7px 12px;
+  border: 1.5px solid #8a5a12;
+  border-radius: 6px 8px 5px 9px / 8px 5px 9px 6px;
+  background:
+    repeating-linear-gradient(179deg, rgba(0, 0, 0, 0.06) 0 1px, rgba(0, 0, 0, 0) 1px 6px),
+    linear-gradient(180deg, #ffe27e 0%, #f3b62a 100%);
+  box-shadow: 0 2px 0 #8a5a12, 0 4px 10px rgba(90, 60, 20, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  color: #2a1a05;
+  text-align: left;
+}
+.s07-mvp-medal { flex: none; font-size: 26px; line-height: 1; }
+.s07-mvp-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.s07-mvp-title { font-size: 10.5px; font-weight: 900; letter-spacing: 1.4px; text-transform: uppercase; color: #6b4210; }
+.s07-mvp-name { font-size: 17px; font-weight: 900; line-height: 1.15; overflow-wrap: anywhere; }
+.s07-mvp-value {
+  flex: none;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #4a2f06;
+  color: #ffd94f;
+  font-size: 12.5px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+/* Qolgan mukofotlar: qog'ozga qadalgan kichik nishonlar */
+.s07-awards {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 6px;
+}
+.s07-award {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 5px 8px;
+  border-radius: 5px;
+  border: 1px dashed rgba(90, 60, 20, 0.4);
+  background: rgba(255, 250, 235, 0.45);
+  text-align: left;
+}
+.s07-award-icon { flex: none; font-size: 18px; line-height: 1; }
+.s07-award-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.s07-award-title { font-size: 9.5px; font-weight: 900; letter-spacing: 0.8px; text-transform: uppercase; color: #6b4a1c; }
+.s07-award-name { font-size: 12.5px; font-weight: 800; color: #2b1b08; overflow-wrap: anywhere; }
+.s07-award-value { flex: none; font-size: 11px; font-weight: 900; color: #4a2f06; white-space: nowrap; }
+
+/* Statistika jadvali: uzun bo'lsa ichida aylantiriladi, sarlavha qatori yopishib turadi */
+.s07-night-scroll {
+  max-height: clamp(132px, 34vh, 280px);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.s07-night-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #efdfba;
+  white-space: nowrap;
+}
+.s07-night-table .s07-num { width: 1%; text-align: center; white-space: nowrap; }
+.s07-night-table .s07-name { overflow-wrap: anywhere; }
+.s07-night-table .s07-status { white-space: nowrap; }
+.s07-night-table .s07-empty { text-align: center; color: #6b5a3f; font-style: italic; }
+.s07-bot { margin-left: 5px; font-size: 11px; }
+.s07-alpha { margin-left: 4px; font-size: 10.5px; font-weight: 900; color: #7a5410; }
+.s07-st.is-alive { color: #276a33; }
+.s07-st.is-dead { color: #7a2a1a; }
+.s07-night-table tr.is-mvp td {
+  color: #2a1a05;
+  font-weight: 900;
+  background: linear-gradient(180deg, rgba(255, 217, 79, 0.75), rgba(243, 182, 42, 0.6));
+}
+.s07-night-table tr.is-mvp .s07-rank { background: #4a2f06; color: #ffd94f; }
+.s07-night-table tr.is-me:not(.is-mvp) td { background: rgba(90, 60, 20, 0.1); }
+
+/* Tor ekran: ustun sarlavhalari va holat faqat belgilar bilan, mukofotlar bir ustunda */
+@media (max-width: 520px) {
+  #stage07-winner-overlay.is-night-summary { padding: 14px 10px 12px; }
+  .s07-night-board { margin: 10px 0 0; padding: 6px 6px 8px; }
+  .s07-night-table th,
+  .s07-night-table td { padding: 5px 4px; }
+  .s07-night-table .s07-word { display: none; }
+  .s07-awards { grid-template-columns: 1fr; }
+  .s07-mvp-name { font-size: 15px; }
+}
+/* Past ekran: ichki aylantirish o'rniga butun varaq aylantiriladi */
+@media (max-height: 520px) {
+  .s07-night-scroll { max-height: none; overflow: visible; }
+}

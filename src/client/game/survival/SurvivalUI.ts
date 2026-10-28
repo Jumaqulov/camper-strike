@@ -11,6 +11,7 @@ import {
 } from '../../../shared/survival';
 import type { NightSnap } from '../../../shared/wolf/night';
 import { CAMPFIRE_LOW_FUEL_SEC } from '../../../shared/wolf/camp';
+import { buildNightSummaryBoardHtml, escHtml as esc, nightSummaryKey } from './nightResults';
 import type { SpectatorCameraPose } from './SpectatorController';
 
 /** "Tong otguncha" yuqori pill matni: 🌙 Tonggacha mm:ss · 2/4-to'lqin · 🐺 2 */
@@ -36,6 +37,11 @@ export function formatCampPillUz(
   return { text: `🔥 Lager ${mm}:${ss}${pile}`, cls: fuelSec < CAMPFIRE_LOW_FUEL_SEC ? 'low' : '' };
 }
 
+/** Tun natijasi pastidagi chiziq: keyingi tungacha qolgan vaqt ulushi, % (natija ekrani 10 s turadi). */
+function winBarPercent(timeLeft: number): string {
+  return (Math.max(0, Math.min(1, timeLeft / 10)) * 100).toFixed(0);
+}
+
 export interface SurvivalUICallbacks {
   onCycleSpectatorTarget: (delta: number) => void;
   onToggleCameraPerspective: () => void;
@@ -59,26 +65,6 @@ export interface SurvivalUIDiagnostics {
   winReason: SurvivalWinReason;
   topStatusText: string;
   preRoundBannerText: string;
-}
-
-
-function esc(s: string): string {
-  return s.replace(/[&<>"']/g, (c) => {
-    switch (c) {
-      case '&':
-        return '&amp;';
-      case '<':
-        return '&lt;';
-      case '>':
-        return '&gt;';
-      case '"':
-        return '&quot;';
-      case "'":
-        return '&#39;';
-      default:
-        return c;
-    }
-  });
 }
 
 export class SurvivalUI {
@@ -113,6 +99,8 @@ export class SurvivalUI {
   private lastBannerKey = '';
   private lastSpecKey = '';
   private lastWinKey = '';
+  /** Tun natijasi varag'ining taymersiz mazmuni: o'zgarmasa har soniyada faqat pastki taymer yangilanadi. */
+  private lastNightSheetKey = '';
 
   constructor(callbacks: SurvivalUICallbacks) {
     this.callbacks = callbacks;
@@ -196,6 +184,7 @@ export class SurvivalUI {
     this.lastPillKey = '';
     this.lastBannerKey = '';
     this.lastWinKey = '';
+    this.lastNightSheetKey = '';
     this.render();
   }
 
@@ -440,17 +429,33 @@ export class SurvivalUI {
     const showWinner = snap.phase === 'ended';
     this.winnerOverlayVisible = showWinner;
 
-    const winKey = showWinner
-      ? `1|${snap.winnerId}|${snap.winnerName}|${snap.winReason}|${snap.timeLeft}|${snap.players
+    // Tun natijasi (statistika va mukofotlar) — server faqat wolf_night 'ended' fazasida yuboradi
+    const nightSummary = showWinner && night ? snap.nightSummary ?? null : null;
+    const nightSheet =
+      showWinner &&
+      night &&
+      (nightSummary !== null || snap.winReason === 'dawn' || snap.winReason === 'draw_no_survivors');
+    // Mazmun kaliti taymersiz: tun varag'ida faqat soniya o'zgarsa varaq qayta qurilmaydi (pastki taymer yangilanadi)
+    const winContentKey = showWinner
+      ? `1|${snap.winnerId}|${snap.winnerName}|${snap.winReason}|${snap.players
           .map((p) => `${p.id}:${p.role}:${p.alive ? 1 : 0}:${p.kills}:${p.deaths}:${p.placement ?? ''}`)
-          .join(',')}${night ? `|${(snap.winnerIds ?? []).join(',')}` : ''}`
+          .join(',')}${night ? `|${(snap.winnerIds ?? []).join(',')}|${nightSummaryKey(nightSummary)}` : ''}`
       : '0';
+    const winKey = showWinner ? `${winContentKey}|${snap.timeLeft}` : '0';
     if (this.winnerOverlayEl && winKey !== this.lastWinKey) {
       this.lastWinKey = winKey;
-      if (showWinner && night && (snap.winReason === 'dawn' || snap.winReason === 'draw_no_survivors')) {
-        this.winnerOverlayEl.className = '';
-        this.winnerOverlayEl.innerHTML = this.renderNightResultHtml(snap);
+      if (nightSheet) {
+        const cls = nightSummary ? 'is-night-summary' : '';
+        if (this.winnerOverlayEl.className !== cls) this.winnerOverlayEl.className = cls;
+        if (winContentKey !== this.lastNightSheetKey) {
+          this.lastNightSheetKey = winContentKey;
+          this.winnerOverlayEl.innerHTML = this.renderNightResultHtml(snap);
+        } else {
+          // Faqat taymer o'zgardi — jadval aylantirilgan joyidan sakramasin, chiziq silliq qisqarsin
+          this.updateWinFooter(snap.timeLeft);
+        }
       } else if (showWinner) {
+        this.lastNightSheetKey = '';
         this.winnerOverlayEl.className = '';
         const isDraw = snap.winnerId === null || snap.winnerName === 'draw' || !snap.winnerName;
         // Yog'och lager belgisi: katta sarlavha (bo'yalgan taxta) + ostida izoh
@@ -544,19 +549,32 @@ export class SurvivalUI {
           </div>
         `;
       } else {
+        this.lastNightSheetKey = '';
         this.winnerOverlayEl.className = 'hidden';
         this.winnerOverlayEl.innerHTML = '';
       }
     }
   }
 
+  /** Natija varag'i pastidagi taymer (soniya va chiziq) — varaqni qayta qurmasdan. */
+  private updateWinFooter(timeLeft: number): void {
+    const el = this.winnerOverlayEl;
+    if (!el) return;
+    const secEl = el.querySelector<HTMLElement>('.s07-win-footer b');
+    if (secEl) secEl.textContent = String(timeLeft);
+    const barEl = el.querySelector<HTMLElement>('.s07-win-bar i');
+    if (barEl) barEl.style.width = `${winBarPercent(timeLeft)}%`;
+  }
+
   /**
    * "Tong otguncha" natija ekrani:
    *  - 'dawn' — tong otdi: barcha tiriklar (winnerIds) birga g'olib (#1), qolganlar yo'q bo'lish tartibida #2..;
    *  - 'draw_no_survivors' — bo'rilar yutdi: hech kim tongni ko'rmadi.
+   * Server nightSummary yuborsa pergamentda o'rin/qotil jadvali o'rniga qiyinlik, mukofotlar va tun statistikasi.
    */
   private renderNightResultHtml(snap: SurvivalStateSnap): string {
-    const dawn = snap.winReason === 'dawn';
+    const summary = snap.nightSummary ?? null;
+    const dawn = snap.winReason === 'dawn' || summary?.dawn === true;
     const winnerIds = new Set(dawn ? snap.winnerIds ?? [] : []);
     const meWon = winnerIds.has(this.myId);
     const survivorNames = snap.players.filter((p) => winnerIds.has(p.id)).map((p) => p.name);
@@ -568,7 +586,27 @@ export class SurvivalUI {
     const headerIcon = dawn ? '🌅' : '🐺';
     const signCls = dawn ? (meWon ? 'is-victory' : 'is-other') : 'is-draw';
     const reasonLabel = SURVIVAL_WIN_REASON_LABELS_UZ[snap.winReason] ?? snap.statusTextUz ?? '';
+    const boardHtml = summary
+      ? buildNightSummaryBoardHtml(summary, this.myId)
+      : this.renderNightPlacementBoardHtml(snap, winnerIds);
 
+    return `
+          <div class="s07-win-sign ${signCls}">
+            <span class="s07-win-icon">${headerIcon}</span>
+            <span class="s07-win-title">${headerText}</span>
+          </div>
+          <div class="s07-win-sub">${headerSub}</div>
+          <div class="s07-win-reason">${esc(reasonLabel)}</div>
+          ${boardHtml}
+          <div class="s07-win-footer">
+            <span>Keyingi tun <b>${snap.timeLeft}</b> soniyadan keyin boshlanadi</span>
+            <span class="s07-win-bar"><i style="width:${winBarPercent(snap.timeLeft)}%"></i></span>
+          </div>
+        `;
+  }
+
+  /** nightSummary bo'lmasa (eski server): o'rin/holat/qotil jadvali. */
+  private renderNightPlacementBoardHtml(snap: SurvivalStateSnap, winnerIds: ReadonlySet<string>): string {
     // Tartib: g'oliblar → yo'q bo'lganlar (keyinroq yo'q bo'lgan yuqorida) → kuzatuvchilar
     const sortedPlayers = [...snap.players].sort((a, b) => {
       const aw = winnerIds.has(a.id) ? 1 : 0;
@@ -614,15 +652,7 @@ export class SurvivalUI {
       })
       .join('');
 
-    // Keyingi tungacha qolgan vaqt (natija ekrani 10 s turadi)
-    const progress = Math.max(0, Math.min(1, snap.timeLeft / 10));
     return `
-          <div class="s07-win-sign ${signCls}">
-            <span class="s07-win-icon">${headerIcon}</span>
-            <span class="s07-win-title">${headerText}</span>
-          </div>
-          <div class="s07-win-sub">${headerSub}</div>
-          <div class="s07-win-reason">${esc(reasonLabel)}</div>
           <div class="s07-win-board">
             <table class="s07-win-table">
               <thead>
@@ -637,12 +667,7 @@ export class SurvivalUI {
                 ${rowsHtml}
               </tbody>
             </table>
-          </div>
-          <div class="s07-win-footer">
-            <span>Keyingi tun <b>${snap.timeLeft}</b> soniyadan keyin boshlanadi</span>
-            <span class="s07-win-bar"><i style="width:${(progress * 100).toFixed(0)}%"></i></span>
-          </div>
-        `;
+          </div>`;
   }
 
   getDiagnostics(): SurvivalUIDiagnostics {
@@ -683,6 +708,7 @@ export class SurvivalUI {
     this.lastBannerKey = '';
     this.lastSpecKey = '';
     this.lastWinKey = '';
+    this.lastNightSheetKey = '';
 
     if (this.rootEl) this.rootEl.className = 'hidden';
     if (this.topPillEl) this.topPillEl.innerHTML = '';

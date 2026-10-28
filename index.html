@@ -270,7 +270,16 @@
                 <div class="cf-grid">
                   <label class="field" title="Server boshqaradigan botlar: barcha rejimlarda, survivalda loot yig'adi">🤖 Botlar <input id="room-bots" type="number" min="0" max="16" value="4" /></label>
                   <label class="field" id="room-wolves-field" title="Vahshiy bo'rilar: hid va o'q ovozidan topadi, quvib tishlaydi, zinaga chiqolmaydi">🐺 Bo'rilar <input id="room-wolves" type="number" min="0" max="4" value="0" /></label>
+                  <!-- Tong otguncha: bo'rilar maydoni o'rnida tun qiyinligi (boshqa rejimlarda yashirin) -->
+                  <label class="field is-hidden" id="room-night-difficulty-field" title="Tun qiyinligi: bo'rilar soni, tezligi, joni va tishlash kuchi">🌙 Qiyinlik
+                    <select id="room-night-difficulty">
+                      <option value="easy">Oson</option>
+                      <option value="normal" selected>O'rta</option>
+                      <option value="hard">Qiyin</option>
+                    </select>
+                  </label>
                 </div>
+                <div class="cf-hint is-hidden" id="room-night-difficulty-hint">🌙 Bo'rilar soni o'yinchilar soniga qarab moslashadi (odamlar + botlar); qiyinlik ularning soni, tezligi va kuchini belgilaydi.</div>
                 <div class="cf-hint">Bo'ri hid va o'q ovozidan topadi, sprintdan tez yuguradi, lekin 2-qavatga chiqolmaydi.</div>
               </section>
 

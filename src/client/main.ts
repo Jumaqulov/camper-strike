@@ -2,7 +2,13 @@ import './style.css';
 import { io } from 'socket.io-client';
 import { isSurvivalMode, type GameMode } from '../shared/constants';
 import type { CreateRoomOpts, ReadyAck, RoomInfo, WelcomeMsg } from '../shared/protocol';
-import { NIGHT_DEFAULT_MINUTES, NIGHT_MAX_MINUTES, NIGHT_MIN_MINUTES } from '../shared/wolf/night';
+import {
+  NIGHT_DEFAULT_MINUTES,
+  NIGHT_DIFFICULTIES,
+  NIGHT_MAX_MINUTES,
+  NIGHT_MIN_MINUTES,
+  sanitizeNightDifficulty,
+} from '../shared/wolf/night';
 import { createWorldDefinition, extractWorldMeta, validateWorldCompatibility, type MapId } from '../shared/world';
 import { AudioSys } from './game/Audio';
 import { preloadBuildingAssets } from './game/buildings';
@@ -384,6 +390,9 @@ function applyModeSelection(mode: string): void {
   // Tong otguncha: bo'rilar sonini to'lqinlar jadvali boshqaradi — maydon yashiriladi
   const wolvesField = getEl<HTMLElement>('room-wolves-field');
   wolvesField?.classList.toggle('is-hidden', isNight);
+  // ...uning o'rnida tun qiyinligi tanlanadi (faqat Tong otguncha)
+  getEl<HTMLElement>('room-night-difficulty-field')?.classList.toggle('is-hidden', !isNight);
+  getEl<HTMLElement>('room-night-difficulty-hint')?.classList.toggle('is-hidden', !isNight);
   const lootField = getEl<HTMLElement>('room-loot-preview-field');
   const lootHint = getEl<HTMLElement>('room-loot-preview-hint');
   const timeInput = getEl<HTMLInputElement>('room-time');
@@ -478,11 +487,16 @@ function renderRooms(rooms: RoomInfo[]): void {
       // Tunda bo'rilar to'lqinlar bilan keladi — xonadagi joriy son ko'rsatilmaydi
       const wolvesMeta = !isNight && r.wolves ? ` · 🐺 ${r.wolves} bo'ri` : '';
       const goalMeta = isNight ? 'tong otguncha' : survivalLike ? '1 tirik' : String(r.scoreLimit);
+      // Tun qiyinligi nomi yonida (eski server yubormasa — ko'rsatilmaydi)
+      const diff = isNight && r.nightDifficulty ? sanitizeNightDifficulty(r.nightDifficulty) : null;
+      const diffBadge = diff
+        ? ` <span class="r-diff is-${diff}" title="Tun qiyinligi">🌙 ${esc(NIGHT_DIFFICULTIES[diff].nameUz)}</span>`
+        : '';
       return `
       <div class="room-item">
         <span class="r-mode ${r.mode}">${modeBadgeLabel}</span>
         <div class="r-main">
-          <div class="r-name">${esc(r.name)}</div>
+          <div class="r-name">${esc(r.name)}${diffBadge}</div>
           <div class="r-meta">${mapLabel}${lootBadge} · 👤 ${r.players}/${r.maxPlayers} o'yinchi · 🤖 ${r.bots} bot${wolvesMeta} · ⏱ ${r.timeLimit} daq · 🎯 ${goalMeta}${survivalLike && (r.minHumans ?? 1) > 1 ? ` · 🚦 start: ${r.minHumans} odam` : ''}</div>
         </div>
         <button class="btn primary" data-join="${r.id}" ${r.players >= r.maxPlayers ? 'disabled' : ''}>KIRISH</button>
@@ -788,6 +802,10 @@ function initEvents(): void {
     // Vahshiy bo'rilar (barcha rejimlarda ixtiyoriy); tunda to'lqinlar boshqaradi — 0 yuboriladi
     const wolvesInput = getEl<HTMLInputElement>('room-wolves');
     opts.wolves = isNight ? 0 : Math.max(0, Math.min(4, Number(wolvesInput?.value ?? 0) || 0));
+    if (isNight) {
+      // Tun qiyinligi (Oson / O'rta / Qiyin); boshqa rejimlarda yuborilmaydi
+      opts.nightDifficulty = sanitizeNightDifficulty(getEl<HTMLSelectElement>('room-night-difficulty')?.value);
+    }
 
     socket.emit('createRoom', opts, (res: { ok: boolean; roomId?: string; error?: string }) => {
       if (!res.ok || !res.roomId) return toast(res.error ?? "Xona yaratib bo'lmadi");
