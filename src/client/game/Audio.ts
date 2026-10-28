@@ -604,11 +604,11 @@ export class AudioSys {
     const kBreath = this.distanceFactor(pos, 3, WOLF_BREATH_MAX_DIST);
     const kGrowl = this.distanceFactor(pos, 4, WOLF_NEAR_MAX_DIST);
     // Nafas: tinch — sekin va past, ov — tez va baland ("pishillab" quvadi)
-    const breathLevel = (threat ? 0.5 : alert ? 0.3 : 0.16) * kBreath;
+    const breathLevel = (threat ? 0.3 : alert ? 0.15 : 0.06) * kBreath;
     v.breath.gain.setTargetAtTime(Math.max(0.0001, breathLevel), now, 0.25);
     v.breathLfo.frequency.setTargetAtTime(threat ? 3.4 + Math.min(1.2, speed * 0.15) : alert ? 2.4 : 1.6, now, 0.3);
     // Uzluksiz irillash faqat ovda (hujumda eng baland)
-    const growlLevel = (threat ? 0.32 : alert ? 0.14 : 0) * kGrowl;
+    const growlLevel = (threat ? 0.2 : alert ? 0.07 : 0) * kGrowl;
     v.growl.gain.setTargetAtTime(Math.max(0.0001, growlLevel), now, 0.3);
   }
 

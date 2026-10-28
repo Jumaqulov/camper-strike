@@ -2095,7 +2095,8 @@ export class Game {
           const gallop = w.speed > 5;
           w.stepTimer = gallop ? 0.16 : 0.3;
           const surf = detectSurface(this.worldDef, w.pos.x, w.pos.y, w.pos.z);
-          this.audio.footstep({ x: w.pos.x, y: w.pos.y, z: w.pos.z }, gallop ? 0.6 : 0.35, surf);
+          // Yurganda yumshoq panjalar, chopganda sal og'irroq — lekin o'yinchi qadamidan baland emas
+          this.audio.footstep({ x: w.pos.x, y: w.pos.y, z: w.pos.z }, gallop ? 0.3 : 0.14, surf);
         }
       }
     }
