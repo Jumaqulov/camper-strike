@@ -14,6 +14,13 @@ import {
 import { scaleBoxUVs } from './geometryUtils';
 import { createTextures, TEX_SCALE } from './Textures';
 import type { GroundCoverStats } from './GroundCoverRenderer';
+import {
+  createDawnLighting,
+  dawnSkyUniformDefaults,
+  DAWN_SKY_GLSL_APPLY,
+  DAWN_SKY_GLSL_UNIFORMS,
+  type DawnSkyUniforms,
+} from './night/dawnLighting';
 
 export type { CullingProfileStats, Stage04ASceneHandles, GroundCoverStats };
 
@@ -29,6 +36,11 @@ export interface WorldHandles {
     focusPos?: { x: number; y: number; z: number },
     thirdPerson?: boolean,
   ) => void;
+  /**
+   * "Tong otguncha" (faqat 'night' mavzusida): tong otish darajasi 0 (tun) .. 1 (tong) — osmon, tuman,
+   * oy nuri va yarimshar yorug'ligi interpolyatsiya qilinadi. Game har kadr silliqlangan qiymat beradi.
+   */
+  setDawn?: (progress: number) => void;
   getCullingProfile?: () => CullingProfileStats;
   resetCullingProfile?: () => void;
   /** STAGE 08-FIX: visual-only ground cover stats (only present on `forest_square`). */
@@ -263,6 +275,8 @@ export function buildWorld(
       glowColor: { value: night ? new THREE.Color(0.86, 0.9, 1.0) : new THREE.Color(1.0, 0.88, 0.62) },
       glowCore: { value: night ? 2.2 : 4.2 },
       glowHalo: { value: night ? 0.1 : 0.32 },
+      // Tong shafaqi ("Tong otguncha" oxiri); kunduzi va tun boshida dawnAmount = 0
+      ...dawnSkyUniformDefaults(),
     },
     vertexShader: /* glsl */ `
       varying vec3 vDir;
@@ -276,14 +290,14 @@ export function buildWorld(
       uniform vec3 sunDir;
       uniform vec3 glowColor;
       uniform float glowCore;
-      uniform float glowHalo;
+      uniform float glowHalo;${DAWN_SKY_GLSL_UNIFORMS}
       varying vec3 vDir;
       void main() {
         vec3 d = normalize(vDir);
         float h = clamp(d.y * 1.55 + 0.06, 0.0, 1.0);
         vec3 col = mix(bottom, top, pow(h, 0.75));
         float s = max(dot(d, sunDir), 0.0);
-        col += glowColor * (pow(s, 800.0) * glowCore + pow(s, 10.0) * glowHalo);
+        col += glowColor * (pow(s, 800.0) * glowCore + pow(s, 10.0) * glowHalo);${DAWN_SKY_GLSL_APPLY}
         gl_FragColor = vec4(col, 1.0);
         #include <colorspace_fragment>
       }`,
@@ -292,11 +306,23 @@ export function buildWorld(
   sky.frustumCulled = false;
   sky.renderOrder = -1;
   scene.add(sky);
-  scene.fog = night ? new THREE.Fog('#0a0f1c', 40, 190) : new THREE.Fog('#c8d9cc', 95, 340);
+  const fog = night ? new THREE.Fog('#0a0f1c', 40, 190) : new THREE.Fog('#c8d9cc', 95, 340);
+  scene.fog = fog;
+  // "Tong otguncha": tun oxirida tong ko'rinishiga o'tish (ForestRenderer bilan bir xil parametrlar)
+  const dawnLighting = night
+    ? createDawnLighting({
+        hemi,
+        moon: sun,
+        sky: { ...skyMat.uniforms, horizon: skyMat.uniforms.bottom } as unknown as DawnSkyUniforms,
+        fog,
+        fogBase: () => ({ near: 40, far: 190 }),
+      })
+    : null;
 
   return {
     sun,
     sky,
+    setDawn: dawnLighting ? (p: number) => dawnLighting.apply(p) : undefined,
     dispose: () => {
       sun.shadow.map?.dispose();
       scene.remove(group);

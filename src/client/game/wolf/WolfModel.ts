@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { WolfState } from '../../../shared/wolf';
+import { wolfCoatTraits, type WolfState } from '../../../shared/wolf';
 import { instantiateWolf, isWolfAssetReady, onWolfAssetReady, preloadWolfAssets, type WolfClipName, type WolfInstance } from './WolfAssetRegistry';
 
 export interface WolfModelState {
@@ -21,7 +21,10 @@ const CLIP_TIMESCALE_MAX = 2.2;
 export const WOLF_RUN_CLIP_ENTER_SPEED = 2.8;
 export const WOLF_RUN_CLIP_EXIT_SPEED = 2.5;
 
-/** Holat → klip. Idle/sniff harakatda Walk ga o'tadi; Walk sig'magan tezlikda (gisterezis bilan) Run. */
+/**
+ * Holat → klip. Idle/sniff harakatda Walk ga o'tadi; Walk sig'magan tezlikda (gisterezis bilan) Run.
+ * 'flee' (tong otdi — o'rmonga qochish) ham shu yo'l bilan: WOLF_RUN_SPEED da Run, to'xtaganda Alert.
+ */
 export function wolfClipFor(s: WolfModelState, current: WolfClipName | null = null): WolfClipName {
   const clip = baseClipFor(s);
   if (clip !== 'Walk') return clip;
@@ -33,6 +36,9 @@ function baseClipFor(s: WolfModelState): WolfClipName {
   switch (s.state) {
     case 'hunt':
       return s.speed > 0.5 ? 'Run' : 'Alert';
+    case 'flee':
+      // Tezlik bo'yicha Walk → (gisterezis) Run; Run klipi timeScale bilan haqiqiy tezlikka moslanadi
+      return s.speed > 0.4 ? 'Walk' : 'Alert';
     case 'stalk':
       return s.speed > 0.3 ? 'Walk' : 'Alert';
     case 'alert':
@@ -47,13 +53,45 @@ function baseClipFor(s: WolfModelState): WolfClipName {
       return 'Death';
     case 'sniff':
       return s.speed > 0.4 ? 'Walk' : 'Sniff';
-    default:
+    case 'idle':
       return s.speed > 0.4 ? 'Walk' : 'Idle';
+    default: {
+      // Yangi WolfState qo'shilsa — kompilyatsiya xatosi (bu yerda klip tanlanishi shart)
+      const unknownState: never = s.state;
+      void unknownState;
+      return s.speed > 0.4 ? 'Walk' : 'Idle';
+    }
   }
+}
+
+/** GLB dagi ko'z materiali (emissive, KHR_materials_emissive_strength = 4). */
+const WOLF_EYES_MATERIAL = 'wolf_eyes';
+/** To'da boshlig'ining ko'zlari yorqinroq yonadi (oddiy bo'ri — 4). */
+const ALPHA_EYE_EMISSIVE = 7;
+
+/**
+ * To'da boshlig'i: ko'z materialining yorqinligini oshiradi. Material shu coat GLB nusxalarida umumiy
+ * (oq coat = faqat boshliq), shuning uchun mutlaq qiymat qo'yiladi — takroriy chaqiruv xavfsiz.
+ */
+function boostAlphaEyes(root: THREE.Object3D): void {
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const m of mats) {
+      if (m instanceof THREE.MeshStandardMaterial && m.name === WOLF_EYES_MATERIAL) m.emissiveIntensity = ALPHA_EYE_EMISSIVE;
+    }
+  });
 }
 
 const LOOPING: ReadonlySet<WolfClipName> = new Set<WolfClipName>(['Idle', 'Sniff', 'Alert', 'Walk', 'Run']);
 const FADE = 0.16;
+
+/** Bo'ri turi bo'yicha model masshtabi (`WOLF_COAT_TRAITS`: to'da boshlig'i 1.22, chaqqon 0.92). */
+export function wolfModelScale(coat: number | undefined): number {
+  const s = wolfCoatTraits(coat).scale;
+  return Number.isFinite(s) && s > 0 ? s : 1;
+}
 
 /**
  * Bitta bo'rining 3D ko'rinishi: GLB nusxasi + AnimationMixer; GLB kelguncha (yoki xatoda) procedural
@@ -72,8 +110,13 @@ export class WolfModel {
   private disposed = false;
   private lastState: WolfState = 'idle';
 
-  /** @param coat rang varianti (`WolfSnap.coat`, 0..4) */
-  constructor(private readonly coat = 0) {
+  /** Tur bo'yicha masshtab (root ga qo'llangan). */
+  readonly scale: number;
+
+  /** @param coat rang varianti (`WolfSnap.coat`, 0..4) — u bo'ri turini ham belgilaydi (`wolfCoatTraits`). */
+  constructor(readonly coat = 0) {
+    this.scale = wolfModelScale(coat);
+    this.root.scale.setScalar(this.scale);
     void preloadWolfAssets(coat);
     if (isWolfAssetReady(coat)) this.attach();
     if (!this.inst) {
@@ -105,6 +148,7 @@ export class WolfModel {
       }
       this.actions.set(name, a);
     }
+    if (wolfCoatTraits(this.coat).kind === 'alpha') boostAlphaEyes(inst.root);
     this.disposeFallback();
     this.current = null;
   }
@@ -115,7 +159,8 @@ export class WolfModel {
     const head = new THREE.BoxGeometry(0.4, 0.38, 0.55);
     const leg = new THREE.BoxGeometry(0.14, 0.6, 0.14);
     const fur = new THREE.MeshStandardMaterial({ color: '#2a2b2e', roughness: 0.9 });
-    const eye = new THREE.MeshStandardMaterial({ color: '#000', emissive: '#ffb020', emissiveIntensity: 3 });
+    const alpha = wolfCoatTraits(this.coat).kind === 'alpha';
+    const eye = new THREE.MeshStandardMaterial({ color: '#000', emissive: '#ffb020', emissiveIntensity: alpha ? 5 : 3 });
     this.fallbackGeos.push(body, head, leg);
     this.fallbackMats.push(fur, eye);
     const b = new THREE.Mesh(body, fur);
@@ -179,7 +224,7 @@ export class WolfModel {
   getMouthWorld(out: THREE.Vector3): THREE.Vector3 {
     const s = this.inst?.sockets.get('socket_mouth');
     if (s) return s.getWorldPosition(out);
-    return this.root.getWorldPosition(out).add(new THREE.Vector3(0, 0.95, 0));
+    return this.root.getWorldPosition(out).add(new THREE.Vector3(0, 0.95 * this.scale, 0));
   }
 
   update(dt: number, s: WolfModelState): void {
@@ -195,8 +240,8 @@ export class WolfModel {
     this.play(clip, restart);
     this.lastState = s.state;
     if (this.current === 'Run' || this.current === 'Walk') {
-      // Yurish/yugurish tezligini haqiqiy tezlikka moslash
-      const base = this.current === 'Run' ? RUN_CLIP_SPEED : WALK_CLIP_SPEED;
+      // Yurish/yugurish tezligini haqiqiy tezlikka moslash (katta bo'rining qadami ham masshtab bo'yicha uzun)
+      const base = (this.current === 'Run' ? RUN_CLIP_SPEED : WALK_CLIP_SPEED) * this.scale;
       const a = this.actions.get(this.current);
       if (a) a.setEffectiveTimeScale(THREE.MathUtils.clamp(s.speed / base, CLIP_TIMESCALE_MIN, CLIP_TIMESCALE_MAX));
     }

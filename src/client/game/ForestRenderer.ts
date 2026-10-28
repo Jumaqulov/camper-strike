@@ -68,6 +68,14 @@ import { sampleForestSquareRoad } from '../../shared/forestSquareRoads';
 import { getForestSquarePoiSites } from '../../shared/structures/contracts';
 import { setTerrainDetail } from './terrain/TerrainMaterial';
 import { buildBoundaryFence } from './BoundaryFence';
+import {
+  createDawnLighting,
+  dawnSkyUniformDefaults,
+  DAWN_SKY_GLSL_APPLY,
+  DAWN_SKY_GLSL_UNIFORMS,
+  type DawnLighting,
+  type DawnSkyUniforms,
+} from './night/dawnLighting';
 
 /** O't maydoni zichlik ko'paytiruvchisi (faqat vizual; server/gameplay hash ga ta'sir qilmaydi). */
 const GRASS_FIELD_DENSITY_SCALE = 8;
@@ -1370,6 +1378,8 @@ export function buildForestSampleScene(
       glowColor: { value: night ? new THREE.Color(0.86, 0.9, 1.0) : new THREE.Color(1.0, 0.89, 0.64) },
       glowCore: { value: night ? 2.0 : 3.8 },
       glowHalo: { value: night ? 0.1 : 0.34 },
+      // Tong shafaqi ("Tong otguncha" oxiri); kunduzi va tun boshida dawnAmount = 0
+      ...dawnSkyUniformDefaults(),
     },
     vertexShader: /* glsl */ `
       varying vec3 vDir;
@@ -1383,14 +1393,14 @@ export function buildForestSampleScene(
       uniform vec3 sunDir;
       uniform vec3 glowColor;
       uniform float glowCore;
-      uniform float glowHalo;
+      uniform float glowHalo;${DAWN_SKY_GLSL_UNIFORMS}
       varying vec3 vDir;
       void main() {
         vec3 d = normalize(vDir);
         float h = clamp(d.y * 1.45 + 0.08, 0.0, 1.0);
         vec3 col = mix(horizon, top, pow(h, 0.72));
         float s = max(dot(d, sunDir), 0.0);
-        col += glowColor * (pow(s, 700.0) * glowCore + pow(s, 9.0) * glowHalo);
+        col += glowColor * (pow(s, 700.0) * glowCore + pow(s, 9.0) * glowHalo);${DAWN_SKY_GLSL_APPLY}
         gl_FragColor = vec4(col, 1.0);
         #include <colorspace_fragment>
       }`,
@@ -1405,6 +1415,21 @@ export function buildForestSampleScene(
   const fogFar = night ? (isForestSquare ? 150 : 120) : isForestSquare ? 265 : 215;
   const forestFog = new THREE.Fog(night ? '#0a0f1c' : '#c4d6ba', fogNear, fogFar);
   scene.fog = forestFog;
+  // Tuman near/far asosi (yuqoridan ko'rinishda uzoqlashadi); tongda ustiga dawn ko'paytuvchisi qo'llanadi
+  let fogBaseNear = fogNear;
+  let fogBaseFar = fogFar;
+
+  // "Tong otguncha": tun oxirida yorug'lik/osmon/tuman tong ko'rinishiga o'tadi (Game har kadr setDawn chaqiradi)
+  const dawnLighting: DawnLighting | null = night
+    ? createDawnLighting({
+        hemi,
+        moon: sun,
+        rim: rimLight,
+        sky: skyMat.uniforms as unknown as DawnSkyUniforms,
+        fog: forestFog,
+        fogBase: () => ({ near: fogBaseNear, far: fogBaseFar }),
+      })
+    : null;
 
   // 7. Dynamic Per-Chunk Frustum Culling, Quality LOD/Distance Scaling & Dirty-Flag Caching
   let currentQuality: QualityLevel = initialQuality;
@@ -1578,11 +1603,18 @@ export function buildForestSampleScene(
 
     if (isForestSquare) {
       // Yuqoridan ko'rinishda (kuzatuvchi kamerasi) tuman uzoqlashadi; tunda ham nisbat saqlanadi
-      forestFog.near = isTopDownOverview ? (night ? 90 : 160) : fogNear;
-      forestFog.far = isTopDownOverview ? (night ? 320 : 520) : fogFar;
+      fogBaseNear = isTopDownOverview ? (night ? 90 : 160) : fogNear;
+      fogBaseFar = isTopDownOverview ? (night ? 320 : 520) : fogFar;
+      if (dawnLighting) dawnLighting.reapplyFog();
+      else {
+        forestFog.near = fogBaseNear;
+        forestFog.far = fogBaseFar;
+      }
     }
 
     sunShadowFollower?.update(camera, focusPos, isTopDownOverview);
+    // Soya kuzatuvchisi oyni tungi ofset bilan qayta joylashtiradi — tongda pasaygan yo'nalishni qaytaramiz
+    if (dawnLighting && dawnLighting.factor > 0) dawnLighting.reapplyMoonDirection();
     poiCuller?.update(camera, frustum, currentQuality, isTopDownOverview);
     stage04aHandles?.outdoor?.update(camera, frustum, currentQuality, isTopDownOverview);
     groundCover?.update(camera, frustum, isTopDownOverview);
@@ -1732,6 +1764,7 @@ export function buildForestSampleScene(
     sky,
     setQuality: applyQuality,
     update: updateVisibility,
+    setDawn: dawnLighting ? (p: number) => dawnLighting.apply(p) : undefined,
     getCullingProfile,
     resetCullingProfile,
     getGroundCoverStats: groundCoverStatsSource ? () => groundCoverStatsSource.getStats() : undefined,

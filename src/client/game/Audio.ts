@@ -1,4 +1,5 @@
 import type { WeaponId } from '../../shared/weapons';
+import type { WolfState } from '../../shared/wolf';
 import type { SurfaceKind } from './surface';
 
 interface P3 {
@@ -7,7 +8,36 @@ interface P3 {
   z: number;
 }
 
-export type AmbientProfile = 'forest' | 'arena';
+/** 'night' — "Tong otguncha" tuni: o'rmon foni qushlarsiz (qushlar tongda — `dawnChorus`). */
+export type AmbientProfile = 'forest' | 'arena' | 'night';
+
+/** Bo'rining doimiy ovozi kayfiyati: tinch / hushyor / ov / qochish (tong otdi — tez nafas, irillashsiz). */
+export type WolfVoiceMood = 'calm' | 'alert' | 'threat' | 'flee';
+
+/** Holat → doimiy ovoz kayfiyati (barcha WolfState lar uchun; yangi holat qo'shilsa kompilyatsiya xatosi). */
+export function wolfVoiceMood(state: WolfState): WolfVoiceMood {
+  switch (state) {
+    case 'stalk':
+    case 'hunt':
+    case 'attack':
+      return 'threat';
+    case 'alert':
+    case 'sniff':
+      return 'alert';
+    case 'flee':
+      return 'flee';
+    case 'idle':
+    case 'hit':
+    case 'howl':
+    case 'dead':
+      return 'calm';
+    default: {
+      const unknownState: never = state;
+      void unknownState;
+      return 'calm';
+    }
+  }
+}
 
 /** Masofaviy otishma: shu masofadan boshlab past chastota filtri va aks-sado qo'shiladi (m). */
 const DISTANT_SHOT_FROM = 22;
@@ -100,7 +130,8 @@ export class AudioSys {
     const c = this.ctx;
     const profile = this.ambientProfile;
     if (!c || !profile || this.ambient) return;
-    const forest = profile === 'forest';
+    const forest = profile === 'forest' || profile === 'night';
+    const birds = profile === 'forest';
     const nodes: AudioNode[] = [];
     const timers: number[] = [];
     const gain = c.createGain();
@@ -117,8 +148,9 @@ export class AudioSys {
       timers.push(id);
     };
 
-    if (forest) {
+    if (birds) {
       // 3. Qushlar: tasodifiy joydan, tasodifiy oraliqda chirqillash; vaqti-vaqti bilan uzoqdan qizilishton
+      // (tunda — 'night' profili — qushlar sayramaydi; tong otganda `dawnChorus`)
       schedule(() => this.birdChirp(gain), 1500, 6500);
       schedule(() => this.woodpecker(gain), 18000, 45000);
     }
@@ -146,6 +178,38 @@ export class AudioSys {
       const f0 = base * (0.9 + Math.random() * 0.25);
       const f1 = f0 * (0.65 + Math.random() * 0.7);
       this.tone(d, t + i * gap, 'sine', f0, f1, 0.045 + Math.random() * 0.06, 0.05 + Math.random() * 0.035);
+    }
+  }
+
+  /**
+   * Tong xori ("Tong otguncha" — tong otdi): ~7 s davomida atrofdagi daraxtlardan bir nechta qush
+   * birin-ketin sayraydi (oddiy qushlardan sal pastroq, tinch). Ambient profili 'night' bo'lsa ham chalinadi.
+   */
+  dawnChorus(): void {
+    const c = this.ctx;
+    if (!c) return;
+    const t0 = c.currentTime + 0.15;
+    const birds = 7 + Math.floor(Math.random() * 4);
+    for (let b = 0; b < birds; b++) {
+      const start = t0 + b * 0.55 + Math.random() * 0.9;
+      // Panner qo'shiq tugagach (eng uzun kuy ~4 s) uziladi
+      const d = this.dest(this.randomAround(8, 30, 4 + Math.random() * 6), start - c.currentTime + 5);
+      if (!d) continue;
+      // Har qushning o'z "kuyi": baland trel yoki pastga tushuvchi hushtak, 2–3 marta takror
+      const base = 2300 + Math.random() * 2200;
+      const phrases = 1 + Math.floor(Math.random() * 3);
+      const trill = Math.random() < 0.5;
+      let t = start;
+      for (let p = 0; p < phrases; p++) {
+        const notes = trill ? 5 + Math.floor(Math.random() * 4) : 2 + Math.floor(Math.random() * 2);
+        const gap = trill ? 0.05 + Math.random() * 0.02 : 0.12 + Math.random() * 0.06;
+        for (let i = 0; i < notes; i++) {
+          const f0 = base * (trill ? 1 + (i % 2) * 0.12 : 1.1 - i * 0.12);
+          const f1 = f0 * (trill ? 0.92 : 0.7 + Math.random() * 0.2);
+          this.tone(d, t + i * gap, 'sine', f0, f1, trill ? 0.035 : 0.08, 0.035 + Math.random() * 0.025);
+        }
+        t += notes * gap + 0.25 + Math.random() * 0.35;
+      }
     }
   }
 
@@ -413,9 +477,12 @@ export class AudioSys {
     return g;
   }
 
-  /** Irillash (sezdi / quvyapti): tishlangan arra to'lqini + g'ichirlagan shovqin, 14 Hz tremolo bilan, ~0.9 s. */
-  wolfGrowl(pos?: P3): void {
-    const d = this.wolfDest(pos, 3, 7, 4, WOLF_NEAR_MAX_DIST);
+  /**
+   * Irillash (sezdi / quvyapti): tishlangan arra to'lqini + g'ichirlagan shovqin, 14 Hz tremolo bilan, ~0.9 s.
+   * `rangeMul` < 1 — sezdirmay keladigan bo'ri ("Tun soyasi"): faqat yaqindan eshitiladi.
+   */
+  wolfGrowl(pos?: P3, rangeMul = 1): void {
+    const d = this.wolfDest(pos, 3, 7 * rangeMul, 4 * rangeMul, WOLF_NEAR_MAX_DIST * rangeMul);
     if (!d) return;
     const t = this.ctx!.currentTime;
     const tr = this.tremolo(d, t, 0.95, 13 + Math.random() * 4, 0.7);
@@ -577,13 +644,15 @@ export class AudioSys {
 
   /**
    * Har kadr: bo'rining pozitsiyasi va holati bo'yicha doimiy ovoz darajasi.
-   * `threat` — ovlayapti (stalk/hunt/attack), `moving` — gorizontal tezlik (m/s), `dist` — tinglovchigacha (m).
+   * `mood` — `wolfVoiceMood(state)`, `speed` — gorizontal tezlik (m/s), `dist` — tinglovchigacha (m),
+   * `rangeMul` — eshitilish masofasi ko'paytuvchisi ("Tun soyasi" — qisqa, `wolfAudioRangeMul`).
    */
-  wolfVoice(id: string, pos: P3, threat: boolean, alert: boolean, speed: number, dist: number, alive: boolean): void {
+  wolfVoice(id: string, pos: P3, mood: WolfVoiceMood, speed: number, dist: number, alive: boolean, rangeMul = 1): void {
     const c = this.ctx;
     if (!c) return;
     let v = this.wolfVoices.get(id);
-    if (!alive || dist > 60) {
+    const range = Math.min(1, Math.max(0.1, rangeMul));
+    if (!alive || dist > 60 * range) {
       if (v) this.wolfVoiceRemove(id);
       return;
     }
@@ -601,13 +670,21 @@ export class AudioSys {
     }
     const now = c.currentTime;
     // Masofa: 3 m gacha to'liq, keyin kvadratik so'nadi, nafas 35 m / irillash 45 m dan nari jim
-    const kBreath = this.distanceFactor(pos, 3, WOLF_BREATH_MAX_DIST);
-    const kGrowl = this.distanceFactor(pos, 4, WOLF_NEAR_MAX_DIST);
-    // Nafas: tinch — sekin va past, ov — tez va baland ("pishillab" quvadi)
-    const breathLevel = (threat ? 0.3 : alert ? 0.15 : 0.06) * kBreath;
+    // (soya — shu masofalarning `rangeMul` qismi)
+    const kBreath = this.distanceFactor(pos, 3 * range, WOLF_BREATH_MAX_DIST * range);
+    const kGrowl = this.distanceFactor(pos, 4 * range, WOLF_NEAR_MAX_DIST * range);
+    const threat = mood === 'threat';
+    const alert = mood === 'alert';
+    const flee = mood === 'flee';
+    // Nafas: tinch — sekin va past, ov — tez va baland ("pishillab" quvadi), qochish — tez, o'rtacha
+    const breathLevel = (threat ? 0.3 : flee ? 0.18 : alert ? 0.15 : 0.06) * kBreath;
     v.breath.gain.setTargetAtTime(Math.max(0.0001, breathLevel), now, 0.25);
-    v.breathLfo.frequency.setTargetAtTime(threat ? 3.4 + Math.min(1.2, speed * 0.15) : alert ? 2.4 : 1.6, now, 0.3);
-    // Uzluksiz irillash faqat ovda (hujumda eng baland)
+    v.breathLfo.frequency.setTargetAtTime(
+      threat ? 3.4 + Math.min(1.2, speed * 0.15) : flee ? 3.0 : alert ? 2.4 : 1.6,
+      now,
+      0.3,
+    );
+    // Uzluksiz irillash faqat ovda (hujumda eng baland); qochayotgan bo'ri irillamaydi
     const growlLevel = (threat ? 0.2 : alert ? 0.07 : 0) * kGrowl;
     v.growl.gain.setTargetAtTime(Math.max(0.0001, growlLevel), now, 0.3);
   }

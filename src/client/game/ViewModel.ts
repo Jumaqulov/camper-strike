@@ -20,6 +20,20 @@ const KNIFE_POSE = new THREE.Euler(0.3, 0.25, 0.35, 'YXZ');
 
 const watchBandMat = new THREE.MeshStandardMaterial({ color: '#382919', roughness: 0.7 });
 
+/** 1P yoritgich ranglari: tun (oy nuri) va tong (iliq shafaq). */
+const VM_NIGHT = {
+  hemi: new THREE.Color('#b8c4e6'),
+  hemiGround: new THREE.Color('#2a3040'),
+  key: new THREE.Color('#aebfff'),
+  rim: new THREE.Color('#6f8fd6'),
+};
+const VM_DAWN = {
+  hemi: new THREE.Color('#f3d9cc'),
+  hemiGround: new THREE.Color('#4a4032'),
+  key: new THREE.Color('#ffd3aa'),
+  rim: new THREE.Color('#d79cbc'),
+};
+
 /** Birinchi shaxs ko'rinishidagi qurol + kemperning flanel yengli qo'llari va barmoqlari. */
 export class ViewModel {
   readonly scene = new THREE.Scene();
@@ -52,6 +66,9 @@ export class ViewModel {
   private readonly hemi: THREE.HemisphereLight;
   private readonly keyLight: THREE.DirectionalLight;
   private readonly rimLight: THREE.DirectionalLight;
+  /** Tun rejimi va joriy tong omili (-1 — hali qo'llanmagan). */
+  private night = false;
+  private dawnF = -1;
   visible = true;
 
   constructor(aspect: number) {
@@ -186,14 +203,10 @@ export class ViewModel {
    * tus oladi — aks holda 1P qurol tun dunyosi ustida kunduzdek yorug' ko'rinardi.
    */
   setNight(on: boolean): void {
+    this.night = on;
+    this.dawnF = -1;
     if (on) {
-      this.hemi.color.set('#b8c4e6');
-      this.hemi.groundColor.set('#2a3040');
-      this.hemi.intensity = 1.9 * 0.45;
-      this.keyLight.color.set('#aebfff');
-      this.keyLight.intensity = 2.8 * 0.45;
-      this.rimLight.color.set('#6f8fd6');
-      this.rimLight.intensity = 1.8 * 0.45;
+      this.setDawn(0);
     } else {
       this.hemi.color.set('#ffffff');
       this.hemi.groundColor.set('#6b5a40');
@@ -203,6 +216,25 @@ export class ViewModel {
       this.rimLight.color.set('#7dd3fc');
       this.rimLight.intensity = 1.8;
     }
+  }
+
+  /**
+   * Tong otishi (faqat tun rejimida): `f` — `dawnBlendFactor` (0 tun .. 1 tong). Pasaytirilgan tungi
+   * yoritgichlar ~45% → ~80% ga ko'tariladi va ko'kimtir oy tusidan iliq shafaq tusiga o'tadi.
+   */
+  setDawn(f: number): void {
+    if (!this.night) return;
+    const k = Math.min(1, Math.max(0, f));
+    if (Math.abs(k - this.dawnF) < 1e-4) return;
+    this.dawnF = k;
+    const mul = THREE.MathUtils.lerp(0.45, 0.8, k);
+    this.hemi.color.copy(VM_NIGHT.hemi).lerp(VM_DAWN.hemi, k);
+    this.hemi.groundColor.copy(VM_NIGHT.hemiGround).lerp(VM_DAWN.hemiGround, k);
+    this.hemi.intensity = 1.9 * mul;
+    this.keyLight.color.copy(VM_NIGHT.key).lerp(VM_DAWN.key, k);
+    this.keyLight.intensity = 2.8 * mul;
+    this.rimLight.color.copy(VM_NIGHT.rim).lerp(VM_DAWN.rim, k);
+    this.rimLight.intensity = 1.8 * mul;
   }
 
   setArmColor(c: THREE.ColorRepresentation): void {

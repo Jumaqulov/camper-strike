@@ -10,14 +10,16 @@ import {
   WOLF_RADIUS,
   isWolfId,
   isWolfThreatState,
+  wolfCoatTraits,
   type WolfBiteEvent,
   type WolfHowlEvent,
   type WolfSnap,
   type WolfState,
 } from '../../shared/wolf';
-import { WolfModel, preloadWolfAssets } from './wolf';
+import { WolfModel, preloadWolfAssets, wolfAudioRangeMul, wolfWarningFor, type WolfWarning } from './wolf';
 import { CAMP_ERROR_MESSAGES_UZ, CAMP_INTERACT_RANGE_M, CAMPFIRE_LOW_FUEL_SEC, WOOD_CARRY_MAX } from '../../shared/wolf/camp';
 import { CampRenderer, type CampFireView, type CampPileView } from './night';
+import { DawnTracker, dawnBlendFactor, dawnExposure } from './night/dawnLighting';
 import {
   DEFAULT_CONTAINER_EXTRA_MARGIN_M,
   GROUND_ITEM_PICKUP_RADIUS_M,
@@ -42,7 +44,7 @@ import {
   type WorldMeta,
 } from '../../shared/world';
 import { saveSettings, type QualityLevel, type Settings } from '../settings';
-import type { AudioSys } from './Audio';
+import { wolfVoiceMood, type AudioSys } from './Audio';
 import { Effects } from './Effects';
 import { buildGrenadeModel, buildGun } from './GunModels';
 import { esc, Hud, weaponBadgeHtml } from './Hud';
@@ -126,6 +128,8 @@ interface BufferedSnap {
 interface WolfRemote {
   id: string;
   model: WolfModel;
+  /** Rang varianti = bo'ri turi (`wolfCoatTraits`); o'zgarsa model qayta quriladi. */
+  coat: number;
   pos: THREE.Vector3;
   yaw: number;
   state: WolfState;
@@ -204,6 +208,9 @@ export class Game {
   private zoneWall: ZoneWall | null = null;
   /** "Tong otguncha" lageri: gulxanlar/o'tin g'aramlari renderi (faqat tun rejimida). */
   private camp: CampRenderer | null = null;
+  /** Tong otishi (tun rejimi): match yangilanishlari orasida silliqlangan daraja; tong xori bir marta chalinadi. */
+  private dawn = new DawnTracker();
+  private dawnChorusDone = false;
   /** [E] nishoni — eng yaqin gulxan yoki o'tin g'arami (konteynerdan ustun, agar yaqinroq bo'lsa). */
   private campTarget: { kind: 'pile' | 'fire'; id: string } | null = null;
   /** Lager amali so'rovi yuborilgan, ack kutilmoqda (ikki marta bosilmasin). */
@@ -381,8 +388,9 @@ export class Game {
       this.updatePauseMenu();
     };
     this.audio.setVolume(settings.volume);
-    // Ambient fon: o'rmon xaritalarida faqat qushlar (shamol va barg shovqini foydalanuvchi so'rovi bilan olib tashlangan)
-    this.audio.startAmbient('forest');
+    // Ambient fon: o'rmon xaritalarida faqat qushlar (shamol va barg shovqini foydalanuvchi so'rovi bilan olib tashlangan).
+    // "Tong otguncha" tunida qushlar sayramaydi — ular tong otganda qaytadi (updateDawn)
+    this.audio.startAmbient(this.isNight ? 'night' : 'forest');
 
     this.hud.reset();
     this.hud.show(true);
@@ -1025,6 +1033,13 @@ export class Game {
 
   private onMatch(m: MatchState) {
     this.match = m;
+    if (this.isNight) {
+      this.dawn.onMatch({
+        phase: m.phase,
+        winReason: m.winReason ?? m.survival?.winReason ?? null,
+        dawnInSec: m.survival?.night?.dawnInSec ?? null,
+      });
+    }
     const zone = m.phase === 'playing' ? m.survival?.zone ?? null : null;
     if (zone !== this.zoneSnap) {
       this.zoneSnap = zone;
@@ -1194,7 +1209,9 @@ export class Game {
   }
 
   private onKill(e: KillEvent) {
-    this.hud.killfeed(e, this.myId);
+    // Bo'ri o'ldirsa — killfeed va o'lim ekranida bo'ri turi ("Tun soyasi", "To'da boshlig'i", ...)
+    const wolfName = e.weapon === 'wolf' ? this.wolfKillerName(e) : null;
+    this.hud.killfeed(e, this.myId, wolfName);
     const rem = this.remotes.get(e.victim);
     if (rem) {
       rem.model.triggerDeath(e.headshot, e.weapon);
@@ -1220,7 +1237,7 @@ export class Game {
         e.weapon === 'zone'
           ? `Xavfsiz zonadan tashqarida qoldingiz ${weaponBadgeHtml('zone', false)}`
           : e.weapon === 'wolf'
-          ? `${esc(WOLF_NAME_UZ)} ${weaponBadgeHtml('wolf', false)} sizni g'ajib tashladi`
+          ? `${esc(wolfName ?? WOLF_NAME_UZ)} ${weaponBadgeHtml('wolf', false)} sizni g'ajib tashladi`
           : e.killer === e.victim
           ? `O'z granatangizdan halok bo'ldingiz ${weaponBadgeHtml('grenade', false)}`
           : `<span class="t-${e.killerTeam}">${esc(e.killerName)}</span> ${weaponBadgeHtml(e.weapon, e.headshot)} orqali sizni yo'q qildi`;
@@ -1635,6 +1652,7 @@ export class Game {
     this.fx.update(dt);
     // Konteyner qopqoq animatsiyalari lootWorld.update() ichida yangilanadi (bir kadrda bir marta).
     this.updateCamera(dt, t);
+    this.updateDawn(dt);
     this.updateCamp(dt, t);
     if (import.meta.env.DEV && this.collisionDebug?.isEnabled()) {
       const snap = this.lastAuthoritativeSnap;
@@ -2097,12 +2115,22 @@ export class Game {
       if (!s0 || !s1) continue;
       seen.add(id);
       let w = this.wolves.get(id);
+      const coat = s1.coat ?? s0.coat ?? 0;
+      if (w && w.coat !== coat) {
+        // Qayta tug'ilgan bo'ri boshqa turda — model (rang, masshtab) almashtiriladi
+        this.scene.remove(w.model.root);
+        w.model.dispose();
+        w.model = new WolfModel(coat);
+        w.coat = coat;
+        this.scene.add(w.model.root);
+      }
       if (!w) {
-        const model = new WolfModel(s0.coat ?? 0);
+        const model = new WolfModel(coat);
         this.scene.add(model.root);
         w = {
           id,
           model,
+          coat,
           pos: new THREE.Vector3(s0.x, s0.y, s0.z),
           yaw: s0.yaw,
           state: s0.state,
@@ -2124,35 +2152,40 @@ export class Game {
       const snapSpeed = Math.hypot(s1.x - s0.x, s1.z - s0.z) / dtSnap;
       w.speed = teleport ? 0 : lerp(w.speed, snapSpeed, Math.min(1, dt * 12));
       const newState = s1.state;
-      const mouth = { x: w.pos.x, y: w.pos.y + 0.9, z: w.pos.z };
+      const scale = w.model.scale;
+      const mouth = { x: w.pos.x, y: w.pos.y + 0.9 * scale, z: w.pos.z };
+      // "Tun soyasi": ovozlari faqat yaqindan eshitiladi va ovga hurmasdan, sezdirmay tushadi
+      const rangeMul = wolfAudioRangeMul(w.coat);
+      const stealthy = rangeMul < 1;
       if (newState !== w.state) {
         const wasThreat = isWolfThreatState(w.state);
         if (newState === 'attack') {
           this.audio.wolfSnarl(mouth);
         } else if (newState === 'hunt' && !wasThreat) {
-          // O'yinchini ko'rdi — hurib ovga tushadi
+          // O'yinchini ko'rdi — hurib ovga tushadi (soya — faqat past irillash)
           w.growlAt = t;
-          this.audio.wolfBark(mouth);
+          if (stealthy) this.audio.wolfGrowl(mouth, rangeMul);
+          else this.audio.wolfBark(mouth);
         } else if ((newState === 'stalk' || newState === 'alert') && !wasThreat && t - w.growlAt > 1.2) {
           w.growlAt = t;
-          this.audio.wolfGrowl(mouth);
+          this.audio.wolfGrowl(mouth, rangeMul);
         }
         w.state = newState;
       }
       w.targetId = src.targetId ?? null;
       w.alive = newState !== 'dead';
       const distToMe = Math.hypot(w.pos.x - this.me.body.pos.x, w.pos.z - this.me.body.pos.z);
-      // Ov davomida 2.5–4 s da bir irillaydi (40 m ichida), hushyor holatda sekinroq
+      // Ov davomida 2.5–4 s da bir irillaydi (40 m ichida; soya — yaqinroqda), hushyor holatda sekinroq
       const threat = isWolfThreatState(w.state);
-      if (w.alive && w.state !== 'attack' && distToMe < 40) {
+      if (w.alive && w.state !== 'attack' && distToMe < 40 * rangeMul) {
         const interval = threat ? 2.5 + Math.random() * 1.5 : w.state === 'alert' ? 5 : 0;
         if (interval > 0 && t - w.growlAt > interval) {
           w.growlAt = t;
-          this.audio.wolfGrowl(mouth);
+          this.audio.wolfGrowl(mouth, rangeMul);
         }
       }
       // Doimiy ovoz: nafas (pishillash) va ovda uzluksiz irillash — pozitsiyasi har kadr yangilanadi
-      this.audio.wolfVoice(w.id, mouth, threat, w.state === 'alert' || w.state === 'sniff', w.speed, distToMe, w.alive);
+      this.audio.wolfVoice(w.id, mouth, wolfVoiceMood(w.state), w.speed, distToMe, w.alive, rangeMul);
       const m = w.model;
       m.root.position.copy(w.pos);
       m.root.rotation.y = w.yaw;
@@ -2184,15 +2217,17 @@ export class Game {
 
   /** Bo'ri o'q xitboksi (server bilan bir xil AABB) — bashoratli qon effekti uchun. */
   private rayVsWolves(origin: Vec3, d: Vec3, maxT: number): number | null {
-    const r = WOLF_RADIUS + 0.25;
     let best: number | null = null;
     for (const w of this.wolves.values()) {
       if (!w.alive) continue;
+      // Xitboks tur masshtabi bilan kengayadi (to'da boshlig'i katta, chaqqon kichikroq)
+      const sc = w.model.scale;
+      const r = (WOLF_RADIUS + 0.25) * sc;
       const h = rayBox(
         origin,
         d,
         { x: w.pos.x - r, y: w.pos.y, z: w.pos.z - r },
-        { x: w.pos.x + r, y: w.pos.y + WOLF_HEIGHT, z: w.pos.z + r },
+        { x: w.pos.x + r, y: w.pos.y + WOLF_HEIGHT * sc, z: w.pos.z + r },
         best ?? maxT,
       );
       if (h) best = h.t;
@@ -2450,18 +2485,52 @@ export class Game {
     this.hud.setCampWarning(!main.lit ? 'out' : main.fuelSec < CAMPFIRE_LOW_FUEL_SEC ? 'low' : '');
   }
 
-  /** HUD: bo'ri xavfi darajasi (quvyapti / yaqinda). */
-  private wolfThreatLevel(): '' | 'near' | 'hunt' {
-    if (!this.me.alive || this.wolves.size === 0) return '';
+  /**
+   * HUD: bo'ri xavfi darajasi (quvyapti / yaqinda) va quvayotgan bo'ri turi. Qochayotgan ('flee') bo'rilar
+   * xavf emas; "Tun soyasi" kechroq (yaqinroqdan) seziladi — `wolfWarningFor`.
+   */
+  private wolfThreatLevel(): WolfWarning {
+    if (!this.me.alive || this.wolves.size === 0) return { level: '', nameUz: null };
     const p = this.me.body.pos;
-    let near = false;
-    for (const w of this.wolves.values()) {
-      if (!w.alive) continue;
-      if (w.targetId === this.myId && isWolfThreatState(w.state)) return 'hunt';
-      const d = Math.hypot(w.pos.x - p.x, w.pos.z - p.z);
-      if (d < 14 || (d < 26 && (w.state === 'alert' || w.state === 'stalk' || w.state === 'hunt'))) near = true;
+    const views = [...this.wolves.values()].map((w) => ({
+      x: w.pos.x,
+      z: w.pos.z,
+      state: w.state,
+      targetId: w.targetId,
+      alive: w.alive,
+      coat: w.coat,
+    }));
+    return wolfWarningFor(views, { x: p.x, z: p.z, alive: this.me.alive }, this.myId);
+  }
+
+  /** O'ldirgan bo'ri turi nomi: lokal bo'ri (coat) bo'yicha, bo'lmasa server bergan ism. */
+  private wolfKillerName(e: KillEvent): string {
+    const w = this.wolves.get(e.killer);
+    if (w) return wolfCoatTraits(w.coat).nameUz;
+    return e.killerName?.trim() ? e.killerName : WOLF_NAME_UZ;
+  }
+
+  /**
+   * Tong otishi (faqat tun rejimi): silliqlangan daraja → dunyo yorug'ligi/osmon/tuman, ekspozitsiya va
+   * 1P qo'l yoritgichlari. Tong otganda (yakun, winReason 'dawn') bir marta tong xori va kunduzgi qushlar;
+   * yangi tun (sanoq) boshlanganda — yana qushsiz tun foni.
+   */
+  private updateDawn(dt: number): void {
+    if (!this.isNight) return;
+    const p = this.dawn.update(dt);
+    this.world.setDawn?.(p);
+    this.renderer.toneMappingExposure = dawnExposure(p);
+    this.vm.setDawn(dawnBlendFactor(p));
+    const m = this.match;
+    const dawnWon = m?.phase === 'ended' && (m.winReason ?? m.survival?.winReason) === 'dawn';
+    if (dawnWon && !this.dawnChorusDone) {
+      this.dawnChorusDone = true;
+      this.audio.dawnChorus();
+      this.audio.startAmbient('forest');
+    } else if (this.dawnChorusDone && m && m.phase !== 'ended') {
+      this.dawnChorusDone = false;
+      this.audio.startAmbient('night');
     }
-    return near ? 'near' : '';
   }
 
   /**
@@ -2680,7 +2749,8 @@ export class Game {
       this.miniMap.update(center, allies, this.zoneSnap ? this.currentZoneForMinimap(t) : null, camp);
     }
     this.updateZone(t);
-    this.hud.setWolfWarning(this.wolfThreatLevel());
+    const wolfWarn = this.wolfThreatLevel();
+    this.hud.setWolfWarning(wolfWarn.level, wolfWarn.nameUz);
     this.updateCampHud(t);
     if (me.weapon) {
       const a = me.ammo[me.weapon];

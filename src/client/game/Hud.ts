@@ -208,15 +208,19 @@ export class Hud {
   }
 
   private lastWolfWarn = '';
-  /** Bo'ri xavfi: 'hunt' — sizni quvyapti, 'near' — yaqin atrofda hushyor, '' — yo'q. */
-  setWolfWarning(level: '' | 'near' | 'hunt'): void {
-    if (level === this.lastWolfWarn) return;
-    this.lastWolfWarn = level;
+  /**
+   * Bo'ri xavfi: 'hunt' — sizni quvyapti, 'near' — yaqin atrofda hushyor, '' — yo'q.
+   * `nameUz` — quvayotgan bo'ri turi ("To'da boshlig'i", "Tun soyasi", ...), bo'lmasa oddiy vahshiy bo'ri.
+   */
+  setWolfWarning(level: '' | 'near' | 'hunt', nameUz: string | null = null): void {
+    const key = level === 'hunt' ? `hunt:${nameUz ?? ''}` : level;
+    if (key === this.lastWolfWarn) return;
+    this.lastWolfWarn = key;
     const el = $('wolf-warn');
     el.classList.toggle('hidden', level === '');
     el.classList.toggle('hunt', level === 'hunt');
     $('hud').classList.toggle('wolf-hunted', level === 'hunt');
-    if (level === 'hunt') el.textContent = "VAHSHIY BO'RI SIZNI QUVYAPTI · qoching yoki oting!";
+    if (level === 'hunt') el.textContent = `${(nameUz || "Vahshiy bo'ri").toUpperCase()} SIZNI QUVYAPTI · qoching yoki oting!`;
     else if (level === 'near') el.textContent = "Yaqinda bo'ri bor · sekin yuring";
   }
 
@@ -341,7 +345,8 @@ export class Hud {
     this.flashTimer = window.setTimeout(() => f.classList.remove('show'), 80);
   }
 
-  killfeed(e: KillEvent, myId: string): void {
+  /** `wolfName` — bo'ri o'ldirganda uning turi nomi (`wolfCoatTraits(coat).nameUz`), bo'lmasa oddiy bo'ri. */
+  killfeed(e: KillEvent, myId: string, wolfName: string | null = null): void {
     const kf = $('killfeed');
     const el = document.createElement('div');
     const isMeKiller = e.killer === myId;
@@ -352,7 +357,7 @@ export class Hud {
     const self = e.killer === e.victim;
     el.innerHTML = wolfKill
       ? // Bo'ri o'ldirdi: o'yinchilar o'rtasidagi o'limdan farqli, qon-qizil taxtacha va "g'ajidi" so'zi
-        `<span class="kf-wolf">${WOLF_SVG}<span>Vahshiy bo'ri</span></span><span class="kf-verb">g'ajidi</span><span class="kf-name t-${e.victimTeam}">${esc(e.victimName)}</span>`
+        `<span class="kf-wolf">${WOLF_SVG}<span>${esc(wolfName || "Vahshiy bo'ri")}</span></span><span class="kf-verb">g'ajidi</span><span class="kf-name t-${e.victimTeam}">${esc(e.victimName)}</span>`
       : self
         ? `${weaponBadgeHtml(e.weapon, false)}<span class="kf-name t-${e.victimTeam}">${esc(e.victimName)}</span>`
         : `<span class="kf-name t-${e.killerTeam}">${esc(e.killerName)}</span>${weaponBadgeHtml(e.weapon, e.headshot)}<span class="kf-name t-${e.victimTeam}">${esc(e.victimName)}</span>`;
