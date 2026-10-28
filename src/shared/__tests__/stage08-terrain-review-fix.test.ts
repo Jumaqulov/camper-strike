@@ -140,16 +140,16 @@ describe('STAGE 08-TERRAIN-ART-POLISH-REVIEW-FIX — Unit & Integratsiya QA', ()
   // =========================================================================
   // 2. Deterministic World & Gameplay Hash
   // =========================================================================
-  it('2. Deterministik Dunyo va Gameplay Hash: seed 6501 uchun gameplayHash="6e4913c3e10347c9", worldVersion=2, 2571 kollayder, 36 spawn, 26 container, 6 POI', () => {
+  it('2. Deterministik Dunyo va Gameplay Hash: seed 6501 uchun gameplayHash="b9f85b7f2fe01575", worldVersion=2, 2583 kollayder, 36 spawn, 26 container, 6 POI', () => {
     const world = createForestSquareWorld({ publicLayoutSeed: 6501 });
 
     assert.equal(
       world.gameplayHash,
-      '6e4913c3e10347c9',
-      'Seed 6501 uchun gameplayHash aynan 6e4913c3e10347c9 bo‘lishi shart',
+      'b9f85b7f2fe01575',
+      'Seed 6501 uchun gameplayHash aynan b9f85b7f2fe01575 bo‘lishi shart',
     );
     assert.equal(world.worldVersion, 2, 'worldVersion aynan 2 bo‘lishi shart');
-    assert.equal(world.colliders.length, 2571, 'Aynan 2,356 kollayder saqlanishi shart');
+    assert.equal(world.colliders.length, 2583, 'Aynan 2,356 kollayder saqlanishi shart');
     assert.equal(world.spawnPoints.length, 36, 'Aynan 36 ta spawn nuqtasi saqlanishi shart');
     assert.equal(world.containerLocations.length, 26, 'Aynan 26 ta konteyner saqlanishi shart');
 
@@ -167,8 +167,8 @@ describe('STAGE 08-TERRAIN-ART-POLISH-REVIEW-FIX — Unit & Integratsiya QA', ()
     const collidersJson = JSON.stringify(world.colliders);
     const field = buildForestSquareGroundCover(world);
     assert.ok(field.total > 0, 'Ground cover muvaffaqiyatli qurilishi shart');
-    assert.equal(world.gameplayHash, '6e4913c3e10347c9', 'gameplayHash ground cover chaqiruvidan keyin o‘zgarmasligi shart');
-    assert.equal(world.colliders.length, 2571, 'Kollayderlar soni o‘zgarmasligi shart');
+    assert.equal(world.gameplayHash, 'b9f85b7f2fe01575', 'gameplayHash ground cover chaqiruvidan keyin o‘zgarmasligi shart');
+    assert.equal(world.colliders.length, 2583, 'Kollayderlar soni o‘zgarmasligi shart');
     assert.equal(JSON.stringify(world.colliders), collidersJson, 'Kollayderlar tarkibi o‘zgarmasligi shart');
   });
 

@@ -325,6 +325,31 @@ function buildCabinClusterSite(
   // Central courtyard well / bench prop
   const props: PrefabPlacement[] = [
     {
+      // Loftning ochiq g'arbiy cheti (zal tomon) uchun yog'och to'siq: zina maydonchasi (z 0.25..1.45) ochiq qoladi
+      objectId: `poi:${site.id}:prop:loft_guard_rail`,
+      prefabId: 'cabin:loft_guard_rail',
+      groundToTerrain: false,
+      transform: {
+        position: { x: q3(origin0.x + 4.06), y: q3(floorY + 3.0), z: q3(origin0.z + 2.725) },
+        yaw: 0,
+        scale: { x: 1, y: 1, z: 1 },
+      },
+      parts: [
+        {
+          localId: 'rail',
+          offset: { x: 0, y: 0.55, z: 0 },
+          size: { x: 0.12, y: 1.1, z: 2.45 },
+          mat: 'crate',
+          colliderTag: 'structure',
+          hasCollider: true,
+          hasVisual: true,
+          visualCategory: 'structure',
+          batchKey: 'poi:wood_stack',
+          batchMode: 'static_box',
+        },
+      ],
+    },
+    {
       objectId: `poi:${site.id}:prop:courtyard_bench_01`,
       prefabId: 'cluster:courtyard_bench',
       groundToTerrain: true,
@@ -1022,8 +1047,45 @@ function buildCliffWatchSite(
     ),
   ];
 
-  // Surrounding ancient stone ruin walls & low tactical cover blocks (static_box, mat: 'wall')
+  // Yuqori balkon (upper_deck_landing, y = floorY + 3, x −1.35..2.65, z −1.3..0) ochiq chetlari uchun to'siqlar;
+  // janub tomoni zina (g'arb) va eshik (sharq, x 1.1..2.9) uchun ochiq qoladi
+  const railPart = (localId: string, ox: number, oz: number, sx: number, sz: number, baseY = 0, h = 1.1) => ({
+    localId,
+    offset: { x: ox, y: q3(baseY + h / 2), z: oz },
+    size: { x: sx, y: h, z: sz },
+    mat: 'crate' as const,
+    colliderTag: 'structure' as const,
+    hasCollider: true,
+    hasVisual: true,
+    visualCategory: 'structure' as const,
+    batchKey: 'poi:wood_stack',
+    batchMode: 'static_box' as const,
+  });
+  // Tashqi zinaning ochiq (−X) tomoni: 8 ta pog'onali to'siq, zina balandligiga ergashadi (3 m / 4 m)
+  const stairRailParts = Array.from({ length: 8 }, (_, i) => {
+    const zc = 3.85 - (i + 0.5) * 0.5;
+    const rise = ((3.85 - zc) / 4.0) * 3.0;
+    return railPart(`stair_rail_${i + 1}`, -1.41, q3(zc), 0.12, 0.5, q3(rise), 1.0);
+  });
   const props: PrefabPlacement[] = [
+    {
+      objectId: `poi:${site.id}:prop:landing_guard_rail`,
+      prefabId: 'watchpost:landing_guard_rail',
+      groundToTerrain: false,
+      transform: { position: { x: q3(origin0.x), y: q3(floorY + 3.0), z: q3(origin0.z) }, yaw: 0, scale: { x: 1, y: 1, z: 1 } },
+      parts: [
+        railPart('north', 0.65, -1.24, 4.0, 0.12),
+        railPart('west', -1.29, -0.725, 0.12, 1.15),
+        railPart('east', 2.59, -0.65, 0.12, 1.3),
+      ],
+    },
+    {
+      objectId: `poi:${site.id}:prop:stair_guard_rail`,
+      prefabId: 'watchpost:stair_guard_rail',
+      groundToTerrain: false,
+      transform: { position: { x: q3(origin0.x), y: q3(floorY), z: q3(origin0.z) }, yaw: 0, scale: { x: 1, y: 1, z: 1 } },
+      parts: stairRailParts,
+    },
     {
       objectId: `poi:${site.id}:prop:ruin_wall_east`,
       prefabId: 'ruins:broken_stone_wall',
