@@ -166,18 +166,30 @@ export function preloadWolfAssets(): Promise<void> {
   }
   state = 'loading';
   preloadPromise = (async () => {
-    try {
-      const res = await fetch(WOLF_GLB_URL);
-      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-      const tpl = await parseWolfGlb(await res.arrayBuffer());
-      if (state !== 'loading') return;
-      adopt(tpl);
-    } catch (err) {
-      if (state !== 'loading') return;
-      state = 'failed';
-      if (!warned) {
-        warned = true;
-        console.warn(`[WolfAssetRegistry] '${WOLF_GLB_URL}' yuklanmadi, procedural zaxira:`, err);
+    // Tarmoq xatosida (server qayta ishga tushayotganda) bir necha marta qayta urinamiz
+    const delays = [1500, 4000, 10000];
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const res = await fetch(WOLF_GLB_URL, { cache: attempt === 0 ? 'default' : 'reload' });
+        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+        const tpl = await parseWolfGlb(await res.arrayBuffer());
+        if (state !== 'loading') return;
+        adopt(tpl);
+        return;
+      } catch (err) {
+        if (state !== 'loading') return;
+        if (attempt < delays.length) {
+          console.warn(`[WolfAssetRegistry] '${WOLF_GLB_URL}' yuklanmadi, ${delays[attempt]! / 1000} s dan keyin qayta urinish:`, err);
+          await new Promise((r) => setTimeout(r, delays[attempt]));
+          if (state !== 'loading') return;
+          continue;
+        }
+        state = 'failed';
+        if (!warned) {
+          warned = true;
+          console.warn(`[WolfAssetRegistry] '${WOLF_GLB_URL}' yuklanmadi, procedural zaxira:`, err);
+        }
+        return;
       }
     }
   })();

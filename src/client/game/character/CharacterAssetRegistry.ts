@@ -297,21 +297,34 @@ export function preloadCharacterAssets(): Promise<void> {
   state = 'loading';
   const t0 = nowMs();
   preloadPromise = (async () => {
-    try {
-      const res = await fetch(CAMPER_BUDDY_URL);
-      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-      const buf = await res.arrayBuffer();
-      const tpl = await parseCharacterGlb(buf);
-      // A test/dev re-register while we were in flight wins
-      if (state !== 'loading') return;
-      loadMs = Math.round(nowMs() - t0);
-      adoptTemplate(tpl);
-    } catch (err) {
-      if (state !== 'loading') return;
-      loadMs = Math.round(nowMs() - t0);
-      state = 'failed';
-      lastError = err instanceof Error ? err.message : String(err);
-      warnOnce(`[CharacterAssetRegistry] '${CAMPER_BUDDY_URL}' yuklanmadi, procedural Stickman fallback:`, err);
+    // Tarmoq/HTTP xatosi (masalan, server qayta ishga tushayotgan lahzada) bir martalik bo'lmasin:
+    // bir necha marta qayta urinamiz, aks holda sahifa yangilanguncha hamma procedural zaxirada qolardi.
+    const delays = [1500, 4000, 10000];
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const res = await fetch(CAMPER_BUDDY_URL, { cache: attempt === 0 ? 'default' : 'reload' });
+        if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+        const buf = await res.arrayBuffer();
+        const tpl = await parseCharacterGlb(buf);
+        // A test/dev re-register while we were in flight wins
+        if (state !== 'loading') return;
+        loadMs = Math.round(nowMs() - t0);
+        adoptTemplate(tpl);
+        return;
+      } catch (err) {
+        if (state !== 'loading') return;
+        lastError = err instanceof Error ? err.message : String(err);
+        if (attempt < delays.length) {
+          console.warn(`[CharacterAssetRegistry] '${CAMPER_BUDDY_URL}' yuklanmadi (${lastError}), ${delays[attempt]! / 1000} s dan keyin qayta urinish`);
+          await new Promise((r) => setTimeout(r, delays[attempt]));
+          if (state !== 'loading') return;
+          continue;
+        }
+        loadMs = Math.round(nowMs() - t0);
+        state = 'failed';
+        warnOnce(`[CharacterAssetRegistry] '${CAMPER_BUDDY_URL}' yuklanmadi, procedural Stickman fallback:`, err);
+        return;
+      }
     }
   })();
   return preloadPromise;
