@@ -274,13 +274,13 @@ function adoptTemplate(t: CharacterAssetTemplate): void {
     templateClipMap = null;
     state = 'failed';
     lastError = `validation failed: ${t.validation.errors.join('; ')}`;
-    warnOnce(`[CharacterAssetRegistry] '${CAMPER_BUDDY_URL}' ${lastError} — procedural Stickman fallback`);
+    warnOnce(`[CharacterAssetRegistry] '${CAMPER_BUDDY_URL}' ${lastError} — o'yinchilar model yuklanmaguncha ko'rinmaydi`);
   }
 }
 
 /**
  * Singleton loader for the Camper Buddy GLB: fetches + parses once, validates, and notifies listeners.
- * Never rejects; on any failure the state becomes 'failed' and callers keep the procedural Stickman.
+ * Never rejects; on any failure the state becomes 'failed' and players stay invisible (there is no fallback body).
  * In Node/test (no `window`/`fetch`) it is a no-op — tests register a parsed template directly.
  */
 export function preloadCharacterAssets(): Promise<void> {
@@ -298,7 +298,7 @@ export function preloadCharacterAssets(): Promise<void> {
   const t0 = nowMs();
   preloadPromise = (async () => {
     // Tarmoq/HTTP xatosi (masalan, server qayta ishga tushayotgan lahzada) bir martalik bo'lmasin:
-    // bir necha marta qayta urinamiz, aks holda sahifa yangilanguncha hamma procedural zaxirada qolardi.
+    // bir necha marta qayta urinamiz, aks holda sahifa yangilanguncha hamma o'yinchilar ko'rinmas qolardi.
     const delays = [1500, 4000, 10000];
     for (let attempt = 0; ; attempt++) {
       try {
@@ -322,7 +322,7 @@ export function preloadCharacterAssets(): Promise<void> {
         }
         loadMs = Math.round(nowMs() - t0);
         state = 'failed';
-        warnOnce(`[CharacterAssetRegistry] '${CAMPER_BUDDY_URL}' yuklanmadi, procedural Stickman fallback:`, err);
+        warnOnce(`[CharacterAssetRegistry] '${CAMPER_BUDDY_URL}' yuklanmadi (qayta urinishlar tugadi) — o'yinchilar model yuklanmaguncha ko'rinmaydi:`, err);
         return;
       }
     }
@@ -426,7 +426,7 @@ export function instantiateCamperBuddy(): CamperBuddyInstance | null {
   if (!mainMaterial || !teamTemplateMaterial || !teamMesh || sockets.size !== CAMPER_BUDDY_SOCKETS.length) {
     // Validation guarantees these; a mismatch means the template was mutated after registration
     for (const sk of skeletons) sk.dispose();
-    console.warn('[CharacterAssetRegistry] instance is missing materials/sockets, using procedural fallback');
+    console.warn('[CharacterAssetRegistry] instance is missing materials/sockets — attach skipped, player stays invisible');
     return null;
   }
 

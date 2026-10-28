@@ -975,7 +975,6 @@ export class Game {
       let rem = this.remotes.get(r.id);
       if (!rem) {
         const model = new Stickman(colorFor(r.team, r.id));
-        model.setArchetypeFromId(r.name);
         model.setWeapon(this.lootPreview ? null : 'rifle');
         model.root.visible = false;
         this.scene.add(model.root);
@@ -998,7 +997,6 @@ export class Game {
         this.remotes.set(r.id, rem);
       }
       if (rem.team !== r.team) rem.model.setColor(colorFor(r.team, r.id));
-      rem.model.setArchetypeFromId(r.name);
       rem.team = r.team;
       rem.name = r.name;
     }

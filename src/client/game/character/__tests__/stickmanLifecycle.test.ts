@@ -11,9 +11,10 @@ import {
 } from '../CharacterAssetRegistry';
 
 // Stage 08B-CHAR-INTEGRATION — sub-agent D: coordinator adapter (Stickman) lifecycle in Node.
-// Stickman draws canvas textures (flannel, name tag, flash) → a minimal `document` stub with a
-// no-op 2D context is installed for this file only. `window` stays undefined, so the asset/weapon
+// Stickman draws canvas textures (name tag, flash) → a minimal `document` stub with a no-op 2D
+// context is installed for this file only. `window` stays undefined, so the asset/weapon
 // preloaders are no-ops and the template is injected via registerCharacterTemplateForTest.
+// There is no procedural fallback body any more: until the GLB is ready the model renders nothing.
 
 const GLB_PATH = fileURLToPath(
   new URL('../../../../../public/models/characters/camper_buddy_balanced_rigged.glb', import.meta.url),
@@ -58,6 +59,15 @@ function glbTemplate(): Promise<CharacterAssetTemplate> {
 
 const flush = () => new Promise<void>((r) => setTimeout(r, 0));
 
+/** `root` ostidagi barcha Mesh/SkinnedMesh'lar soni (ism yorlig'i / olov Sprite hisobga olinmaydi). */
+function countMeshes(root: THREE.Object3D): number {
+  let n = 0;
+  root.traverse((o) => {
+    if ((o as THREE.Mesh).isMesh) n++;
+  });
+  return n;
+}
+
 type StickmanCtor = typeof import('../../Stickman').Stickman;
 type StickmanState = import('../../Stickman').StickmanState;
 
@@ -86,12 +96,22 @@ describe('BOSQICH 08B-CHAR — Stickman adapter hayot sikli (Node, document stub
     uninstall();
   });
 
-  it('1. Asset yuklanmaguncha procedural; registry ready → buddy; har 4 qurol; tirik/o‘lik/tirilish; dispose → liveInstances 0', async () => {
+  it('1. Asset yuklanmaguncha root bo‘sh (pending); registry ready → buddy + kutib turgan qurol/jihoz; har 4 qurol; tirik/o‘lik/tirilish; dispose → liveInstances 0', async () => {
     const s = new Stickman('#e03a30');
-    assert.equal(s.usesCharacterAsset(), false, 'yuklanishdan oldin procedural');
-    assert.equal(s.getCharacterDiagnostics().mode, 'procedural');
+    assert.equal(s.usesCharacterAsset(), false, 'yuklanishdan oldin buddy yo‘q');
+    assert.equal(s.getCharacterDiagnostics().mode, 'pending');
+    assert.equal(countMeshes(s.root), 0, 'zaxira tana yo‘q — GLB kelmaguncha hech qanday mesh chizilmaydi');
     s.setWeapon('rifle');
+    s.setGear({ helmet: true, armor: true, grenades: 2, medkits: 1 });
     s.update(DT, alive(3));
+    assert.equal(s.hasWeapon(), false, 'qurol so‘rovi saqlanadi, lekin model hali o‘rnatilmagan');
+    assert.equal(countMeshes(s.root), 0, 'qurol/jihoz so‘rovi ham root’ga mesh qo‘shmaydi');
+    // Anchorlar root ostida — muzzle o‘yinchi bilan birga yuradi, xarita markazida emas
+    s.root.position.set(10, 0, -4);
+    s.root.updateMatrixWorld(true);
+    const pendingMuzzle = s.getMuzzleWorld(new THREE.Vector3());
+    assert.ok(Math.abs(pendingMuzzle.x - 10) < 1 && Math.abs(pendingMuzzle.z + 4) < 1, 'pending muzzle root yonida');
+    s.root.position.set(0, 0, 0);
 
     registerCharacterTemplateForTest(tpl);
     await flush();
@@ -100,7 +120,14 @@ describe('BOSQICH 08B-CHAR — Stickman adapter hayot sikli (Node, document stub
     assert.equal(d.liveInstances, 1);
     const diag = s.getCharacterDiagnostics();
     assert.equal(diag.mode, 'buddy');
-    assert.equal(diag.weapon, 'rifle', 'qurol hand socket’ga qayta o‘rnatiladi');
+    assert.equal(diag.weapon, 'rifle', 'kutib turgan qurol hand socket’ga o‘rnatiladi');
+    assert.equal(s.hasWeapon(), true);
+    assert.ok(countMeshes(s.root) > 0, 'buddy skinned mesh + qurol + jihoz mesh’lari root ostida');
+    let gearHelmet: THREE.Object3D | undefined;
+    s.root.traverse((o) => {
+      if (o.name === 'gear_helmet') gearHelmet = o;
+    });
+    assert.ok(gearHelmet?.visible, 'kutib turgan jihoz (kaska) suyakka ulanadi');
     let buddyRoot: THREE.Object3D | undefined;
     s.root.traverse((o) => {
       if (o.name === 'camper_buddy_instance') buddyRoot = o;
@@ -128,7 +155,7 @@ describe('BOSQICH 08B-CHAR — Stickman adapter hayot sikli (Node, document stub
     assert.equal(s.getCharacterDiagnostics().weapon, null);
     s.setWeapon('rifle');
 
-    // death (frozen + procedural fall) → revive
+    // death (frozen skeleton + whole-body pivot fall) → revive
     s.triggerDeath(false, 'rifle');
     for (let i = 0; i < 90; i++) s.update(DT, { ...alive(0), alive: false });
     assert.equal(s.usesCharacterAsset(), true);
@@ -178,7 +205,7 @@ describe('BOSQICH 08B-CHAR — Stickman adapter hayot sikli (Node, document stub
     assert.equal(getCharacterAssetDiagnostics().liveInstances, 0);
   });
 
-  it('4. Asset xatosi → procedural fallback ishlaydi (update/setWeapon/dispose xatosiz)', async () => {
+  it('4. Asset xatosi → model pending (bo‘sh) qoladi, update/setWeapon/o‘lim/dispose xatosiz', async () => {
     registerCharacterTemplateForTest(null);
     const bad = await glbTemplate();
     bad.clips = bad.clips.filter((c) => c.name !== 'Run');
@@ -194,14 +221,23 @@ describe('BOSQICH 08B-CHAR — Stickman adapter hayot sikli (Node, document stub
     const s = new Stickman('#e03a30');
     await flush();
     assert.equal(s.usesCharacterAsset(), false);
+    assert.equal(countMeshes(s.root), 0, 'xato holatida ham zaxira tana chizilmaydi');
     for (const w of WEAPONS) {
       s.setWeapon(w);
       s.update(DT, alive(3));
+      assert.equal(s.hasWeapon(), false);
     }
+    s.setCrouch(true);
+    s.update(DT, alive(0));
+    s.setCameraProximityFade(0.3);
+    s.playInteract();
+    s.triggerDeath(true);
     s.update(DT, { ...alive(0), alive: false });
     s.update(DT, alive(0));
-    assert.equal(s.getCharacterDiagnostics().mode, 'procedural');
+    assert.equal(s.getCharacterDiagnostics().mode, 'pending');
+    assert.equal(countMeshes(s.root), 0);
     s.dispose();
     assert.equal(getCharacterAssetDiagnostics().liveInstances, 0);
+    assert.equal(getCharacterAssetDiagnostics().createdInstances, 0);
   });
 });

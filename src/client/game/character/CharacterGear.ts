@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 /**
  * O'yinchi modeliga osilgan jihozlar: kaska (bosh), zirh nimcha (ko'krak), granatalar va aptechkalar
- * (kamar, ovchi uslubida). Ham Camper Buddy GLB suyaklariga, ham protsedural stickman guruhlariga ulanadi.
+ * (kamar, ovchi uslubida). Camper Buddy GLB suyaklariga (Head / Chest / Hips) ulanadi.
  *
  * Geometriya va materiallar umumiy (dispose qilinmaydi); har rig faqat o'z Mesh'larini yaratadi.
  */
@@ -18,8 +18,6 @@ export interface CharacterGearState {
 
 export const EMPTY_GEAR: CharacterGearState = { helmet: false, armor: false, grenades: 0, medkits: 0 };
 
-export type GearLayout = 'procedural' | 'buddy';
-
 interface GearPoint {
   pos: [number, number, number];
   rot?: [number, number, number];
@@ -32,22 +30,6 @@ interface GearLayoutTable {
   grenades: GearPoint[];
   medkits: GearPoint[];
 }
-
-/** Protsedural stickman: headGroup (bosh markazi), chest (ko'krak), hips (tos) guruhlari koordinatalarida. */
-const LAYOUT_PROCEDURAL: GearLayoutTable = {
-  helmet: { pos: [0, 0.14, 0], scale: 1.18 },
-  vest: { pos: [0, -0.02, 0], scale: 1.0 },
-  grenades: [
-    { pos: [-0.27, 0.05, 0.1] },
-    { pos: [-0.29, 0.05, -0.03] },
-    { pos: [-0.27, 0.05, -0.16] },
-  ],
-  medkits: [
-    { pos: [0.27, 0.05, 0.08], rot: [0, Math.PI / 2, 0] },
-    { pos: [0.27, 0.05, -0.08], rot: [0, Math.PI / 2, 0] },
-    { pos: [0.1, 0.06, -0.26], rot: [0, 0, 0] },
-  ],
-};
 
 /** Camper Buddy GLB: Head, Chest, Hips suyaklari lokal koordinatalarida (suyak o'qi Y bo'ylab yuqoriga). */
 const LAYOUT_BUDDY: GearLayoutTable = {
@@ -348,7 +330,6 @@ export class CharacterGearRig {
   private vest: THREE.Group | null = null;
   private readonly grenades: THREE.Group[] = [];
   private readonly medkits: THREE.Group[] = [];
-  private layout: GearLayout = 'procedural';
   private state: CharacterGearState = { ...EMPTY_GEAR };
   private scaleDirty = false;
 
@@ -358,14 +339,11 @@ export class CharacterGearRig {
     this.beltHolder.name = 'gear_belt';
   }
 
-  /** Ushlagichlarni berilgan ota obyektlarga (suyak yoki guruh) ko'chiradi. */
-  attach(
-    layout: GearLayout,
-    head: THREE.Object3D | null,
-    chest: THREE.Object3D | null,
-    hips: THREE.Object3D | null,
-  ): void {
-    this.layout = layout;
+  /**
+   * Ushlagichlarni Camper Buddy suyaklariga ko'chiradi. `setState()` bilan oldin berilgan jihozlar
+   * (GLB kelishidan oldin saqlangan so'rov) shu yerda darhol suyaklarda ko'rinadi.
+   */
+  attach(head: THREE.Object3D | null, chest: THREE.Object3D | null, hips: THREE.Object3D | null): void {
     this.headHolder.removeFromParent();
     this.chestHolder.removeFromParent();
     this.beltHolder.removeFromParent();
@@ -374,7 +352,7 @@ export class CharacterGearRig {
     hips?.add(this.beltHolder);
     for (const h of [this.headHolder, this.chestHolder, this.beltHolder]) h.scale.setScalar(1);
     // GLB suyaklari masshtabli bo'lishi mumkin — birinchi update'da teskari masshtab qo'llanadi
-    this.scaleDirty = layout === 'buddy';
+    this.scaleDirty = true;
     this.applyLayout();
   }
 
@@ -424,7 +402,7 @@ export class CharacterGearRig {
   }
 
   private applyLayout(): void {
-    const table = this.layout === 'buddy' ? LAYOUT_BUDDY : LAYOUT_PROCEDURAL;
+    const table = LAYOUT_BUDDY;
     const s = this.state;
 
     if (s.helmet) {

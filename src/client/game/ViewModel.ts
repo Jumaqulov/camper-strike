@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { RUN_SPEED } from '../../shared/constants';
 import { WEAPONS, type WeaponId } from '../../shared/weapons';
 import { buildGrenadeModel, buildGun, type GunModel } from './GunModels';
-import { getFlannelTexture, skinMat } from './Stickman';
+import { getFlannelTexture, skinMat } from './ViewModelMaterials';
 import { flashTexture } from './Textures';
 import { onWeaponAssetsReady } from './WeaponAssetRegistry';
 
