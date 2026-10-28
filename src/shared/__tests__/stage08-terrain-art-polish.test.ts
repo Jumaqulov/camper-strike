@@ -241,7 +241,7 @@ void main() {
   // =========================================================================
   // 4. World Determinism & Hash Preservation
   // =========================================================================
-  it('4. Dunyo Determinizmi va Hash Saqlanishi: Relyef balandliklari deterministik, gameplayHash="a746d9f39e5ba0b2", 36 spawn, 26 container, colliders daxlsiz', () => {
+  it('4. Dunyo Determinizmi va Hash Saqlanishi: Relyef balandliklari deterministik, gameplayHash="344d2cb0662ba731", 36 spawn, 26 container, colliders daxlsiz', () => {
     const t1 = buildForestSquareTerrain(6501);
     const t2 = buildForestSquareTerrain(6501);
     const buf1 = Buffer.from(new Float32Array(t1.heights).buffer);
@@ -251,8 +251,8 @@ void main() {
     const world = createForestSquareWorld({ publicLayoutSeed: 6501 });
     assert.equal(
       world.gameplayHash,
-      'a746d9f39e5ba0b2',
-      'Seed 6501 uchun gameplayHash aynan a746d9f39e5ba0b2 bo‘lishi shart',
+      '344d2cb0662ba731',
+      'Seed 6501 uchun gameplayHash aynan 344d2cb0662ba731 bo‘lishi shart',
     );
     assert.equal(world.spawnPoints.length, 36, 'Aynan 36 ta spawn saqlanishi kerak');
     assert.equal(world.containerLocations.length, 26, 'Aynan 26 ta konteyner saqlanishi kerak');
@@ -262,7 +262,7 @@ void main() {
 
     const field = buildForestSquareGroundCover(world);
     assert.ok(field.total > 16000 && field.total < 22000, `Instansiyalar soni budgetda bo‘lishi kerak: ${field.total}`);
-    assert.equal(world.gameplayHash, 'a746d9f39e5ba0b2', 'Ground cover yaratilishi gameplayHash ni aslo o‘zgartirmasligi shart');
+    assert.equal(world.gameplayHash, '344d2cb0662ba731', 'Ground cover yaratilishi gameplayHash ni aslo o‘zgartirmasligi shart');
     assert.equal(world.colliders.length, collidersCount, 'Yangi kollayder qo‘shilmasligi shart');
     assert.equal(JSON.stringify(world.colliders), collidersJson, 'Kollayderlar massivi aynan saqlanishi shart');
   });

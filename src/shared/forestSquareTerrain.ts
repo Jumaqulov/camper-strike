@@ -1,5 +1,5 @@
 import { clamp, q3 } from './math';
-import { sampleForestSquareRoad } from './forestSquareRoads';
+import { sampleForestSquareRoad, setBoundedSeedCache } from './forestSquareRoads';
 import {
   FOREST_SQUARE_CELL_SIZE,
   FOREST_SQUARE_HALF,
@@ -53,7 +53,7 @@ function getCachedPoiSites(seed: number): ForestSquarePoiSiteSpec[] {
   let sites = poiSitesCache.get(key);
   if (!sites) {
     sites = getForestSquarePoiSites(key);
-    poiSitesCache.set(key, sites);
+    setBoundedSeedCache(poiSitesCache, key, sites);
   }
   return sites;
 }
@@ -227,7 +227,7 @@ export function buildForestSquareTerrain(
     rows,
     heights,
   };
-  terrainCache.set(seedKey, descriptor);
+  setBoundedSeedCache(terrainCache, seedKey, descriptor);
   return {
     ...descriptor,
     heights: descriptor.heights.slice(),

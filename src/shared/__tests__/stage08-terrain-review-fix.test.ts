@@ -141,13 +141,13 @@ describe('STAGE 08-TERRAIN-ART-POLISH-REVIEW-FIX — Unit & Integratsiya QA', ()
   // =========================================================================
   // 2. Deterministic World & Gameplay Hash
   // =========================================================================
-  it('2. Deterministik Dunyo va Gameplay Hash: seed 6501 uchun gameplayHash="a746d9f39e5ba0b2", worldVersion=2, 2584 kollayder, 36 spawn, 26 container, 6 POI', () => {
+  it('2. Deterministik Dunyo va Gameplay Hash: seed 6501 uchun gameplayHash="344d2cb0662ba731", worldVersion=2, 2584 kollayder, 36 spawn, 26 container, 6 POI', () => {
     const world = createForestSquareWorld({ publicLayoutSeed: 6501 });
 
     assert.equal(
       world.gameplayHash,
-      'a746d9f39e5ba0b2',
-      'Seed 6501 uchun gameplayHash aynan a746d9f39e5ba0b2 bo‘lishi shart',
+      '344d2cb0662ba731',
+      'Seed 6501 uchun gameplayHash aynan 344d2cb0662ba731 bo‘lishi shart',
     );
     assert.equal(world.worldVersion, 2, 'worldVersion aynan 2 bo‘lishi shart');
     assert.equal(world.colliders.length, 2584, 'Aynan 2584 kollayder saqlanishi shart');
@@ -168,7 +168,7 @@ describe('STAGE 08-TERRAIN-ART-POLISH-REVIEW-FIX — Unit & Integratsiya QA', ()
     const collidersJson = JSON.stringify(world.colliders);
     const field = buildForestSquareGroundCover(world);
     assert.ok(field.total > 0, 'Ground cover muvaffaqiyatli qurilishi shart');
-    assert.equal(world.gameplayHash, 'a746d9f39e5ba0b2', 'gameplayHash ground cover chaqiruvidan keyin o‘zgarmasligi shart');
+    assert.equal(world.gameplayHash, '344d2cb0662ba731', 'gameplayHash ground cover chaqiruvidan keyin o‘zgarmasligi shart');
     assert.equal(world.colliders.length, 2584, 'Kollayderlar soni o‘zgarmasligi shart');
     assert.equal(JSON.stringify(world.colliders), collidersJson, 'Kollayderlar tarkibi o‘zgarmasligi shart');
   });

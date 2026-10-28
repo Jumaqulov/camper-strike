@@ -107,6 +107,22 @@ const GRID_MIN = -128;
 const GRID_CELL_SIZE = 256 / GRID_DIM; // 4m
 const CELL_HALF_DIAG = Math.SQRT2 * (GRID_CELL_SIZE * 0.5); // ~2.828m
 
+/**
+ * Urug' bo'yicha keshlar (yo'l tarmog'i, relyef, POI joylari) hajmi chegarasi — dunyo keshi kabi 16 ta.
+ * Urug' mijozdan keladi (lobbi istalgan `publicLayoutSeed` ni qabul qiladi), cheklanmagan Map xotirani
+ * cheksiz o'stirishi mumkin edi.
+ */
+export const FOREST_SQUARE_SEED_CACHE_MAX = 16;
+
+/** FIFO: kesh to'lgan bo'lsa eng eski yozuvni o'chirib, yangisini qo'shadi (Map qo'shilish tartibini saqlaydi). */
+export function setBoundedSeedCache<K, V>(cache: Map<K, V>, key: K, value: V, max = FOREST_SQUARE_SEED_CACHE_MAX): void {
+  if (!cache.has(key) && cache.size >= max) {
+    const oldest = cache.keys().next();
+    if (!oldest.done) cache.delete(oldest.value);
+  }
+  cache.set(key, value);
+}
+
 const roadNetworkCache = new Map<number, CachedRoadNetwork>();
 
 function pointToSegmentDistSq(px: number, pz: number, seg: CompiledRoadSegment): number {
@@ -310,7 +326,8 @@ function getCachedRoadNetwork(seed: number): CachedRoadNetwork {
   let cached = roadNetworkCache.get(key);
   if (!cached) {
     cached = buildCachedRoadNetwork(key);
-    roadNetworkCache.set(key, cached);
+    // Urug' mijozdan keladi — kesh hajmi cheklangan (FIFO, 16 ta)
+    setBoundedSeedCache(roadNetworkCache, key, cached);
   }
   return cached;
 }

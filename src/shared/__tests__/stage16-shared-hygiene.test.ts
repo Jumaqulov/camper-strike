@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { FOREST_SQUARE_SEED_CACHE_MAX, setBoundedSeedCache } from '../forestSquareRoads';
 import { createSeededRng, q3 } from '../math';
 import { pointInsideCollider, rayBox, stepProjectileInWorld } from '../physics';
+import { SpatialGridIndex } from '../spatialIndex';
 import { buildSurvivalZoneTimeline } from '../survival/zone';
 import { createGroundedRockCollider, createGroundedTreeCollider, sampleTerrainHeight } from '../terrain';
 import {
@@ -183,5 +185,81 @@ describe('Bosqich 16 — umumiy kod gigiyenasi (RNG, q3, hit-shakl granata)', ()
     const hit = rayBox({ x: 0, y: 1, z: -5 }, { x: 0, y: 0, z: 1 }, { x: -1, y: 0, z: -1 }, { x: 1, y: 2, z: 1 }, 20);
     assert.ok(hit && Math.abs(hit.t - 4) < 1e-9 && hit.nz === -1);
     assert.equal(rayBox({ x: 5, y: 1, z: -5 }, { x: 0, y: 0, z: 1 }, { x: -1, y: 0, z: -1 }, { x: 1, y: 2, z: 1 }, 20), null);
+  });
+  it('7. Urug‘ keshlari cheklangan (FIFO, 16 ta): mijoz istalgan seed yuborsa ham xotira o‘smaydi', () => {
+    assert.equal(FOREST_SQUARE_SEED_CACHE_MAX, 16);
+    const cache = new Map<number, string>();
+    for (let seed = 0; seed < 100; seed++) setBoundedSeedCache(cache, seed, `v${seed}`);
+    assert.equal(cache.size, FOREST_SQUARE_SEED_CACHE_MAX);
+    assert.deepEqual([...cache.keys()], Array.from({ length: 16 }, (_, i) => 84 + i), 'eng eskilari chiqariladi');
+    // Mavjud kalitni yangilash hech narsani chiqarmaydi
+    setBoundedSeedCache(cache, 90, 'new');
+    assert.equal(cache.size, 16);
+    assert.equal(cache.get(84), 'v84');
+    assert.equal(cache.get(90), 'new');
+  });
+
+  it('8. SpatialGridIndex: qayta ishlatiladigan bufer bilan natija brute-force bilan bir xil tartibda (insert dan keyin ham)', () => {
+    const rng = createSeededRng(77);
+    const mk = (i: number): ColliderBox => {
+      const x = (rng() - 0.5) * 120;
+      const z = (rng() - 0.5) * 120;
+      const w = 0.2 + rng() * 14;
+      const d = 0.2 + rng() * 14;
+      const y = rng() * 6;
+      return { id: `b${i}`, tag: 'prop', mat: 'crate', min: { x, y, z }, max: { x: x + w, y: y + 0.5 + rng() * 3, z: z + d } };
+    };
+    const items = Array.from({ length: 400 }, (_, i) => mk(i));
+    const index = new SpatialGridIndex(items.slice(0, 300), { cellSize: 8 });
+    const check = (all: ColliderBox[]) => {
+      for (let q = 0; q < 200; q++) {
+        const x = (rng() - 0.5) * 140;
+        const z = (rng() - 0.5) * 140;
+        const w = rng() * 30;
+        const d = rng() * 30;
+        const y0 = rng() * 5;
+        const y1 = y0 + rng() * 4;
+        const got = index.queryAABB(x, z, x + w, z + d, y0, y1).map((b) => b.id);
+        const want = all
+          .filter((b) => b.max.x >= x && b.min.x <= x + w && b.max.z >= z && b.min.z <= z + d && b.max.y >= y0 && b.min.y <= y1)
+          .map((b) => b.id);
+        assert.deepEqual(got, want);
+        // Nur so'rovi: natija qo'shilish tartibida, takrorlanishsiz va brute-force kesishuvlarni qamraydi
+        const o = { x, y: y0 + 0.5, z };
+        const a = rng() * Math.PI * 2;
+        const dir = { x: Math.cos(a), y: 0, z: Math.sin(a) };
+        const ray = index.queryRay(o, dir, 60);
+        const order = ray.map((b) => all.indexOf(b));
+        assert.deepEqual(order, [...order].sort((p, q2) => p - q2), 'qo‘shilish tartibi');
+        assert.equal(new Set(order).size, order.length, 'takrorlanishsiz');
+        for (const b of all) {
+          if (rayBox(o, dir, b.min, b.max, 60)) assert.ok(ray.includes(b), `nur nomzodi ${b.id}`);
+        }
+      }
+    };
+    check(items.slice(0, 300));
+    for (const b of items.slice(300)) index.insert(b);
+    check(items);
+  });
+
+  it('9. forest_assets_preview toshlari forest_sample dagi bilan bir xil o‘lchamda (vizual scale = AABB)', () => {
+    const sample = createWorldDefinition({ mapId: 'forest_sample', publicLayoutSeed: 6501 } as never);
+    const preview = createWorldDefinition({ mapId: 'forest_assets_preview', publicLayoutSeed: 6501 } as never);
+    const bySource = new Map<string, ColliderBox>();
+    for (const c of sample.colliders) if (c.tag === 'rock') bySource.set(c.sourceObjectId ?? c.id, c);
+    const rocks = preview.colliders.filter((c) => c.tag === 'rock');
+    assert.ok(rocks.length > 5);
+    for (const r of rocks) {
+      const src = bySource.get(r.id);
+      assert.ok(src, `${r.id} forest_sample da bor`);
+      for (const axis of ['x', 'y', 'z'] as const) {
+        const ds: number = src.max[axis] - src.min[axis];
+        const dp: number = r.max[axis] - r.min[axis];
+        assert.ok(Math.abs(ds - dp) <= 2.5e-3, `${r.id} ${axis}: ${dp} ≈ ${ds}`);
+      }
+      const vis = preview.visuals.find((v) => v.sourceObjectId === r.id && v.category === 'rock');
+      assert.ok(vis, `${r.id} vizuali`);
+      assert.ok(Math.abs(r.max.x - r.min.x - vis!.transform.scale.x) <= 2.5e-3, `${r.id} AABB X = vizual scale.x`);
+    }
   });
 });

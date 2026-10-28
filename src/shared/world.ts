@@ -35,6 +35,7 @@ import {
   type MultiSiteStructureLayout,
 } from './forestSquare';
 import { q3, type Vec3 } from './math';
+import { isOutdoorYawAxisAligned } from './outdoor/outdoorColliders';
 import type { Stage04APreviewLayout } from './structures/contracts';
 import {
   buildTechnicalHeightfield,
@@ -154,8 +155,9 @@ export type ColliderTag = 'ground' | 'structure' | 'prop' | 'tree' | 'rock' | 'b
 /**
  * O'q/ko'rinish (raycast) uchun aniq shakl. Harakat fizikasi hamon AABB (`min`/`max`) bilan ishlaydi,
  * lekin o'q trayektoriyasi vizual shaklga mos keladi: dumaloq daraxt tanasi, yumaloq tosh, burilgan devor,
- * uchburchak tom old devori. Shakl doim AABB ichida bo'lishi shart (keng faza AABB bo'yicha).
- * gameplayHash ga kirmaydi (min/max/tag/mat hashlanadi).
+ * uchburchak tom old devori. Shakl doim AABB ichida bo'lishi shart (keng faza AABB bo'yicha); gable prizmasi
+ * GLB uchburchagidan olingani uchun qutidan chiqib turadi — `rayCollider` uni AABB ning y oralig'i bilan kesadi.
+ * gameplayHash ga kiradi (`hitShapeCanonical`): klient/server shakllari farq qilsa, ulanish tekshiruvi buni ushlaydi.
  */
 export type ColliderHitShape =
   | { kind: 'cylinder'; cx: number; cz: number; r: number }
@@ -306,6 +308,20 @@ export function hashCanonicalString(input: string): string {
   return `${hex1}${hex2}`;
 }
 
+/** Hit-shaklning kanonik satri (q3 yaxlitlangan) — `computeGameplayHash` uchun. */
+function hitShapeCanonical(h: ColliderHitShape): string {
+  switch (h.kind) {
+    case 'cylinder':
+      return `cyl:${q3(h.cx)},${q3(h.cz)},${q3(h.r)}`;
+    case 'ellipsoid':
+      return `ell:${q3(h.cx)},${q3(h.cy)},${q3(h.cz)},${q3(h.rx)},${q3(h.ry)},${q3(h.rz)}`;
+    case 'obb':
+      return `obb:${q3(h.cx)},${q3(h.cy)},${q3(h.cz)},${q3(h.hx)},${q3(h.hy)},${q3(h.hz)},${q3(h.yaw)}`;
+    case 'gable':
+      return `gab:${q3(h.cx)},${q3(h.cz)},${q3(h.hx)},${q3(h.baseY)},${q3(h.apexY)},${q3(h.hz)},${q3(h.yaw)}`;
+  }
+}
+
 /**
  * Computes the canonical gameplay hash from gameplay-affecting fields ONLY.
  * Explicitly ignores `visuals` (render descriptors, LODs, shadows) and any secret server loot seed.
@@ -329,8 +345,10 @@ export function computeGameplayHash(
   }
 
   for (const c of data.colliders) {
+    // O'q hit-shakli ham gameplay: server o'q tegishi va klient o'q izi/ko'rinishi bir xil shakldan foydalanishi shart
+    const hit = c.hit ? `|hit:${hitShapeCanonical(c.hit)}` : '';
     parts.push(
-      `col:${c.id}:${c.tag}:${c.mat}:${q3(c.min.x)},${q3(c.min.y)},${q3(c.min.z)}->${q3(c.max.x)},${q3(c.max.y)},${q3(c.max.z)}`,
+      `col:${c.id}:${c.tag}:${c.mat}:${q3(c.min.x)},${q3(c.min.y)},${q3(c.min.z)}->${q3(c.max.x)},${q3(c.max.y)},${q3(c.max.z)}${hit}`,
     );
   }
 
@@ -496,8 +514,8 @@ export function compilePrefabPlacement(
         max,
       };
       // Kardinal bo'lmagan burilishda AABB shishadi — o'q uchun haqiqiy burilgan quti
-      const k = yaw / (Math.PI / 2);
-      if (Math.abs(k - Math.round(k)) >= 1e-6) {
+      // (q3 yaxlitlangan 1.571 / 3.142 kabi yaw lar kardinal hisoblanadi — `isOutdoorYawAxisAligned`, 1e-3 rad)
+      if (!isOutdoorYawAxisAligned(yaw)) {
         col.hit = { kind: 'obb', cx: q3(cx), cy: q3(cy), cz: q3(cz), hx: sx / 2, hy: sy / 2, hz: sz / 2, yaw };
       }
       colliders.push(col);

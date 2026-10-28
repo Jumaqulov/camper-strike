@@ -527,13 +527,13 @@ void main() {
       assert.deepEqual(t1.heights, t2.heights, 'Qayta chaqirilganda relyef balandliklari 100% teng bo\'lishi shart');
     });
 
-    it('4.2 Seed 6501 uchun gameplayHash aynan "a746d9f39e5ba0b2" ga teng va barcha xaritalash invariantlari daxlsiz', () => {
+    it('4.2 Seed 6501 uchun gameplayHash aynan "344d2cb0662ba731" ga teng va barcha xaritalash invariantlari daxlsiz', () => {
       const world = createForestSquareWorld({ publicLayoutSeed: 6501 });
 
       assert.equal(
         world.gameplayHash,
-        'a746d9f39e5ba0b2',
-        'seed 6501 uchun gameplayHash aynan a746d9f39e5ba0b2 bo\'lishi shart',
+        '344d2cb0662ba731',
+        'seed 6501 uchun gameplayHash aynan 344d2cb0662ba731 bo\'lishi shart',
       );
       assert.equal(world.spawnPoints.length, 36, 'O\'rmon xaritasida aynan 36 ta spawn nuqtasi bo\'lishi kerak');
       assert.equal(world.containerLocations.length, 26, 'O\'rmon xaritasida aynan 26 ta loot konteyneri bo\'lishi kerak');

@@ -160,6 +160,8 @@ export function isSpawnPointSafe(
 const AXIS_CONTACT_EPS = 2e-3;
 /** Overlap depth (m) along the other axes that counts as "genuinely inside" a box. */
 const DEEP_OVERLAP_MIN = 0.02;
+/** `moveBodyInWorld` bitta chaqiruvidagi pastki qadamlar soni yuqori chegarasi (har qanday dt da). */
+export const MAX_MOVE_SUBSTEPS = 64;
 
 function overlapsOtherAxesDeeply(p: Vec3, axis: 'x' | 'z', r: number, h: number, b: Box): boolean {
   const other = axis === 'x' ? 'z' : 'x';
@@ -212,6 +214,25 @@ function isStandingOnCollider(p: Vec3, r: number, boxes: readonly Box[]): Box | 
       if (!best || b.max.y > best.max.y) best = b;
     }
   }
+  return best;
+}
+
+/**
+ * Zinadan tushish (step-down): oyoq ostidan tayanch yo'qolganda, `STEP_HEIGHT` gacha pastdagi eng baland
+ * kollayder ustini topadi (relyefdan past bo'lmagan va kapsula u yerga sig'adigan). Topilmasa — null.
+ * `isStandingOnCollider` ±0.06 m ni allaqachon qamraydi, shuning uchun bu faqat undan chuqurroq tushishlar uchun.
+ */
+function findStepDownSupport(p: Vec3, r: number, h: number, boxes: Box[], groundY: number): Box | null {
+  let best: Box | null = null;
+  for (const b of boxes) {
+    if (p.x + r <= b.min.x || p.x - r >= b.max.x || p.z + r <= b.min.z || p.z - r >= b.max.z) {
+      continue;
+    }
+    const drop = p.y - b.max.y;
+    if (drop <= 0 || drop > STEP_HEIGHT || b.max.y < groundY - 1e-3) continue;
+    if (!best || b.max.y > best.max.y) best = b;
+  }
+  if (!best || collidesAt(boxes, p.x, best.max.y + 0.001, p.z, r, h)) return null;
   return best;
 }
 
@@ -327,9 +348,13 @@ export function moveBodyInWorld(
   // Tik turish — PLAYER_HEIGHT, o'tirish — CROUCH_HEIGHT (vertikal, gorizontal va depenetratsiya bir xil h dan)
   const h = bodyHeightOf(body);
 
-  // Substep so large dt (e.g. lag spikes) cannot tunnel through walls or terrain
+  // Substep so large dt (e.g. lag spikes) cannot tunnel through walls or terrain.
+  // MAX_MOVE_SUBSTEPS ikkala hadni ham cheklaydi (avval dt hadi min() dan tashqarida edi — katta dt da cheksiz ish).
   const maxComp = Math.max(Math.abs(v.x), Math.abs(v.y), Math.abs(v.z));
-  const steps = Math.max(1, Math.min(64, Math.ceil((maxComp * dt) / 0.15), Math.ceil(dt / (1 / 60))));
+  const steps = Math.max(
+    1,
+    Math.min(MAX_MOVE_SUBSTEPS, Math.max(Math.ceil((maxComp * dt) / 0.15), Math.ceil(dt / (1 / 60)))),
+  );
   const sdt = dt / steps;
 
   const spatial = getWorldSpatialIndex(world);
@@ -402,6 +427,17 @@ export function moveBodyInWorld(
       v.y = 0;
       body.onGround = true;
       onStructure = true;
+    } else if (!supportBox && wasOnGround && !wasOnTerrain && v.y <= 0) {
+      // Zinadan / pog'onadan tushish: kollayder ustida turgan (sakramagan) o'yinchi pastki pog'ona ustiga
+      // yopishadi (≤ STEP_HEIGHT) — har pog'onada qisqa "havoda" sakrash bo'lmaydi. Relyef bo'yicha
+      // yopishish (3-band) o'zgarmagan; server va klient bashorati bir xil funksiyani chaqiradi.
+      const downBox = findStepDownSupport(p, r, h, boxes, newGroundY);
+      if (downBox) {
+        p.y = downBox.max.y;
+        v.y = 0;
+        body.onGround = true;
+        onStructure = true;
+      }
     }
 
     // 3) Resolve heightfield ground surface contact & downhill terrain following
@@ -674,14 +710,31 @@ export function rayObbY(o: Vec3, d: Vec3, cx: number, cy: number, cz: number, hx
   return rayConvex(o, d, planes, maxT);
 }
 
-/** Uchburchak prizma (tom old devori): asos `baseY` da ±hx, uchi `apexY` da; qalinlik ±hz; Y atrofida burilgan. */
-export function rayGable(o: Vec3, d: Vec3, cx: number, cz: number, hx: number, baseY: number, apexY: number, hz: number, yaw: number, maxT: number): RayHit | null {
+/**
+ * Uchburchak prizma (tom old devori): asos `baseY` da ±hx, uchi `apexY` da; qalinlik ±hz; Y atrofida burilgan.
+ * `yMin`/`yMax` (ixtiyoriy) prizmani gorizontal tekisliklar bilan kesadi: `rayCollider` kollayder AABB sining
+ * y oralig'ini beradi — GLB uchburchagi (−0.46..1.68) qutidan (0..1.5) chiqib turgan qismlari o'qni to'xtatmaydi.
+ */
+export function rayGable(
+  o: Vec3,
+  d: Vec3,
+  cx: number,
+  cz: number,
+  hx: number,
+  baseY: number,
+  apexY: number,
+  hz: number,
+  yaw: number,
+  maxT: number,
+  yMin = -Infinity,
+  yMax = Infinity,
+): RayHit | null {
   const cos = Math.cos(yaw);
   const sin = Math.sin(yaw);
   const ax = { x: cos, z: -sin };
   const az = { x: sin, z: cos };
   const h = Math.max(1e-6, apexY - baseY);
-  const base = { nx: 0, ny: -1, nz: 0, c: -baseY };
+  const base = { nx: 0, ny: -1, nz: 0, c: -Math.max(baseY, yMin) };
   // Qiya qirralar: ±x·h + hx·y <= hx·apexY  (x — lokal X koordinatasi)
   const xc = ax.x * cx + ax.z * cz;
   const slopeR = { nx: ax.x * h, ny: hx, nz: ax.z * h, c: xc * h + hx * apexY };
@@ -693,6 +746,7 @@ export function rayGable(o: Vec3, d: Vec3, cx: number, cz: number, hx: number, b
     { nx: az.x, ny: 0, nz: az.z, c: az.x * cx + az.z * cz + hz },
     { nx: -az.x, ny: 0, nz: -az.z, c: -(az.x * cx + az.z * cz) + hz },
   ];
+  if (yMax < apexY) planes.push({ nx: 0, ny: 1, nz: 0, c: yMax });
   const hit = rayConvex(o, d, planes, maxT);
   if (!hit) return null;
   const l = Math.hypot(hit.nx, hit.ny, hit.nz) || 1;
@@ -716,7 +770,8 @@ export function rayCollider(col: ColliderBox, o: Vec3, d: Vec3, maxT: number): R
     case 'obb':
       return rayObbY(o, d, h.cx, h.cy, h.cz, h.hx, h.hy, h.hz, h.yaw, maxT);
     case 'gable':
-      return rayGable(o, d, h.cx, h.cz, h.hx, h.baseY, h.apexY, h.hz, h.yaw, maxT);
+      // Prizma ∩ AABB: shakl kollayder qutisidan tashqariga chiqmaydi (pointInsideCollider ham shunday)
+      return rayGable(o, d, h.cx, h.cz, h.hx, h.baseY, h.apexY, h.hz, h.yaw, maxT, col.min.y, col.max.y);
     default:
       return box;
   }

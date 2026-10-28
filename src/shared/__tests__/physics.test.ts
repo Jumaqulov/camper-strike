@@ -5,6 +5,8 @@ import {
   applyWorldMovement,
   boxOverlap,
   collidesAt,
+  MAX_MOVE_SUBSTEPS,
+  moveBodyInWorld,
   pointInsideBoxes,
   rayBox,
   raycastBoxes,
@@ -12,7 +14,8 @@ import {
   stepProjectileInWorld,
   type Body,
 } from '../physics';
-import type { Box } from '../world';
+import { getWorldSpatialIndex } from '../spatialIndex';
+import type { Box, ColliderBox } from '../world';
 import { boxCollider, makeFlatWorld } from './flatWorldFixture';
 
 const groundBox: Box = {
@@ -175,5 +178,67 @@ describe('Shared physics (src/shared/physics.ts)', () => {
     assert.equal(wallBounce, true);
     assert.ok(shot.vel.x < 0, `Expected grenade to bounce back from wall, got vel.x=${shot.vel.x}`);
     assert.ok(shot.pos.x < 3, `Grenade must stay outside the wall box, got x=${shot.pos.x}`);
+  });
+
+  it('caps moveBodyInWorld substeps at MAX_MOVE_SUBSTEPS for any dt (no unbounded work on huge dt)', () => {
+    const world = makeFlatWorld([]);
+    const index = getWorldSpatialIndex(world);
+    const original = index.queryAABB.bind(index);
+    let queries = 0;
+    index.queryAABB = ((...args: Parameters<typeof original>) => {
+      queries++;
+      return original(...args);
+    }) as typeof index.queryAABB;
+    const count = (dt: number, vx: number): number => {
+      queries = 0;
+      moveBodyInWorld({ pos: { x: 0, y: 0, z: 0 }, vel: { x: vx, y: 0, z: 0 }, onGround: true }, dt, world);
+      return queries;
+    };
+    // Har bir pastki qadam aynan bitta keng faza so'rovi qiladi
+    assert.equal(count(1 / 60, 0), 1);
+    assert.equal(count(1 / 30, 0), 2);
+    assert.equal(count(0.5, 0), 30);
+    // Avval dt hadi min() dan tashqarida edi: dt = 10 s → 600 qadam. Endi ikkala had ham 64 bilan cheklangan.
+    assert.equal(count(10, 0), MAX_MOVE_SUBSTEPS);
+    assert.equal(count(10, 40), MAX_MOVE_SUBSTEPS);
+  });
+
+  it('snaps down onto the next lower step while walking down stairs (no airborne hops), but still falls off tall ledges', () => {
+    // 6 ta pog'ona (har biri 0.2 m ko'tarilish, 0.3 m chuqurlik) +X tomonga pastlaydi; pog'onalar ostida bo'shliq
+    const steps: ColliderBox[] = [];
+    for (let i = 0; i < 6; i++) {
+      const top = 1.2 - i * 0.2;
+      steps.push(boxCollider(`step_${i}`, { x: i * 0.3, y: top - 0.2, z: -1 }, { x: (i + 1) * 0.3, y: top, z: 1 }));
+    }
+    // Yuqori maydoncha (pog'onalar boshida) va pastki pol
+    steps.push(boxCollider('landing', { x: -3, y: 1.0, z: -1 }, { x: 0, y: 1.2, z: 1 }));
+    steps.push(boxCollider('floor', { x: 1.8, y: -0.2, z: -1 }, { x: 6, y: 0.0, z: 1 }));
+    const world = makeFlatWorld(steps);
+    const body: Body = { pos: { x: -1.5, y: 1.2, z: 0 }, vel: { x: 0, y: 0, z: 0 }, onGround: true };
+    let airborne = 0;
+    for (let i = 0; i < 90; i++) {
+      applyWorldMovement(body, 5, 0, false, 1 / 60, world);
+      if (!body.onGround) airborne++;
+    }
+    assert.ok(body.pos.x > 3, `pastki polga yetib keldi (x=${body.pos.x.toFixed(2)})`);
+    assert.ok(Math.abs(body.pos.y - 0) < 1e-6, `pol ustida (y=${body.pos.y})`);
+    assert.equal(airborne, 0, 'zinadan tushishda har tick yerda (havoda sakrashlar yo‘q)');
+
+    // Sakrash hamon ishlaydi (snap v.y > 0 da qo'llanmaydi)
+    const jumper: Body = { pos: { x: -1.5, y: 1.2, z: 0 }, vel: { x: 0, y: 0, z: 0 }, onGround: true };
+    applyWorldMovement(jumper, 0, 0, false, 1 / 60, world);
+    applyWorldMovement(jumper, 0, 0, true, 1 / 60, world);
+    assert.equal(jumper.onGround, false);
+    assert.ok(jumper.vel.y > JUMP_SPEED * 0.9);
+
+    // STEP_HEIGHT dan baland jardan (1.2 m) — snap yo'q, erkin tushish
+    const ledgeWorld = makeFlatWorld([boxCollider('deck', { x: -3, y: 1.0, z: -1 }, { x: 0, y: 1.2, z: 1 })]);
+    const faller: Body = { pos: { x: -0.6, y: 1.2, z: 0 }, vel: { x: 0, y: 0, z: 0 }, onGround: true };
+    let fell = false;
+    for (let i = 0; i < 30; i++) {
+      applyWorldMovement(faller, 5, 0, false, 1 / 60, ledgeWorld);
+      if (!faller.onGround && faller.pos.y < 1.2 - STEP_HEIGHT) fell = true;
+    }
+    assert.ok(fell, 'baland jardan yiqiladi (pastga yopishmaydi)');
   });
 });

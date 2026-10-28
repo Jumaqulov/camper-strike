@@ -13,7 +13,7 @@
  *   2. Verifies Multi-Room / Multi-Seed & Legacy Map compatibility via Socket.IO (`forest_square`
  *      across seeds 6501, 7777, 9021 plus `forest_assets_preview`, `forest_sample`, `forest_technical`).
  *   3. Launches Client 1 & Client 2 in the same `forest_square` room (seed=6501, bots=0) and verifies:
- *      - `mapId === 'forest_square'`, `publicLayoutSeed === 6501`, `gameplayHash === 'a746d9f39e5ba0b2'`
+ *      - `mapId === 'forest_square'`, `publicLayoutSeed === 6501`, `gameplayHash === '344d2cb0662ba731'`
  *      - 100% loading of all 28 GLB assets, 0 console errors, 0 network errors
  *      - Live Authoritative Walking Test (`setSyntheticInput` -> server `input` -> `snap` -> `reconcile`,
  *        verifying `currentSeq > 20`, `lastAckedSeq > 15`, `reconcileCount > 5`, distance moved `> 4.0m`,
@@ -668,7 +668,7 @@ async function main() {
     if (client1Meta.mapId !== 'forest_square' || client2Meta.mapId !== 'forest_square') {
       throw new Error(`Expected mapId='forest_square', got Client1=${client1Meta.mapId}, Client2=${client2Meta.mapId}`);
     }
-    if (client1Meta.gameplayHash !== 'a746d9f39e5ba0b2' || client2Meta.gameplayHash !== 'a746d9f39e5ba0b2') {
+    if (client1Meta.gameplayHash !== '344d2cb0662ba731' || client2Meta.gameplayHash !== '344d2cb0662ba731') {
       throw new Error(
         `GameplayHash mismatch: Client1=${client1Meta.gameplayHash} vs Client2=${client2Meta.gameplayHash}`,
       );

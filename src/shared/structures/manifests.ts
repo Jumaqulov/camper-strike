@@ -1,4 +1,5 @@
 import { q3, type Vec3 } from '../math';
+import { isOutdoorYawAxisAligned } from '../outdoor/outdoorColliders';
 import type { Box, ColliderBox, ColliderTag, MaterialKind } from '../world';
 import {
   BUILDING_ASSET_IDS,
@@ -270,7 +271,8 @@ export const BUILDING_MANIFESTS: Record<BuildingAssetId, BuildingAssetManifest> 
         name: 'gable_wall',
         center: [0, 0.75, 0],
         size: [4.0, 1.5, 0.2],
-        // O'q uchun: GLB uchburchagi (asos y=-0.46 da ±2.41, uchi y=1.68) — quti burchaklari havoda qolmasin
+        // O'q uchun: GLB uchburchagi (asos y=-0.46 da ±2.41, uchi y=1.68) — quti burchaklari havoda qolmasin.
+        // rayCollider prizmani quti y oralig'i (0..1.5) bilan kesadi, shakl AABB dan tashqariga chiqmaydi.
         gable: { halfWidth: 2.41, baseY: -0.46, apexY: 1.68 },
       },
     ],
@@ -1050,10 +1052,13 @@ export function localBoxToWorldCollider(
   return out;
 }
 
-/** Burilish 90° ga karrali (AABB aniq) bo'lsa true. */
+/**
+ * Burilish 90° ga karrali (AABB aniq) bo'lsa true. Joylashuv yaw lari q3 yaxlitlangan (1.571, 3.142, 6.284 ...),
+ * shuning uchun tolerantlik `outdoorColliders` dagi bilan bir xil (1e-3 rad): bunday devorning AABB si burilgan
+ * qutidan ko'pi bilan ~1.6 mm farq qiladi (q3 kvantlash darajasi), ortiqcha OBB nur tekshiruvi kerak emas.
+ */
 function isCardinalYaw(yaw: number): boolean {
-  const k = yaw / (Math.PI / 2);
-  return Math.abs(k - Math.round(k)) < 1e-6;
+  return isOutdoorYawAxisAligned(yaw);
 }
 
 /**

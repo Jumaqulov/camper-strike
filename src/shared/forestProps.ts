@@ -13,7 +13,8 @@
  *
  * Fallen logs are approximated by N yaw-aware AABB segments along the (tilted) log axis so the union
  * of segment AABBs never overhangs the true visual footprint by more than ~0.1 m (no invisible walls),
- * while the log body itself cannot be walked through. Stumps use one AABB (half-extent 0.8 × base radius).
+ * while the log body itself cannot be walked through. Stumps use one AABB (half-extent 0.8 × base radius)
+ * plus a vertical cylinder hit shape inscribed in it (bullets ignore the empty AABB corners, like tree trunks).
  */
 import { q3, type Vec3 } from './math';
 import { sampleTerrainHeight, sampleTerrainNormal } from './terrain';
@@ -241,6 +242,8 @@ export function buildFallenLogColliders(
  * Builds a single AABB collider for one `prop:tree_stump` instance (approximates the round stump with
  * half-extent `0.8 × baseRadius × scale.x` so it never overhangs the visual by more than a few cm).
  * ID: `${id}:col`, `sourceObjectId = id`, tag `'prop'`, mat `'crate'`.
+ * O'q uchun: qutiga ichki chizilgan vertikal silindr (r = half; vizual konus radiusi 0.42 → 0.28 oralig'ida) —
+ * quti burchaklari (≈0.475·scale) havoda qolmaydi. Harakat fizikasi hamon AABB.
  */
 export function buildTreeStumpCollider(
   id: string,
@@ -272,6 +275,7 @@ export function buildTreeStumpCollider(
       sourceObjectId: id,
       min: { x: q3(minX), y: q3(minY), z: q3(minZ) },
       max: { x: q3(maxX), y: q3(maxY), z: q3(maxZ) },
+      hit: { kind: 'cylinder', cx: q3(position.x), cz: q3(position.z), r: q3(half) },
     },
   ];
 }

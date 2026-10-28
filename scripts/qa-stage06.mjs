@@ -849,7 +849,7 @@ async function main() {
     if (client1Meta.mapId !== 'forest_square' || client2Meta.mapId !== 'forest_square') {
       throw new Error(`Expected mapId='forest_square', got Client1=${client1Meta.mapId}, Client2=${client2Meta.mapId}`);
     }
-    if (client1Meta.gameplayHash !== 'a746d9f39e5ba0b2' || client2Meta.gameplayHash !== 'a746d9f39e5ba0b2') {
+    if (client1Meta.gameplayHash !== '344d2cb0662ba731' || client2Meta.gameplayHash !== '344d2cb0662ba731') {
       throw new Error(
         `GameplayHash mismatch: Client1=${client1Meta.gameplayHash} vs Client2=${client2Meta.gameplayHash}`,
       );

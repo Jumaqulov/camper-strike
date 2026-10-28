@@ -1482,9 +1482,12 @@ export function createForestAssetsPreviewWorld(
         createGroundedTreeCollider(col.sourceObjectId ?? col.id, terrain, cx, cz, trunkRadius, 4.4),
       );
     } else if (col.tag === 'rock') {
-      const sx = q3((col.max.x - col.min.x) / 1.04);
-      const sy = q3((col.max.y - col.min.y) / 1.14);
-      const sz = q3((col.max.z - col.min.z) / 1.04);
+      // forest_sample toshlari `createGroundedRockCollider` ga aynan vizual scale (sx, sy, sz) bilan quriladi,
+      // shuning uchun AABB o'lchami = scale. Avvalgi `/ 1.04`, `/ 1.14` bo'lish (GLB normallash koeffitsientlari)
+      // preview toshlarini forest_sample dagidan (XZ da 4%, Y da 12%) kichik qilib qo'yardi.
+      const sx = q3(col.max.x - col.min.x);
+      const sy = q3(col.max.y - col.min.y);
+      const sz = q3(col.max.z - col.min.z);
       forestColliders.push(
         createGroundedRockCollider(col.sourceObjectId ?? col.id, terrain, cx, cz, {
           x: sx,

@@ -452,7 +452,9 @@ describe('BOSQICH 08-FIX — P1-B: rotatsiyalangan chodir, panjara va bochka col
         }
         if (isOutdoorYawAxisAligned(p.rotationY)) {
           aligned++;
-          assert.deepEqual(cols, legacy(p), `${p.id} (axis-aligned) eski ID va box saqlanishi shart`);
+          // Harakat qutisi eskicha; dumaloq qismlarda (bochka, gulxan halqasi) qo'shimcha o'q silindri bor
+          const boxesOnly = cols.map(({ hit: _hit, ...rest }) => rest);
+          assert.deepEqual(boxesOnly, legacy(p), `${p.id} (axis-aligned) eski ID va box saqlanishi shart`);
         } else {
           rotated++;
           const specs = getOutdoorLocalColliderSpecs(p);

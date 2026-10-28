@@ -15,6 +15,12 @@ export interface OutdoorLocalColliderSpec {
    * (identical to the legacy result at axis-aligned yaws for square footprints). Default `'rotate'`.
    */
   yawMode?: 'rotate' | 'invariant';
+  /**
+   * O'q uchun aniq shakl: `'cylinder'` — vizual dumaloq (tik bochka, tosh halqa) bo'lgan `'invariant'` qismlar uchun
+   * AABB ga ichki chizilgan vertikal silindr (daraxt tanasi kabi), quti burchaklari o'qni to'xtatmaydi.
+   * Harakat fizikasi AABB bilan qoladi.
+   */
+  hitShape?: 'cylinder';
 }
 
 /**
@@ -39,6 +45,7 @@ const UPRIGHT_BARREL_SPECS: readonly OutdoorLocalColliderSpec[] = [
     mat: 'metal',
     // Upright cylinder (GLB radius ≈ 0.298 m): footprint does not change with yaw
     yawMode: 'invariant',
+    hitShape: 'cylinder',
   },
 ];
 
@@ -159,6 +166,7 @@ export const OUTDOOR_STATIC_COLLIDER_SPECS: Record<
       mat: 'wall',
       // Circular stone ring: footprint does not change with yaw
       yawMode: 'invariant',
+      hitShape: 'cylinder',
     },
   ],
   wooden_railing_01: [
@@ -294,6 +302,7 @@ export function buildOutdoorPlacementColliders(placement: OutdoorPlacement): Col
     lenY: number,
     lenZ: number,
     invariant: boolean,
+    cylinderHit = false,
   ): void => {
     const worldCx = placement.position.x + rx * cos + rz * sin;
     const worldCy = placement.position.y + ry;
@@ -303,7 +312,7 @@ export function buildOutdoorPlacementColliders(placement: OutdoorPlacement): Col
     const halfY = 0.5 * lenY;
     const halfZ = invariant ? 0.5 * lenZ : 0.5 * (Math.abs(lenX * sin) + Math.abs(lenZ * cos));
 
-    out.push({
+    const col: ColliderBox = {
       id,
       tag: part.tag,
       sourceObjectId: placement.id,
@@ -318,7 +327,12 @@ export function buildOutdoorPlacementColliders(placement: OutdoorPlacement): Col
         y: q3(worldCy + halfY),
         z: q3(worldCz + halfZ),
       },
-    });
+    };
+    if (cylinderHit) {
+      // Dumaloq qism: silindr AABB ichida (r — kichikroq yarim kenglik)
+      col.hit = { kind: 'cylinder', cx: q3(worldCx), cz: q3(worldCz), r: q3(Math.min(halfX, halfZ)) };
+    }
+    out.push(col);
   };
 
   for (const part of parts) {
@@ -336,7 +350,9 @@ export function buildOutdoorPlacementColliders(placement: OutdoorPlacement): Col
 
     const pieces = invariant || axisAligned ? null : segmentRotatedRect(lenX, lenZ, yaw);
     if (!pieces) {
-      emit(`${placement.id}:col:${part.name}`, part, rx, ry, rz, lenX, lenY, lenZ, invariant);
+      // Silindr faqat yaw ga bog'liq bo'lmagan (dumaloq) qismlar uchun: kardinal yaw da ham kvadrat izi bir xil
+      const cylinderHit = part.hitShape === 'cylinder' && part.yawMode === 'invariant';
+      emit(`${placement.id}:col:${part.name}`, part, rx, ry, rz, lenX, lenY, lenZ, invariant, cylinderHit);
       continue;
     }
     pieces.forEach((piece, i) => {

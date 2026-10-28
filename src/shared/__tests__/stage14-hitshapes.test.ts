@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { rayCollider, rayCylinderY, rayEllipsoid, rayGable, rayObbY, raycastWorld } from '../physics';
+import { buildTreeStumpCollider } from '../forestProps';
+import { rayBox, rayCollider, rayCylinderY, rayEllipsoid, rayGable, rayObbY, raycastWorld } from '../physics';
 import { localBoxToWorldCollider } from '../structures/manifests';
 import { createGroundedRockCollider, createGroundedTreeCollider } from '../terrain';
-import { createWorldDefinition, type ColliderBox } from '../world';
+import { computeGameplayHash, createWorldDefinition, type ColliderBox } from '../world';
 
 const DIR_Z: { x: number; y: number; z: number } = { x: 0, y: 0, z: 1 };
 const S2 = Math.SQRT1_2;
@@ -128,10 +129,72 @@ describe('Bosqich 14 — o‘q uchun aniq hit-shakllar (daraxt, tosh, burilgan q
     }
     assert.ok(checked >= 60);
 
-    // Hash o'zgarmagan: hit maydoni gameplayHash ga kirmaydi
+    // Hit-shakl gameplayHash ga kiradi: shakl o'zgarsa (yoki olib tashlansa) xesh o'zgaradi
+    const { gameplayHash: _h, visuals: _v, name: _n, chunkSize: _c, ...hashData } = world;
+    assert.equal(computeGameplayHash(hashData), world.gameplayHash);
     const plain: ColliderBox = { ...trees[0]! };
     delete plain.hit;
-    assert.ok(world.gameplayHash.length > 0);
-    void plain;
+    const withoutShape = computeGameplayHash({ ...hashData, colliders: [plain, ...world.colliders.slice(1)] });
+    assert.notEqual(withoutShape, world.gameplayHash, 'hit-shakl olib tashlansa xesh o‘zgaradi');
+    const t0 = trees[0]!;
+    const h0 = t0.hit as { kind: 'cylinder'; cx: number; cz: number; r: number };
+    const shrunk: ColliderBox = { ...t0, hit: { ...h0, r: h0.r - 0.05 } };
+    const idx0 = world.colliders.indexOf(t0);
+    const cols2 = world.colliders.slice();
+    cols2[idx0] = shrunk;
+    assert.notEqual(computeGameplayHash({ ...hashData, colliders: cols2 }), world.gameplayHash, 'silindr radiusi xeshga kiradi');
+  });
+
+  it('6. Kardinal (q3 yaxlitlangan) yaw da OBB yo‘q; to‘nka, tik bochka va gulxan halqasida silindr; gable AABB bilan kesiladi', () => {
+    const spec = { name: 'w', center: [0, 1.5, 0] as [number, number, number], size: [4, 3, 0.2] as [number, number, number] };
+    for (const yaw of [1.571, -1.571, 3.142, 4.713, 6.284]) {
+      const c = localBoxToWorldCollider('q', 'q', spec, { x: 3, y: 0, z: -2 }, yaw);
+      assert.equal(c.hit, undefined, `yaw ${yaw}: AABB aniq (OBB kerak emas)`);
+    }
+    assert.equal(localBoxToWorldCollider('q', 'q', spec, { x: 0, y: 0, z: 0 }, 1.56).hit?.kind, 'obb', '0.6° og‘ish — OBB');
+
+    const world = createWorldDefinition({ mapId: 'forest_square', publicLayoutSeed: 6501 } as never);
+    // Haqiqiy kardinal bo'lmagan OBB lar qoladi, q3 kardinallari yo'q
+    for (const c of world.colliders) {
+      if (c.hit?.kind !== 'obb') continue;
+      const k = c.hit.yaw / (Math.PI / 2);
+      assert.ok(Math.abs(k - Math.round(k)) * (Math.PI / 2) >= 1e-3, `${c.id}: kardinal yaw da OBB bo‘lmasligi kerak`);
+    }
+    const stumps = world.colliders.filter((c) => /^sq_stump_\d+:col$/.test(c.id));
+    const barrels = world.colliders.filter((c) => c.id.endsWith(':rusty_barrel_01:col:barrel'));
+    const rings = world.colliders.filter((c) => c.id.endsWith(':campfire_pit_01:col:ring'));
+    assert.ok(stumps.length > 20 && barrels.length >= 4 && rings.length >= 3);
+    for (const c of [...stumps, ...barrels, ...rings]) {
+      assert.equal(c.hit?.kind, 'cylinder', `${c.id} silindr`);
+      const h = c.hit as { kind: 'cylinder'; cx: number; cz: number; r: number };
+      // Silindr AABB ichida (q3 yaxlitlash ±1 mm)
+      assert.ok(h.cx - h.r >= c.min.x - 1e-3 && h.cx + h.r <= c.max.x + 1e-3, `${c.id} x`);
+      assert.ok(h.cz - h.r >= c.min.z - 1e-3 && h.cz + h.r <= c.max.z + 1e-3, `${c.id} z`);
+    }
+
+    // To'nka: quti burchagidan o'tgan diagonal nur AABB ga tegadi, silindrga emas
+    const stump = buildTreeStumpCollider('s', { position: { x: 0, y: 0, z: 0 }, yaw: 0, scale: { x: 1, y: 1, z: 1 } })[0]!;
+    const sh = stump.hit as { kind: 'cylinder'; cx: number; cz: number; r: number };
+    const off = sh.r * 1.25;
+    const o = { x: off * S2 - 3 * S2, y: 0.3, z: -off * S2 - 3 * S2 };
+    assert.ok(rayBox(o, DIAG, stump.min, stump.max, 10), 'AABB burchagi');
+    assert.equal(rayCollider(stump, o, DIAG, 10), null, 'silindr burchakni e‘tiborsiz qoldiradi');
+    assert.ok(rayCollider(stump, { x: 0, y: 0.3, z: -3 }, DIR_Z, 10), 'markazdan — tegadi');
+
+    // Gable: prizma (−0.46..1.68) quti (0..1.5) bilan kesiladi — quti tepasidan yuqorida (uch qismi) tegish yo'q,
+    // AABB ga keyinroq kiradigan qiya nur ham quti tashqarisidagi nuqtada "tegmaydi"
+    const gSpec = { name: 'g', center: [0, 0.75, 0] as [number, number, number], size: [4, 1.5, 0.2] as [number, number, number] };
+    const gable = localBoxToWorldCollider('g', 'g', { ...gSpec, gable: { halfWidth: 2.41, baseY: -0.46, apexY: 1.68 } }, { x: 0, y: 6, z: 0 }, 0);
+    assert.equal(rayCollider(gable, { x: 0, y: 7.6, z: -3 }, DIR_Z, 10), null, 'quti tepasidan yuqori (y=7.6 > 7.5)');
+    const down = { x: 0, y: -Math.SQRT1_2, z: Math.SQRT1_2 };
+    // (0, 10.5, −3) dan 45° pastga: kesishsiz prizma old yuzasiga y ≈ 7.6 da (quti tashqarisida) tegardi;
+    // kesilganda quti tepasiga (y = 7.5, z = 0) tegadi
+    const slanted = rayCollider(gable, { x: 0, y: 10.5, z: -3 }, down, 10);
+    assert.ok(slanted, 'qiya nur uchburchakka tegadi');
+    const hitY = 10.5 + down.y * slanted!.t;
+    assert.ok(hitY <= gable.max.y + 1e-6, `tegish nuqtasi AABB ichida (y=${hitY.toFixed(3)} ≤ ${gable.max.y})`);
+    assert.ok(Math.abs(slanted!.ny - 1) < 1e-9, 'quti tepasi (kesish tekisligi) normali');
+    assert.ok(rayCollider(gable, { x: 0, y: 7.0, z: -3 }, DIR_Z, 10), 'uchburchak ichi tegadi');
+    assert.equal(rayCollider(gable, { x: 1.9, y: 7.4, z: -3 }, DIR_Z, 10), null, 'quti yuqori burchagi bo‘sh');
   });
 });

@@ -48,8 +48,9 @@ Chrome va tashqi dasturlarga muhtoj, shuning uchun ularni qo'lda ishga tushirasi
 ## Eslatmalar
 
 - `qa-stage05.mjs` va `qa-stage06.mjs` `forest_square` + `publicLayoutSeed=6501` uchun `gameplayHash`
-  qiymatini **`a746d9f39e5ba0b2`** deb tekshiradi (joriy dunyo versiyasi; `src/shared/__tests__/stage08-terrain-art-polish.test.ts`
-  bilan bir xil). Dunyo generatori gameplay'ga ta'sir qiladigan tarzda o'zgarsa, bu konstantani ham yangilang.
+  qiymatini **`344d2cb0662ba731`** deb tekshiradi (joriy dunyo versiyasi; `src/shared/__tests__/stage08-terrain-art-polish.test.ts`
+  bilan bir xil). Dunyo generatori gameplay'ga ta'sir qiladigan tarzda o'zgarsa (kollayder qutilari, o'q hit-shakllari,
+  spawn/konteyner joylari), bu konstantani ham yangilang.
 - qa-stage* harnesslari o'z bosqichi holatiga mo'ljallangan "tarixiy" skriptlar: keyingi bosqichlardagi
   o'zgarishlar (masalan, yangi assetlar soni) ularning ayrim tekshiruvlarini eskirtirgan bo'lishi mumkin.
   Ular qayta yozilmagan — kerak bo'lsa faqat tegishli bosqich uchun ishlating.
