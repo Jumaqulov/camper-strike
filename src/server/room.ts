@@ -7,11 +7,29 @@ import { clamp, isVec3, q3, spreadDir, vdist, vnorm, vsub, type Vec3 } from '../
 import {
   isSpawnPointSafe,
   pointInsideBoxes,
+  rayBox,
   raycastWorld,
   rayVsPlayer,
   type Body,
   type HitZone,
 } from '../shared/physics';
+import {
+  WOLF_BITE_CONNECT_RANGE,
+  WOLF_BITE_DAMAGE,
+  WOLF_CORPSE_SEC,
+  WOLF_HEIGHT,
+  WOLF_MAX_HP,
+  WOLF_MAX_PER_ROOM,
+  WOLF_NAME_UZ,
+  WOLF_RADIUS,
+  WOLF_RESPAWN_SEC,
+  WOLF_SPAWN_CLEARANCE,
+  type WolfBiteEvent,
+  type WolfDeathEvent,
+  type WolfHowlEvent,
+  type WolfSnap,
+} from '../shared/wolf';
+import { WolfBrain, type ServerWolf } from './wolf';
 import type {
   ChatMsg, ClientState, ContainerOpenAck, ContainerOpenReq, CreateRoomOpts, EquipWeaponAck, EquipWeaponReq,
   HitConfirm, HurtEvent, InputAckEvent, KillEvent, LootPickupAck, LootPickupReq, MatchState,
@@ -170,6 +188,11 @@ export class Room {
   private chatHistory: ChatMsg[] = [];
   /** Xonadan chiqib ketgan, lekin hali portlamagan granatasi bor o'yinchilar (granata zarar berishi uchun). */
   private departed = new Map<string, ServerPlayer>();
+  /** Vahshiy bo'rilar (server boshqaradi; survivalda raund boshida paydo bo'ladi, klassikda doimiy). */
+  readonly wolves = new Map<string, ServerWolf>();
+  private wolfSeq = 0;
+  /** Xona sozlamasidagi bo'rilar soni (chat buyruqlari bilan o'zgartiriladi). */
+  private wolfCount: number;
   destroyed = false;
 
   constructor(readonly opts: CreateRoomOpts, private io: Server, private onEmpty: (room: Room) => void) {
@@ -227,6 +250,9 @@ export class Room {
     // Botlar barcha rejimlarda (loot rejimida ham — loot AI bilan qurol yig'adi)
     const initialBots = opts.bots;
     for (let i = 0; i < initialBots; i++) this.addBot();
+    // Bo'rilar: klassik rejimlarda darhol, survivalda raund boshida (handleSurvivalRoundStart)
+    this.wolfCount = clamp(Math.floor(opts.wolves ?? 0), 0, WOLF_MAX_PER_ROOM);
+    if (!this.isSurvival) this.syncWolvesToCount();
     // Windows'da taymer aniqligi ~15.6 ms, shuning uchun tez-tez tekshirib, aniq 30 Hz ushlab turamiz
     const step = 1 / TICK_RATE;
     let nextTick = this.now();
@@ -313,7 +339,217 @@ export class Room {
       roundId: this.roundId,
       phase: this.phase,
       minHumans: this.isSurvival ? this.survival?.getConfig().minHumansToStart ?? 1 : undefined,
+      wolves: this.wolfCount,
     };
+  }
+
+  // ---------------- Bo'rilar ----------------
+
+  /** Bo'ri shu o'yinchini ovlashi mumkinmi (tirik; survivalda faqat ishtirokchi). */
+  isWolfPrey(p: ServerPlayer): boolean {
+    if (!p.alive || !p.ready) return false;
+    if (this.isSurvival && this.survival) return this.survival.isAliveContender(p.id);
+    return true;
+  }
+
+  /** Xonadagi bo'rilar soni sozlamaga tenglashtiriladi (kam bo'lsa qo'shadi, ko'p bo'lsa olib tashlaydi). */
+  private syncWolvesToCount(): void {
+    while (this.wolves.size > this.wolfCount) {
+      const last = [...this.wolves.keys()].pop();
+      if (last === undefined) break;
+      this.wolves.delete(last);
+    }
+    while (this.wolves.size < this.wolfCount) this.addWolf();
+  }
+
+  /** Bo'rilar sonini o'zgartirish (chat buyrug'i / pauza menyusi). Survivalda keyingi raunddan kuchga kiradi. */
+  setWolfCount(n: number): number {
+    this.wolfCount = clamp(Math.floor(n), 0, WOLF_MAX_PER_ROOM);
+    if (!this.isSurvival || this.phase === 'playing') this.syncWolvesToCount();
+    return this.wolfCount;
+  }
+
+  getWolfCount(): number {
+    return this.wolfCount;
+  }
+
+  /** O'yinchilardan uzoqdagi (≥ 35 m, iloji bo'lsa) nav tuguni — bo'ri paydo bo'ladigan joy. */
+  private pickWolfSpawn(): Vec3 {
+    const zone = this.getZoneSnap();
+    let best: Vec3 | null = null;
+    let bestD = -1;
+    for (let i = 0; i < 24; i++) {
+      const c = this.nav.randomPoint();
+      if (zone && Math.hypot(c.x - zone.cx, c.z - zone.cz) > zone.radius * 0.9) continue;
+      let minD = Infinity;
+      for (const p of this.players.values()) {
+        if (!p.alive) continue;
+        minD = Math.min(minD, Math.hypot(p.pos.x - c.x, p.pos.z - c.z));
+      }
+      if (minD >= 35) return c;
+      if (minD > bestD) {
+        bestD = minD;
+        best = c;
+      }
+    }
+    return best ?? this.nav.randomPoint();
+  }
+
+  /**
+   * Sayr maqsadi: tasodifiy o'ljaning atrofida (14–40 m halqa) nav tuguni — bo'ri doim o'yinchilar
+   * atrofida aylanib yuradi va oxir-oqibat hid/ko'rish masofasiga kiradi. O'lja bo'lmasa — xaritada tasodifiy.
+   */
+  pickWolfRoamGoal(w: ServerWolf): Vec3 {
+    const prey = [...this.players.values()].filter((p) => this.isWolfPrey(p));
+    const zone = this.getZoneSnap();
+    const b = this.world.bounds;
+    if (prey.length) {
+      for (let i = 0; i < 10; i++) {
+        const p = prey[Math.floor(Math.random() * prey.length)]!;
+        const ang = Math.random() * Math.PI * 2;
+        const dist = 14 + Math.random() * 26;
+        const x = p.pos.x + Math.cos(ang) * dist;
+        const z = p.pos.z + Math.sin(ang) * dist;
+        if (x < b.minX + 2 || x > b.maxX - 2 || z < b.minZ + 2 || z > b.maxZ - 2) continue;
+        if (zone && Math.hypot(x - zone.cx, z - zone.cz) > zone.radius) continue;
+        const ni = this.nav.nearest({ x, y: p.pos.y, z });
+        if (ni < 0) continue;
+        const c = this.nav.center(ni);
+        if (Math.hypot(c.x - w.pos.x, c.z - w.pos.z) < 6) continue;
+        return c;
+      }
+    }
+    for (let i = 0; i < 8; i++) {
+      const c = this.nav.randomPoint();
+      if (zone && Math.hypot(c.x - zone.cx, c.z - zone.cz) > zone.radius) continue;
+      if (Math.hypot(c.x - w.pos.x, c.z - w.pos.z) >= 6) return c;
+    }
+    return this.nav.randomPoint();
+  }
+
+  addWolf(): ServerWolf | null {
+    if (this.wolves.size >= WOLF_MAX_PER_ROOM) return null;
+    const sp = this.pickWolfSpawn();
+    const id = `wolf:${++this.wolfSeq}`;
+    const w: ServerWolf = {
+      id,
+      coat: this.wolves.size % 5,
+      pos: { x: sp.x, y: sp.y, z: sp.z },
+      vel: { x: 0, y: 0, z: 0 },
+      onGround: true,
+      hp: WOLF_MAX_HP,
+      alive: true,
+      yaw: Math.random() * Math.PI * 2,
+      state: 'idle',
+      targetId: null,
+      diedAt: 0,
+      respawnAt: Infinity,
+      brain: null as unknown as WolfBrain,
+    };
+    w.brain = new WolfBrain(this, w);
+    w.brain.onSpawn(this.now());
+    this.wolves.set(id, w);
+    return w;
+  }
+
+  private respawnWolf(w: ServerWolf): void {
+    const sp = this.pickWolfSpawn();
+    w.pos = { x: sp.x, y: sp.y, z: sp.z };
+    w.vel = { x: 0, y: 0, z: 0 };
+    w.onGround = true;
+    w.hp = WOLF_MAX_HP;
+    w.alive = true;
+    w.state = 'idle';
+    w.targetId = null;
+    w.diedAt = 0;
+    w.respawnAt = Infinity;
+    w.brain.onSpawn(this.now());
+  }
+
+  /** Bo'rilar AI, jasadlar va qayta paydo bo'lish — har tick. */
+  private updateWolves(dt: number, t: number): void {
+    for (const [id, w] of this.wolves) {
+      if (w.alive) {
+        w.brain.update(dt, t);
+        continue;
+      }
+      if (t - w.diedAt < WOLF_CORPSE_SEC) continue;
+      if (this.isSurvival) {
+        this.wolves.delete(id);
+      } else if (t >= w.respawnAt && this.phase === 'playing') {
+        this.respawnWolf(w);
+      }
+    }
+  }
+
+  /** Bo'ri uvladi — klientlarga pozitsion ovoz uchun. */
+  wolfHowl(w: ServerWolf): void {
+    const ev: WolfHowlEvent = { id: w.id, x: q3(w.pos.x), y: q3(w.pos.y), z: q3(w.pos.z) };
+    this.io.to(this.channel).emit('wolf:howl', ev);
+  }
+
+  /** Bo'ri tishladi (WolfBrain hujum klipining 0.30 s lahzasida chaqiradi). */
+  wolfBite(w: ServerWolf, target: ServerPlayer | null): void {
+    let hit = false;
+    if (target && this.isWolfPrey(target) && this.phase === 'playing') {
+      const dH = Math.hypot(target.pos.x - w.pos.x, target.pos.z - w.pos.z);
+      const dy = Math.abs(target.pos.y - w.pos.y);
+      if (dH <= WOLF_BITE_CONNECT_RANGE && dy < 1.4) {
+        hit = true;
+        const from = { x: w.pos.x, y: w.pos.y + 0.9, z: w.pos.z };
+        this.damage(target, w, WOLF_BITE_DAMAGE, 'wolf', false, from);
+      }
+    }
+    const ev: WolfBiteEvent = {
+      id: w.id,
+      target: target?.id ?? '',
+      hit,
+      x: q3(w.pos.x),
+      y: q3(w.pos.y),
+      z: q3(w.pos.z),
+    };
+    this.io.to(this.channel).emit('wolf:bite', ev);
+  }
+
+  /** O'q/granata bo'riga tegdi. */
+  private damageWolf(w: ServerWolf, attacker: ServerPlayer, amount: number, from: Vec3): void {
+    if (!w.alive || amount <= 0 || this.phase !== 'playing') return;
+    w.hp -= amount;
+    const dx = w.pos.x - from.x;
+    const dz = w.pos.z - from.z;
+    const dl = Math.hypot(dx, dz) || 1;
+    const knock = clamp(amount / 40, 0.3, 3);
+    w.vel.x += (dx / dl) * knock;
+    w.vel.z += (dz / dl) * knock;
+    const hc: HitConfirm = { target: w.id, damage: amount, headshot: false, kill: w.hp <= 0 };
+    attacker.socket?.emit('hitConfirm', hc);
+    w.brain.onDamaged(attacker, this.now());
+    if (w.hp <= 0) this.killWolf(w, attacker);
+  }
+
+  private killWolf(w: ServerWolf, killer: ServerPlayer): void {
+    w.alive = false;
+    w.hp = 0;
+    w.state = 'dead';
+    w.targetId = null;
+    w.diedAt = this.now();
+    w.respawnAt = this.isSurvival ? Infinity : w.diedAt + WOLF_RESPAWN_SEC;
+    const ev: WolfDeathEvent = { id: w.id, killerId: killer.id, killerName: killer.name };
+    this.io.to(this.channel).emit('wolf:death', ev);
+    this.systemChat(`${killer.name} vahshiy bo'rini o'ldirdi!`);
+  }
+
+  /** Bo'ri xitboksi: gavda atrofidagi AABB (uzunligi 2 m bo'lgani uchun kengroq). */
+  private rayVsWolf(origin: Vec3, dir: Vec3, w: ServerWolf, maxT: number): number | null {
+    const r = WOLF_RADIUS + 0.25;
+    const h = rayBox(
+      origin,
+      dir,
+      { x: w.pos.x - r, y: w.pos.y, z: w.pos.z - r },
+      { x: w.pos.x + r, y: w.pos.y + WOLF_HEIGHT, z: w.pos.z + r },
+      maxT,
+    );
+    return h ? h.t : null;
   }
 
   isFull(): boolean {
@@ -557,6 +793,7 @@ export class Room {
     if (cands.length === 0) cands = all;
     if (cands.length === 0) return this.fallbackSpawn(p);
     const others = [...this.players.values()].filter((o) => o !== p && o.alive);
+    const wolves = [...this.wolves.values()].filter((w) => w.alive);
     const scored = cands.map((s) => {
       let minEnemy = 999;
       let occupied = false;
@@ -565,7 +802,13 @@ export class Room {
         if (d < 1.5) occupied = true;
         if (this.isEnemy(p, o)) minEnemy = Math.min(minEnemy, d);
       }
-      const score = (occupied ? -1000 : 0) + Math.min(minEnemy, 60) + Math.random() * 10;
+      // Tirik bo'ri yonida tug'ilmaslik: yaqinlik darajasiga qarab jarima (28 m ichida kuchli)
+      let wolfPenalty = 0;
+      for (const w of wolves) {
+        const d = Math.hypot(w.pos.x - s.x, w.pos.z - s.z);
+        if (d < WOLF_SPAWN_CLEARANCE) wolfPenalty = Math.max(wolfPenalty, (WOLF_SPAWN_CLEARANCE - d) * 8);
+      }
+      const score = (occupied ? -1000 : 0) + Math.min(minEnemy, 60) - wolfPenalty + Math.random() * 10;
       return { s, score };
     });
     scored.sort((a, b) => b.score - a.score);
@@ -790,10 +1033,12 @@ export class Room {
     const castDirs = melee ? this.meleeFan(p) : dirs;
     const ends: Vec3[] = [];
     const dmg = new Map<ServerPlayer, { dmg: number; head: boolean }>();
+    const wolfDmg = new Map<ServerWolf, number>();
     for (const d of castDirs) {
       const wall = raycastWorld(this.world, origin, d, def.range);
       let maxT = wall ? wall.t : def.range;
       let hitP: ServerPlayer | null = null;
+      let hitW: ServerWolf | null = null;
       let zone: HitZone = 'torso';
       for (const o of this.players.values()) {
         if (!o.alive || !this.isEnemy(p, o)) continue;
@@ -805,8 +1050,29 @@ export class Room {
           zone = h.zone;
         }
       }
-      if (!melee || hitP || ends.length === 0) {
+      for (const w of this.wolves.values()) {
+        if (!w.alive) continue;
+        const tw = this.rayVsWolf(origin, d, w, maxT);
+        if (tw !== null) {
+          maxT = tw;
+          hitP = null;
+          hitW = w;
+        }
+      }
+      if (!melee || hitP || hitW || ends.length === 0) {
         ends.push({ x: q3(origin.x + d.x * maxT), y: q3(origin.y + d.y * maxT), z: q3(origin.z + d.z * maxT) });
+      }
+      if (hitW) {
+        // Bo'rida bosh/oyoq zonasi yo'q — tana zarari; pichoq bir marta tegadi
+        const amount = damageAt(def, maxT, 'torso');
+        if (melee) {
+          ends.length = 0;
+          ends.push({ x: q3(origin.x + d.x * maxT), y: q3(origin.y + d.y * maxT), z: q3(origin.z + d.z * maxT) });
+          wolfDmg.set(hitW, amount);
+          break;
+        }
+        wolfDmg.set(hitW, (wolfDmg.get(hitW) ?? 0) + amount);
+        continue;
       }
       if (hitP) {
         // Zarar tegish zonasiga qarab: bosh ×headMult, tana ×1, oyoq ×0.7
@@ -844,6 +1110,9 @@ export class Room {
       }
       if (!this.deferWinCheck) this.checkWin();
     }
+    for (const [w, amount] of wolfDmg) this.damageWolf(w, p, Math.round(amount), origin);
+    // O'q ovozi bo'rilarni tortadi (pichoq jim)
+    if (!melee) for (const w of this.wolves.values()) if (w.alive) w.brain.onNoise(origin, t, p);
     return true;
   }
 
@@ -1138,8 +1407,21 @@ export class Room {
         this.balanceBots();
         this.systemChat(`${p.name} bitta botni olib tashladi`);
       }
+    } else if (c === '/addwolf') {
+      if (this.wolfCount >= WOLF_MAX_PER_ROOM) return this.systemChat(`Bo'rilar soni maksimal (${WOLF_MAX_PER_ROOM})`);
+      const n = this.setWolfCount(this.wolfCount + 1);
+      this.systemChat(`${p.name} vahshiy bo'ri qo'shdi (jami: ${n})${this.isSurvival && this.phase !== 'playing' ? ' — keyingi raunddan' : ''}`);
+    } else if (c === '/removewolf') {
+      if (this.wolfCount <= 0) return this.systemChat("Xonada bo'ri yo'q");
+      const n = this.setWolfCount(this.wolfCount - 1);
+      this.systemChat(`${p.name} bitta bo'rini olib tashladi (jami: ${n})`);
     } else {
-      p.socket?.emit('chat', { name: '', text: 'Buyruqlar: /addbot, /removebot', team: 'none', system: true } as ChatMsg);
+      p.socket?.emit('chat', {
+        name: '',
+        text: 'Buyruqlar: /addbot, /removebot, /addwolf, /removewolf',
+        team: 'none',
+        system: true,
+      } as ChatMsg);
     }
   }
 
@@ -1166,7 +1448,14 @@ export class Room {
 
   // ---------------- Jang ----------------
 
-  private damage(target: ServerPlayer, attacker: ServerPlayer, amount: number, weapon: WeaponId | 'grenade', headshot: boolean, from: Vec3) {
+  private damage(
+    target: ServerPlayer,
+    attacker: ServerPlayer | ServerWolf,
+    amount: number,
+    weapon: WeaponId | 'grenade' | 'wolf',
+    headshot: boolean,
+    from: Vec3,
+  ) {
     if (!target.alive || amount <= 0 || this.phase !== 'playing') return;
     if (this.now() - target.spawnTime < SPAWN_PROTECTION) return;
     // Zirh/kaska: zararning bir qismini yutadi, mustahkamlik shuncha kamayadi (faqat loot rejimida bo'ladi)
@@ -1195,7 +1484,7 @@ export class Room {
     const dx = target.pos.x - from.x;
     const dz = target.pos.z - from.z;
     const distH = Math.hypot(dx, dz) || 1;
-    const wMult = weapon === 'grenade' ? 2.6 : weapon === 'shotgun' ? 1.9 : weapon === 'sniper' ? 2.2 : 1.0;
+    const wMult = weapon === 'grenade' ? 2.6 : weapon === 'shotgun' ? 1.9 : weapon === 'sniper' ? 2.2 : weapon === 'wolf' ? 1.6 : 1.0;
     const knock = clamp((amount / 26) * wMult, 0.5, 9.5);
     target.vel.x += (dx / distH) * knock * 2.2;
     target.vel.z += (dz / distH) * knock * 2.2;
@@ -1206,15 +1495,21 @@ export class Room {
 
     const hurt: HurtEvent = { attacker: attacker.id, damage: amount, from, headshot };
     target.socket?.emit('hurt', hurt);
-    if (attacker !== target) {
+    const attackerPlayer = 'brain' in attacker && 'socket' in attacker ? (attacker as ServerPlayer) : null;
+    if (attackerPlayer && attackerPlayer !== target) {
       const hc: HitConfirm = { target: target.id, damage: amount, headshot, kill: target.hp <= 0 };
-      attacker.socket?.emit('hitConfirm', hc);
+      attackerPlayer.socket?.emit('hitConfirm', hc);
     }
-    target.brain?.onDamaged(attacker);
+    if (attackerPlayer) target.brain?.onDamaged(attackerPlayer);
     if (target.hp <= 0) this.kill(target, attacker, weapon, headshot);
   }
 
-  private kill(victim: ServerPlayer, killer: ServerPlayer, weapon: WeaponId | 'grenade' | 'zone', headshot: boolean) {
+  private kill(
+    victim: ServerPlayer,
+    killer: ServerPlayer | ServerWolf,
+    weapon: WeaponId | 'grenade' | 'zone' | 'wolf',
+    headshot: boolean,
+  ) {
     victim.alive = false;
     victim.hp = 0;
     victim.scoped = false;
@@ -1239,14 +1534,21 @@ export class Room {
     } else {
       victim.respawnAt = this.now() + RESPAWN_TIME;
     }
-    if (killer !== victim) {
-      killer.kills++;
-      if (this.opts.mode === 'tdm' && (killer.team === 'red' || killer.team === 'blue')) this.scores[killer.team]++;
-    } else if (weapon !== 'zone') {
-      killer.kills = Math.max(0, killer.kills - 1);
+    const killerPlayer = 'socket' in killer ? (killer as ServerPlayer) : null;
+    if (killerPlayer) {
+      if (killerPlayer !== victim) {
+        killerPlayer.kills++;
+        if (this.opts.mode === 'tdm' && (killerPlayer.team === 'red' || killerPlayer.team === 'blue')) {
+          this.scores[killerPlayer.team]++;
+        }
+      } else if (weapon !== 'zone') {
+        killerPlayer.kills = Math.max(0, killerPlayer.kills - 1);
+      }
     }
     const ev: KillEvent = {
-      killer: killer.id, killerName: killer.name, killerTeam: killer.team,
+      killer: killer.id,
+      killerName: killerPlayer ? killerPlayer.name : WOLF_NAME_UZ,
+      killerTeam: killerPlayer ? killerPlayer.team : 'none',
       victim: victim.id, victimName: victim.name, victimTeam: victim.team,
       weapon, headshot,
     };
@@ -1402,6 +1704,16 @@ export class Room {
         const amount = Math.round(GRENADE_DAMAGE * (1 - d / GRENADE_RADIUS));
         this.damage(o, owner, amount, 'grenade', false, origin);
       }
+      for (const w of this.wolves.values()) {
+        if (!w.alive) continue;
+        const center = { x: w.pos.x, y: w.pos.y + 0.6, z: w.pos.z };
+        const d = vdist(origin, center);
+        if (d > GRENADE_RADIUS) continue;
+        const blocked = raycastWorld(this.world, origin, vnorm(vsub(center, origin)), d);
+        if (blocked && d > 0.5) continue;
+        this.damageWolf(w, owner, Math.round(GRENADE_DAMAGE * (1 - d / GRENADE_RADIUS)), origin);
+      }
+      for (const w of this.wolves.values()) if (w.alive) w.brain.onNoise(origin, this.now(), null);
     } finally {
       this.deferWinCheck = prevDefer;
     }
@@ -1455,11 +1767,18 @@ export class Room {
       }
     }
 
+    // Bo'rilar raund boshida o'yinchilardan uzoqda paydo bo'ladi
+    this.wolves.clear();
+    this.syncWolvesToCount();
+
     this.io.to(this.channel).emit('loot:snapshot', this.loot.getPublicLootSnapshot());
     this.rosterDirty = true;
     this.sendRoster();
     this.sendMatch();
     this.systemChat(`Forest Survival — ${roundId}-raund boshlandi! Qurol va buyumlarni konteynerlardan toping.`);
+    if (this.wolves.size > 0) {
+      this.systemChat(`Ehtiyot bo'ling: o'rmonda ${this.wolves.size} ta vahshiy bo'ri bor!`);
+    }
   }
 
   private handleSurvivalRoundEnd(
@@ -1473,6 +1792,7 @@ export class Room {
     this.phase = 'ended';
     this.phaseEndsAt = this.survival.getPhaseEndsAt();
     this.grenades = [];
+    this.wolves.clear();
     this.winner = winnerId ? (winnerName || winnerId) : 'draw';
     for (const p of this.players.values()) {
       resetServerWeaponSwitchState(p);
@@ -1499,6 +1819,7 @@ export class Room {
     this.phaseEndsAt = this.survival.getPhaseEndsAt();
     this.winner = '';
     this.grenades = [];
+    this.wolves.clear();
     const roundLootSeed = ((this.secretLootSeed + roundId * 104729) >>> 0) || 1;
     this.loot.resetForRound(roundId, roundLootSeed);
     for (const p of this.players.values()) {
@@ -1566,6 +1887,9 @@ export class Room {
       p.deaths = 0;
       if (p.ready) this.spawn(p);
     }
+    // Bo'rilar yangi raundda qaytadan, o'yinchilardan uzoqda paydo bo'ladi
+    this.wolves.clear();
+    this.syncWolvesToCount();
     if (this.lootEnabled) this.io.to(this.channel).emit('loot:snapshot', this.loot.getPublicLootSnapshot());
     this.rosterDirty = true;
     this.sendMatch();
@@ -1645,6 +1969,8 @@ export class Room {
       }
       for (const p of this.players.values()) if (p.brain && p.alive) p.brain.update(dt, t);
     }
+    // Bo'rilar: AI faqat 'playing' fazasida yuradi (WolfBrain fazani tekshiradi), jasadlar har doim tozalanadi
+    if (this.wolves.size > 0) this.updateWolves(dt, t);
 
     this.sendSnapshot(t);
     if (this.rosterDirty || t >= this.nextRosterAt) this.sendRoster();
@@ -1691,6 +2017,22 @@ export class Room {
       players,
       grenades: this.grenades.map((g) => ({ id: g.id, x: q3(g.pos.x), y: q3(g.pos.y), z: q3(g.pos.z) })),
     };
+    if (this.wolves.size > 0) {
+      const wolves: WolfSnap[] = [];
+      for (const w of this.wolves.values()) {
+        const ws: WolfSnap = {
+          id: w.id,
+          x: q3(w.pos.x), y: q3(w.pos.y), z: q3(w.pos.z),
+          yaw: q3(w.yaw),
+          hp: Math.max(0, Math.round(w.hp)),
+          state: w.state,
+          coat: w.coat,
+        };
+        if (w.targetId) ws.targetId = w.targetId;
+        wolves.push(ws);
+      }
+      snap.wolves = wolves;
+    }
     this.io.to(this.channel).volatile.emit('snap', snap);
   }
 

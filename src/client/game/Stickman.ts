@@ -989,7 +989,7 @@ export class Stickman {
    * - Boshqa holatlarda: 1 (oldinga faceplant), 2 (aylanib tiz cho'kib yonboshga qulash),
    *   4 (chap yonboshga g'ujanak bo'lib yiqilish), 5 (oyoqlari shpagat ketib yuztuban qulash)
    */
-  triggerDeath(headshot: boolean, weapon?: WeaponId | 'grenade' | 'zone'): void {
+  triggerDeath(headshot: boolean, weapon?: WeaponId | 'grenade' | 'zone' | 'wolf'): void {
     this.deathT = 0.001;
     if (headshot) {
       this.deathStyle = 0;

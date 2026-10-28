@@ -2,6 +2,7 @@ import type { GameMode, Team } from './constants';
 import type { Vec3 } from './math';
 import type { SurvivalPhase, SurvivalPlayerRole, SurvivalStateSnap, SurvivalWinReason } from './survival';
 import type { WeaponId } from './weapons';
+import type { WolfSnap } from './wolf';
 import type { MapId, WorldMeta } from './world';
 
 // ---------- Lobby ----------
@@ -25,6 +26,8 @@ export interface RoomInfo {
   phase?: SurvivalPhase;
   /** Survival: boshlash uchun kerakli odamlar soni. */
   minHumans?: number;
+  /** Xonadagi vahshiy bo'rilar soni (0 — yo'q). */
+  wolves?: number;
 }
 
 export interface CreateRoomOpts {
@@ -42,6 +45,8 @@ export interface CreateRoomOpts {
   countdownSec?: number;
   /** Survival: raund boshlanishi uchun kerakli tayyor odamlar soni (botlar hisobga olinmaydi), standart 1. */
   minHumans?: number;
+  /** Vahshiy bo'rilar soni 0..WOLF_MAX_PER_ROOM (standart 0). */
+  wolves?: number;
 }
 
 export interface WelcomeMsg {
@@ -128,6 +133,8 @@ export interface Snapshot {
   roundId?: number;
   players: PlayerSnap[];
   grenades: GrenadeSnap[];
+  /** Bo'rilar (faqat xonada bo'ri bo'lsa yuboriladi). */
+  wolves?: WolfSnap[];
 }
 
 export interface InputAckEvent {
@@ -201,10 +208,13 @@ export interface KillEvent {
   victim: string;
   victimName: string;
   victimTeam: Team;
-  /** 'zone' — xavfsiz zonadan tashqarida qolib halok bo'ldi (qotil = qurbon). */
-  weapon: WeaponId | 'grenade' | 'zone';
+  /** 'zone' — xavfsiz zonadan tashqarida qolib halok bo'ldi (qotil = qurbon); 'wolf' — bo'ri g'ajidi. */
+  weapon: WeaponId | 'grenade' | 'zone' | 'wolf';
   headshot: boolean;
 }
+
+/** O'lim/zarar manbai turi (HUD ikonkalari uchun). */
+export type DamageSource = WeaponId | 'grenade' | 'zone' | 'wolf';
 
 export interface SpawnEvent {
   spawnId: number;
@@ -333,6 +343,8 @@ export type {
   UseMedkitAck,
   UseMedkitReq,
 } from './loot';
+
+export type { WolfBiteEvent, WolfDeathEvent, WolfHowlEvent, WolfSnap, WolfState } from './wolf';
 
 export type {
   SurvivalConfig,

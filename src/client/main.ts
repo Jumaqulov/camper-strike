@@ -438,7 +438,7 @@ function renderRooms(rooms: RoomInfo[]): void {
         <span class="r-mode ${r.mode}">${modeBadgeLabel}</span>
         <div class="r-main">
           <div class="r-name">${esc(r.name)}</div>
-          <div class="r-meta">${mapLabel}${lootBadge} · 👤 ${r.players}/${r.maxPlayers} o'yinchi · 🤖 ${r.bots} bot · ⏱ ${r.timeLimit} daq · 🎯 ${r.mode === 'forest_survival' ? '1 tirik' : r.scoreLimit}${r.mode === 'forest_survival' && (r.minHumans ?? 1) > 1 ? ` · 🚦 start: ${r.minHumans} odam` : ''}</div>
+          <div class="r-meta">${mapLabel}${lootBadge} · 👤 ${r.players}/${r.maxPlayers} o'yinchi · 🤖 ${r.bots} bot${r.wolves ? ` · 🐺 ${r.wolves} bo'ri` : ''} · ⏱ ${r.timeLimit} daq · 🎯 ${r.mode === 'forest_survival' ? '1 tirik' : r.scoreLimit}${r.mode === 'forest_survival' && (r.minHumans ?? 1) > 1 ? ` · 🚦 start: ${r.minHumans} odam` : ''}</div>
         </div>
         <button class="btn primary" data-join="${r.id}" ${r.players >= r.maxPlayers ? 'disabled' : ''}>KIRISH</button>
       </div>`;
@@ -720,6 +720,9 @@ function initEvents(): void {
       // Shuncha odam tayyor bo'lgach raund boshlanadi (botlar hisobga olinmaydi)
       opts.minHumans = Math.max(1, Math.min(16, Number(minHumansInput?.value ?? 1) || 1));
     }
+    // Vahshiy bo'rilar (barcha rejimlarda ixtiyoriy)
+    const wolvesInput = getEl<HTMLInputElement>('room-wolves');
+    opts.wolves = Math.max(0, Math.min(4, Number(wolvesInput?.value ?? 0) || 0));
 
     socket.emit('createRoom', opts, (res: { ok: boolean; roomId?: string; error?: string }) => {
       if (!res.ok || !res.roomId) return toast(res.error ?? "Xona yaratib bo'lmadi");

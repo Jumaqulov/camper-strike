@@ -3,7 +3,19 @@ import type { Socket } from 'socket.io-client';
 import { EYE_HEIGHT, RESPAWN_TIME, WALK_SPEED, type GameMode, type Team } from '../../shared/constants';
 import { angleDiff, clamp, lerp, type Vec3 } from '../../shared/math';
 import { MAX_INPUT_BATCH_SIZE } from '../../shared/netMovement';
-import { computeCameraClearDistance, raycastWorld, rayVsPlayer } from '../../shared/physics';
+import { computeCameraClearDistance, rayBox, raycastWorld, rayVsPlayer } from '../../shared/physics';
+import {
+  WOLF_HEIGHT,
+  WOLF_NAME_UZ,
+  WOLF_RADIUS,
+  isWolfId,
+  isWolfThreatState,
+  type WolfBiteEvent,
+  type WolfHowlEvent,
+  type WolfSnap,
+  type WolfState,
+} from '../../shared/wolf';
+import { WolfModel, preloadWolfAssets } from './wolf';
 import {
   DEFAULT_CONTAINER_EXTRA_MARGIN_M,
   GROUND_ITEM_PICKUP_RADIUS_M,
@@ -105,6 +117,22 @@ interface BufferedSnap {
   t: number;
   s: Snapshot;
   map: Map<string, PlayerSnap>;
+  wolves: Map<string, WolfSnap> | null;
+}
+
+/** Klientdagi bo'ri (server snapshotlaridan interpolyatsiya qilinadi). */
+interface WolfRemote {
+  id: string;
+  model: WolfModel;
+  pos: THREE.Vector3;
+  yaw: number;
+  state: WolfState;
+  targetId: string | null;
+  alive: boolean;
+  speed: number;
+  /** Irillash ovozi oxirgi marta chalingan vaqt (spam bo'lmasin). */
+  growlAt: number;
+  stepTimer: number;
 }
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -128,6 +156,7 @@ export class Game {
   private thirdPerson = true;
   private myName: string;
   private remotes = new Map<string, Remote>();
+  private wolves = new Map<string, WolfRemote>();
   private roster: RosterEntry[] = [];
   private snaps: BufferedSnap[] = [];
   private grenadeMeshes = new Map<number, THREE.Object3D>();
@@ -279,6 +308,8 @@ export class Game {
     this.myModel.setWeapon(initialWeapon);
     this.myModel.setNameTag(this.myName, '#ffe082', false);
     this.scene.add(this.myModel.root);
+    // Xonada bo'ri bo'lsa modelini oldindan yuklaymiz (birinchi bo'ri ko'ringanda zaxira ko'rinmasin)
+    if (welcome.room.wolves) void preloadWolfAssets();
 
     this.lootWorld = new LootWorldRenderer(
       this.scene,
@@ -432,6 +463,7 @@ export class Game {
       getLootSnapshot: () => this.lootSnapshot,
       getInventorySnap: () => this.inventorySnap,
       getRemotes: () => this.remotes.values(),
+      getWolves: () => this.wolves.values(),
       getCollisionDebug: () => this.collisionDebug,
       getSpectatableTargets: () => this.getSpectatableTargets(),
       sendInput: () => this.sendInput(),
@@ -583,6 +615,19 @@ export class Game {
       if (isMeleeWeapon(this.me.weapon)) this.audio.knifeHit();
       this.audio.hitmarker(e.headshot);
       if (e.kill) this.audio.killConfirm();
+      if (isWolfId(e.target)) {
+        const w = this.wolves.get(e.target);
+        if (w) this.fx.bloodHit(w.pos.clone().add(new THREE.Vector3(0, 0.7, 0)), e.kill);
+      }
+    });
+    this.on<WolfHowlEvent>('wolf:howl', (e) => this.audio.wolfHowl({ x: e.x, y: e.y + 1, z: e.z }));
+    this.on<WolfBiteEvent>('wolf:bite', (e) => {
+      this.audio.wolfBite({ x: e.x, y: e.y + 0.9, z: e.z }, e.hit);
+      if (!e.hit) return;
+      const w = this.wolves.get(e.id);
+      const mouth = w ? w.model.getMouthWorld(new THREE.Vector3()) : new THREE.Vector3(e.x, e.y + 0.9, e.z);
+      this.fx.bloodHit(mouth, true);
+      if (e.target === this.myId) this.shake = Math.max(this.shake, 0.6);
     });
     this.on<KillEvent>('kill', (e) => this.onKill(e));
     this.on<ExplosionEvent>('explosion', (e) => this.onExplosion(e));
@@ -857,7 +902,8 @@ export class Game {
 
   private applySnap(s: Snapshot) {
     const map = new Map(s.players.map((p) => [p.id, p] as const));
-    this.snaps.push({ t: performance.now() / 1000, s, map });
+    const wolves = s.wolves && s.wolves.length ? new Map(s.wolves.map((w) => [w.id, w] as const)) : null;
+    this.snaps.push({ t: performance.now() / 1000, s, map, wolves });
     if (this.snaps.length > 40) this.snaps.shift();
     if (s.roundId !== undefined && s.roundId > this.me.roundId) {
       this.me.roundId = s.roundId;
@@ -1136,6 +1182,8 @@ export class Game {
       const html =
         e.weapon === 'zone'
           ? `Xavfsiz zonadan tashqarida qoldingiz ${weaponBadgeHtml('zone', false)}`
+          : e.weapon === 'wolf'
+          ? `${esc(WOLF_NAME_UZ)} ${weaponBadgeHtml('wolf', false)} sizni g'ajib tashladi`
           : e.killer === e.victim
           ? `O'z granatangizdan halok bo'ldingiz ${weaponBadgeHtml('grenade', false)}`
           : `<span class="t-${e.killerTeam}">${esc(e.killerName)}</span> ${weaponBadgeHtml(e.weapon, e.headshot)} orqali sizni yo'q qildi`;
@@ -1816,6 +1864,11 @@ export class Game {
           hitPlayer = true;
         }
       }
+      const tw = this.rayVsWolves(origin, d, maxT);
+      if (tw !== null) {
+        maxT = tw;
+        hitPlayer = true;
+      }
       if (hitPlayer) this.fx.bloodHit(new THREE.Vector3(origin.x + d.x * maxT, origin.y + d.y * maxT, origin.z + d.z * maxT));
       return;
     }
@@ -1851,6 +1904,11 @@ export class Game {
           maxT = h.t;
           hitPlayer = true;
         }
+      }
+      const tw = this.rayVsWolves(origin, d, maxT);
+      if (tw !== null) {
+        maxT = tw;
+        hitPlayer = true;
       }
       const end = new THREE.Vector3(origin.x + d.x * maxT, origin.y + d.y * maxT, origin.z + d.z * maxT);
       if (hitPlayer) this.fx.bloodHit(end);
@@ -1920,6 +1978,8 @@ export class Game {
       }
     }
 
+    this.updateWolves(a, b, k, dt, t);
+
     // Granatalar
     const ga = new Map(a.s.grenades.map((g) => [g.id, g] as const));
     const gb = b ? new Map(b.s.grenades.map((g) => [g.id, g] as const)) : ga;
@@ -1950,6 +2010,122 @@ export class Game {
         this.grenadeMeshes.delete(id);
       }
     }
+  }
+
+  /** Bo'rilar: snapshotlar orasida interpolyatsiya, model/animatsiya, irillash va qadam ovozlari. */
+  private updateWolves(a: BufferedSnap, b: BufferedSnap | undefined, k: number, dt: number, t: number): void {
+    const wa = a.wolves;
+    const wb = b ? b.wolves : wa;
+    if (!wa && !wb) {
+      if (this.wolves.size) this.removeWolvesExcept(null);
+      return;
+    }
+    const seen = new Set<string>();
+    const ids = new Set<string>([...(wa?.keys() ?? []), ...(wb?.keys() ?? [])]);
+    for (const id of ids) {
+      const s0 = wa?.get(id) ?? wb?.get(id);
+      const s1 = wb?.get(id) ?? s0;
+      if (!s0 || !s1) continue;
+      seen.add(id);
+      let w = this.wolves.get(id);
+      if (!w) {
+        const model = new WolfModel();
+        this.scene.add(model.root);
+        w = {
+          id,
+          model,
+          pos: new THREE.Vector3(s0.x, s0.y, s0.z),
+          yaw: s0.yaw,
+          state: s0.state,
+          targetId: s0.targetId ?? null,
+          alive: s0.state !== 'dead',
+          speed: 0,
+          growlAt: -99,
+          stepTimer: 0,
+        };
+        this.wolves.set(id, w);
+      }
+      const teleport = Math.hypot(s1.x - s0.x, s1.z - s0.z) > 6;
+      const kk = teleport ? (k < 0.5 ? 0 : 1) : k;
+      const src = kk < 0.5 ? s0 : s1;
+      w.pos.set(lerp(s0.x, s1.x, kk), lerp(s0.y, s1.y, kk), lerp(s0.z, s1.z, kk));
+      w.yaw = s0.yaw + angleDiff(s0.yaw, s1.yaw) * kk;
+      // Tezlik: snapshotlar orasidagi siljishdan (bo'ri snapshotida vel yo'q)
+      const dtSnap = b ? Math.max(1e-3, b.t - a.t) : 1 / 30;
+      const snapSpeed = Math.hypot(s1.x - s0.x, s1.z - s0.z) / dtSnap;
+      w.speed = teleport ? 0 : lerp(w.speed, snapSpeed, Math.min(1, dt * 12));
+      const newState = s1.state;
+      if (newState !== w.state) {
+        const wasThreat = isWolfThreatState(w.state);
+        if (isWolfThreatState(newState) && !wasThreat && t - w.growlAt > 1.5) {
+          w.growlAt = t;
+          this.audio.wolfGrowl({ x: w.pos.x, y: w.pos.y + 0.9, z: w.pos.z });
+        } else if (newState === 'attack') {
+          this.audio.wolfSnarl({ x: w.pos.x, y: w.pos.y + 0.9, z: w.pos.z });
+        } else if (newState === 'alert' && t - w.growlAt > 2.5) {
+          w.growlAt = t;
+          this.audio.wolfGrowl({ x: w.pos.x, y: w.pos.y + 0.9, z: w.pos.z });
+        }
+        w.state = newState;
+      }
+      w.targetId = src.targetId ?? null;
+      w.alive = newState !== 'dead';
+      const m = w.model;
+      m.root.position.copy(w.pos);
+      m.root.rotation.y = w.yaw;
+      m.update(dt, { state: w.state, speed: w.speed });
+      // Yugurgan bo'rining panja tovushi (yumshoq, tez)
+      if (w.alive && w.speed > 2.5) {
+        w.stepTimer -= dt;
+        if (w.stepTimer <= 0) {
+          w.stepTimer = w.speed > 5 ? 0.17 : 0.3;
+          const surf = detectSurface(this.worldDef, w.pos.x, w.pos.y, w.pos.z);
+          this.audio.footstep({ x: w.pos.x, y: w.pos.y, z: w.pos.z }, 0.22, surf);
+        }
+      }
+    }
+    this.removeWolvesExcept(seen);
+  }
+
+  private removeWolvesExcept(keep: Set<string> | null): void {
+    for (const [id, w] of this.wolves) {
+      if (keep && keep.has(id)) continue;
+      this.scene.remove(w.model.root);
+      w.model.dispose();
+      this.wolves.delete(id);
+    }
+  }
+
+  /** Bo'ri o'q xitboksi (server bilan bir xil AABB) — bashoratli qon effekti uchun. */
+  private rayVsWolves(origin: Vec3, d: Vec3, maxT: number): number | null {
+    const r = WOLF_RADIUS + 0.25;
+    let best: number | null = null;
+    for (const w of this.wolves.values()) {
+      if (!w.alive) continue;
+      const h = rayBox(
+        origin,
+        d,
+        { x: w.pos.x - r, y: w.pos.y, z: w.pos.z - r },
+        { x: w.pos.x + r, y: w.pos.y + WOLF_HEIGHT, z: w.pos.z + r },
+        best ?? maxT,
+      );
+      if (h) best = h.t;
+    }
+    return best;
+  }
+
+  /** HUD: bo'ri xavfi darajasi (quvyapti / yaqinda). */
+  private wolfThreatLevel(): '' | 'near' | 'hunt' {
+    if (!this.me.alive || this.wolves.size === 0) return '';
+    const p = this.me.body.pos;
+    let near = false;
+    for (const w of this.wolves.values()) {
+      if (!w.alive) continue;
+      if (w.targetId === this.myId && isWolfThreatState(w.state)) return 'hunt';
+      const d = Math.hypot(w.pos.x - p.x, w.pos.z - p.z);
+      if (d < 14 || (d < 26 && (w.state === 'alert' || w.state === 'stalk' || w.state === 'hunt'))) near = true;
+    }
+    return near ? 'near' : '';
   }
 
   /**
@@ -2165,6 +2341,7 @@ export class Game {
       this.miniMap.update(center, allies, this.zoneSnap ? this.currentZoneForMinimap(t) : null);
     }
     this.updateZone(t);
+    this.hud.setWolfWarning(this.wolfThreatLevel());
     if (me.weapon) {
       const a = me.ammo[me.weapon];
       this.hud.setAmmo(me.weapon, a.mag, a.reserve, !!me.reloadWeapon, me.grenades, this.lootPreview ? me.ownedWeapons : undefined);
@@ -2298,6 +2475,8 @@ export class Game {
     this.hud.show(false);
     this.hud.setLayout(false, false);
     $('pause-menu').classList.add('hidden');
+    this.hud.setWolfWarning('');
+    this.removeWolvesExcept(null);
     for (const rem of this.remotes.values()) rem.model.dispose();
     for (const [, mesh] of this.grenadeMeshes) {
       this.scene.remove(mesh);

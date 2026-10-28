@@ -125,6 +125,15 @@ export interface DevRemoteView {
   model: Stickman;
 }
 
+/** Klientdagi bo'ri (DEV asboblari uchun tor ko'rinish). */
+export interface DevWolfView {
+  id: string;
+  pos: { x: number; y: number; z: number };
+  state: string;
+  targetId: string | null;
+  alive: boolean;
+}
+
 /** Game asboblarga beradigan tor interfeys: faqat kerakli obyektlar, getter/setter'lar va amallar. */
 export interface DevGameHooks {
   /** BrowserGuard holati (to'liq ekran, Keyboard Lock, "chiqasizmi?" tasdig'i). */
@@ -169,6 +178,7 @@ export interface DevGameHooks {
   getLootSnapshot(): RoomLootSnapshot | null;
   getInventorySnap(): PlayerInventorySnap | null;
   getRemotes(): Iterable<DevRemoteView>;
+  getWolves(): Iterable<DevWolfView>;
   getCollisionDebug(): CollisionDebugOverlay | null;
   getSpectatableTargets(): SpectatableTarget[];
   sendInput(): void;
@@ -323,6 +333,8 @@ export interface DevGameTools {
   getBrowserGuardState?: () => unknown;
   getOtherPlayerCount?: () => number;
   getOtherPlayers?: () => Array<{ id: string; name: string; pos: Vec3; weapon: WeaponId | null; crouched: boolean }>;
+  /** Bo'rilar (klient interpolyatsiyasidan): pozitsiya, holat, nishon. */
+  getWolves?: () => DevWolfView[];
   getContainersCount?: () => number;
   /** 08B: Camper Buddy asset + per-model animator/weapon-mount diagnostics. */
   getCharacterDiagnostics?: () => {
@@ -731,6 +743,14 @@ export function installDevGameTools(h: DevGameHooks): () => void {
     getWorldVersion: () => h.getWorldDef().worldVersion,
     getRoomId: () => h.roomId,
     getBrowserGuardState: () => h.getBrowserGuardState?.() ?? null,
+    getWolves: () =>
+      Array.from(h.getWolves()).map((w) => ({
+        id: w.id,
+        pos: { x: w.pos.x, y: w.pos.y, z: w.pos.z },
+        state: w.state,
+        targetId: w.targetId,
+        alive: w.alive,
+      })),
     getOtherPlayerCount: () => Array.from(h.getRemotes()).length,
     getOtherPlayers: () =>
       Array.from(h.getRemotes()).map((r) => ({

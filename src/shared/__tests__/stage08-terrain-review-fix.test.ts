@@ -129,8 +129,9 @@ describe('STAGE 08-TERRAIN-ART-POLISH-REVIEW-FIX — Unit & Integratsiya QA', ()
       54,
       `public/models/ ichida (characters/ dan tashqari) jami aynan 54 ta GLB bo'lishi shart, topildi: ${envGlbs.length}`,
     );
+    // 08B: 1 ta personaj (camper_buddy) + Bosqich 18: vahshiy bo'ri (5 ta rang varianti) = 6 ta
     const characterGlbs = allGlbs.length - envGlbs.length;
-    assert.equal(characterGlbs, 1, `08B: public/models/characters/ da aynan 1 ta GLB bo'lishi shart, topildi: ${characterGlbs}`);
+    assert.equal(characterGlbs, 6, `public/models/characters/ da aynan 6 ta GLB bo'lishi shart (buddy + 5 bo'ri), topildi: ${characterGlbs}`);
 
     for (const glbPath of allGlbs) {
       assertValidGltfHeader(glbPath);

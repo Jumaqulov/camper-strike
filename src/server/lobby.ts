@@ -21,6 +21,7 @@ import type {
   UseMedkitReq,
   WelcomeMsg,
 } from '../shared/protocol';
+import { WOLF_MAX_PER_ROOM } from '../shared/wolf';
 import { DEFAULT_PUBLIC_LAYOUT_SEED, type MapId } from '../shared/world';
 import { Room } from './room';
 
@@ -75,6 +76,8 @@ export function sanitizeOpts(raw: Partial<CreateRoomOpts> | undefined, owner: st
     // Boshlash uchun kerakli odamlar soni: 1..maxPlayers (botlar hisobga olinmaydi)
     opts.minHumans = num(raw?.minHumans, 1, 1, opts.maxPlayers);
   }
+  // Vahshiy bo'rilar: barcha rejimlarda ixtiyoriy (standart 0)
+  opts.wolves = num(raw?.wolves, 0, 0, WOLF_MAX_PER_ROOM);
   return opts;
 }
 

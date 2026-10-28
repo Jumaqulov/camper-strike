@@ -135,8 +135,12 @@ const HEADSHOT_SVG = `<svg class="hs-svg" viewBox="0 0 24 24" fill="none" xmlns=
 /** Xavfsiz zona (survival) belgisi — killfeed va o'lim ekrani uchun. */
 export const ZONE_SVG = `<svg class="w-svg w-svg-zone" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="11" stroke="#7dd3fc" stroke-width="2.4" stroke-dasharray="4 3"/><circle cx="16" cy="16" r="4" fill="#7dd3fc"/></svg>`;
 
-export function weaponIconHtml(w: WeaponId | 'grenade' | 'zone'): string {
+/** Bo'ri boshi silueti (killfeed / o'lim ekrani). */
+export const WOLF_SVG = `<svg class="w-svg w-svg-wolf" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 4l5 7h10l5-7v10c0 6-4 11-10 13C10 25 6 20 6 14V4z" fill="#3a3b3f" stroke="#111" stroke-width="1.4"/><path d="M12 15l2 1-1 2zM20 15l-2 1 1 2z" fill="#ffb020"/><path d="M13 21l1.5 3 1.5-3 1.5 3 1.5-3" stroke="#f1ead6" stroke-width="1.2" fill="none"/></svg>`;
+
+export function weaponIconHtml(w: WeaponId | 'grenade' | 'zone' | 'wolf'): string {
   if (w === 'zone') return ZONE_SVG;
+  if (w === 'wolf') return WOLF_SVG;
   const icons3d = getWeaponIcons3D();
   const src = icons3d[w];
   if (src) {
@@ -145,7 +149,7 @@ export function weaponIconHtml(w: WeaponId | 'grenade' | 'zone'): string {
   return WEAPON_SVG[w];
 }
 
-export function weaponBadgeHtml(w: WeaponId | 'grenade' | 'zone', headshot = false): string {
+export function weaponBadgeHtml(w: WeaponId | 'grenade' | 'zone' | 'wolf', headshot = false): string {
   return `<span class="kf-weapon">${weaponIconHtml(w)}${
     headshot ? `<span class="kf-hs">${HEADSHOT_SVG}</span>` : ''
   }</span>`;
@@ -186,6 +190,19 @@ export class Hud {
     el.classList.toggle('hidden', !outside);
     $('hud').classList.toggle('zone-outside', outside);
     if (outside) el.textContent = `XAVFSIZ ZONADAN TASHQARIDASIZ · −${dps}/s · zonaga qayting`;
+  }
+
+  private lastWolfWarn = '';
+  /** Bo'ri xavfi: 'hunt' — sizni quvyapti, 'near' — yaqin atrofda hushyor, '' — yo'q. */
+  setWolfWarning(level: '' | 'near' | 'hunt'): void {
+    if (level === this.lastWolfWarn) return;
+    this.lastWolfWarn = level;
+    const el = $('wolf-warn');
+    el.classList.toggle('hidden', level === '');
+    el.classList.toggle('hunt', level === 'hunt');
+    $('hud').classList.toggle('wolf-hunted', level === 'hunt');
+    if (level === 'hunt') el.textContent = "VAHSHIY BO'RI SIZNI QUVYAPTI · qoching yoki oting!";
+    else if (level === 'near') el.textContent = "Yaqinda bo'ri bor · sekin yuring";
   }
 
   private lastGearKey = '';

@@ -333,6 +333,50 @@ export class AudioSys {
     this.noise(chain.d, t + 0.08, 0.16, 'bandpass', 1800, 900, 1.6, 0.05, 0.05);
   }
 
+  /** Bo'ri g'ingshidi/irillaydi (sezdi, ovga o'tdi): past arra to'lqini + bo'g'iq shovqin, 0.7 s. */
+  wolfGrowl(pos?: P3): void {
+    const d = this.dest(pos, 3);
+    if (!d) return;
+    const t = this.ctx!.currentTime;
+    this.tone(d, t, 'sawtooth', 78, 52, 0.7, 0.16);
+    this.tone(d, t + 0.02, 'sawtooth', 81, 55, 0.68, 0.1);
+    this.noise(d, t, 0.6, 'lowpass', 360, 140, 0.9, 0.12, 0.05);
+  }
+
+  /** Tashlanish oldidan qisqa keskin irillash. */
+  wolfSnarl(pos?: P3): void {
+    const d = this.dest(pos, 3);
+    if (!d) return;
+    const t = this.ctx!.currentTime;
+    this.tone(d, t, 'sawtooth', 120, 70, 0.32, 0.2);
+    this.noise(d, t, 0.3, 'bandpass', 700, 260, 1.4, 0.16, 0.01);
+  }
+
+  /** Uvlash: uchburchak to'lqin 300 → 540 → 330 Hz, ~2.5 s, yengil vibrato; uzoqdan ham eshitiladi. */
+  wolfHowl(pos?: P3): void {
+    const d = this.dest(pos, 5);
+    if (!d) return;
+    const t = this.ctx!.currentTime;
+    this.tone(d, t, 'triangle', 290, 540, 1.15, 0.2);
+    this.tone(d, t + 0.03, 'sine', 293, 546, 1.12, 0.08);
+    this.tone(d, t + 1.1, 'triangle', 540, 330, 1.4, 0.18);
+    this.tone(d, t + 1.12, 'sine', 546, 334, 1.36, 0.07);
+  }
+
+  /** Tishlash: tegsa — jag' "shaq" + bo'g'iq zarba, tegmasa — havoda "shap". */
+  wolfBite(pos: P3 | undefined, hit: boolean): void {
+    const d = this.dest(pos, 3);
+    if (!d) return;
+    const t = this.ctx!.currentTime;
+    if (hit) {
+      this.noise(d, t, 0.08, 'highpass', 1800, 600, 1.2, 0.3, 0.003);
+      this.noise(d, t + 0.02, 0.14, 'lowpass', 500, 110, 0.8, 0.45, 0.004);
+      this.tone(d, t + 0.02, 'sine', 200, 80, 0.12, 0.3);
+    } else {
+      this.noise(d, t, 0.12, 'bandpass', 950, 450, 1.5, 0.18, 0.01);
+    }
+  }
+
   /** Pichoq tanaga tegdi: bo'g'iq "tup" — past shovqin va qisqa past ton. */
   knifeHit(): void {
     const c = this.ctx;
