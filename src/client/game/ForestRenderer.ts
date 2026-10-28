@@ -60,7 +60,7 @@ import {
   type OutdoorSceneHandles,
 } from './outdoor';
 import { createTextures, TEX_SCALE } from './Textures';
-import type { WorldHandles } from './World';
+import type { WorldHandles, WorldTheme } from './World';
 import type { ForestSquareWorldDefinition } from '../../shared/forestSquare';
 import { buildForestSquareGroundCover } from '../../shared/groundCover';
 import { createGroundCoverRenderer, type GroundCoverRendererHandle } from './GroundCoverRenderer';
@@ -637,9 +637,12 @@ export function buildForestSampleScene(
   scene: THREE.Scene,
   world: WorldDefinition,
   initialQuality: QualityLevel = 'medium',
+  theme: WorldTheme = 'day',
 ): WorldHandles {
   void preloadForestAssets();
   const isForestSquare = world.mapId === 'forest_square';
+  // "Tong otguncha": oy nuri, tun osmoni va qalin qorong'i tuman; kulba lampalari tunda ham yonadi
+  const night = theme === 'night';
   const isModularStructuresMap = world.mapId === 'forest_assets_preview' || isForestSquare;
   if (isModularStructuresMap) {
     void preloadBuildingAssets();
@@ -1322,11 +1325,14 @@ export function buildForestSampleScene(
       groundCover = null;
     }
   }
-  // 6. Dedicated Forest Environment Lighting & Golden-Hour Atmosphere
-  const hemi = new THREE.HemisphereLight('#d4e6ff', '#354d24', 1.25);
+  // 6. Dedicated Forest Environment Lighting & Golden-Hour Atmosphere (tunda: oy nuri)
+  const hemi = night
+    ? new THREE.HemisphereLight('#2b3a66', '#0d1410', 0.45)
+    : new THREE.HemisphereLight('#d4e6ff', '#354d24', 1.25);
   scene.add(hemi);
 
-  const sun = new THREE.DirectionalLight('#ffe1a6', 2.65);
+  // Tunda "quyosh" oy vazifasini bajaradi — soyalar saqlanadi
+  const sun = night ? new THREE.DirectionalLight('#aebfff', 0.5) : new THREE.DirectionalLight('#ffe1a6', 2.65);
   sun.position.set(52, 54, 36);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
@@ -1347,18 +1353,23 @@ export function buildForestSampleScene(
     : null;
 
   // Cool sky rim-light from opposite direction so shaded trunks & GLB foliage have readable 3D depth
-  const rimLight = new THREE.DirectionalLight('#9ec4ed', 0.58);
+  const rimLight = new THREE.DirectionalLight('#9ec4ed', night ? 0.25 : 0.58);
   rimLight.position.set(-45, 32, -40);
   scene.add(rimLight);
 
+  // Tunda sunDir — oy yo'nalishi: kichikroq va oqroq gardish
   const sunDir = sun.position.clone().normalize();
   const skyMat = new THREE.ShaderMaterial({
     side: THREE.BackSide,
     depthWrite: false,
     uniforms: {
-      top: { value: new THREE.Color('#27629e') },
-      horizon: { value: new THREE.Color('#e6d3b3') },
+      top: { value: new THREE.Color(night ? '#05070f' : '#27629e') },
+      horizon: { value: new THREE.Color(night ? '#1b2240' : '#e6d3b3') },
       sunDir: { value: sunDir },
+      // Chiziqli (linear) qiymatlar — kunduzgi rang avvalgi shader konstantasi bilan bir xil
+      glowColor: { value: night ? new THREE.Color(0.86, 0.9, 1.0) : new THREE.Color(1.0, 0.89, 0.64) },
+      glowCore: { value: night ? 2.0 : 3.8 },
+      glowHalo: { value: night ? 0.1 : 0.34 },
     },
     vertexShader: /* glsl */ `
       varying vec3 vDir;
@@ -1370,13 +1381,16 @@ export function buildForestSampleScene(
       uniform vec3 top;
       uniform vec3 horizon;
       uniform vec3 sunDir;
+      uniform vec3 glowColor;
+      uniform float glowCore;
+      uniform float glowHalo;
       varying vec3 vDir;
       void main() {
         vec3 d = normalize(vDir);
         float h = clamp(d.y * 1.45 + 0.08, 0.0, 1.0);
         vec3 col = mix(horizon, top, pow(h, 0.72));
         float s = max(dot(d, sunDir), 0.0);
-        col += vec3(1.0, 0.89, 0.64) * (pow(s, 700.0) * 3.8 + pow(s, 9.0) * 0.34);
+        col += glowColor * (pow(s, 700.0) * glowCore + pow(s, 9.0) * glowHalo);
         gl_FragColor = vec4(col, 1.0);
         #include <colorspace_fragment>
       }`,
@@ -1386,8 +1400,10 @@ export function buildForestSampleScene(
   sky.renderOrder = -1;
   scene.add(sky);
 
-  // Natural woodland depth fog
-  const forestFog = new THREE.Fog('#c4d6ba', isForestSquare ? 62 : 50, isForestSquare ? 265 : 215);
+  // Natural woodland depth fog (tunda qalin va qorong'i: forest_square 28..150, kichik xaritalar 22..120)
+  const fogNear = night ? (isForestSquare ? 28 : 22) : isForestSquare ? 62 : 50;
+  const fogFar = night ? (isForestSquare ? 150 : 120) : isForestSquare ? 265 : 215;
+  const forestFog = new THREE.Fog(night ? '#0a0f1c' : '#c4d6ba', fogNear, fogFar);
   scene.fog = forestFog;
 
   // 7. Dynamic Per-Chunk Frustum Culling, Quality LOD/Distance Scaling & Dirty-Flag Caching
@@ -1561,8 +1577,9 @@ export function buildForestSampleScene(
     const isTopDownOverview = camPos.y > 32;
 
     if (isForestSquare) {
-      forestFog.near = isTopDownOverview ? 160 : 62;
-      forestFog.far = isTopDownOverview ? 520 : 265;
+      // Yuqoridan ko'rinishda (kuzatuvchi kamerasi) tuman uzoqlashadi; tunda ham nisbat saqlanadi
+      forestFog.near = isTopDownOverview ? (night ? 90 : 160) : fogNear;
+      forestFog.far = isTopDownOverview ? (night ? 320 : 520) : fogFar;
     }
 
     sunShadowFollower?.update(camera, focusPos, isTopDownOverview);
@@ -1701,7 +1718,8 @@ export function buildForestSampleScene(
     }
     stage04aHandles?.outdoor?.setQuality(q);
     groundCover?.setQuality(q);
-    sunbeamMesh.visible = q !== 'low';
+    // Quyosh nurlari tunda yo'q
+    sunbeamMesh.visible = q !== 'low' && !night;
     updateVisibility();
   };
   applyQuality(initialQuality);

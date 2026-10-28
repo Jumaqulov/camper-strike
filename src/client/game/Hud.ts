@@ -1,4 +1,4 @@
-import type { GameMode, Team } from '../../shared/constants';
+import { isSurvivalMode, type GameMode, type Team } from '../../shared/constants';
 import type { ChatMsg, KillEvent, MatchState, RosterEntry } from '../../shared/protocol';
 import { KNIFE, KNIFE_SLOT_KEY, WEAPONS, WEAPON_SLOTS, isMeleeWeapon, type WeaponId } from '../../shared/weapons';
 import { getWeaponIcons3D } from './GunModels';
@@ -341,7 +341,7 @@ export class Hud {
   setMatch(m: MatchState, leader: number): void {
     const mm = Math.floor(m.timeLeft / 60);
     const ss = String(m.timeLeft % 60).padStart(2, '0');
-    if (m.mode === 'forest_survival') {
+    if (isSurvivalMode(m.mode)) {
       $('timer').textContent =
         m.phase === 'waiting'
           ? 'KUTILMOQDA'
@@ -393,7 +393,7 @@ export class Hud {
 
   setTeamBadge(team: Team, mode: GameMode): void {
     const b = $('team-badge');
-    if (mode === 'forest_survival') {
+    if (isSurvivalMode(mode)) {
       // Survival'da yuqoridagi status paneli rejimni ko'rsatadi — pastdagi takroriy nishon kerak emas
       b.textContent = '';
       b.className = 't-none';
@@ -426,9 +426,11 @@ export class Hud {
       mode === 'tdm'
         ? table(`QIZIL — ${m?.scores.red ?? 0}`, 'red', sorted.filter((r) => r.team === 'red')) +
           table(`KO'K — ${m?.scores.blue ?? 0}`, 'blue', sorted.filter((r) => r.team === 'blue'))
-        : mode === 'forest_survival'
-          ? table(`🌲 FOREST SURVIVAL — RAUND #${m?.roundId ?? 1}`, 'ffa', sorted)
-          : table('HAMMA HAMMAGA QARSHI', 'ffa', sorted);
+        : mode === 'wolf_night'
+          ? table(`🐺 TONG OTGUNCHA — RAUND #${m?.roundId ?? 1}`, 'ffa', sorted)
+          : mode === 'forest_survival'
+            ? table(`🌲 FOREST SURVIVAL — RAUND #${m?.roundId ?? 1}`, 'ffa', sorted)
+            : table('HAMMA HAMMAGA QARSHI', 'ffa', sorted);
   }
 
   death(show: boolean, killer = '', seconds = 0): void {

@@ -37,6 +37,7 @@ export const SURVIVAL_WIN_REASON_LABELS_UZ: Record<SurvivalWinReason, string> = 
   draw_mutual_elimination: 'Durang: barcha ishtirokchilar bir vaqtda halok bo‘ldi',
   draw_timeout: 'Durang: vaqt tugadi, g‘olib aniqlanmadi',
   draw_no_survivors: 'Durang: tirik ishtirokchilar qolmadi',
+  dawn: 'Tong otdi — tunni o‘tkazganlar g‘olib',
 };
 
 export function isSurvivalPhase(x: unknown): x is SurvivalPhase {
@@ -98,12 +99,27 @@ export function computePreRoundPhaseTransition(
   return 'countdown';
 }
 
+/** Raund natijasi; `winnerIds` — wolf_night (sharedSurvival) rejimida tong otganda birgalikda g'olib bo'lganlar. */
+export type SurvivalRoundOutcome = SurvivalRoundEvaluation & { winnerIds?: string[] };
+
 export function evaluateSurvivalRoundOutcome(
   contenderIds: readonly string[],
   aliveContenderIds: readonly string[],
   timeRemainingSec: number,
-  opts?: { endedByDisconnect?: boolean },
-): SurvivalRoundEvaluation {
+  opts?: { endedByDisconnect?: boolean; sharedSurvival?: boolean },
+): SurvivalRoundOutcome {
+  if (opts?.sharedSurvival) {
+    // Tong otguncha: oxirgi tirik qolgan raundni tugatmaydi; hamma o'lsa — bo'rilar yutdi,
+    // taymer tugasa — barcha tirik ishtirokchilar birgalikda g'olib ('dawn').
+    if (aliveContenderIds.length === 0) {
+      return { shouldEnd: true, winnerId: null, winReason: 'draw_no_survivors', winnerIds: [] };
+    }
+    if (timeRemainingSec <= 0) {
+      return { shouldEnd: true, winnerId: null, winReason: 'dawn', winnerIds: [...aliveContenderIds] };
+    }
+    return { shouldEnd: false, winnerId: null, winReason: 'none' };
+  }
+
   if (contenderIds.length < 2) {
     if (aliveContenderIds.length === 1) {
       return {
@@ -184,6 +200,10 @@ export function formatSurvivalStatusTextUz(
     case 'playing':
       return `Tirik qolganlar: ${snap.aliveCount}/${snap.totalContenders} • Vaqt: ${secs}s`;
     case 'ended': {
+      if (snap.winReason === 'dawn') {
+        const names = snap.winnerName || SURVIVAL_WIN_REASON_LABELS_UZ.dawn;
+        return `Tong otdi — g‘oliblar: ${names} • Keyingi raund: ${secs}s`;
+      }
       if (snap.winnerId && snap.winnerName) {
         const reasonText = SURVIVAL_WIN_REASON_LABELS_UZ[snap.winReason];
         return `G‘olib: ${snap.winnerName} (${reasonText}) • Keyingi raund: ${secs}s`;

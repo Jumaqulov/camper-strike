@@ -12,6 +12,7 @@ import {
 import { eyeHeightOf, hitboxScaleOf } from '../shared/stance';
 import { sampleTerrainHeight } from '../shared/world';
 import { WEAPONS, WEAPON_SLOTS, isMeleeWeapon, type WeaponId } from '../shared/weapons';
+import { isWolfThreatState } from '../shared/wolf';
 import { findLocalPath, standingHeights } from './botLocalPath';
 import { applyAuthoritativeWeaponSwitch } from './combat/weaponSwitchAuthority';
 import type { Room, ServerPlayer } from './room';
@@ -130,6 +131,9 @@ export class BotBrain {
   private lastGoalKey = '';
   /** Joriy yo'l mahalliy (0.8 m katak) — tugun yaqinlik chegarasi kichikroq. */
   private pathIsLocal = false;
+  /** Bo'ridan qochish maqsadi (nav tuguni) va u tanlangan vaqt. */
+  private wolfFleeGoal: Vec3 | null = null;
+  private wolfFleeGoalAt = -99;
 
   constructor(private room: Room, private me: ServerPlayer) {}
 
@@ -552,11 +556,186 @@ export class BotBrain {
     return true;
   }
 
+  // ---------------- Bo'rilar ----------------
+
+  /**
+   * Yaqin bo'ri tahdidi: o'qotar qurol va o'q bo'lsa, bo'rini ko'rsa — unga qarab otadi (6 m dan yaqin kelsa
+   * orqaga tisariladi); aks holda bo'ridan teskari tomonga (~14 m, nav tuguniga) yugurib qochadi.
+   * Qaytaradi: 'fight' / 'flee' (harakat qo'llandi, shu tick uchun boshqa mantiq kerak emas) yoki null (tahdid yo'q).
+   */
+  private handleWolfThreat(dt: number, t: number): 'fight' | 'flee' | null {
+    const me = this.me;
+    if (this.room.wolves.size === 0) {
+      this.wolfFleeGoal = null;
+      return null;
+    }
+    const w = this.room.nearestWolfThreat(me, 22);
+    if (!w) {
+      this.wolfFleeGoal = null;
+      return null;
+    }
+    const dx = w.pos.x - me.pos.x;
+    const dz = w.pos.z - me.pos.z;
+    const dH = Math.hypot(dx, dz) || 1e-3;
+    const hunting = w.targetId === me.id || isWolfThreatState(w.state);
+    if (!hunting && dH > 10) {
+      // Uzoqda sayr qilayotgan bo'ri — o'z ishimizda davom etamiz
+      this.wolfFleeGoal = null;
+      return null;
+    }
+
+    const weapon = me.weapon;
+    const ranged = !!weapon && !isMeleeWeapon(weapon) && me.ammo[weapon].mag + me.ammo[weapon].reserve > 0;
+    const eye = this.eye();
+    const center = { x: w.pos.x, y: w.pos.y + 0.6, z: w.pos.z };
+    const toW = vsub(center, eye);
+    const dist = vdist(eye, center);
+    const canSee = ranged && dist > 1e-3 && !raycastWorld(this.room.world, eye, vnorm(toW), dist);
+
+    let wishX = 0;
+    let wishZ = 0;
+    if (canSee && weapon) {
+      const def = WEAPONS[weapon];
+      const { yaw, pitch } = anglesFromDir(toW);
+      // Bo'ri tez — o'yinchiga qaraganda shoshilinchroq buriladi
+      this.turnTowards(yaw, pitch, 5 + this.skill * 3, dt);
+      const err = Math.abs(angleDiff(me.yaw, yaw)) + Math.abs(me.pitch - pitch);
+      if (err < 0.12 && t >= this.nextFireAt && me.ammo[weapon].mag > 0) {
+        const extraSpread = 0.02 + (1 - this.skill) * 0.04;
+        if (this.room.botFire(me, extraSpread)) {
+          this.nextFireAt = t + def.fireInterval + (def.auto ? 0.03 : 0.2 + Math.random() * 0.2);
+        }
+      }
+      if (dH < 6) {
+        // Juda yaqin — otishda davom etib orqaga tisarilamiz
+        const sp = RUN_SPEED * def.speedMul * 0.7;
+        wishX = -(dx / dH) * sp;
+        wishZ = -(dz / dH) * sp;
+      }
+      this.wolfFleeGoal = null;
+      this.repathAt = 0;
+      applyWorldMovement(me, wishX, wishZ, false, dt, this.room.world);
+      return 'fight';
+    }
+
+    // Qochish: bo'ridan teskari yo'nalishda ~14 m — yo'li bor nav tuguniga, yo'l bo'ylab yugurib
+    const speed = RUN_SPEED * (weapon ? WEAPONS[weapon].speedMul : 1);
+    if (
+      !this.wolfFleeGoal ||
+      t - this.wolfFleeGoalAt > 1.5 ||
+      Math.hypot(this.wolfFleeGoal.x - me.pos.x, this.wolfFleeGoal.z - me.pos.z) < 1.5
+    ) {
+      const pick = this.pickWolfFleeGoal(w.pos, dH);
+      this.wolfFleeGoal = pick.goal;
+      this.wolfFleeGoalAt = t;
+      this.path = pick.path;
+      this.pathIdx = 0;
+      // Birinchi tugun o'z katagimiz markazi bo'lsa (orqada qolgan) — undan o'tib ketamiz
+      if (this.path.length > 1) {
+        const n0 = this.path[0]!;
+        if (Math.hypot(n0.x - me.pos.x, n0.z - me.pos.z) < 2.5) this.pathIdx = 1;
+      }
+      this.pathIsLocal = false;
+      this.repathAt = 0;
+      this.lastGoalKey = 'wolf:flee';
+    }
+    let goal = this.wolfFleeGoal;
+    if (this.pathIdx < this.path.length) {
+      const node = this.path[this.pathIdx]!;
+      if (Math.hypot(node.x - me.pos.x, node.z - me.pos.z) < 0.8) this.pathIdx++;
+      if (this.pathIdx < this.path.length) goal = this.path[this.pathIdx]!;
+    }
+    const gx = goal.x - me.pos.x;
+    const gz = goal.z - me.pos.z;
+    const gl = Math.hypot(gx, gz);
+    let jump = false;
+    if (gl > 0.3) {
+      wishX = (gx / gl) * speed;
+      wishZ = (gz / gl) * speed;
+      this.turnTowards(Math.atan2(-gx, -gz), 0, 6, dt);
+      // Tiqilib qolsa sakraydi
+      if (me.onGround && Math.hypot(me.vel.x, me.vel.z) < 0.3 && t - this.wolfFleeGoalAt > 0.4) jump = true;
+    }
+    applyWorldMovement(me, wishX, wishZ, jump, dt, this.room.world);
+    return 'flee';
+  }
+
+  /**
+   * Qochish maqsadi: bo'ridan teskari yo'nalish atrofida (0°, ±30°, ±60°, ±95°, ±130°) ~14 m dagi nav
+   * tugunlari sinab chiqiladi — bo'ridan kamida 4 m uzoqlashtiradigan va yo'li bor birinchisi olinadi
+   * (to'g'ri qochish devorga olib borsa, yon tomonga o'tiladi). Topilmasa — xom teskari nuqta, yo'lsiz.
+   */
+  private pickWolfFleeGoal(wolfPos: Vec3, dH: number): { goal: Vec3; path: Vec3[] } {
+    const me = this.me;
+    const nav = this.room.nav;
+    const ax = (me.pos.x - wolfPos.x) / dH;
+    const az = (me.pos.z - wolfPos.z) / dH;
+    let best: { goal: Vec3; path: Vec3[]; score: number } | null = null;
+    for (const deg of [0, 30, -30, 60, -60, 95, -95, 130, -130]) {
+      const a = (deg * Math.PI) / 180;
+      const cs = Math.cos(a);
+      const sn = Math.sin(a);
+      const dx = ax * cs - az * sn;
+      const dz = ax * sn + az * cs;
+      const raw = { x: me.pos.x + dx * 14, y: me.pos.y, z: me.pos.z + dz * 14 };
+      const ni = nav.nearest(raw);
+      if (ni < 0) continue;
+      const c = nav.center(ni);
+      const gain = Math.hypot(c.x - wolfPos.x, c.z - wolfPos.z) - dH;
+      if (gain < 4) continue;
+      const path = nav.findPath(me.pos, c);
+      if (!path.length) continue;
+      let len = 0;
+      let prev: Vec3 = me.pos;
+      for (const n of path) {
+        len += Math.hypot(n.x - prev.x, n.z - prev.z);
+        prev = n;
+      }
+      const score = gain - Math.max(0, len - 16) * 0.5 - Math.abs(deg) * 0.03;
+      if (!best || score > best.score) best = { goal: c, path, score };
+      // To'g'ri (yoki unga yaqin) yo'nalish yaxshi ishlayapti — qidiruvni to'xtatamiz
+      if (gain >= 9 && len <= 20) break;
+    }
+    if (best) return { goal: best.goal, path: best.path };
+    return { goal: { x: me.pos.x + ax * 14, y: me.pos.y, z: me.pos.z + az * 14 }, path: [] };
+  }
+
+  /** O'q-dorilar: bo'sh magazin — qayta yuklash yoki boshqa qurolga/pichoqqa o'tish; tinch paytda to'ldirish. */
+  private manageAmmo(visible: boolean): void {
+    const me = this.me;
+    const activeWeapon: WeaponId = me.weapon ?? 'rifle';
+    const meleeNow = isMeleeWeapon(me.weapon);
+    const lootMode = this.room.lootEnabled;
+    const ammo = me.ammo[activeWeapon];
+    if (!me.reloadWeapon && me.weapon && !meleeNow) {
+      if (ammo.mag === 0) {
+        if (ammo.reserve > 0) this.room.startReload(me);
+        else {
+          const alt = WEAPON_SLOTS.find(
+            (w) => (!lootMode || this.room.loot.canPlayerUseWeapon(me.id, w)) && me.ammo[w].mag + me.ammo[w].reserve > 0,
+          );
+          // O'q tugadi: boshqa o'qotar qurol bo'lmasa — pichoq
+          applyAuthoritativeWeaponSwitch(me, alt ?? 'knife', this.room.now(), { fromAutoPickup: true });
+          if (lootMode) this.room.loot.syncPlayerFromServerPlayer(me.id, me);
+        }
+      } else if (!visible && ammo.mag < WEAPONS[activeWeapon].magSize * 0.4 && ammo.reserve > 0) {
+        this.room.startReload(me);
+      }
+    }
+  }
+
   update(dt: number, t: number): void {
     const me = this.me;
     if (!me.alive) return;
     if (this.room.phase !== 'playing') {
       applyWorldMovement(me, 0, 0, false, dt, this.room.world);
+      return;
+    }
+
+    // --- Bo'ri tahdidi: otish yoki qochish (o'yinchi-jang va loot mantiqidan ustun) ---
+    const wolfAction = this.handleWolfThreat(dt, t);
+    if (wolfAction !== null) {
+      this.manageAmmo(wolfAction === 'fight');
       return;
     }
 
@@ -847,21 +1026,6 @@ export class BotBrain {
     applyWorldMovement(me, wishX, wishZ, jump, dt, this.room.world);
 
     // --- O'q-dorilar ---
-    const ammo = me.ammo[activeWeapon];
-    if (!me.reloadWeapon && me.weapon && !meleeNow) {
-      if (ammo.mag === 0) {
-        if (ammo.reserve > 0) this.room.startReload(me);
-        else {
-          const alt = WEAPON_SLOTS.find(
-            (w) => (!lootMode || this.room.loot.canPlayerUseWeapon(me.id, w)) && me.ammo[w].mag + me.ammo[w].reserve > 0,
-          );
-          // O'q tugadi: boshqa o'qotar qurol bo'lmasa — pichoq
-          applyAuthoritativeWeaponSwitch(me, alt ?? 'knife', this.room.now(), { fromAutoPickup: true });
-          if (lootMode) this.room.loot.syncPlayerFromServerPlayer(me.id, me);
-        }
-      } else if (!visible && ammo.mag < WEAPONS[activeWeapon].magSize * 0.4 && ammo.reserve > 0) {
-        this.room.startReload(me);
-      }
-    }
+    this.manageAmmo(visible);
   }
 }

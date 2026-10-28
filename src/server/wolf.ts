@@ -39,6 +39,10 @@ export interface ServerWolf extends Body {
   diedAt: number;
   /** Klassik rejimlarda qayta paydo bo'lish vaqti (survivalda Infinity). */
   respawnAt: number;
+  /** To'lqin ko'paytuvchilari (wolf_night; boshqa rejimlarda 1): tezlik, jon (WOLF_MAX_HP ga), tishlash zarari. */
+  speedMul: number;
+  hpMul: number;
+  biteMul: number;
   brain: WolfBrain;
 }
 
@@ -208,6 +212,11 @@ export class WolfBrain {
     }
   }
 
+  /** Holat tezligi × to'lqin ko'paytuvchisi (wolf_night to'lqinlarida bo'rilar tezlashadi). */
+  private speedFor(state: WolfState): number {
+    return wolfSpeedForState(state) * (this.me.speedMul || 1);
+  }
+
   private turnTowards(yaw: number, dt: number, rate = WOLF_TURN_RATE): void {
     const me = this.me;
     const d = angleDiff(me.yaw, yaw);
@@ -357,7 +366,7 @@ export class WolfBrain {
           this.setState('alert', t);
         }
         if (dH > 3.5) {
-          const m = this.moveTowards({ x: tgt.pos.x, y: me.pos.y, z: tgt.pos.z }, wolfSpeedForState('stalk'), dt);
+          const m = this.moveTowards({ x: tgt.pos.x, y: me.pos.y, z: tgt.pos.z }, this.speedFor('stalk'), dt);
           wishX = m.wishX;
           wishZ = m.wishZ;
         }
@@ -374,7 +383,7 @@ export class WolfBrain {
       } else {
         const huntState: WolfState = fresh ? 'hunt' : 'stalk';
         if (me.state !== huntState) this.setState(huntState, t);
-        const speed = wolfSpeedForState(huntState);
+        const speed = this.speedFor(huntState);
         const direct = this.hasDirectLine(goal);
         const m = this.followPath(goal, speed, t, dt, direct);
         wishX = m.wishX;
@@ -389,7 +398,7 @@ export class WolfBrain {
     } else if (this.investigatePos) {
       const goal = this.investigatePos;
       if (me.state !== 'stalk') this.setState('stalk', t);
-      const m = this.followPath(goal, wolfSpeedForState('stalk'), t, dt, this.hasDirectLine(goal));
+      const m = this.followPath(goal, this.speedFor('stalk'), t, dt, this.hasDirectLine(goal));
       wishX = m.wishX;
       wishZ = m.wishZ;
       if (Math.hypot(goal.x - me.pos.x, goal.z - me.pos.z) < 1.5) {
@@ -411,7 +420,7 @@ export class WolfBrain {
           this.roamGoalAt = t;
           this.repathAt = 0;
         }
-        const m = this.followPath(this.roamGoal, wolfSpeedForState('idle'), t, dt, false);
+        const m = this.followPath(this.roamGoal, this.speedFor('idle'), t, dt, false);
         wishX = m.wishX;
         wishZ = m.wishZ;
         if (Math.hypot(this.roamGoal.x - me.pos.x, this.roamGoal.z - me.pos.z) < 1.2) this.roamGoal = null;

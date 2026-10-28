@@ -1,5 +1,18 @@
 export type Team = 'red' | 'blue' | 'none';
-export type GameMode = 'tdm' | 'ffa' | 'forest_survival';
+/** 'wolf_night' — "Tong otguncha": survival hayot sikli, lekin raqib — bo'ri to'lqinlari, g'alaba — tong otishi. */
+export type GameMode = 'tdm' | 'ffa' | 'forest_survival' | 'wolf_night';
+
+/** Survival hayot siklidan (kutish → sanoq → raund → yakun, ishtirokchilar, kuzatuvchilar) foydalanadigan rejimlar. */
+export function isSurvivalMode(mode: GameMode): boolean {
+  return mode === 'forest_survival' || mode === 'wolf_night';
+}
+
+export const GAME_MODE_NAMES_UZ: Record<GameMode, string> = {
+  tdm: 'Jamoaviy (TDM)',
+  ffa: 'Hamma qarshi (FFA)',
+  forest_survival: 'Forest Survival',
+  wolf_night: 'Tong otguncha',
+};
 
 export const SERVER_PORT = 3000;
 export const TICK_RATE = 30;

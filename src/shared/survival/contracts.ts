@@ -1,3 +1,4 @@
+import type { NightSnap } from '../wolf/night';
 import type { SurvivalZoneSnap } from './zone';
 export type SurvivalPhase = 'waiting' | 'countdown' | 'playing' | 'ended';
 
@@ -9,7 +10,9 @@ export type SurvivalWinReason =
   | 'opponent_disconnected'
   | 'draw_mutual_elimination'
   | 'draw_timeout'
-  | 'draw_no_survivors';
+  | 'draw_no_survivors'
+  /** wolf_night: tong otdi — barcha tirik ishtirokchilar birgalikda g'olib. */
+  | 'dawn';
 
 export interface SurvivalConfig {
   minPlayersToStart: number;
@@ -20,6 +23,11 @@ export interface SurvivalConfig {
   zoneEnabled: boolean;
   /** Raund boshlanishi uchun kerakli tayyor odamlar soni (botlar hisobga olinmaydi), kamida 1. */
   minHumansToStart: number;
+  /**
+   * wolf_night: raund oxirgi tirik qolganda tugamaydi; taymer tugaganda barcha tirik ishtirokchilar
+   * g'olib ('dawn'), hamma o'lsa 'draw_no_survivors'.
+   */
+  sharedSurvival?: boolean;
 }
 
 export interface SurvivalPlayerStatusSnap {
@@ -56,6 +64,10 @@ export interface SurvivalStateSnap {
   players: SurvivalPlayerStatusSnap[];
   /** Xavfsiz zona holati (faqat 'playing' fazasida). */
   zone?: SurvivalZoneSnap | null;
+  /** wolf_night: tun/to'lqin holati (faqat 'playing' fazasida). */
+  night?: NightSnap | null;
+  /** wolf_night: tong otganda birgalikda g'olib bo'lgan tirik ishtirokchilar. */
+  winnerIds?: string[];
 }
 
 export interface SurvivalRoundEvaluation {

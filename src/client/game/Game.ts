@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { Socket } from 'socket.io-client';
-import { EYE_HEIGHT, RESPAWN_TIME, WALK_SPEED, type GameMode, type Team } from '../../shared/constants';
+import { EYE_HEIGHT, RESPAWN_TIME, WALK_SPEED, isSurvivalMode, type GameMode, type Team } from '../../shared/constants';
 import { angleDiff, clamp, lerp, type Vec3 } from '../../shared/math';
 import { MAX_INPUT_BATCH_SIZE } from '../../shared/netMovement';
 import { computeCameraClearDistance, rayBox, raycastWorld, rayVsPlayer } from '../../shared/physics';
@@ -165,6 +165,8 @@ export class Game {
   private readonly roomId: string;
   private readonly mode: GameMode;
   private readonly isSurvival: boolean;
+  /** "Tong otguncha" (wolf_night): tun vizuallari, to'lqin ma'lumoti, tong/bo'rilar natija ekranlari. */
+  private readonly isNight: boolean;
   worldDef: WorldDefinition;
   private raf = 0;
   private last = performance.now();
@@ -259,7 +261,8 @@ export class Game {
     this.myId = welcome.you;
     this.roomId = welcome.room.id;
     this.mode = welcome.room.mode;
-    this.isSurvival = this.mode === 'forest_survival';
+    this.isSurvival = isSurvivalMode(this.mode);
+    this.isNight = this.mode === 'wolf_night';
     this.lootPreview = this.isSurvival || Boolean(welcome.room.lootPreview);
     this.myName = settings.name;
     this.worldDef = createWorldDefinition({
@@ -277,7 +280,8 @@ export class Game {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    // Tunda ("Tong otguncha") ekspozitsiya pastroq — oy nuri va lampalar kontrasti saqlanadi
+    this.renderer.toneMappingExposure = this.isNight ? 0.9 : 1.05;
     this.renderer.autoClear = false;
     root.appendChild(this.renderer.domElement);
     try {
@@ -295,12 +299,13 @@ export class Game {
     this.camera.rotation.order = 'YXZ';
     this.scene.add(this.camera);
 
-    this.world = buildWorld(this.scene, this.worldDef, settings.quality);
+    this.world = buildWorld(this.scene, this.worldDef, settings.quality, this.isNight ? 'night' : 'day');
     this.applyQualityRendererSettings(settings.quality);
     this.detectWeakGpu();
     this.fx = new Effects(this.scene);
     this.fx.groundAt = (x, z) => sampleTerrainHeight(this.worldDef.terrain, x, z);
     this.vm = new ViewModel(aspect);
+    if (this.isNight) this.vm.setNight(true);
     this.myModel = new Stickman(colorFor('red', this.myId));
     const initialWeapon: WeaponId | null = this.lootPreview ? null : 'rifle';
     if (!this.lootPreview) this.prevWeapon = 'pistol';
@@ -350,6 +355,7 @@ export class Game {
         this.thirdPerson = !this.thirdPerson;
       },
     });
+    this.survivalUi.setMode(this.mode);
     this.survivalUi.setVisible(this.isSurvival);
     this.input = new Input(this.renderer.domElement);
     // root — butun hujjat: to'liq ekranda HUD, pauza menyusi va chat ham ko'rinsin
@@ -416,7 +422,7 @@ export class Game {
         this.world.dispose();
         const techWorld = createTechnicalTerrainFixture();
         this.worldDef = techWorld;
-        this.world = buildWorld(this.scene, techWorld, this.settings.quality);
+        this.world = buildWorld(this.scene, techWorld, this.settings.quality, this.isNight ? 'night' : 'day');
         this.me.setWorld(techWorld);
         const sp = techWorld.spawnPoints[0];
         this.me.body.pos = { x: sp.x, y: sp.y, z: sp.z };
@@ -1018,7 +1024,12 @@ export class Game {
       this.survivalUi.setVisible(true);
       this.hud.center(null);
       if (m.phase === 'ended' && this.lastPhase !== 'ended') {
-        const win = m.winnerId ? m.winnerId === this.myId : m.winner === this.myName;
+        // Tong otganda g'oliblar ko'p (winnerIds); boshqa hollarda yagona g'olib
+        const win = m.survival?.winnerIds?.length
+          ? m.survival.winnerIds.includes(this.myId)
+          : m.winnerId
+            ? m.winnerId === this.myId
+            : m.winner === this.myName;
         this.audio.roundEnd(win);
       }
       if (m.phase !== 'playing') {
@@ -1465,7 +1476,7 @@ export class Game {
   };
 
   private isEnemy(rem: Remote): boolean {
-    return this.mode === 'ffa' || this.mode === 'forest_survival' || rem.team !== this.me.team;
+    return this.mode === 'ffa' || isSurvivalMode(this.mode) || rem.team !== this.me.team;
   }
 
   private update(dt: number, t: number) {

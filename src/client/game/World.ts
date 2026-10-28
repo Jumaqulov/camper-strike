@@ -17,6 +17,9 @@ import type { GroundCoverStats } from './GroundCoverRenderer';
 
 export type { CullingProfileStats, Stage04ASceneHandles, GroundCoverStats };
 
+/** Dunyo yoritilishi: 'day' — golden-hour (standart), 'night' — "Tong otguncha" oy nuri va tun tumani. */
+export type WorldTheme = 'day' | 'night';
+
 export interface WorldHandles {
   sun: THREE.DirectionalLight;
   sky: THREE.Mesh;
@@ -77,14 +80,16 @@ export function buildWorld(
   scene: THREE.Scene,
   world: WorldDefinition,
   quality: QualityLevel = 'medium',
+  theme: WorldTheme = 'day',
 ): WorldHandles {
   if (
     world.mapId === 'forest_sample' ||
     world.mapId === 'forest_assets_preview' ||
     world.mapId === 'forest_square'
   ) {
-    return buildForestSampleScene(scene, world, quality);
+    return buildForestSampleScene(scene, world, quality, theme);
   }
+  const night = theme === 'night';
   const textures = createTextures();
   const mats = {} as Record<MaterialKind, THREE.MeshStandardMaterial>;
   for (const k of Object.keys(textures) as MaterialKind[]) {
@@ -224,10 +229,12 @@ export function buildWorld(
   group.add(outerGround);
   scene.add(group);
 
-  // "RV There Yet?" Golden-Hour Mabutts Valley yorug'ligi
-  const hemi = new THREE.HemisphereLight('#ffe9c4', '#3f5930', 1.2);
+  // "RV There Yet?" Golden-Hour Mabutts Valley yorug'ligi (tunda — oy nuri)
+  const hemi = night
+    ? new THREE.HemisphereLight('#2b3a66', '#0d1410', 0.45)
+    : new THREE.HemisphereLight('#ffe9c4', '#3f5930', 1.2);
   scene.add(hemi);
-  const sun = new THREE.DirectionalLight('#ffe6b0', 2.85);
+  const sun = night ? new THREE.DirectionalLight('#aebfff', 0.5) : new THREE.DirectionalLight('#ffe6b0', 2.85);
   sun.position.set(42, 62, 30);
   sun.castShadow = true;
   sun.shadow.mapSize.set(4096, 4096);
@@ -249,9 +256,13 @@ export function buildWorld(
     side: THREE.BackSide,
     depthWrite: false,
     uniforms: {
-      top: { value: new THREE.Color('#1f579c') },
-      bottom: { value: new THREE.Color('#f0d8b4') },
+      top: { value: new THREE.Color(night ? '#05070f' : '#1f579c') },
+      bottom: { value: new THREE.Color(night ? '#1b2240' : '#f0d8b4') },
       sunDir: { value: sunDir },
+      // Yorug'lik manbai nuri: kunduzi iliq quyosh gardishi, tunda kichikroq va oqroq oy
+      glowColor: { value: night ? new THREE.Color(0.86, 0.9, 1.0) : new THREE.Color(1.0, 0.88, 0.62) },
+      glowCore: { value: night ? 2.2 : 4.2 },
+      glowHalo: { value: night ? 0.1 : 0.32 },
     },
     vertexShader: /* glsl */ `
       varying vec3 vDir;
@@ -263,13 +274,16 @@ export function buildWorld(
       uniform vec3 top;
       uniform vec3 bottom;
       uniform vec3 sunDir;
+      uniform vec3 glowColor;
+      uniform float glowCore;
+      uniform float glowHalo;
       varying vec3 vDir;
       void main() {
         vec3 d = normalize(vDir);
         float h = clamp(d.y * 1.55 + 0.06, 0.0, 1.0);
         vec3 col = mix(bottom, top, pow(h, 0.75));
         float s = max(dot(d, sunDir), 0.0);
-        col += vec3(1.0, 0.88, 0.62) * (pow(s, 800.0) * 4.2 + pow(s, 10.0) * 0.32);
+        col += glowColor * (pow(s, 800.0) * glowCore + pow(s, 10.0) * glowHalo);
         gl_FragColor = vec4(col, 1.0);
         #include <colorspace_fragment>
       }`,
@@ -278,7 +292,7 @@ export function buildWorld(
   sky.frustumCulled = false;
   sky.renderOrder = -1;
   scene.add(sky);
-  scene.fog = new THREE.Fog('#c8d9cc', 95, 340);
+  scene.fog = night ? new THREE.Fog('#0a0f1c', 40, 190) : new THREE.Fog('#c8d9cc', 95, 340);
 
   return {
     sun,

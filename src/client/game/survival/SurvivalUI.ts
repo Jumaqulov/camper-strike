@@ -1,3 +1,4 @@
+import type { GameMode } from '../../../shared/constants';
 import {
   SURVIVAL_PHASE_LABELS_UZ,
   SURVIVAL_WIN_REASON_LABELS_UZ,
@@ -8,7 +9,16 @@ import {
   type SurvivalStateSnap,
   type SurvivalWinReason,
 } from '../../../shared/survival';
+import type { NightSnap } from '../../../shared/wolf/night';
 import type { SpectatorCameraPose } from './SpectatorController';
+
+/** "Tong otguncha" yuqori pill matni: 🌙 Tonggacha mm:ss · 2/4-to'lqin · 🐺 2 */
+function formatNightPillUz(n: NightSnap): string {
+  const total = Math.max(0, Math.floor(n.dawnInSec));
+  const mm = String(Math.floor(total / 60)).padStart(2, '0');
+  const ss = String(total % 60).padStart(2, '0');
+  return `🌙 Tonggacha ${mm}:${ss} · ${n.wave}/${n.waveCount}-to'lqin · 🐺 ${n.wolvesAlive}`;
+}
 
 export interface SurvivalUICallbacks {
   onCycleSpectatorTarget: (delta: number) => void;
@@ -67,6 +77,8 @@ export class SurvivalUI {
   private winnerOverlayEl: HTMLElement | null = null;
 
   private visible = false;
+  /** Xona rejimi — wolf_night bo'lsa tun matnlari/natija ekranlari ('playing' dan oldin ham ma'lum). */
+  private mode: GameMode = 'forest_survival';
   private snap: SurvivalStateSnap | null = null;
   private myId = '';
   private myRole: SurvivalPlayerRole | null = null;
@@ -158,6 +170,21 @@ export class SurvivalUI {
     });
   }
 
+  /** Xona rejimini o'rnatish (Game konstruktorida, birinchi snapshot kelmasidan oldin). */
+  setMode(mode: GameMode): void {
+    if (this.mode === mode) return;
+    this.mode = mode;
+    // Kesh kalitlari rejimga bog'liq emas — majburan qayta chizish
+    this.lastPillKey = '';
+    this.lastBannerKey = '';
+    this.lastWinKey = '';
+    this.render();
+  }
+
+  private get isNight(): boolean {
+    return this.mode === 'wolf_night';
+  }
+
   setVisible(visible: boolean): void {
     if (this.visible === visible) return;
     this.visible = visible;
@@ -243,7 +270,11 @@ export class SurvivalUI {
     this.myRole = myStatus ? myStatus.role : null;
 
     // 1. Top Pill
-    const phaseLabel = SURVIVAL_PHASE_LABELS_UZ[snap.phase] ?? snap.phase.toUpperCase();
+    const night = this.isNight;
+    const phaseLabel =
+      night && snap.phase === 'playing'
+        ? 'TUN DAVOM ETMOQDA'
+        : SURVIVAL_PHASE_LABELS_UZ[snap.phase] ?? snap.phase.toUpperCase();
     const countLabel =
       snap.phase === 'waiting' || snap.phase === 'countdown'
         ? (snap.minHumans ?? 1) > 1 && (snap.readyHumans ?? 0) < (snap.minHumans ?? 1)
@@ -252,9 +283,13 @@ export class SurvivalUI {
         : `Tirik: ${snap.aliveCount}/${snap.totalContenders}`;
     this.topStatusText = `RAUND #${snap.roundId} · ${phaseLabel} · ${countLabel}`;
 
+    // Tunda zona yo'q — pillda to'lqin/tong ma'lumoti ko'rsatiladi
+    const nightText = night && snap.phase === 'playing' && snap.night ? formatNightPillUz(snap.night) : '';
     const pillKey = `${snap.roundId}|${snap.phase}|${snap.timeLeft}|${countLabel}|${
-      snap.phase === 'playing' && snap.zone ? `${formatZoneStatusUz(snap.zone)}|${snap.zone.shrinking ? 1 : 0}` : ''
-    }`;
+      !night && snap.phase === 'playing' && snap.zone
+        ? `${formatZoneStatusUz(snap.zone)}|${snap.zone.shrinking ? 1 : 0}`
+        : ''
+    }${night ? `|${phaseLabel}|${nightText}` : ''}`;
     if (this.topPillEl && pillKey !== this.lastPillKey) {
       this.lastPillKey = pillKey;
       // Vaqt segmenti: countdown/ended — soniya, playing — mm:ss, waiting — ko'rsatilmaydi
@@ -271,20 +306,35 @@ export class SurvivalUI {
         ${timeHtml}
         <span class="s07-pill-phase phase-${esc(snap.phase)}">${esc(phaseLabel)}</span>
         <span class="s07-pill-count">${esc(countLabel)}</span>
-        ${snap.phase === 'playing' && snap.zone ? `<span class="s07-pill-zone${snap.zone.shrinking ? ' shrinking' : ''}">${esc(formatZoneStatusUz(snap.zone))}</span>` : ''}
+        ${
+          night
+            ? nightText
+              ? `<span class="s07-pill-night">${esc(nightText)}</span>`
+              : ''
+            : snap.phase === 'playing' && snap.zone
+              ? `<span class="s07-pill-zone${snap.zone.shrinking ? ' shrinking' : ''}">${esc(formatZoneStatusUz(snap.zone))}</span>`
+              : ''
+        }
       `;
     }
 
     // 2. Pre-Round Banner
     if (snap.phase === 'waiting' || snap.phase === 'countdown') {
-      const title =
-        snap.phase === 'waiting'
-          ? (snap.minHumans ?? 1) > 1 && (snap.readyHumans ?? 0) < (snap.minHumans ?? 1)
+      const needHumans = (snap.minHumans ?? 1) > 1 && (snap.readyHumans ?? 0) < (snap.minHumans ?? 1);
+      const title = night
+        ? snap.phase === 'waiting'
+          ? `Tun boshlanishini kutamiz · ${needHumans ? `${snap.readyHumans ?? 0}/${snap.minHumans} odam` : `${snap.readyCount}/${snap.minPlayers}`}`
+          : `Tun boshlanishiga ${snap.timeLeft} s`
+        : snap.phase === 'waiting'
+          ? needHumans
             ? `Odamlar kutilmoqda · ${snap.readyHumans ?? 0}/${snap.minHumans}`
             : `O'yinchilar kutilmoqda · ${snap.readyCount}/${snap.minPlayers}`
           : `Raund boshlanmoqda`;
-      const subtitle =
-        snap.phase === 'waiting'
+      const subtitle = night
+        ? snap.phase === 'waiting'
+          ? `Tayyor bo'ling — bo'rilar to'lqin bo'lib keladi, tong otguncha omon qoling`
+          : `Bo'rilar kelmoqda — konteynerlarni [E] bilan oching, birga himoyalaning`
+        : snap.phase === 'waiting'
           ? (snap.minHumans ?? 1) > 1
             ? `Kamida ${snap.minHumans} odam kerak · hamma qurolsiz boshlaydi`
             : `Kamida ${snap.minPlayers} o'yinchi kerak · hamma qurolsiz boshlaydi`
@@ -369,11 +419,14 @@ export class SurvivalUI {
     const winKey = showWinner
       ? `1|${snap.winnerId}|${snap.winnerName}|${snap.winReason}|${snap.timeLeft}|${snap.players
           .map((p) => `${p.id}:${p.role}:${p.alive ? 1 : 0}:${p.kills}:${p.deaths}:${p.placement ?? ''}`)
-          .join(',')}`
+          .join(',')}${night ? `|${(snap.winnerIds ?? []).join(',')}` : ''}`
       : '0';
     if (this.winnerOverlayEl && winKey !== this.lastWinKey) {
       this.lastWinKey = winKey;
-      if (showWinner) {
+      if (showWinner && night && (snap.winReason === 'dawn' || snap.winReason === 'draw_no_survivors')) {
+        this.winnerOverlayEl.className = '';
+        this.winnerOverlayEl.innerHTML = this.renderNightResultHtml(snap);
+      } else if (showWinner) {
         this.winnerOverlayEl.className = '';
         const isDraw = snap.winnerId === null || snap.winnerName === 'draw' || !snap.winnerName;
         // Yog'och lager belgisi: katta sarlavha (bo'yalgan taxta) + ostida izoh
@@ -471,6 +524,101 @@ export class SurvivalUI {
         this.winnerOverlayEl.innerHTML = '';
       }
     }
+  }
+
+  /**
+   * "Tong otguncha" natija ekrani:
+   *  - 'dawn' — tong otdi: barcha tiriklar (winnerIds) birga g'olib (#1), qolganlar yo'q bo'lish tartibida #2..;
+   *  - 'draw_no_survivors' — bo'rilar yutdi: hech kim tongni ko'rmadi.
+   */
+  private renderNightResultHtml(snap: SurvivalStateSnap): string {
+    const dawn = snap.winReason === 'dawn';
+    const winnerIds = new Set(dawn ? snap.winnerIds ?? [] : []);
+    const meWon = winnerIds.has(this.myId);
+    const survivorNames = snap.players.filter((p) => winnerIds.has(p.id)).map((p) => p.name);
+    // Snapshot'da ismi bo'lmagan g'oliblar uchun serverning qo'shma ismlar matni
+    const namesText = survivorNames.length ? survivorNames.join(', ') : snap.winnerName;
+
+    const headerText = dawn ? (meWon ? 'OMON QOLDINGIZ!' : 'TONG OTDI!') : "BO'RILAR YUTDI";
+    const headerSub = dawn ? `Tunni o'tkazganlar: ${esc(namesText)}` : "Hech kim tongni ko'rmadi";
+    const headerIcon = dawn ? '🌅' : '🐺';
+    const signCls = dawn ? (meWon ? 'is-victory' : 'is-other') : 'is-draw';
+    const reasonLabel = SURVIVAL_WIN_REASON_LABELS_UZ[snap.winReason] ?? snap.statusTextUz ?? '';
+
+    // Tartib: g'oliblar → yo'q bo'lganlar (keyinroq yo'q bo'lgan yuqorida) → kuzatuvchilar
+    const sortedPlayers = [...snap.players].sort((a, b) => {
+      const aw = winnerIds.has(a.id) ? 1 : 0;
+      const bw = winnerIds.has(b.id) ? 1 : 0;
+      if (aw !== bw) return bw - aw;
+      if (a.role === 'spectator' && b.role !== 'spectator') return 1;
+      if (b.role === 'spectator' && a.role !== 'spectator') return -1;
+      if (a.alive !== b.alive) return a.alive ? -1 : 1;
+      if (a.eliminatedAt !== undefined && b.eliminatedAt !== undefined && a.eliminatedAt !== b.eliminatedAt) {
+        return b.eliminatedAt - a.eliminatedAt;
+      }
+      if (a.placement !== undefined && b.placement !== undefined && a.placement !== b.placement) {
+        return a.placement - b.placement;
+      }
+      return b.kills - a.kills || a.deaths - b.deaths;
+    });
+
+    let nextRank = 2;
+    const rowsHtml = sortedPlayers
+      .map((p) => {
+        const isWinner = winnerIds.has(p.id);
+        const isMe = p.id === this.myId;
+        const isSpectator = p.role === 'spectator';
+        const placeText = isWinner ? '#1' : isSpectator ? '—' : `#${nextRank++}`;
+        const statusText = isWinner
+          ? '🌅 Omon qoldi'
+          : isSpectator
+            ? '👁 Kuzatuvchi'
+            : p.alive
+              ? '🛡 Tirik'
+              : "💀 Bo'ri g'ajidi";
+        const rowCls = `${isWinner ? 'is-winner' : ''} ${isMe ? 'is-me' : ''} ${
+          !isWinner && !p.alive && !isSpectator ? 'is-out' : ''
+        }`.trim();
+        return `
+              <tr class="${rowCls}">
+                <td><span class="s07-rank">${esc(placeText)}</span></td>
+                <td class="s07-name">${esc(p.name)}${isMe ? '<span class="s07-tag">Siz</span>' : ''}</td>
+                <td>${esc(statusText)}</td>
+                <td class="s07-kills">${p.kills}</td>
+              </tr>
+            `;
+      })
+      .join('');
+
+    // Keyingi tungacha qolgan vaqt (natija ekrani 10 s turadi)
+    const progress = Math.max(0, Math.min(1, snap.timeLeft / 10));
+    return `
+          <div class="s07-win-sign ${signCls}">
+            <span class="s07-win-icon">${headerIcon}</span>
+            <span class="s07-win-title">${headerText}</span>
+          </div>
+          <div class="s07-win-sub">${headerSub}</div>
+          <div class="s07-win-reason">${esc(reasonLabel)}</div>
+          <div class="s07-win-board">
+            <table class="s07-win-table">
+              <thead>
+                <tr>
+                  <th>O'rin</th>
+                  <th>O'yinchi</th>
+                  <th>Holat</th>
+                  <th class="s07-kills">Qotil</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+            </table>
+          </div>
+          <div class="s07-win-footer">
+            <span>Keyingi tun <b>${snap.timeLeft}</b> soniyadan keyin boshlanadi</span>
+            <span class="s07-win-bar"><i style="width:${(progress * 100).toFixed(0)}%"></i></span>
+          </div>
+        `;
   }
 
   getDiagnostics(): SurvivalUIDiagnostics {

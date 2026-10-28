@@ -1,6 +1,8 @@
 import './style.css';
 import { io } from 'socket.io-client';
+import { isSurvivalMode, type GameMode } from '../shared/constants';
 import type { CreateRoomOpts, ReadyAck, RoomInfo, WelcomeMsg } from '../shared/protocol';
+import { NIGHT_DEFAULT_MINUTES, NIGHT_MAX_MINUTES, NIGHT_MIN_MINUTES } from '../shared/wolf/night';
 import { validateWorldCompatibility, type MapId } from '../shared/world';
 import { AudioSys } from './game/Audio';
 import { preloadBuildingAssets } from './game/buildings';
@@ -364,23 +366,29 @@ function applyModeSelection(mode: string): void {
   const botsInput = getEl<HTMLInputElement>('room-bots');
   const scoreInput = getEl<HTMLInputElement>('room-score');
   const lootPreviewChk = getEl<HTMLInputElement>('room-loot-preview');
+  // Survival hayot siklidagi rejimlar (forest_survival, wolf_night) bir xil formani ko'radi
+  const survivalLike = isSurvivalMode(mode as GameMode);
+  const isNight = mode === 'wolf_night';
 
   const minHumansField = getEl<HTMLElement>('room-min-humans-field');
-  if (minHumansField) minHumansField.style.display = mode === 'forest_survival' ? '' : 'none';
+  if (minHumansField) minHumansField.style.display = survivalLike ? '' : 'none';
   // Survivalda hisob chegarasi yo'q (oxirgi tirik qolgan g'olib) — maydon yashiriladi
   const scoreField = getEl<HTMLElement>('room-score-field');
-  if (scoreField) scoreField.style.display = mode === 'forest_survival' ? 'none' : '';
+  if (scoreField) scoreField.style.display = survivalLike ? 'none' : '';
+  // Tong otguncha: bo'rilar sonini to'lqinlar jadvali boshqaradi — maydon yashiriladi
+  const wolvesField = getEl<HTMLElement>('room-wolves-field');
+  wolvesField?.classList.toggle('is-hidden', isNight);
   const lootField = getEl<HTMLElement>('room-loot-preview-field');
   const lootHint = getEl<HTMLElement>('room-loot-preview-hint');
   const timeInput = getEl<HTMLInputElement>('room-time');
 
-  if (mode === 'forest_survival') {
+  if (survivalLike) {
     if (mapSel) mapSel.value = 'forest_square';
     if (botsInput) {
-      // Survival'da botlar loot AI bilan qatnashadi (0–8)
+      // Survival'da botlar loot AI bilan qatnashadi (0–8); tunda standart 2 ta hamroh
       botsInput.disabled = false;
       botsInput.max = '8';
-      if (Number(botsInput.value) > 8 || Number(botsInput.value) === 0) botsInput.value = '3';
+      if (Number(botsInput.value) > 8 || Number(botsInput.value) === 0) botsInput.value = isNight ? '2' : '3';
     }
     if (scoreInput) {
       scoreInput.value = '1';
@@ -392,8 +400,26 @@ function applyModeSelection(mode: string): void {
     }
     lootField?.classList.add('is-locked');
     if (lootHint) lootHint.textContent = 'Survivalda doim yoqilgan: qurol va buyumlar konteynerlardan topiladi';
-    if (timeInput && Number(timeInput.value) > 15) timeInput.value = '3';
+    if (timeInput) {
+      if (isNight) {
+        // Tun davomiyligi: standart 8 daqiqa, 3..20 oralig'ida
+        timeInput.min = String(NIGHT_MIN_MINUTES);
+        timeInput.max = String(NIGHT_MAX_MINUTES);
+        const cur = Number(timeInput.value);
+        if (!Number.isFinite(cur) || cur < NIGHT_MIN_MINUTES || cur > NIGHT_MAX_MINUTES) {
+          timeInput.value = String(NIGHT_DEFAULT_MINUTES);
+        }
+      } else {
+        timeInput.min = '1';
+        timeInput.max = '60';
+        if (Number(timeInput.value) > 15) timeInput.value = '3';
+      }
+    }
   } else {
+    if (timeInput) {
+      timeInput.min = '1';
+      timeInput.max = '60';
+    }
     if (scoreInput) {
       scoreInput.disabled = false;
       scoreInput.value = mode === 'tdm' ? '50' : '25';
@@ -427,24 +453,31 @@ function renderRooms(rooms: RoomInfo[]): void {
     .map((r) => {
       // Lobbida faqat Forest Square taklif qilinadi; boshqa xarita ID lari (eski/test xonalari) umumiy nom bilan
       const mapLabel = r.world?.mapId === 'forest_square' ? '🌲 Forest Square (256×256)' : "🌲 O'rmon xaritasi";
-      const lootBadge =
-        r.mode === 'forest_survival'
+      const survivalLike = isSurvivalMode(r.mode);
+      const isNight = r.mode === 'wolf_night';
+      const lootBadge = isNight
+        ? ` · <b style="color:#a5b4fc;">🐺 Tong otguncha · tunni o'tkazganlar g'olib</b>`
+        : r.mode === 'forest_survival'
           ? ` · <b style="color:#4ade80;">🌲 Oxirgi tirik qolgan · Qurolsiz boshlash</b>`
           : r.lootPreview
             ? ` · <b style="color:#fbbf24;">📦 Qurolsiz boshlash + Loot sinovi</b>`
             : '';
-      const modeBadgeLabel =
-        r.mode === 'forest_survival'
+      const modeBadgeLabel = isNight
+        ? 'TONG OTGUNCHA'
+        : r.mode === 'forest_survival'
           ? 'SURVIVAL'
           : r.mode === 'tdm'
             ? 'JAMOAVIY'
             : 'FFA';
+      // Tunda bo'rilar to'lqinlar bilan keladi — xonadagi joriy son ko'rsatilmaydi
+      const wolvesMeta = !isNight && r.wolves ? ` · 🐺 ${r.wolves} bo'ri` : '';
+      const goalMeta = isNight ? 'tong otguncha' : survivalLike ? '1 tirik' : String(r.scoreLimit);
       return `
       <div class="room-item">
         <span class="r-mode ${r.mode}">${modeBadgeLabel}</span>
         <div class="r-main">
           <div class="r-name">${esc(r.name)}</div>
-          <div class="r-meta">${mapLabel}${lootBadge} · 👤 ${r.players}/${r.maxPlayers} o'yinchi · 🤖 ${r.bots} bot${r.wolves ? ` · 🐺 ${r.wolves} bo'ri` : ''} · ⏱ ${r.timeLimit} daq · 🎯 ${r.mode === 'forest_survival' ? '1 tirik' : r.scoreLimit}${r.mode === 'forest_survival' && (r.minHumans ?? 1) > 1 ? ` · 🚦 start: ${r.minHumans} odam` : ''}</div>
+          <div class="r-meta">${mapLabel}${lootBadge} · 👤 ${r.players}/${r.maxPlayers} o'yinchi · 🤖 ${r.bots} bot${wolvesMeta} · ⏱ ${r.timeLimit} daq · 🎯 ${goalMeta}${survivalLike && (r.minHumans ?? 1) > 1 ? ` · 🚦 start: ${r.minHumans} odam` : ''}</div>
         </div>
         <button class="btn primary" data-join="${r.id}" ${r.players >= r.maxPlayers ? 'disabled' : ''}>KIRISH</button>
       </div>`;
@@ -677,7 +710,7 @@ function initEvents(): void {
   lootPreviewChk?.addEventListener('change', () => {
     const botsInput = getEl<HTMLInputElement>('room-bots');
     const mapSel = getEl<HTMLSelectElement>('room-map');
-    if (modeSel?.value === 'forest_survival') {
+    if (isSurvivalMode((modeSel?.value ?? 'tdm') as GameMode)) {
       // Survival: botlar ruxsat etilgan (loot AI), xarita qat'iy forest_square
       if (botsInput) {
         botsInput.disabled = false;
@@ -697,7 +730,8 @@ function initEvents(): void {
     audio.init();
     const mapSel = getEl<HTMLSelectElement>('room-map');
     const curMode = modeSel ? modeSel.value : 'forest_survival';
-    const isSurvival = curMode === 'forest_survival';
+    const isNight = curMode === 'wolf_night';
+    const isSurvival = curMode === 'forest_survival' || isNight;
     const selectedMap = isSurvival
       ? 'forest_square'
       : (mapSel?.value as MapId) || 'forest_square';
@@ -712,12 +746,18 @@ function initEvents(): void {
 
     const opts: CreateRoomOpts = {
       name: (rNameInput ? rNameInput.value.trim() : '') || `${settings.name} xonasi`,
-      mode: isSurvival ? 'forest_survival' : curMode === 'ffa' ? 'ffa' : 'tdm',
+      mode: isNight ? 'wolf_night' : isSurvival ? 'forest_survival' : curMode === 'ffa' ? 'ffa' : 'tdm',
       bots: isSurvival
-        ? Math.max(0, Math.min(8, Number(botsInput?.value ?? 3)))
+        ? Math.max(0, Math.min(8, Number(botsInput?.value ?? (isNight ? 2 : 3))))
         : Math.max(0, Math.min(16, Number(botsInput?.value ?? 4))),
       maxPlayers: Math.max(isSurvival ? 2 : 1, Math.min(16, Number(maxInput?.value ?? 10))),
-      timeLimit: Math.max(1, Math.min(60, Number(timeInput?.value ?? (isSurvival ? 15 : 10)))),
+      timeLimit: isNight
+        ? // Tun davomiyligi (daqiqa): 3..20, standart 8
+          Math.max(
+            NIGHT_MIN_MINUTES,
+            Math.min(NIGHT_MAX_MINUTES, Number(timeInput?.value ?? NIGHT_DEFAULT_MINUTES) || NIGHT_DEFAULT_MINUTES),
+          )
+        : Math.max(1, Math.min(60, Number(timeInput?.value ?? (isSurvival ? 15 : 10)))),
       scoreLimit: isSurvival ? 1 : Math.max(1, Math.min(500, Number(scoreInput?.value ?? (curMode === 'tdm' ? 50 : 25)))),
       mapId: selectedMap,
       lootPreview,
@@ -726,9 +766,9 @@ function initEvents(): void {
       // Shuncha odam tayyor bo'lgach raund boshlanadi (botlar hisobga olinmaydi)
       opts.minHumans = Math.max(1, Math.min(16, Number(minHumansInput?.value ?? 1) || 1));
     }
-    // Vahshiy bo'rilar (barcha rejimlarda ixtiyoriy)
+    // Vahshiy bo'rilar (barcha rejimlarda ixtiyoriy); tunda to'lqinlar boshqaradi — 0 yuboriladi
     const wolvesInput = getEl<HTMLInputElement>('room-wolves');
-    opts.wolves = Math.max(0, Math.min(4, Number(wolvesInput?.value ?? 0) || 0));
+    opts.wolves = isNight ? 0 : Math.max(0, Math.min(4, Number(wolvesInput?.value ?? 0) || 0));
 
     socket.emit('createRoom', opts, (res: { ok: boolean; roomId?: string; error?: string }) => {
       if (!res.ok || !res.roomId) return toast(res.error ?? "Xona yaratib bo'lmadi");

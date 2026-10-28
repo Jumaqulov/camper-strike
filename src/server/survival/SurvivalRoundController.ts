@@ -52,6 +52,8 @@ export class SurvivalRoundController {
   private winnerId: string | null = null;
   private winnerName = '';
   private winReason: SurvivalWinReason = 'none';
+  /** wolf_night: tong otganda birgalikda g'olib bo'lgan tirik ishtirokchilar (boshqa hollarda bo'sh). */
+  private winnerIds: string[] = [];
   private winnerDeclaredForRound = false;
   private roundDeclareCount = 0;
 
@@ -103,6 +105,9 @@ export class SurvivalRoundController {
     if (partial.minHumansToStart !== undefined && Number.isFinite(partial.minHumansToStart)) {
       this.config.minHumansToStart = Math.max(1, Math.floor(partial.minHumansToStart));
     }
+    if (partial.sharedSurvival !== undefined) {
+      this.config.sharedSurvival = Boolean(partial.sharedSurvival);
+    }
   }
 
   getRoundId(): number {
@@ -151,6 +156,11 @@ export class SurvivalRoundController {
 
   getWinReason(): SurvivalWinReason {
     return this.winReason;
+  }
+
+  /** wolf_night: tong otganda birgalikda g'olib bo'lganlar; boshqa rejimlarda bo'sh. */
+  getWinnerIds(): string[] {
+    return [...this.winnerIds];
   }
 
   getRoundDeclareCount(): number {
@@ -330,7 +340,7 @@ export class SurvivalRoundController {
       this.contenderOrder,
       [...this.aliveContenderIds],
       this.phaseEndsAt - now,
-      { endedByDisconnect },
+      { endedByDisconnect, sharedSurvival: this.config.sharedSurvival === true },
     );
 
     if (!evalRes.shouldEnd) {
@@ -343,11 +353,22 @@ export class SurvivalRoundController {
     this.phaseEndsAt = now + this.config.endedDisplayDurationSec;
     this.winnerId = evalRes.winnerId;
     this.winReason = evalRes.winReason;
+    this.winnerIds = evalRes.winnerIds ? [...evalRes.winnerIds] : [];
 
     if (evalRes.winnerId) {
       const wp = this.hooks.getPlayerById(evalRes.winnerId);
       this.winnerName = wp ? wp.name : evalRes.winnerId;
       this.eliminatedMeta.set(evalRes.winnerId, { at: now, placement: 1 });
+    } else if (this.winnerIds.length > 0) {
+      // Tong otdi: barcha tirik qolganlar 1-o'rin, ismlar vergul bilan (ko'pi bilan 3 ta + "va yana N")
+      const names: string[] = [];
+      for (const id of this.winnerIds) {
+        this.eliminatedMeta.set(id, { at: now, placement: 1 });
+        const wp = this.hooks.getPlayerById(id);
+        names.push(wp ? wp.name : id);
+      }
+      this.winnerName =
+        names.length > 3 ? `${names.slice(0, 3).join(', ')} va yana ${names.length - 3}` : names.join(', ');
     } else {
       this.winnerName = 'draw';
     }
@@ -373,6 +394,7 @@ export class SurvivalRoundController {
     this.winnerId = null;
     this.winnerName = '';
     this.winReason = 'none';
+    this.winnerIds = [];
     this.winnerDeclaredForRound = false;
     this.phase = 'playing';
     this.phaseEndsAt = now + this.config.roundDurationSec;
@@ -416,6 +438,7 @@ export class SurvivalRoundController {
         this.winnerId = null;
         this.winnerName = '';
         this.winReason = 'none';
+        this.winnerIds = [];
         this.winnerDeclaredForRound = false;
 
         if (readyCount >= this.config.minPlayersToStart) {
@@ -509,6 +532,7 @@ export class SurvivalRoundController {
       winReason: this.winReason,
       statusTextUz,
       players,
+      ...(this.config.sharedSurvival ? { winnerIds: [...this.winnerIds] } : {}),
     };
   }
 }

@@ -225,6 +225,10 @@
                     <div class="mode-card-title">🌲 Forest Survival</div>
                     <div class="mode-card-desc">Oxirgi tirik qolgan g'olib. Qurolsiz start, loot konteynerlardan, zona torayadi.</div>
                   </div>
+                  <div class="mode-card" data-mode="wolf_night">
+                    <div class="mode-card-title">🐺 Tong otguncha</div>
+                    <div class="mode-card-desc">Tun bo'yi bo'ri to'lqinlaridan omon qoling. Tong otganda tiriklar birga g'olib.</div>
+                  </div>
                   <div class="mode-card" data-mode="tdm">
                     <div class="mode-card-title">⚔️ Jamoaviy (TDM)</div>
                     <div class="mode-card-desc">Qizil va Ko'k jamoa. Hisob chegarasiga birinchi yetgan g'olib.</div>
@@ -236,6 +240,7 @@
                 </div>
                 <select id="room-mode" class="cf-hidden" aria-hidden="true" tabindex="-1">
                   <option value="forest_survival" selected>Forest Survival</option>
+                  <option value="wolf_night">Tong otguncha</option>
                   <option value="tdm">Jamoaviy (TDM)</option>
                   <option value="ffa">Hamma qarshi (FFA)</option>
                 </select>
@@ -263,7 +268,7 @@
                 <div class="cf-label"><span class="cf-step">3</span>Raqiblar</div>
                 <div class="cf-grid">
                   <label class="field" title="Server boshqaradigan botlar: barcha rejimlarda, survivalda loot yig'adi">🤖 Botlar <input id="room-bots" type="number" min="0" max="16" value="4" /></label>
-                  <label class="field" title="Vahshiy bo'rilar: hid va o'q ovozidan topadi, quvib tishlaydi, zinaga chiqolmaydi">🐺 Bo'rilar <input id="room-wolves" type="number" min="0" max="4" value="0" /></label>
+                  <label class="field" id="room-wolves-field" title="Vahshiy bo'rilar: hid va o'q ovozidan topadi, quvib tishlaydi, zinaga chiqolmaydi">🐺 Bo'rilar <input id="room-wolves" type="number" min="0" max="4" value="0" /></label>
                 </div>
                 <div class="cf-hint">Bo'ri hid va o'q ovozidan topadi, sprintdan tez yuguradi, lekin 2-qavatga chiqolmaydi.</div>
               </section>

@@ -1,7 +1,7 @@
 import type { Server, Socket } from 'socket.io';
 import {
-  GRENADE_DAMAGE, GRENADE_FUSE, GRENADE_RADIUS, GRENADE_THROW_SPEED, GRENADES_PER_LIFE, MATCH_END_DURATION,
-  MAX_HP, RESPAWN_TIME, SPAWN_PROTECTION, TEAM_NAMES, TICK_RATE, type Team,
+  GAME_MODE_NAMES_UZ, GRENADE_DAMAGE, GRENADE_FUSE, GRENADE_RADIUS, GRENADE_THROW_SPEED, GRENADES_PER_LIFE,
+  MATCH_END_DURATION, MAX_HP, RESPAWN_TIME, SPAWN_PROTECTION, TEAM_NAMES, TICK_RATE, isSurvivalMode, type Team,
 } from '../shared/constants';
 import { clamp, isVec3, q3, spreadDir, vdist, vnorm, vsub, type Vec3 } from '../shared/math';
 import {
@@ -14,6 +14,10 @@ import {
   type HitZone,
 } from '../shared/physics';
 import {
+  NIGHT_MAX_MINUTES,
+  NIGHT_MIN_MINUTES,
+  NIGHT_WAVES,
+  NIGHT_WAVE_COUNT,
   WOLF_BITE_CONNECT_RANGE,
   WOLF_BITE_DAMAGE,
   WOLF_CORPSE_SEC,
@@ -24,6 +28,10 @@ import {
   WOLF_RADIUS,
   WOLF_RESPAWN_SEC,
   WOLF_SPAWN_CLEARANCE,
+  evaluateNightWave,
+  isWolfThreatState,
+  type NightSnap,
+  type NightWave,
   type WolfBiteEvent,
   type WolfDeathEvent,
   type WolfHowlEvent,
@@ -141,6 +149,8 @@ export class Room {
   readonly world: WorldDefinition;
   readonly nav: NavGraph;
   readonly isSurvival: boolean;
+  /** "Tong otguncha" (wolf_night): survival hayot sikli + bo'ri to'lqinlari, zona yo'q, tong otganda hamma tirik g'olib. */
+  readonly isNight: boolean;
   readonly lootEnabled: boolean;
   /** @deprecated Stage 06 qoldig'i — har doim `lootEnabled` bilan bir xil; protokol maydoni uchun saqlanadi. */
   get lootPreview(): boolean {
@@ -191,15 +201,18 @@ export class Room {
   /** Vahshiy bo'rilar (server boshqaradi; survivalda raund boshida paydo bo'ladi, klassikda doimiy). */
   readonly wolves = new Map<string, ServerWolf>();
   private wolfSeq = 0;
-  /** Xona sozlamasidagi bo'rilar soni (chat buyruqlari bilan o'zgartiriladi). */
+  /** Xona sozlamasidagi bo'rilar soni (chat buyruqlari bilan o'zgartiriladi; wolf_night da to'lqin belgilaydi). */
   private wolfCount: number;
+  /** wolf_night: joriy to'lqin indeksi (0..NIGHT_WAVE_COUNT-1), raunddan tashqarida -1. */
+  private nightWaveIdx = -1;
   destroyed = false;
 
   constructor(readonly opts: CreateRoomOpts, private io: Server, private onEmpty: (room: Room) => void) {
     this.id = 'r' + ++roomSeq + Math.random().toString(36).slice(2, 6);
-    this.isSurvival = opts.mode === 'forest_survival';
+    this.isSurvival = isSurvivalMode(opts.mode);
+    this.isNight = opts.mode === 'wolf_night';
     if (this.isSurvival && opts.mapId && opts.mapId !== 'forest_square') {
-      throw new Error('Forest Survival rejimi faqat forest_square xaritasida yaratilishi mumkin');
+      throw new Error(`${GAME_MODE_NAMES_UZ[opts.mode]} rejimi faqat forest_square xaritasida yaratilishi mumkin`);
     }
     const mapId = this.isSurvival ? 'forest_square' : (opts.mapId ?? 'forest_square');
     this.world = createWorldDefinition({
@@ -231,14 +244,26 @@ export class Room {
           },
           onSystemChat: (textUz) => this.systemChat(textUz),
         },
-        {
-          minPlayersToStart: 2,
-          countdownDurationSec: opts.countdownSec ?? 10,
-          roundDurationSec: Math.max(5, (opts.timeLimit || 3) * 60),
-          endedDisplayDurationSec: MATCH_END_DURATION,
-          zoneEnabled: true,
-          minHumansToStart: Math.max(1, Math.floor(opts.minHumans ?? 1)),
-        },
+        this.isNight
+          ? {
+              // Tong otguncha: yakka o'yinchi ham o'ynaydi, tun = timeLimit daqiqa (3..20), zona yo'q,
+              // raund oxirgi tirik qolganda tugamaydi — tong otganda barcha tirik ishtirokchilar g'olib
+              minPlayersToStart: 1,
+              countdownDurationSec: opts.countdownSec ?? 10,
+              roundDurationSec: clamp(opts.timeLimit || NIGHT_MIN_MINUTES, NIGHT_MIN_MINUTES, NIGHT_MAX_MINUTES) * 60,
+              endedDisplayDurationSec: MATCH_END_DURATION,
+              zoneEnabled: false,
+              minHumansToStart: Math.max(1, Math.floor(opts.minHumans ?? 1)),
+              sharedSurvival: true,
+            }
+          : {
+              minPlayersToStart: 2,
+              countdownDurationSec: opts.countdownSec ?? 10,
+              roundDurationSec: Math.max(5, (opts.timeLimit || 3) * 60),
+              endedDisplayDurationSec: MATCH_END_DURATION,
+              zoneEnabled: true,
+              minHumansToStart: Math.max(1, Math.floor(opts.minHumans ?? 1)),
+            },
       );
     } else {
       this.phase = 'playing';
@@ -250,8 +275,9 @@ export class Room {
     // Botlar barcha rejimlarda (loot rejimida ham — loot AI bilan qurol yig'adi)
     const initialBots = opts.bots;
     for (let i = 0; i < initialBots; i++) this.addBot();
-    // Bo'rilar: klassik rejimlarda darhol, survivalda raund boshida (handleSurvivalRoundStart)
-    this.wolfCount = clamp(Math.floor(opts.wolves ?? 0), 0, WOLF_MAX_PER_ROOM);
+    // Bo'rilar: klassik rejimlarda darhol, survivalda raund boshida (handleSurvivalRoundStart);
+    // wolf_night da sonni to'lqinlar belgilaydi (opts.wolves e'tiborga olinmaydi)
+    this.wolfCount = this.isNight ? 0 : clamp(Math.floor(opts.wolves ?? 0), 0, WOLF_MAX_PER_ROOM);
     if (!this.isSurvival) this.syncWolvesToCount();
     // Windows'da taymer aniqligi ~15.6 ms, shuning uchun tez-tez tekshirib, aniq 30 Hz ushlab turamiz
     const step = 1 / TICK_RATE;
@@ -362,8 +388,12 @@ export class Room {
     while (this.wolves.size < this.wolfCount) this.addWolf();
   }
 
-  /** Bo'rilar sonini o'zgartirish (chat buyrug'i / pauza menyusi). Survivalda keyingi raunddan kuchga kiradi. */
+  /**
+   * Bo'rilar sonini o'zgartirish (chat buyrug'i / pauza menyusi). Survivalda keyingi raunddan kuchga kiradi.
+   * wolf_night da sonni to'lqinlar boshqaradi — qo'lda o'zgartirilmaydi.
+   */
   setWolfCount(n: number): number {
+    if (this.isNight) return this.wolfCount;
     this.wolfCount = clamp(Math.floor(n), 0, WOLF_MAX_PER_ROOM);
     if (!this.isSurvival || this.phase === 'playing') this.syncWolvesToCount();
     return this.wolfCount;
@@ -427,6 +457,21 @@ export class Room {
     return this.nav.randomPoint();
   }
 
+  /** Joriy to'lqin (wolf_night, raund davomida); boshqa hollarda null — ko'paytuvchilar 1. */
+  private currentNightWave(): NightWave | null {
+    if (!this.isNight || this.nightWaveIdx < 0) return null;
+    return NIGHT_WAVES[Math.min(this.nightWaveIdx, NIGHT_WAVES.length - 1)] ?? null;
+  }
+
+  /** Yangi paydo bo'lgan/qayta tug'ilgan bo'riga joriy to'lqin ko'paytuvchilarini beradi (jon shu asosda). */
+  private applyWaveStats(w: ServerWolf): void {
+    const wave = this.currentNightWave();
+    w.speedMul = wave ? wave.speedMul : 1;
+    w.hpMul = wave ? wave.hpMul : 1;
+    w.biteMul = wave ? wave.biteMul : 1;
+    w.hp = Math.max(1, Math.round(WOLF_MAX_HP * w.hpMul));
+  }
+
   addWolf(): ServerWolf | null {
     if (this.wolves.size >= WOLF_MAX_PER_ROOM) return null;
     const sp = this.pickWolfSpawn();
@@ -444,8 +489,12 @@ export class Room {
       targetId: null,
       diedAt: 0,
       respawnAt: Infinity,
+      speedMul: 1,
+      hpMul: 1,
+      biteMul: 1,
       brain: null as unknown as WolfBrain,
     };
+    this.applyWaveStats(w);
     w.brain = new WolfBrain(this, w);
     w.brain.onSpawn(this.now());
     this.wolves.set(id, w);
@@ -457,13 +506,19 @@ export class Room {
     w.pos = { x: sp.x, y: sp.y, z: sp.z };
     w.vel = { x: 0, y: 0, z: 0 };
     w.onGround = true;
-    w.hp = WOLF_MAX_HP;
+    // wolf_night: qayta tug'ilgan bo'ri joriy (kuchliroq) to'lqin ko'rsatkichlarini oladi
+    this.applyWaveStats(w);
     w.alive = true;
     w.state = 'idle';
     w.targetId = null;
     w.diedAt = 0;
     w.respawnAt = Infinity;
     w.brain.onSpawn(this.now());
+  }
+
+  /** O'lgan bo'ri shu rejimda qayta tug'iladimi (klassik va wolf_night — ha; forest_survival — jasad o'chadi). */
+  private wolvesRespawn(): boolean {
+    return !this.isSurvival || this.isNight;
   }
 
   /** Bo'rilar AI, jasadlar va qayta paydo bo'lish — har tick. */
@@ -474,12 +529,64 @@ export class Room {
         continue;
       }
       if (t - w.diedAt < WOLF_CORPSE_SEC) continue;
-      if (this.isSurvival) {
+      if (!this.wolvesRespawn()) {
         this.wolves.delete(id);
       } else if (t >= w.respawnAt && this.phase === 'playing') {
         this.respawnWolf(w);
       }
     }
+  }
+
+  /**
+   * Botlar uchun: `maxDist` ichidagi eng yaqin tirik bo'ri. Shu o'yinchini ovlayotgan yoki
+   * stalk/hunt/attack holatidagi bo'ri (tahdid) masofadan qat'i nazar oddiy sayr qilayotganidan ustun.
+   */
+  nearestWolfThreat(p: ServerPlayer, maxDist: number): ServerWolf | null {
+    let best: ServerWolf | null = null;
+    let bestThreat = false;
+    let bestD = Infinity;
+    for (const w of this.wolves.values()) {
+      if (!w.alive) continue;
+      const d = Math.hypot(w.pos.x - p.pos.x, w.pos.z - p.pos.z);
+      if (d > maxDist) continue;
+      const threat = w.targetId === p.id || isWolfThreatState(w.state);
+      if (threat !== bestThreat ? threat : d < bestD) {
+        best = w;
+        bestThreat = threat;
+        bestD = d;
+      }
+    }
+    return best;
+  }
+
+  /** wolf_night: tun/to'lqin holati (faqat 'playing' fazasida), aks holda null. */
+  getNightSnap(t: number = this.now()): NightSnap | null {
+    if (!this.isNight || !this.survival || this.phase !== 'playing' || this.nightWaveIdx < 0) return null;
+    const ev = evaluateNightWave(t - this.roundStartedAt, this.survival.getConfig().roundDurationSec);
+    let wolvesAlive = 0;
+    for (const w of this.wolves.values()) if (w.alive) wolvesAlive++;
+    return {
+      wave: ev.wave.wave,
+      waveCount: NIGHT_WAVE_COUNT,
+      wolvesAlive,
+      nextWaveInSec: Math.ceil(ev.nextWaveInSec),
+      dawnInSec: Math.ceil(ev.dawnInSec),
+    };
+  }
+
+  /**
+   * wolf_night: har tick to'lqinni jadvaldan hisoblaydi; to'lqin o'zgarganda bo'rilar soni oshiriladi
+   * (yangilari joriy to'lqin ko'paytuvchilari bilan; tirik eskilar o'zinikini saqlaydi).
+   */
+  private updateNightWaves(t: number): void {
+    if (!this.isNight || !this.survival || this.phase !== 'playing') return;
+    const ev = evaluateNightWave(t - this.roundStartedAt, this.survival.getConfig().roundDurationSec);
+    const idx = ev.wave.wave - 1;
+    if (idx === this.nightWaveIdx) return;
+    this.nightWaveIdx = idx;
+    this.wolfCount = clamp(ev.wave.wolves, 0, WOLF_MAX_PER_ROOM);
+    this.syncWolvesToCount();
+    if (idx > 0) this.systemChat(`🌙 ${ev.wave.wave}-to'lqin: bo'rilar ko'paydi va kuchaydi!`);
   }
 
   /** Bo'ri uvladi — klientlarga pozitsion ovoz uchun. */
@@ -497,7 +604,8 @@ export class Room {
       if (dH <= WOLF_BITE_CONNECT_RANGE && dy < 1.4) {
         hit = true;
         const from = { x: w.pos.x, y: w.pos.y + 0.9, z: w.pos.z };
-        this.damage(target, w, WOLF_BITE_DAMAGE, 'wolf', false, from);
+        // To'lqin ko'paytuvchisi (wolf_night); boshqa rejimlarda biteMul = 1
+        this.damage(target, w, Math.max(1, Math.round(WOLF_BITE_DAMAGE * (w.biteMul || 1))), 'wolf', false, from);
       }
     }
     const ev: WolfBiteEvent = {
@@ -533,7 +641,8 @@ export class Room {
     w.state = 'dead';
     w.targetId = null;
     w.diedAt = this.now();
-    w.respawnAt = this.isSurvival ? Infinity : w.diedAt + WOLF_RESPAWN_SEC;
+    // Klassik va wolf_night (tun shafqatsiz): qayta tug'iladi; forest_survival: jasad o'chadi
+    w.respawnAt = this.wolvesRespawn() ? w.diedAt + WOLF_RESPAWN_SEC : Infinity;
     const ev: WolfDeathEvent = { id: w.id, killerId: killer.id, killerName: killer.name };
     this.io.to(this.channel).emit('wolf:death', ev);
     this.systemChat(`${killer.name} vahshiy bo'rini o'ldirdi!`);
@@ -558,7 +667,7 @@ export class Room {
 
   isEnemy(a: ServerPlayer, b: ServerPlayer): boolean {
     if (a === b) return false;
-    return this.opts.mode === 'ffa' || this.opts.mode === 'forest_survival' || a.team !== b.team;
+    return this.opts.mode === 'ffa' || this.isSurvival || a.team !== b.team;
   }
 
   // ---------------- O'yinchilar ----------------
@@ -595,7 +704,7 @@ export class Room {
   }
 
   private pickTeam(): Team {
-    if (this.opts.mode === 'ffa' || this.opts.mode === 'forest_survival') return 'none';
+    if (this.opts.mode === 'ffa' || this.isSurvival) return 'none';
     let red = 0;
     let blue = 0;
     for (const p of this.players.values()) {
@@ -719,7 +828,7 @@ export class Room {
       this.systemChat(
         readyRes.joinAsSpectator
           ? `${p.name} kuzatuvchi sifatida qo'shildi (keyingi raundda qatnashadi)`
-          : `${p.name} Forest Survival xonasiga qo'shildi`,
+          : `${p.name} ${GAME_MODE_NAMES_UZ[this.opts.mode]} xonasiga qo'shildi`,
       );
       const res: ReadyAck = { ok: true, serverWorld };
       ack?.(res);
@@ -822,7 +931,7 @@ export class Room {
     p.onGround = true;
     // Yangi hayot har doim tik turgan holatda boshlanadi
     p.crouched = false;
-    p.yaw = this.opts.mode === 'ffa' || this.opts.mode === 'forest_survival' ? Math.random() * Math.PI * 2 : sp.yaw;
+    p.yaw = this.opts.mode === 'ffa' || this.isSurvival ? Math.random() * Math.PI * 2 : sp.yaw;
     p.pitch = 0;
     p.scoped = false;
     p.stamina = 1;
@@ -1407,14 +1516,16 @@ export class Room {
         this.balanceBots();
         this.systemChat(`${p.name} bitta botni olib tashladi`);
       }
-    } else if (c === '/addwolf') {
+    } else if (c === '/addwolf' || c === '/removewolf') {
+      if (this.isNight) return this.systemChat("Tong otguncha rejimida bo'rilar to'lqinlar bilan keladi — son o'zgartirilmaydi");
+      if (c === '/removewolf') {
+        if (this.wolfCount <= 0) return this.systemChat("Xonada bo'ri yo'q");
+        const n = this.setWolfCount(this.wolfCount - 1);
+        return this.systemChat(`${p.name} bitta bo'rini olib tashladi (jami: ${n})`);
+      }
       if (this.wolfCount >= WOLF_MAX_PER_ROOM) return this.systemChat(`Bo'rilar soni maksimal (${WOLF_MAX_PER_ROOM})`);
       const n = this.setWolfCount(this.wolfCount + 1);
       this.systemChat(`${p.name} vahshiy bo'ri qo'shdi (jami: ${n})${this.isSurvival && this.phase !== 'playing' ? ' — keyingi raunddan' : ''}`);
-    } else if (c === '/removewolf') {
-      if (this.wolfCount <= 0) return this.systemChat("Xonada bo'ri yo'q");
-      const n = this.setWolfCount(this.wolfCount - 1);
-      this.systemChat(`${p.name} bitta bo'rini olib tashladi (jami: ${n})`);
     } else {
       p.socket?.emit('chat', {
         name: '',
@@ -1769,12 +1880,23 @@ export class Room {
 
     // Bo'rilar raund boshida o'yinchilardan uzoqda paydo bo'ladi
     this.wolves.clear();
-    this.syncWolvesToCount();
+    if (this.isNight) {
+      // Tong otguncha: 1-to'lqin (NIGHT_WAVES[0]) — bo'rilar soni/kuchini jadval belgilaydi
+      this.nightWaveIdx = -1;
+      this.updateNightWaves(this.roundStartedAt);
+    } else {
+      this.syncWolvesToCount();
+    }
 
     this.io.to(this.channel).emit('loot:snapshot', this.loot.getPublicLootSnapshot());
     this.rosterDirty = true;
     this.sendRoster();
     this.sendMatch();
+    if (this.isNight) {
+      this.systemChat(`🌙 ${roundId}-tun boshlandi — tong otguncha omon qoling! Qurol va buyumlarni konteynerlardan toping.`);
+      this.systemChat(`1-to'lqin: o'rmonda ${this.wolves.size} ta vahshiy bo'ri bor, har to'lqinda ko'payadi va kuchayadi.`);
+      return;
+    }
     this.systemChat(`Forest Survival — ${roundId}-raund boshlandi! Qurol va buyumlarni konteynerlardan toping.`);
     if (this.wolves.size > 0) {
       this.systemChat(`Ehtiyot bo'ling: o'rmonda ${this.wolves.size} ta vahshiy bo'ri bor!`);
@@ -1785,7 +1907,7 @@ export class Room {
     roundId: number,
     winnerId: string | null,
     winnerName: string,
-    _winReason: string,
+    winReason: string,
   ): void {
     void roundId;
     if (!this.survival) return;
@@ -1793,7 +1915,9 @@ export class Room {
     this.phaseEndsAt = this.survival.getPhaseEndsAt();
     this.grenades = [];
     this.wolves.clear();
-    this.winner = winnerId ? (winnerName || winnerId) : 'draw';
+    this.nightWaveIdx = -1;
+    const dawn = winReason === 'dawn';
+    this.winner = winnerId ? (winnerName || winnerId) : dawn ? winnerName : 'draw';
     for (const p of this.players.values()) {
       resetServerWeaponSwitchState(p);
       p.scoped = false;
@@ -1802,8 +1926,12 @@ export class Room {
     this.rosterDirty = true;
     this.sendRoster();
     this.sendMatch();
-    if (winnerId) {
+    if (dawn) {
+      this.systemChat(`🌅 Tong otdi! Tunni o'tkazganlar: ${winnerName}`);
+    } else if (winnerId) {
       this.systemChat(`Raund yakunlandi! G'olib: ${winnerName || winnerId}`);
+    } else if (this.isNight) {
+      this.systemChat("Tun hammani yutdi — tirik qolganlar yo'q. Bo'rilar g'olib!");
     } else {
       this.systemChat('Raund durang bilan yakunlandi!');
     }
@@ -1820,6 +1948,7 @@ export class Room {
     this.winner = '';
     this.grenades = [];
     this.wolves.clear();
+    this.nightWaveIdx = -1;
     const roundLootSeed = ((this.secretLootSeed + roundId * 104729) >>> 0) || 1;
     this.loot.resetForRound(roundId, roundLootSeed);
     for (const p of this.players.values()) {
@@ -1935,6 +2064,8 @@ export class Room {
         }
       }
       if (this.survival.getPhase() === 'playing') {
+        // wolf_night: to'lqin jadvali (bo'rilar soni/kuchi) — bo'ri AI dan oldin
+        if (this.isNight) this.updateNightWaves(t);
         for (const p of this.players.values()) if (p.brain && p.alive) p.brain.update(dt, t);
         this.updateGrenades(dt, t);
         this.applyZoneDamage(t);
@@ -2074,7 +2205,12 @@ export class Room {
         minPlayers: surv.minPlayers,
         winnerId: surv.winnerId,
         winReason: surv.winReason,
-        survival: { ...surv, zone: this.getZoneSnap(t) },
+        survival: {
+          ...surv,
+          zone: this.getZoneSnap(t),
+          // wolf_night: tun/to'lqin holati (forest_survival payloadi o'zgarmaydi)
+          ...(this.isNight ? { night: this.getNightSnap(t) } : {}),
+        },
       };
       this.io.to(this.channel).emit('match', m);
       return;

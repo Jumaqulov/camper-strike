@@ -21,7 +21,8 @@ import type {
   UseMedkitReq,
   WelcomeMsg,
 } from '../shared/protocol';
-import { WOLF_MAX_PER_ROOM } from '../shared/wolf';
+import { GAME_MODE_NAMES_UZ, isSurvivalMode, type GameMode } from '../shared/constants';
+import { NIGHT_DEFAULT_MINUTES, NIGHT_MAX_MINUTES, NIGHT_MIN_MINUTES, WOLF_MAX_PER_ROOM } from '../shared/wolf';
 import { DEFAULT_PUBLIC_LAYOUT_SEED, type MapId } from '../shared/world';
 import { Room } from './room';
 
@@ -41,30 +42,38 @@ function sanitizeName(raw: unknown): string {
 }
 
 export function sanitizeOpts(raw: Partial<CreateRoomOpts> | undefined, owner: string): CreateRoomOpts {
-  const mode =
+  const mode: GameMode =
     raw?.mode === 'forest_survival'
       ? 'forest_survival'
-      : raw?.mode === 'ffa'
-        ? 'ffa'
-        : 'tdm';
+      : raw?.mode === 'wolf_night'
+        ? 'wolf_night'
+        : raw?.mode === 'ffa'
+          ? 'ffa'
+          : 'tdm';
+  const survival = isSurvivalMode(mode);
+  const night = mode === 'wolf_night';
   const name = typeof raw?.name === 'string' && raw.name.trim() ? raw.name.replace(/[<>]/g, '').trim().slice(0, 24) : `${owner} xonasi`;
   const num = (v: unknown, def: number, min: number, max: number) => clamp(Math.round(Number.isFinite(Number(v)) ? Number(v) : def), min, max);
   const mapId: MapId =
-    mode === 'forest_survival'
+    survival
       ? 'forest_square'
       : typeof raw?.mapId === 'string' && (VALID_MAP_IDS as string[]).includes(raw.mapId)
         ? raw.mapId
         : 'forest_square';
-  const lootPreview = mode === 'forest_survival' || (Boolean(raw?.lootPreview) && mapId === 'forest_square');
+  const lootPreview = survival || (Boolean(raw?.lootPreview) && mapId === 'forest_square');
   const opts: CreateRoomOpts = {
     name,
     mode,
-    // Survival: botlar loot AI bilan ishtirok etadi (0–8); klassik loot ko'rish rejimida botlar yo'q
-    // Barcha rejimlarda botlar: survival 0–8, klassik (loot rejimi bilan ham) 0–16
-    bots: mode === 'forest_survival' ? num(raw?.bots, 3, 0, 8) : num(raw?.bots, 4, 0, 16),
+    // Survival rejimlari: botlar loot AI bilan ishtirok etadi (0–8; Tong otguncha — standart 2);
+    // klassik (loot rejimi bilan ham) 0–16
+    bots: survival ? num(raw?.bots, night ? 2 : 3, 0, 8) : num(raw?.bots, 4, 0, 16),
+    // Tong otguncha yakka o'yinchi bilan ham o'ynaladi (maxPlayers kamida 1)
     maxPlayers: num(raw?.maxPlayers, 10, mode === 'forest_survival' ? 2 : 1, 16),
-    timeLimit: num(raw?.timeLimit, mode === 'forest_survival' ? 3 : 10, 1, 60),
-    scoreLimit: num(raw?.scoreLimit, mode === 'forest_survival' ? 1 : mode === 'tdm' ? 50 : 25, 1, 500),
+    // Tong otguncha: tun davomiyligi (daqiqa) — NIGHT_MIN..NIGHT_MAX, standart NIGHT_DEFAULT
+    timeLimit: night
+      ? num(raw?.timeLimit, NIGHT_DEFAULT_MINUTES, NIGHT_MIN_MINUTES, NIGHT_MAX_MINUTES)
+      : num(raw?.timeLimit, mode === 'forest_survival' ? 3 : 10, 1, 60),
+    scoreLimit: num(raw?.scoreLimit, survival ? 1 : mode === 'tdm' ? 50 : 25, 1, 500),
     mapId,
     publicLayoutSeed: num(raw?.publicLayoutSeed, DEFAULT_PUBLIC_LAYOUT_SEED, 1, 0x7fffffff),
     lootPreview,
@@ -72,12 +81,12 @@ export function sanitizeOpts(raw: Partial<CreateRoomOpts> | undefined, owner: st
   if (raw?.countdownSec !== undefined && Number.isFinite(Number(raw.countdownSec))) {
     opts.countdownSec = clamp(Number(raw.countdownSec), 1, 60);
   }
-  if (mode === 'forest_survival') {
+  if (survival) {
     // Boshlash uchun kerakli odamlar soni: 1..maxPlayers (botlar hisobga olinmaydi)
     opts.minHumans = num(raw?.minHumans, 1, 1, opts.maxPlayers);
   }
-  // Vahshiy bo'rilar: barcha rejimlarda ixtiyoriy (standart 0)
-  opts.wolves = num(raw?.wolves, 0, 0, WOLF_MAX_PER_ROOM);
+  // Vahshiy bo'rilar: barcha rejimlarda ixtiyoriy (standart 0); Tong otguncha — to'lqinlar boshqaradi (0)
+  opts.wolves = night ? 0 : num(raw?.wolves, 0, 0, WOLF_MAX_PER_ROOM);
   return opts;
 }
 
@@ -124,10 +133,14 @@ export class Lobby {
 
     socket.on('createRoom', (opts: Partial<CreateRoomOpts>, ack?: Ack<{ ok: boolean; roomId?: string; error?: string }>) => {
       if (this.rooms.size >= 20) return ack?.({ ok: false, error: "Xonalar soni juda ko'p" });
-      if (opts?.mode === 'forest_survival' && opts?.mapId && opts.mapId !== 'forest_square') {
+      if (
+        (opts?.mode === 'forest_survival' || opts?.mode === 'wolf_night') &&
+        opts?.mapId &&
+        opts.mapId !== 'forest_square'
+      ) {
         return ack?.({
           ok: false,
-          error: 'Forest Survival rejimi faqat Forest Square (256×256) xaritasida yaratilishi mumkin',
+          error: `${GAME_MODE_NAMES_UZ[opts.mode]} rejimi faqat Forest Square (256×256) xaritasida yaratilishi mumkin`,
         });
       }
       const owner = this.names.get(socket.id) ?? "O'yinchi";

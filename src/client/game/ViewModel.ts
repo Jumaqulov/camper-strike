@@ -48,19 +48,24 @@ export class ViewModel {
   private unarmed = false;
   private ownedGeometries: THREE.BufferGeometry[] = [];
   private unsubWeaponReady: (() => void) | null = null;
+  /** 1P qo'l/qurol yoritgichlari — tun rejimida pasaytiriladi va ko'kimtir tuslanadi. */
+  private readonly hemi: THREE.HemisphereLight;
+  private readonly keyLight: THREE.DirectionalLight;
+  private readonly rimLight: THREE.DirectionalLight;
   visible = true;
 
   constructor(aspect: number) {
     this.camera = new THREE.PerspectiveCamera(62, aspect, 0.01, 10);
     this.scene.add(this.camera);
     this.camera.add(this.holder);
-    this.scene.add(new THREE.HemisphereLight('#ffffff', '#6b5a40', 1.9));
-    const dl = new THREE.DirectionalLight('#fff1d6', 2.8);
-    dl.position.set(1.4, 2.4, 1.5);
-    this.scene.add(dl);
-    const rim = new THREE.DirectionalLight('#7dd3fc', 1.8);
-    rim.position.set(-1.8, 1.5, -1.2);
-    this.scene.add(rim);
+    this.hemi = new THREE.HemisphereLight('#ffffff', '#6b5a40', 1.9);
+    this.scene.add(this.hemi);
+    this.keyLight = new THREE.DirectionalLight('#fff1d6', 2.8);
+    this.keyLight.position.set(1.4, 2.4, 1.5);
+    this.scene.add(this.keyLight);
+    this.rimLight = new THREE.DirectionalLight('#7dd3fc', 1.8);
+    this.rimLight.position.set(-1.8, 1.5, -1.2);
+    this.scene.add(this.rimLight);
 
     this.sleeveMat = new THREE.MeshStandardMaterial({ map: getFlannelTexture('#d9382e'), roughness: 0.72 });
     for (const w of Object.keys(WEAPONS) as WeaponId[]) {
@@ -174,6 +179,30 @@ export class ViewModel {
             ? new THREE.Vector3(0, 0.015, -0.35)
             : new THREE.Vector3(0, 0.015, -0.32);
     buildArm(gripL, gripL.clone().add(new THREE.Vector3(-0.24, -0.2, 0.32)), true);
+  }
+
+  /**
+   * Tun rejimi ("Tong otguncha"): qo'l/qurol yoritgichlari ~45% ga tushadi va oy nuriga mos ko'kimtir
+   * tus oladi — aks holda 1P qurol tun dunyosi ustida kunduzdek yorug' ko'rinardi.
+   */
+  setNight(on: boolean): void {
+    if (on) {
+      this.hemi.color.set('#b8c4e6');
+      this.hemi.groundColor.set('#2a3040');
+      this.hemi.intensity = 1.9 * 0.45;
+      this.keyLight.color.set('#aebfff');
+      this.keyLight.intensity = 2.8 * 0.45;
+      this.rimLight.color.set('#6f8fd6');
+      this.rimLight.intensity = 1.8 * 0.45;
+    } else {
+      this.hemi.color.set('#ffffff');
+      this.hemi.groundColor.set('#6b5a40');
+      this.hemi.intensity = 1.9;
+      this.keyLight.color.set('#fff1d6');
+      this.keyLight.intensity = 2.8;
+      this.rimLight.color.set('#7dd3fc');
+      this.rimLight.intensity = 1.8;
+    }
   }
 
   setArmColor(c: THREE.ColorRepresentation): void {
