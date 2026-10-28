@@ -376,11 +376,19 @@ export class SurvivalUI {
       if (showWinner) {
         this.winnerOverlayEl.className = '';
         const isDraw = snap.winnerId === null || snap.winnerName === 'draw' || !snap.winnerName;
+        // Yog'och lager belgisi: katta sarlavha (bo'yalgan taxta) + ostida izoh
         const headerText = isDraw
-          ? "⚖️ DURRANG — G'OLIB ANIQLANMADI"
+          ? 'DURRANG'
           : snap.winnerId === this.myId
-            ? "🏆 G'ALABA! SIZ OXIRGI TIRIK QOLGAN O'YINCHISIZ!"
-            : `🏆 RAUND G'OLIBI: ${esc(snap.winnerName)}!`;
+            ? "G'ALABA!"
+            : "RAUND G'OLIBI";
+        const headerSub = isDraw
+          ? "G'olib aniqlanmadi"
+          : snap.winnerId === this.myId
+            ? "Siz oxirgi tirik qolgan o'yinchisiz"
+            : esc(snap.winnerName);
+        const headerIcon = isDraw ? '⚖️' : '🏆';
+        const signCls = isDraw ? 'is-draw' : snap.winnerId === this.myId ? 'is-victory' : 'is-other';
 
         const reasonLabel =
           SURVIVAL_WIN_REASON_LABELS_UZ[snap.winReason] ?? snap.statusTextUz ?? '';
@@ -415,35 +423,48 @@ export class SurvivalUI {
                 : p.alive
                   ? '🛡 Tirik'
                   : '💀 Safdan chiqdi';
-            const rowCls = `${isWinner ? 'is-winner' : ''} ${isMe ? 'is-me' : ''}`.trim();
+            const rowCls = `${isWinner ? 'is-winner' : ''} ${isMe ? 'is-me' : ''} ${
+              !isWinner && !p.alive && p.role !== 'spectator' ? 'is-out' : ''
+            }`.trim();
             return `
               <tr class="${rowCls}">
-                <td>${esc(placeText)}</td>
-                <td>${esc(p.name)}${isMe ? ' (Siz)' : ''}</td>
+                <td><span class="s07-rank">${esc(placeText)}</span></td>
+                <td class="s07-name">${esc(p.name)}${isMe ? '<span class="s07-tag">Siz</span>' : ''}</td>
                 <td>${esc(statusText)}</td>
-                <td>${p.kills}</td>
+                <td class="s07-kills">${p.kills}</td>
               </tr>
             `;
           })
           .join('');
 
+        // Keyingi raundgacha qolgan vaqt (natija ekrani 10 s turadi)
+        const progress = Math.max(0, Math.min(1, snap.timeLeft / 10));
         this.winnerOverlayEl.innerHTML = `
-          <div class="s07-win-header">${headerText}</div>
+          <div class="s07-win-sign ${signCls}">
+            <span class="s07-win-icon">${headerIcon}</span>
+            <span class="s07-win-title">${headerText}</span>
+          </div>
+          <div class="s07-win-sub">${headerSub}</div>
           <div class="s07-win-reason">${esc(reasonLabel)}</div>
-          <table class="s07-win-table">
-            <thead>
-              <tr>
-                <th>O'rin</th>
-                <th>O'yinchi</th>
-                <th>Holat</th>
-                <th>Qotil</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHtml}
-            </tbody>
-          </table>
-          <div class="s07-win-footer">Keyingi raund ${snap.timeLeft} soniyadan keyin boshlanadi...</div>
+          <div class="s07-win-board">
+            <table class="s07-win-table">
+              <thead>
+                <tr>
+                  <th>O'rin</th>
+                  <th>O'yinchi</th>
+                  <th>Holat</th>
+                  <th class="s07-kills">Qotil</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+            </table>
+          </div>
+          <div class="s07-win-footer">
+            <span>Keyingi raund <b>${snap.timeLeft}</b> soniyadan keyin boshlanadi</span>
+            <span class="s07-win-bar"><i style="width:${(progress * 100).toFixed(0)}%"></i></span>
+          </div>
         `;
       } else {
         this.winnerOverlayEl.className = 'hidden';
