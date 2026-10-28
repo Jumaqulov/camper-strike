@@ -261,6 +261,20 @@ html, body {
   border-right: 4px solid #ff3b3b;
 }
 .kf-name { font-weight: 800; letter-spacing: 0.3px; }
+/* Bo'ri o'ldirdi: qon-qizil yog'och taxtacha, chap chetida tirnoq izlari, bo'ri boshi + sariq ko'zlar */
+.kf.wolf {
+  border: 1.5px solid #ff6b5a;
+  border-left: 5px solid #8f1414;
+  background:
+    repeating-linear-gradient(179deg, rgba(0, 0, 0, 0.14) 0 1px, rgba(0, 0, 0, 0) 1px 6px),
+    linear-gradient(90deg, rgba(120, 18, 14, 0.95) 0%, rgba(58, 14, 12, 0.92) 55%, rgba(28, 10, 10, 0.92) 100%);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), 0 0 14px rgba(220, 38, 38, 0.35);
+  animation: kfSlideIn 0.2s ease-out, kf-wolf-pulse 1.1s ease-in-out 2;
+}
+@keyframes kf-wolf-pulse { 0%, 100% { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), 0 0 14px rgba(220, 38, 38, 0.35); } 50% { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), 0 0 22px rgba(255, 60, 40, 0.7); } }
+.kf-wolf { display: inline-flex; align-items: center; gap: 6px; color: #ffb020; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; font-size: 13px; }
+.kf-wolf .w-svg-wolf { width: 22px; height: 22px; filter: drop-shadow(0 0 4px rgba(255, 176, 32, 0.7)); }
+.kf-verb { color: #ffd9d4; font-style: italic; font-weight: 700; font-size: 13px; }
 .kf-weapon {
   display: inline-flex;
   align-items: center;

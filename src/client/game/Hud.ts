@@ -307,11 +307,16 @@ export class Hud {
     const el = document.createElement('div');
     const isMeKiller = e.killer === myId;
     const isMeVictim = e.victim === myId;
-    el.className = 'kf' + (isMeKiller || isMeVictim ? ' mine' : '') + (e.headshot ? ' hs-kill' : '');
+    const wolfKill = e.weapon === 'wolf';
+    el.className =
+      'kf' + (isMeKiller || isMeVictim ? ' mine' : '') + (e.headshot ? ' hs-kill' : '') + (wolfKill ? ' wolf' : '');
     const self = e.killer === e.victim;
-    el.innerHTML = self
-      ? `${weaponBadgeHtml(e.weapon, false)}<span class="kf-name t-${e.victimTeam}">${esc(e.victimName)}</span>`
-      : `<span class="kf-name t-${e.killerTeam}">${esc(e.killerName)}</span>${weaponBadgeHtml(e.weapon, e.headshot)}<span class="kf-name t-${e.victimTeam}">${esc(e.victimName)}</span>`;
+    el.innerHTML = wolfKill
+      ? // Bo'ri o'ldirdi: o'yinchilar o'rtasidagi o'limdan farqli, qon-qizil taxtacha va "g'ajidi" so'zi
+        `<span class="kf-wolf">${WOLF_SVG}<span>Vahshiy bo'ri</span></span><span class="kf-verb">g'ajidi</span><span class="kf-name t-${e.victimTeam}">${esc(e.victimName)}</span>`
+      : self
+        ? `${weaponBadgeHtml(e.weapon, false)}<span class="kf-name t-${e.victimTeam}">${esc(e.victimName)}</span>`
+        : `<span class="kf-name t-${e.killerTeam}">${esc(e.killerName)}</span>${weaponBadgeHtml(e.weapon, e.headshot)}<span class="kf-name t-${e.victimTeam}">${esc(e.victimName)}</span>`;
     kf.appendChild(el);
     while (kf.children.length > 6) kf.firstElementChild?.remove();
     setTimeout(() => (el.style.opacity = '0'), 6500);
