@@ -15,6 +15,11 @@ const DISTANT_SHOT_FULL = 150;
 /** Qadam tovushi: shu masofagacha to'liq, undan keyin kvadratik so'nadi va chegaradan nari chalinmaydi (m). */
 const FOOTSTEP_FULL_DIST = 3;
 const FOOTSTEP_MAX_DIST = 30;
+/** Bo'ri ovozlari chegarasi (m): yaqin ovozlar (irillash, tishlash), hurish, uvlash, doimiy nafas. */
+const WOLF_NEAR_MAX_DIST = 45;
+const WOLF_BARK_MAX_DIST = 70;
+const WOLF_HOWL_MAX_DIST = 160;
+const WOLF_BREATH_MAX_DIST = 35;
 
 /**
  * Barcha ovozlar WebAudio yordamida protsedural tarzda yaratiladi (tashqi fayllar kerak emas).
@@ -342,11 +347,28 @@ export class AudioSys {
   // pozitsion "ovoz" (nafas/pishillash va ov paytida uzluksiz past irillash) — bo'ri yaqinlashganda
   // o'yinchi uni ko'rmasdan ham eshitadi.
 
-  /** Pozitsion panner: `refDistance` qanchalik katta bo'lsa, ovoz shunchalik uzoqqa yetadi. */
-  private wolfDest(pos: P3 | undefined, ttlSec: number, refDistance: number): AudioNode | null {
+  /**
+   * Masofa koeffitsienti: `full` m gacha 1, keyin kvadratik so'nadi, `max` m dan nari 0.
+   * Panner'ning sust 1/d so'nishi ustiga qo'llanadi — uzoqdagi ovoz haqiqatan ham uzoqda eshitilsin.
+   */
+  private distanceFactor(pos: P3 | undefined, full: number, max: number): number {
+    if (!pos) return 1;
+    const dist = Math.hypot(pos.x - this.listenerPos.x, pos.y - this.listenerPos.y, pos.z - this.listenerPos.z);
+    if (dist >= max) return 0;
+    const k = 1 - Math.max(0, dist - full) / (max - full);
+    return k * k;
+  }
+
+  /**
+   * Pozitsion panner + masofa gain'i: `refDistance` qanchalik katta bo'lsa, ovoz shunchalik uzoqqa yetadi;
+   * `full`/`max` — aniq so'nish oralig'i (m). Chegaradan nari — null (ovoz chalinmaydi).
+   */
+  private wolfDest(pos: P3 | undefined, ttlSec: number, refDistance: number, full: number, max: number): AudioNode | null {
     const c = this.ctx;
     if (!c) return null;
     if (!pos) return this.master;
+    const k = this.distanceFactor(pos, full, max);
+    if (k <= 0.001) return null;
     const p = c.createPanner();
     p.panningModel = 'equalpower';
     p.distanceModel = 'inverse';
@@ -360,15 +382,18 @@ export class AudioSys {
     } else {
       p.setPosition(pos.x, pos.y, pos.z);
     }
-    p.connect(this.master);
+    const g = c.createGain();
+    g.gain.value = k;
+    g.connect(p).connect(this.master);
     window.setTimeout(() => {
       try {
+        g.disconnect();
         p.disconnect();
       } catch {
         /* e'tibor bermaymiz */
       }
     }, Math.max(0.5, ttlSec) * 1000);
-    return p;
+    return g;
   }
 
   /** Tremolo: `rate` Hz tezlikda `depth` (0..1) chuqurlikda amplituda tebranishi; qaytgan gain'ga ulang. */
@@ -390,7 +415,7 @@ export class AudioSys {
 
   /** Irillash (sezdi / quvyapti): tishlangan arra to'lqini + g'ichirlagan shovqin, 14 Hz tremolo bilan, ~0.9 s. */
   wolfGrowl(pos?: P3): void {
-    const d = this.wolfDest(pos, 3, 7);
+    const d = this.wolfDest(pos, 3, 7, 4, WOLF_NEAR_MAX_DIST);
     if (!d) return;
     const t = this.ctx!.currentTime;
     const tr = this.tremolo(d, t, 0.95, 13 + Math.random() * 4, 0.7);
@@ -403,7 +428,7 @@ export class AudioSys {
 
   /** Hurish (o'yinchini ko'rdi): ikki keskin "vov", 0.5 s — ov boshlanganini bildiradi. */
   wolfBark(pos?: P3): void {
-    const d = this.wolfDest(pos, 3, 9);
+    const d = this.wolfDest(pos, 3, 9, 5, WOLF_BARK_MAX_DIST);
     if (!d) return;
     const t = this.ctx!.currentTime;
     for (const dt of [0, 0.26]) {
@@ -415,7 +440,7 @@ export class AudioSys {
 
   /** Tashlanish oldidan keskin irillash + jag' shaqillashi, 0.45 s. */
   wolfSnarl(pos?: P3): void {
-    const d = this.wolfDest(pos, 3, 8);
+    const d = this.wolfDest(pos, 3, 8, 4, WOLF_NEAR_MAX_DIST);
     if (!d) return;
     const t = this.ctx!.currentTime;
     const tr = this.tremolo(d, t, 0.5, 22, 0.6);
@@ -427,7 +452,7 @@ export class AudioSys {
 
   /** Uvlash: 330 → 620 → 380 Hz, ~2.8 s, 5.5 Hz vibrato va garmonikalar; 300 m gacha eshitiladi. */
   wolfHowl(pos?: P3): void {
-    const d = this.wolfDest(pos, 6, 18);
+    const d = this.wolfDest(pos, 6, 18, 12, WOLF_HOWL_MAX_DIST);
     if (!d) return;
     const c = this.ctx!;
     const t = c.currentTime;
@@ -465,7 +490,7 @@ export class AudioSys {
 
   /** Tishlash: tegsa — jag' "shaq" + bo'g'iq zarba + g'ichirlash, tegmasa — havoda "shap". */
   wolfBite(pos: P3 | undefined, hit: boolean): void {
-    const d = this.wolfDest(pos, 3, 8);
+    const d = this.wolfDest(pos, 3, 8, 4, WOLF_NEAR_MAX_DIST);
     if (!d) return;
     const t = this.ctx!.currentTime;
     if (hit) {
@@ -575,13 +600,16 @@ export class AudioSys {
       p.setPosition(pos.x, pos.y, pos.z);
     }
     const now = c.currentTime;
+    // Masofa: 3 m gacha to'liq, keyin kvadratik so'nadi, nafas 35 m / irillash 45 m dan nari jim
+    const kBreath = this.distanceFactor(pos, 3, WOLF_BREATH_MAX_DIST);
+    const kGrowl = this.distanceFactor(pos, 4, WOLF_NEAR_MAX_DIST);
     // Nafas: tinch — sekin va past, ov — tez va baland ("pishillab" quvadi)
-    const breathLevel = threat ? 0.5 : alert ? 0.3 : 0.16;
-    v.breath.gain.setTargetAtTime(breathLevel, now, 0.25);
+    const breathLevel = (threat ? 0.5 : alert ? 0.3 : 0.16) * kBreath;
+    v.breath.gain.setTargetAtTime(Math.max(0.0001, breathLevel), now, 0.25);
     v.breathLfo.frequency.setTargetAtTime(threat ? 3.4 + Math.min(1.2, speed * 0.15) : alert ? 2.4 : 1.6, now, 0.3);
     // Uzluksiz irillash faqat ovda (hujumda eng baland)
-    const growlLevel = threat ? 0.32 : alert ? 0.14 : 0.0001;
-    v.growl.gain.setTargetAtTime(growlLevel, now, 0.3);
+    const growlLevel = (threat ? 0.32 : alert ? 0.14 : 0) * kGrowl;
+    v.growl.gain.setTargetAtTime(Math.max(0.0001, growlLevel), now, 0.3);
   }
 
   wolfVoiceRemove(id: string): void {
