@@ -16,6 +16,10 @@ export class NavGraph {
   private readonly ox: number;
   private readonly oz: number;
   private readonly valid: Uint8Array;
+  /** Tugun markazlari (relyef balandligi bilan) — bir marta hisoblanadi; A* ichida qayta namunalanmaydi. */
+  private readonly cx: Float64Array;
+  private readonly cy: Float64Array;
+  private readonly cz: Float64Array;
   private readonly neighbors: number[][];
   readonly validList: number[] = [];
   /** Eng katta bog'langan komponent tugunlari (bot sayr maqsadlari uchun). */
@@ -29,6 +33,16 @@ export class NavGraph {
     this.ox = b.minX + this.cell / 2;
     this.oz = b.minZ + this.cell / 2;
     const n = this.nx * this.nz;
+    this.cx = new Float64Array(n);
+    this.cy = new Float64Array(n);
+    this.cz = new Float64Array(n);
+    for (let i = 0; i < n; i++) {
+      const x = this.ox + (i % this.nx) * this.cell;
+      const z = this.oz + Math.floor(i / this.nx) * this.cell;
+      this.cx[i] = x;
+      this.cy[i] = sampleTerrainHeight(this.world.terrain, x, z);
+      this.cz[i] = z;
+    }
     this.valid = new Uint8Array(n);
     for (let i = 0; i < n; i++) {
       const c = this.center(i);
@@ -89,13 +103,9 @@ export class NavGraph {
     this.roamList = bestId >= 0 ? this.validList.filter((i) => comp[i] === bestId) : this.validList.slice();
   }
 
+  /** Tugun markazi (yangi obyekt — chaqiruvchi uni o'zgartirishi mumkin). */
   center(i: number): Vec3 {
-    const ix = i % this.nx;
-    const iz = Math.floor(i / this.nx);
-    const x = this.ox + ix * this.cell;
-    const z = this.oz + iz * this.cell;
-    const y = sampleTerrainHeight(this.world.terrain, x, z);
-    return { x, y, z };
+    return { x: this.cx[i], y: this.cy[i], z: this.cz[i] };
   }
 
   segmentClear(a: Vec3, b: Vec3, r = PLAYER_RADIUS + 0.1): boolean {
@@ -148,8 +158,7 @@ export class NavGraph {
           if (x < 0 || z < 0 || x >= this.nx || z >= this.nz) continue;
           const i = z * this.nx + x;
           if (!this.valid[i]) continue;
-          const c = this.center(i);
-          cands.push({ i, d: Math.hypot(c.x - p.x, c.z - p.z) });
+          cands.push({ i, d: Math.hypot(this.cx[i] - p.x, this.cz[i] - p.z) });
         }
       }
     }
@@ -173,11 +182,11 @@ export class NavGraph {
     const gScore = new Float32Array(n).fill(Infinity);
     const came = new Int32Array(n).fill(-1);
     const closed = new Uint8Array(n);
-    const gc = this.center(g);
-    const h = (i: number) => {
-      const c = this.center(i);
-      return Math.hypot(c.x - gc.x, c.z - gc.z);
-    };
+    const cx = this.cx;
+    const cz = this.cz;
+    const gx = cx[g];
+    const gz = cz[g];
+    const h = (i: number) => Math.hypot(cx[i] - gx, cz[i] - gz);
     const heap = new MinHeap();
     gScore[s] = 0;
     heap.push(s, h(s));
@@ -190,11 +199,11 @@ export class NavGraph {
       }
       if (closed[cur]) continue;
       closed[cur] = 1;
-      const cc = this.center(cur);
+      const ccx = cx[cur];
+      const ccz = cz[cur];
       for (const nb of this.neighbors[cur]) {
         if (closed[nb]) continue;
-        const nc = this.center(nb);
-        const tentative = gScore[cur] + Math.hypot(nc.x - cc.x, nc.z - cc.z);
+        const tentative = gScore[cur] + Math.hypot(cx[nb] - ccx, cz[nb] - ccz);
         if (tentative < gScore[nb]) {
           gScore[nb] = tentative;
           came[nb] = cur;

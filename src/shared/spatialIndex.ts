@@ -14,6 +14,15 @@ export class SpatialGridIndex<T extends Box = ColliderBox> {
   readonly cellSize: number;
   private readonly items: T[] = [];
   private readonly cells = new Map<string, number[]>();
+  /**
+   * So'rovlar uchun qayta ishlatiladigan buferlar (har so'rovda Set + Array.from + comparator sort ajratilmasin):
+   * `stamp[idx] === epoch` — shu so'rovda allaqachon yig'ilgan; `scratch` — yig'ilgan indekslar.
+   * So'rovlar sinxron va qayta kirmaydi, natija massivi esa har safar yangi.
+   */
+  private stamp = new Uint32Array(0);
+  private epoch = 0;
+  private scratch = new Int32Array(64);
+  private scratchLen = 0;
 
   constructor(items: readonly T[] = [], opts: SpatialGridOptions = {}) {
     this.cellSize = Math.max(1, opts.cellSize ?? 8);
@@ -56,6 +65,45 @@ export class SpatialGridIndex<T extends Box = ColliderBox> {
     return idx;
   }
 
+  /** Yangi so'rovni boshlaydi: epoch ni oshiradi (o'ralganda stamp tozalanadi), bufer o'lchamini moslaydi. */
+  private beginCollect(): void {
+    if (this.stamp.length < this.items.length) {
+      const grown = new Uint32Array(Math.max(this.items.length, this.stamp.length * 2));
+      grown.set(this.stamp);
+      this.stamp = grown;
+    }
+    this.epoch = (this.epoch + 1) >>> 0;
+    if (this.epoch === 0) {
+      this.stamp.fill(0);
+      this.epoch = 1;
+    }
+    this.scratchLen = 0;
+  }
+
+  /** Katakdagi indekslarni (takrorlanmasdan) `scratch` ga qo'shadi. */
+  private collectBucket(bucket: readonly number[]): void {
+    const stamp = this.stamp;
+    const epoch = this.epoch;
+    for (let k = 0; k < bucket.length; k++) {
+      const idx = bucket[k];
+      if (stamp[idx] === epoch) continue;
+      stamp[idx] = epoch;
+      if (this.scratchLen === this.scratch.length) {
+        const grown = new Int32Array(this.scratch.length * 2);
+        grown.set(this.scratch);
+        this.scratch = grown;
+      }
+      this.scratch[this.scratchLen++] = idx;
+    }
+  }
+
+  /** Yig'ilgan indekslar o'sish tartibida (= qo'shilish tartibi; avvalgi Set + sort bilan aynan bir xil). */
+  private sortedCollected(): Int32Array {
+    const view = this.scratch.subarray(0, this.scratchLen);
+    view.sort(); // TypedArray.sort — sonli o'sish tartibi, comparator va ajratishsiz
+    return view;
+  }
+
   /**
    * Returns all indexed items in insertion order.
    */
@@ -87,22 +135,19 @@ export class SpatialGridIndex<T extends Box = ColliderBox> {
     const minCz = this.cellCoord(qMinZ);
     const maxCz = this.cellCoord(qMaxZ);
 
-    const seen = new Set<number>();
+    this.beginCollect();
     for (let cz = minCz; cz <= maxCz; cz++) {
       for (let cx = minCx; cx <= maxCx; cx++) {
         const bucket = this.cells.get(this.cellKey(cx, cz));
-        if (!bucket) continue;
-        for (const idx of bucket) {
-          seen.add(idx);
-        }
+        if (bucket) this.collectBucket(bucket);
       }
     }
 
-    if (seen.size === 0) return [];
-    const sortedIndices = Array.from(seen).sort((a, b) => a - b);
+    if (this.scratchLen === 0) return [];
+    const sortedIndices = this.sortedCollected();
     const results: T[] = [];
-    for (const idx of sortedIndices) {
-      const b = this.items[idx];
+    for (let k = 0; k < sortedIndices.length; k++) {
+      const b = this.items[sortedIndices[k]];
       if (
         b.max.x >= qMinX &&
         b.min.x <= qMaxX &&
@@ -147,11 +192,10 @@ export class SpatialGridIndex<T extends Box = ColliderBox> {
     const minY = Math.min(origin.y, endY) - 1e-4;
     const maxY = Math.max(origin.y, endY) + 1e-4;
 
-    const seen = new Set<number>();
+    this.beginCollect();
     const addCell = (cx: number, cz: number) => {
       const bucket = this.cells.get(this.cellKey(cx, cz));
-      if (!bucket) return;
-      for (const idx of bucket) seen.add(idx);
+      if (bucket) this.collectBucket(bucket);
     };
 
     let cx = this.cellCoord(origin.x);
@@ -194,11 +238,11 @@ export class SpatialGridIndex<T extends Box = ColliderBox> {
       }
     }
 
-    if (seen.size === 0) return [];
-    const sortedIndices = Array.from(seen).sort((a, b) => a - b);
+    if (this.scratchLen === 0) return [];
+    const sortedIndices = this.sortedCollected();
     const results: T[] = [];
-    for (const idx of sortedIndices) {
-      const b = this.items[idx];
+    for (let k = 0; k < sortedIndices.length; k++) {
+      const b = this.items[sortedIndices[k]];
       if (b.max.y >= minY && b.min.y <= maxY) {
         results.push(b);
       }
