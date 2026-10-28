@@ -1017,9 +1017,11 @@
   color: #ffd94f;
 }
 
-/* Mayda tugmalar (ismni o'zgartirish, yangilash): kichik yog'och yorliq */
+/* Mayda tugmalar (ismni o'zgartirish, yangilash, pauzadagi ± Bot, modal ✕): kichik yog'och yorliq */
 .btn.tiny,
-.btn-edit-name {
+.btn-edit-name,
+.pause-bots-btns .btn,
+.btn-close {
   font-family: 'Bahnschrift', 'Segoe UI Black', 'Arial Black', 'Segoe UI', sans-serif;
   font-weight: 800;
   text-transform: uppercase;
@@ -1036,7 +1038,9 @@
 }
 
 .btn.tiny:hover,
-.btn-edit-name:hover {
+.btn-edit-name:hover,
+.pause-bots-btns .btn:hover,
+.btn-close:hover {
   background:
     repeating-linear-gradient(179deg, rgba(0, 0, 0, 0.1) 0 1px, rgba(0, 0, 0, 0) 1px 5px),
     linear-gradient(180deg, #ffd94f 0%, #f3b62a 60%, #c98d12 100%);
@@ -1048,7 +1052,9 @@
 }
 
 .btn.tiny:active,
-.btn-edit-name:active {
+.btn-edit-name:active,
+.pause-bots-btns .btn:active,
+.btn-close:active {
   transform: translateY(1px);
   box-shadow: 0 0 0 #24130a, 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 3px rgba(0, 0, 0, 0.35);
 }
@@ -1623,7 +1629,14 @@ details[open] .accordion-arrow {
   text-shadow: var(--cs-text-shadow);
 }
 
-.btn-close,
+/* .btn-close (modal ✕) endi kichik yog'och yorliq (7b-bo'lim); bu yerda faqat o'lcham */
+.btn-close {
+  font-size: 14px;
+  line-height: 1;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+
 .modal-close {
   background: transparent;
   border: none;
@@ -1636,7 +1649,6 @@ details[open] .accordion-arrow {
   transition: color 0.15s, background 0.15s;
 }
 
-.btn-close:hover,
 .modal-close:hover {
   color: var(--cs-amber-400);
   background: rgba(255, 255, 255, 0.08);

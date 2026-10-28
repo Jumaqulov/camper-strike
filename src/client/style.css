@@ -62,10 +62,8 @@ html, body {
 }
 .btn:hover { background: rgba(255, 255, 255, 0.18); }
 .btn:active { transform: scale(0.97); }
-.btn.primary { background: linear-gradient(180deg, #ffbe3d, #f08c00); color: #1b1200; }
-.btn.primary:hover { filter: brightness(1.1); }
-.btn.danger { background: #b3262e; }
-.btn.danger:hover { background: #d0313a; }
+/* .btn.primary / .btn.danger ranglari menu/MenuVisuals.css dagi yog'och taxta uslubida (7b-bo'lim);
+   bu yerda takrorlansa, fayl tartibi tufayli taxta teksturasini yassi gradient bilan yopib qo'yardi. */
 .btn.big { width: 100%; padding: 14px; font-size: 16px; }
 .btn.tiny { padding: 4px 10px; font-size: 12px; font-weight: 600; }
 
