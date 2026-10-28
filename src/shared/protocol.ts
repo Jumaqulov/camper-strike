@@ -95,6 +95,8 @@ export interface PlayerSnap {
   spectateTargetId?: string | null;
   /** Modelda ko'rinadigan jihozlar (kaska, nimcha, granata/aptechka soni) — `packGearState` bit maydoni. */
   gear?: number;
+  /** wolf_night: qo'ldagi o'tin soni (0..WOOD_CARRY_MAX); faqat 0 dan katta bo'lsa yuboriladi. */
+  wood?: number;
 }
 
 export interface GearVisualState {
@@ -344,7 +346,20 @@ export type {
   UseMedkitReq,
 } from './loot';
 
-export type { WolfBiteEvent, WolfDeathEvent, WolfHowlEvent, WolfSnap, WolfState } from './wolf';
+export type {
+  CampActionAck,
+  CampActionError,
+  CampfireEvent,
+  CampfireSnap,
+  FeedFireReq,
+  TakeWoodReq,
+  WolfBiteEvent,
+  WolfDeathEvent,
+  WolfHowlEvent,
+  WolfSnap,
+  WolfState,
+  WoodPileSnap,
+} from './wolf';
 
 export type {
   SurvivalConfig,

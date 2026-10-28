@@ -647,6 +647,159 @@ export class AudioSys {
     for (const id of [...this.wolfVoices.keys()]) this.wolfVoiceRemove(id);
   }
 
+  // ---------------- Gulxan ovozlari ("Tong otguncha" lageri) ----------------
+  // Har bir yonayotgan gulxan uchun doimiy pozitsion "chirsillash": past chastotali shovqin (olov guvillashi)
+  // + tasodifiy qisqa "pop"lar (cho'g' chirsillashi). Bo'ri `wolfVoice` qolipida — har kadr pozitsiya/kuch.
+
+  private campfires = new Map<string, { panner: PannerNode; hiss: GainNode; pop: GainNode; nodes: AudioNode[]; timer: number }>();
+
+  private createCampfireVoice(id: string): void {
+    const c = this.ctx!;
+    const nodes: AudioNode[] = [];
+    const panner = c.createPanner();
+    panner.panningModel = 'equalpower';
+    panner.distanceModel = 'inverse';
+    panner.refDistance = 3;
+    panner.maxDistance = 80;
+    panner.rolloffFactor = 1.2;
+    panner.connect(this.master);
+
+    // Guvillash: shovqin → lowpass 420 Hz → sekin LFO (0.9 Hz) bilan nafas → gain
+    const src = c.createBufferSource();
+    src.buffer = this.noiseBuf;
+    src.loop = true;
+    const lp = c.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 420;
+    lp.Q.value = 0.7;
+    const am = c.createGain();
+    am.gain.value = 0.7;
+    const lfo = c.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.value = 0.9;
+    const lg = c.createGain();
+    lg.gain.value = 0.3;
+    lfo.connect(lg).connect(am.gain);
+    const hiss = c.createGain();
+    hiss.gain.value = 0.0001;
+    src.connect(lp).connect(am).connect(hiss).connect(panner);
+    src.start();
+    lfo.start();
+    nodes.push(src, lp, am, lg, lfo);
+
+    // Chirsillash kanali: qisqa pop'lar shu gain orqali (kuch masofaga bog'liq)
+    const pop = c.createGain();
+    pop.gain.value = 0.0001;
+    pop.connect(panner);
+
+    const v = { panner, hiss, pop, nodes, timer: 0 };
+    const schedulePop = () => {
+      v.timer = window.setTimeout(() => {
+        if (this.campfires.get(id) !== v) return;
+        const t = c.currentTime;
+        // 1–3 ta "chirs": yuqori chastotali juda qisqa shovqin + ba'zan past "tuk"
+        const n = 1 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < n; i++) {
+          const dt = i * (0.03 + Math.random() * 0.06);
+          this.noise(pop, t + dt, 0.025 + Math.random() * 0.03, 'bandpass', 2600 + Math.random() * 1800, 1200, 1.6, 0.6 + Math.random() * 0.5, 0.002);
+        }
+        if (Math.random() < 0.3) this.noise(pop, t + 0.02, 0.07, 'lowpass', 500, 160, 0.8, 0.35, 0.004);
+        schedulePop();
+      }, 120 + Math.random() * 520);
+    };
+    schedulePop();
+    this.campfires.set(id, v);
+  }
+
+  /**
+   * Har kadr: yonayotgan gulxanning chirsillashi. `flame` — olov balandligi 0.5..1.2 (o'tin ulushi),
+   * `dist` — tinglovchigacha (m). 25 m dan nari / o'chgan — ovoz olib tashlanadi.
+   */
+  campfireCrackle(id: string, pos: P3, flame: number, dist: number, lit: boolean): void {
+    const c = this.ctx;
+    if (!c) return;
+    let v = this.campfires.get(id);
+    if (!lit || dist > 25) {
+      if (v) this.campfireCrackleRemove(id);
+      return;
+    }
+    if (!v) {
+      this.createCampfireVoice(id);
+      v = this.campfires.get(id)!;
+    }
+    const p = v.panner;
+    if (p.positionX) {
+      p.positionX.value = pos.x;
+      p.positionY.value = pos.y;
+      p.positionZ.value = pos.z;
+    } else {
+      p.setPosition(pos.x, pos.y, pos.z);
+    }
+    const now = c.currentTime;
+    const k = this.distanceFactor(pos, 2.5, 25);
+    const f = Math.max(0.3, Math.min(1.2, flame));
+    v.hiss.gain.setTargetAtTime(Math.max(0.0001, 0.22 * f * k), now, 0.3);
+    v.pop.gain.setTargetAtTime(Math.max(0.0001, 0.5 * (0.4 + 0.6 * f) * k), now, 0.3);
+  }
+
+  campfireCrackleRemove(id: string): void {
+    const v = this.campfires.get(id);
+    if (!v) return;
+    this.campfires.delete(id);
+    clearTimeout(v.timer);
+    const now = this.ctx?.currentTime ?? 0;
+    try {
+      v.hiss.gain.setTargetAtTime(0.0001, now, 0.2);
+      v.pop.gain.setTargetAtTime(0.0001, now, 0.2);
+    } catch {
+      /* e'tibor bermaymiz */
+    }
+    window.setTimeout(() => {
+      for (const n of v.nodes) {
+        try {
+          if (n instanceof AudioScheduledSourceNode) n.stop();
+          n.disconnect();
+        } catch {
+          /* e'tibor bermaymiz */
+        }
+      }
+      try {
+        v.hiss.disconnect();
+        v.pop.disconnect();
+        v.panner.disconnect();
+      } catch {
+        /* e'tibor bermaymiz */
+      }
+    }, 700);
+  }
+
+  stopCampfireSounds(): void {
+    for (const id of [...this.campfires.keys()]) this.campfireCrackleRemove(id);
+  }
+
+  /** Gulxanga o'tin tashlandi: "vush" alanga ko'tarilishi + chirsillash yomg'iri, ~0.9 s. */
+  campfireFeed(pos?: P3): void {
+    const d = this.wolfDest(pos, 2, 5, 4, 40);
+    if (!d) return;
+    const t = this.ctx!.currentTime;
+    this.noise(d, t, 0.55, 'bandpass', 260, 1300, 1.4, 0.5, 0.08);
+    this.noise(d, t + 0.1, 0.5, 'lowpass', 900, 300, 0.8, 0.35, 0.05);
+    for (let i = 0; i < 7; i++) {
+      const dt = 0.15 + Math.random() * 0.6;
+      this.noise(d, t + dt, 0.03, 'bandpass', 2400 + Math.random() * 2000, 1500, 1.6, 0.4, 0.002);
+    }
+  }
+
+  /** Gulxan o'chdi: uzun "pshsh" bug' vishillashi + past "puf", ~1.6 s. */
+  campfireOut(pos?: P3): void {
+    const d = this.wolfDest(pos, 3, 6, 5, 50);
+    if (!d) return;
+    const t = this.ctx!.currentTime;
+    this.noise(d, t, 0.12, 'lowpass', 600, 150, 0.8, 0.5, 0.01);
+    this.noise(d, t + 0.05, 1.5, 'bandpass', 2600, 700, 0.9, 0.42, 0.06);
+    this.noise(d, t + 0.4, 1.1, 'highpass', 3000, 1500, 0.7, 0.18, 0.1);
+  }
+
   /** Pichoq tanaga tegdi: bo'g'iq "tup" — past shovqin va qisqa past ton. */
   knifeHit(): void {
     const c = this.ctx;

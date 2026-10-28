@@ -10,6 +10,7 @@ import {
   type SurvivalWinReason,
 } from '../../../shared/survival';
 import type { NightSnap } from '../../../shared/wolf/night';
+import { CAMPFIRE_LOW_FUEL_SEC } from '../../../shared/wolf/camp';
 import type { SpectatorCameraPose } from './SpectatorController';
 
 /** "Tong otguncha" yuqori pill matni: 🌙 Tonggacha mm:ss · 2/4-to'lqin · 🐺 2 */
@@ -18,6 +19,15 @@ function formatNightPillUz(n: NightSnap): string {
   const mm = String(Math.floor(total / 60)).padStart(2, '0');
   const ss = String(total % 60).padStart(2, '0');
   return `🌙 Tonggacha ${mm}:${ss} · ${n.wave}/${n.waveCount}-to'lqin · 🐺 ${n.wolvesAlive}`;
+}
+
+/** Asosiy lager gulxani holati (pill): "🔥 Lager m:ss" (kam o'tin — 'low'), o'chgan — "🔥 O'CHDI" ('out'). */
+export function formatCampPillUz(fuelSec: number, lit: boolean): { text: string; cls: '' | 'low' | 'out' } {
+  if (!lit || fuelSec <= 0) return { text: "🔥 O'CHDI", cls: 'out' };
+  const total = Math.max(0, Math.floor(fuelSec));
+  const mm = Math.floor(total / 60);
+  const ss = String(total % 60).padStart(2, '0');
+  return { text: `🔥 Lager ${mm}:${ss}`, cls: fuelSec < CAMPFIRE_LOW_FUEL_SEC ? 'low' : '' };
 }
 
 export interface SurvivalUICallbacks {
@@ -84,6 +94,8 @@ export class SurvivalUI {
   private myRole: SurvivalPlayerRole | null = null;
   private spectatorPose: SpectatorCameraPose | null = null;
   private killerHtml = '';
+  /** Asosiy gulxan holati (Game har kadr ekstrapolyatsiya qilib beradi); null — lager yo'q. */
+  private camp: { fuelSec: number; lit: boolean } | null = null;
 
   private spectatorBannerVisible = false;
   private winnerOverlayVisible = false;
@@ -191,6 +203,11 @@ export class SurvivalUI {
     this.render();
   }
 
+  /** Asosiy lager gulxani holati (tun rejimi) — pill'da "🔥 Lager m:ss" sifatida chiqadi. */
+  setCampStatus(camp: { fuelSec: number; lit: boolean } | null): void {
+    this.camp = camp;
+  }
+
   update(
     snap: SurvivalStateSnap | null,
     myId: string,
@@ -285,11 +302,12 @@ export class SurvivalUI {
 
     // Tunda zona yo'q — pillda to'lqin/tong ma'lumoti ko'rsatiladi
     const nightText = night && snap.phase === 'playing' && snap.night ? formatNightPillUz(snap.night) : '';
+    const campPill = night && snap.phase === 'playing' && this.camp ? formatCampPillUz(this.camp.fuelSec, this.camp.lit) : null;
     const pillKey = `${snap.roundId}|${snap.phase}|${snap.timeLeft}|${countLabel}|${
       !night && snap.phase === 'playing' && snap.zone
         ? `${formatZoneStatusUz(snap.zone)}|${snap.zone.shrinking ? 1 : 0}`
         : ''
-    }${night ? `|${phaseLabel}|${nightText}` : ''}`;
+    }${night ? `|${phaseLabel}|${nightText}|${campPill ? `${campPill.text}|${campPill.cls}` : ''}` : ''}`;
     if (this.topPillEl && pillKey !== this.lastPillKey) {
       this.lastPillKey = pillKey;
       // Vaqt segmenti: countdown/ended — soniya, playing — mm:ss, waiting — ko'rsatilmaydi
@@ -308,9 +326,9 @@ export class SurvivalUI {
         <span class="s07-pill-count">${esc(countLabel)}</span>
         ${
           night
-            ? nightText
-              ? `<span class="s07-pill-night">${esc(nightText)}</span>`
-              : ''
+            ? `${nightText ? `<span class="s07-pill-night">${esc(nightText)}</span>` : ''}${
+                campPill ? `<span class="s07-pill-camp ${campPill.cls}">${esc(campPill.text)}</span>` : ''
+              }`
             : snap.phase === 'playing' && snap.zone
               ? `<span class="s07-pill-zone${snap.zone.shrinking ? ' shrinking' : ''}">${esc(formatZoneStatusUz(snap.zone))}</span>`
               : ''

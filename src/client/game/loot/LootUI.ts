@@ -37,6 +37,14 @@ export interface LootUIDiagnostics {
 
 export type LootStatusKind = 'info' | 'success' | 'error' | 'loading';
 
+/** Konteynerdan boshqa nishon (gulxan, o'tin g'arami) uchun tayyor prompt — loot prompt ustidan ko'rsatiladi. */
+export interface CustomPrompt {
+  html: string;
+  text: string;
+  /** '' | 'blocked' | 'empty' | 'camp' ... — #stage06-loot-prompt klassi */
+  variantClass: string;
+}
+
 
 const CONTAINER_KIND_ICONS: Record<ContainerKind, string> = {
   supply_crate: '📦',
@@ -81,6 +89,7 @@ export class LootUI {
   private toastEl: HTMLElement | null = null;
 
   private currentPrompt: TargetContainerPrompt | null = null;
+  private customPrompt: CustomPrompt | null = null;
   private promptText = '';
   private activeContainer: PublicContainerState | null = null;
   private readonly pendingItemIds = new Set<string>();
@@ -133,6 +142,19 @@ export class LootUI {
   setTargetPrompt(prompt: TargetContainerPrompt | null): void {
     this.currentPrompt = prompt;
     this.renderPrompt();
+  }
+
+  /** Tashqi (lager) prompt: berilsa konteyner prompti o'rniga shu ko'rsatiladi; null — odatiy holat. */
+  setCustomPrompt(prompt: CustomPrompt | null): void {
+    if (prompt === null && this.customPrompt === null) return;
+    this.customPrompt = prompt;
+    this.renderPrompt();
+  }
+
+  /** Joriy konteyner/buyum nishoni masofasi (m); nishon yo'q yoki bilan muloqot mumkin emas — null. */
+  getInteractableTargetDistance(): number | null {
+    const p = this.currentPrompt;
+    return p && p.canInteract ? p.distanceM : null;
   }
 
   setActiveContainer(container: PublicContainerState | null): void {
@@ -265,6 +287,7 @@ export class LootUI {
 
   reset(): void {
     this.currentPrompt = null;
+    this.customPrompt = null;
     this.promptText = '';
     this.activeContainer = null;
     this.pendingItemIds.clear();
@@ -304,6 +327,18 @@ export class LootUI {
   }
 
   private renderPrompt(): void {
+    const custom = this.customPrompt;
+    if (custom) {
+      this.promptText = custom.text;
+      const key = `custom|${custom.variantClass}|${custom.html}`;
+      if (key === this.lastPromptRenderKey) return;
+      this.lastPromptRenderKey = key;
+      if (this.promptEl) {
+        this.promptEl.className = custom.variantClass;
+        this.promptEl.innerHTML = custom.html;
+      }
+      return;
+    }
     const p = this.currentPrompt;
     if (!p) {
       this.promptText = '';

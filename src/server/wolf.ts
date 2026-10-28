@@ -3,6 +3,7 @@ import { angleDiff, vcopy, vdist, type Vec3 } from '../shared/math';
 import { applyWorldMovement, raycastWorld, type Body } from '../shared/physics';
 import { hitboxScaleOf } from '../shared/stance';
 import {
+  CAMPFIRE_RADIUS_M,
   WOLF_ATTACK_COOLDOWN,
   WOLF_ATTACK_DURATION,
   WOLF_BITE_AT,
@@ -49,8 +50,10 @@ export interface ServerWolf extends Body {
 /** Sezish darajasi: 0 — yo'q, 1 — hid/shubha (joy ma'lum, LOS yo'q), 2 — ko'rdi. */
 type SenseLevel = 0 | 1 | 2;
 
-/** Nishon yetib bo'lmas balandlikda (2-qavat, tom) bo'lsa shu oraliqda uvlaydi (s). */
+/** Nishon yetib bo'lmas balandlikda (2-qavat, tom) yoki gulxan yonida bo'lsa shu oraliqda uvlaydi (s). */
 const UNREACHABLE_HOWL_SEC = 9;
+/** Bo'ri yonib turgan gulxan doirasidan tashqarida, shu masofada (markazdan) to'xtab aylanadi (m). */
+const FIRE_STANDOFF_M = CAMPFIRE_RADIUS_M + 1.5;
 /** Sayrda to'xtab hid olish ehtimoli (sekundiga). */
 const ROAM_SNIFF_CHANCE = 0.06;
 const SENSE_INTERVAL = 0.15;
@@ -136,6 +139,16 @@ export class WolfBrain {
       this.repathAt = 0;
       if (me.state === 'idle' || me.state === 'sniff') this.setState('alert', t, 0.8);
     }
+  }
+
+  /** Yaqindagi gulxan o'chdi: nishon bo'lmasa qorong'i lagerga borib tekshiradi (wolf_night). */
+  onFireOut(pos: Vec3, t: number): void {
+    const me = this.me;
+    if (!me.alive || this.target) return;
+    this.investigatePos = vcopy(pos);
+    this.roamGoal = null;
+    this.repathAt = 0;
+    if (me.state === 'idle' || me.state === 'sniff') this.setState('alert', t, 0.8);
   }
 
   private setState(s: WolfState, t: number, durationSec = 0): void {
@@ -317,6 +330,28 @@ export class WolfBrain {
       return;
     }
 
+    // Olovdan qo'rqish: yonib turgan gulxan doirasiga (+1 m) tushib qolsa — tashqariga yugurib chiqadi
+    const burning = this.room.litFireContaining(me.pos.x, me.pos.z, 1);
+    if (burning) {
+      let ox = me.pos.x - burning.x;
+      let oz = me.pos.z - burning.z;
+      const ol = Math.hypot(ox, oz);
+      if (ol < 1e-3) {
+        ox = -Math.sin(me.yaw);
+        oz = -Math.cos(me.yaw);
+      } else {
+        ox /= ol;
+        oz /= ol;
+      }
+      if (me.state !== 'alert') this.setState('alert', t);
+      me.targetId = this.target ? this.target.id : null;
+      this.turnTowards(Math.atan2(-ox, -oz), dt, 10);
+      const sp = this.speedFor('hunt');
+      applyWorldMovement(me, ox * sp, oz * sp, false, dt, this.room.world);
+      this.checkStuck(t, true);
+      return;
+    }
+
     if (t >= this.nextSenseAt) {
       this.nextSenseAt = t + SENSE_INTERVAL;
       this.sense(t);
@@ -355,7 +390,44 @@ export class WolfBrain {
       const fresh = t - this.lastSensedAt < 1.0;
       const goal = fresh ? tgt.pos : (this.lastSensedPos ?? tgt.pos);
       const unreachable = dy > WOLF_UNREACHABLE_DY && dH < 8;
-      if (unreachable) {
+      // Nishon yonib turgan gulxan doirasida: olovga kirmaydi — chetida (R + 1.5 m) to'xtab qaraydi, uvlaydi
+      const fire = this.room.litFireContaining(tgt.pos.x, tgt.pos.z, 0);
+      if (fire) {
+        this.path = [];
+        this.pathIdx = 0;
+        this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt);
+        if (t >= this.nextHowlAt) {
+          this.nextHowlAt = t + UNREACHABLE_HOWL_SEC;
+          this.setState('howl', t, 3.0);
+          this.room.wolfHowl(me);
+        } else if (me.state !== 'alert' && me.state !== 'howl') {
+          this.setState('alert', t);
+        }
+        const fx = me.pos.x - fire.x;
+        const fz = me.pos.z - fire.z;
+        const fd = Math.hypot(fx, fz);
+        if (fd > FIRE_STANDOFF_M + 0.4) {
+          // Olov chetiga yaqinlashadi (markaz tomon, lekin doiraga kirmaydi)
+          const m = this.moveTowards(
+            { x: fire.x + (fx / Math.max(fd, 1e-3)) * FIRE_STANDOFF_M, y: me.pos.y, z: fire.z + (fz / Math.max(fd, 1e-3)) * FIRE_STANDOFF_M },
+            this.speedFor('stalk'),
+            dt,
+          );
+          wishX = m.wishX;
+          wishZ = m.wishZ;
+          this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt, 8);
+        } else if (fd < FIRE_STANDOFF_M - 0.6) {
+          // Juda yaqin — orqaga chekinadi
+          const sp = this.speedFor('stalk');
+          wishX = (fx / Math.max(fd, 1e-3)) * sp;
+          wishZ = (fz / Math.max(fd, 1e-3)) * sp;
+        } else if (me.state === 'alert') {
+          // Chetida aylanib yuradi (soat yo'nalishida, sekin)
+          const sp = this.speedFor('idle') * 0.6;
+          wishX = (-fz / Math.max(fd, 1e-3)) * sp;
+          wishZ = (fx / Math.max(fd, 1e-3)) * sp;
+        }
+      } else if (unreachable) {
         // Nishon balandda (loft/tom): pastda turib qaraydi, vaqti-vaqti bilan uvlaydi
         this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt);
         if (t >= this.nextHowlAt) {

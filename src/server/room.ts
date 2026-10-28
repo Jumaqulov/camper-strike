@@ -3,8 +3,9 @@ import {
   GAME_MODE_NAMES_UZ, GRENADE_DAMAGE, GRENADE_FUSE, GRENADE_RADIUS, GRENADE_THROW_SPEED, GRENADES_PER_LIFE,
   MATCH_END_DURATION, MAX_HP, RESPAWN_TIME, SPAWN_PROTECTION, TEAM_NAMES, TICK_RATE, isSurvivalMode, type Team,
 } from '../shared/constants';
-import { clamp, isVec3, q3, spreadDir, vdist, vnorm, vsub, type Vec3 } from '../shared/math';
+import { clamp, createSeededRng, isVec3, q3, spreadDir, vdist, vnorm, vsub, type Vec3 } from '../shared/math';
 import {
+  collidesAtWorld,
   isSpawnPointSafe,
   pointInsideBoxes,
   rayBox,
@@ -13,7 +14,26 @@ import {
   type Body,
   type HitZone,
 } from '../shared/physics';
+import { getForestSquarePoiSites, type ForestSquarePoiId } from '../shared/structures/contracts';
 import {
+  CAMPFIRE_LOW_FUEL_SEC,
+  CAMPFIRE_MAX_FUEL_SEC,
+  CAMPFIRE_START_FUEL_SEC,
+  CAMPFIRE_WOOD_FUEL_SEC,
+  CAMP_INTERACT_RANGE_M,
+  CAMP_SPAWN_RING_M,
+  NIGHT_CAMPFIRE_COUNT,
+  NIGHT_WOOD_PILE_COUNT,
+  WOOD_CARRY_MAX,
+  WOOD_PILE_GIVE,
+  WOOD_PILE_RESPAWN_SEC,
+  isInsideLitCampfire,
+  type CampActionAck,
+  type CampfireEvent,
+  type CampfireSnap,
+  type FeedFireReq,
+  type TakeWoodReq,
+  type WoodPileSnap,
   NIGHT_MAX_MINUTES,
   NIGHT_MIN_MINUTES,
   NIGHT_WAVES,
@@ -130,9 +150,62 @@ export interface ServerPlayer extends Body {
   kills: number;
   deaths: number;
   ping: number;
+  /** wolf_night: qo'ldagi o'tin (0..WOOD_CARRY_MAX); tug'ilganda 0, o'lganda yo'qoladi. */
+  wood: number;
+  /** wolf_night: oxirgi lager amali (o'tin olish/tashlash) vaqti — spamga qarshi (0.3 s). */
+  lastCampAction: number;
   brain: BotBrain | null;
   authority: PlayerMovementAuthority;
 }
+
+/** Lager gulxani (server holati). Joy (`def`) xona uchun bir marta tanlanadi, o'tin/yonish har raundda tiklanadi. */
+export interface ServerCampfire {
+  id: string;
+  /** Chat uchun nom: "Asosiy lager", "2-lager", "3-lager". */
+  name: string;
+  x: number;
+  y: number;
+  z: number;
+  main: boolean;
+  fuelSec: number;
+  lit: boolean;
+  /** 'low' hodisasi shu yonish davrida yuborilganmi (bir marta). */
+  lowWarned: boolean;
+}
+
+/** O'tin g'arami (server holati). */
+export interface ServerWoodPile {
+  id: string;
+  x: number;
+  y: number;
+  z: number;
+  available: boolean;
+  respawnAt: number;
+}
+
+/** Gulxanlar joylashuvi uchun POI afzalligi: asosiy — uylar guruhi hovlisi, keyin qoya, kemping, ... */
+const CAMP_FIRE_POI_ORDER: readonly ForestSquarePoiId[] = [
+  'poi_cabin_cluster',
+  'poi_cliff_watch',
+  'poi_forest_camp',
+  'poi_lumber_mill',
+  'poi_ranger_house',
+  'poi_service_station',
+];
+const CAMP_FIRE_NAMES_UZ = ['Asosiy lager', '2-lager', '3-lager', '4-lager', '5-lager'];
+/** Gulxanlar orasidagi eng kam masofa, g'aram–gulxan oralig'i va g'aramlar orasidagi eng kam masofa (m). */
+const CAMP_FIRE_MIN_GAP_M = 60;
+const CAMP_PILE_MIN_DIST_M = 25;
+const CAMP_PILE_MAX_DIST_M = 55;
+const CAMP_PILE_GAP_M = 12;
+/** Gulxan atrofida kollayder bo'lmasligi kerak bo'lgan radius (devor ichida yonmasin). */
+const CAMP_FIRE_CLEARANCE_M = 1.6;
+/** Gulxan o'chganda shu masofadagi bo'rilar qorong'i lagerga keladi (m). */
+const CAMP_FIRE_OUT_LURE_M = 40;
+/** Bo'rilar yonib turgan gulxandan va o'yinchilardan kamida shuncha uzoqda tug'iladi (wolf_night, m). */
+const NIGHT_WOLF_SPAWN_CLEARANCE_M = 45;
+/** Botlar lager atrofida sayr qiladigan radius (m). */
+const CAMP_ROAM_RADIUS_M = 10;
 
 let roomSeq = 0;
 
@@ -205,6 +278,11 @@ export class Room {
   private wolfCount: number;
   /** wolf_night: joriy to'lqin indeksi (0..NIGHT_WAVE_COUNT-1), raunddan tashqarida -1. */
   private nightWaveIdx = -1;
+  /** wolf_night: lager gulxanlari va o'tin g'aramlari (joylar xona uchun deterministik; boshqa rejimlarda bo'sh). */
+  readonly campfires = new Map<string, ServerCampfire>();
+  readonly woodPiles = new Map<string, ServerWoodPile>();
+  /** Gulxan atrofidagi (CAMP_ROAM_RADIUS_M) nav tugunlari keshi — botlar lager sayri uchun. */
+  private campRoamCache = new Map<string, Vec3[]>();
   destroyed = false;
 
   constructor(readonly opts: CreateRoomOpts, private io: Server, private onEmpty: (room: Room) => void) {
@@ -279,6 +357,8 @@ export class Room {
     // wolf_night da sonni to'lqinlar belgilaydi (opts.wolves e'tiborga olinmaydi)
     this.wolfCount = this.isNight ? 0 : clamp(Math.floor(opts.wolves ?? 0), 0, WOLF_MAX_PER_ROOM);
     if (!this.isSurvival) this.syncWolvesToCount();
+    // Tong otguncha: lager joylashuvi (gulxanlar + o'tin g'aramlari) xona uchun bir marta tanlanadi
+    if (this.isNight) this.buildCampLayout();
     // Windows'da taymer aniqligi ~15.6 ms, shuning uchun tez-tez tekshirib, aniq 30 Hz ushlab turamiz
     const step = 1 / TICK_RATE;
     let nextTick = this.now();
@@ -406,9 +486,11 @@ export class Room {
   /** O'yinchilardan uzoqdagi (≥ 35 m, iloji bo'lsa) nav tuguni — bo'ri paydo bo'ladigan joy. */
   private pickWolfSpawn(): Vec3 {
     const zone = this.getZoneSnap();
+    // wolf_night: yonib turgan gulxanlardan va o'yinchilardan ≥ 45 m; boshqa rejimlarda o'yinchilardan ≥ 35 m
+    const need = this.isNight ? NIGHT_WOLF_SPAWN_CLEARANCE_M : 35;
     let best: Vec3 | null = null;
     let bestD = -1;
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < (this.isNight ? 40 : 24); i++) {
       const c = this.nav.randomPoint();
       if (zone && Math.hypot(c.x - zone.cx, c.z - zone.cz) > zone.radius * 0.9) continue;
       let minD = Infinity;
@@ -416,7 +498,13 @@ export class Room {
         if (!p.alive) continue;
         minD = Math.min(minD, Math.hypot(p.pos.x - c.x, p.pos.z - c.z));
       }
-      if (minD >= 35) return c;
+      if (this.isNight) {
+        for (const f of this.campfires.values()) {
+          if (!f.lit) continue;
+          minD = Math.min(minD, Math.hypot(f.x - c.x, f.z - c.z));
+        }
+      }
+      if (minD >= need) return c;
       if (minD > bestD) {
         bestD = minD;
         best = c;
@@ -446,15 +534,383 @@ export class Room {
         if (ni < 0) continue;
         const c = this.nav.center(ni);
         if (Math.hypot(c.x - w.pos.x, c.z - w.pos.z) < 6) continue;
+        // Yonib turgan gulxan doirasi ichiga sayr maqsadi qo'yilmaydi (bo'ri olovdan qo'rqadi)
+        if (this.litFireContaining(c.x, c.z, 2)) continue;
         return c;
       }
     }
     for (let i = 0; i < 8; i++) {
       const c = this.nav.randomPoint();
       if (zone && Math.hypot(c.x - zone.cx, c.z - zone.cz) > zone.radius) continue;
+      if (this.litFireContaining(c.x, c.z, 2)) continue;
       if (Math.hypot(c.x - w.pos.x, c.z - w.pos.z) >= 6) return c;
     }
     return this.nav.randomPoint();
+  }
+
+  // ---------------- Lager: gulxanlar va o'tin (wolf_night) ----------------
+
+  /** Nuqtani o'z ichiga olgan yonib turgan gulxan (radius + margin), bo'lmasa null. */
+  litFireContaining(x: number, z: number, margin = 0): ServerCampfire | null {
+    for (const f of this.campfires.values()) {
+      if (isInsideLitCampfire(f, x, z, margin)) return f;
+    }
+    return null;
+  }
+
+  /** Nuqtaga eng yaqin yonib turgan gulxan (yo'q bo'lsa null). */
+  nearestLitFire(x: number, z: number): ServerCampfire | null {
+    let best: ServerCampfire | null = null;
+    let bestD = Infinity;
+    for (const f of this.campfires.values()) {
+      if (!f.lit) continue;
+      const d = Math.hypot(f.x - x, f.z - z);
+      if (d < bestD) {
+        bestD = d;
+        best = f;
+      }
+    }
+    return best;
+  }
+
+  /** Asosiy lager gulxani (wolf_night; boshqa rejimlarda null). */
+  mainCampfire(): ServerCampfire | null {
+    for (const f of this.campfires.values()) if (f.main) return f;
+    return this.campfires.values().next().value ?? null;
+  }
+
+  /**
+   * Gulxan uchun nav tuguni: `center` atrofida (0, 2, 4, 6 m halqalar, 8 yo'nalish) sinab chiqiladi —
+   * tugun sayr komponentida, `maxFromCenter` ichida va atrofida 1.6 m radiusda kollayder bo'lmasligi kerak
+   * (devor/ustun ichida yonmasin). Topilmasa null.
+   */
+  private findFireNode(
+    center: { x: number; z: number },
+    maxFromCenter: number,
+    roamSet: Set<number>,
+    taken: Vec3[],
+    minGap: number,
+  ): Vec3 | null {
+    const offsets: { dx: number; dz: number }[] = [{ dx: 0, dz: 0 }];
+    for (const r of [2, 4, 6, 8]) {
+      for (let k = 0; k < 8; k++) {
+        const a = (k / 8) * Math.PI * 2;
+        offsets.push({ dx: Math.cos(a) * r, dz: Math.sin(a) * r });
+      }
+    }
+    for (const o of offsets) {
+      const x = center.x + o.dx;
+      const z = center.z + o.dz;
+      const ni = this.nav.nearest({ x, y: sampleTerrainHeight(this.world.terrain, x, z), z });
+      if (ni < 0 || !roamSet.has(ni)) continue;
+      const c = this.nav.center(ni);
+      if (Math.hypot(c.x - center.x, c.z - center.z) > maxFromCenter) continue;
+      if (taken.some((t) => Math.hypot(t.x - c.x, t.z - c.z) < minGap)) continue;
+      // Gulxan atrofi bo'sh bo'lsin: 1.6 m radius, 1 m balandlik (past olov)
+      if (collidesAtWorld(this.world, c.x, c.y + 0.05, c.z, CAMP_FIRE_CLEARANCE_M, 1.0)) continue;
+      return c;
+    }
+    return null;
+  }
+
+  /**
+   * Lager joylashuvi (deterministik, publicLayoutSeed bo'yicha): asosiy gulxan — uylar guruhi hovlisida,
+   * yana ikkitasi boshqa POI'larda (≥ 60 m oraliq); o'tin g'aramlari eng yaqin gulxandan 25–55 m da,
+   * bir-biridan va gulxanlardan ≥ 12 m, turli yo'nalishlarda. Nomzod topilmasa — tasodifiy (seedli) sayr
+   * tugunlari, rejim hech qachon buzilmaydi.
+   */
+  private buildCampLayout(): void {
+    this.campfires.clear();
+    this.woodPiles.clear();
+    this.campRoamCache.clear();
+    const seed = this.world.publicLayoutSeed || DEFAULT_PUBLIC_LAYOUT_SEED;
+    const rng = createSeededRng((seed ^ 0x0ca3f1) >>> 0 || 1);
+    const nav = this.nav;
+    const roam = nav.roamList.length ? nav.roamList : nav.validList;
+    const roamSet = new Set(roam);
+    const randomRoamNode = (): Vec3 => nav.center(roam[Math.floor(rng() * roam.length)]!);
+
+    // 1) Gulxanlar
+    const fires: Vec3[] = [];
+    const sites = this.world.mapId === 'forest_square' ? getForestSquarePoiSites(seed) : [];
+    const byId = new Map(sites.map((s) => [s.id, s] as const));
+    for (const poiId of CAMP_FIRE_POI_ORDER) {
+      if (fires.length >= NIGHT_CAMPFIRE_COUNT) break;
+      const site = byId.get(poiId);
+      if (!site) continue;
+      const c = this.findFireNode(site.center, site.flatRadius, roamSet, fires, CAMP_FIRE_MIN_GAP_M);
+      if (c) fires.push(c);
+    }
+    // Zaxira: POI'lar yetmasa — tasodifiy sayr tugunlari (≥ 60 m oraliq, keyin shart yumshatiladi)
+    for (let gap = CAMP_FIRE_MIN_GAP_M; fires.length < NIGHT_CAMPFIRE_COUNT && gap >= 0; gap = gap >= 20 ? gap - 20 : -1) {
+      for (let i = 0; i < 200 && fires.length < NIGHT_CAMPFIRE_COUNT; i++) {
+        const c = randomRoamNode();
+        if (fires.some((f) => Math.hypot(f.x - c.x, f.z - c.z) < gap)) continue;
+        if (collidesAtWorld(this.world, c.x, c.y + 0.05, c.z, CAMP_FIRE_CLEARANCE_M, 1.0)) continue;
+        fires.push(c);
+      }
+    }
+    fires.forEach((c, i) => {
+      const id = `fire:${i + 1}`;
+      this.campfires.set(id, {
+        id,
+        name: CAMP_FIRE_NAMES_UZ[i] ?? `${i + 1}-lager`,
+        x: q3(c.x),
+        y: q3(c.y),
+        z: q3(c.z),
+        main: i === 0,
+        fuelSec: CAMPFIRE_START_FUEL_SEC,
+        lit: true,
+        lowWarned: false,
+      });
+    });
+
+    // 2) O'tin g'aramlari: har biri bitta gulxanga "biriktirilgan" yo'nalish sektorida qidiriladi
+    const piles: Vec3[] = [];
+    const nearestFireDist = (x: number, z: number) =>
+      fires.reduce((m, f) => Math.min(m, Math.hypot(f.x - x, f.z - z)), Infinity);
+    const pileOk = (c: Vec3, strict: boolean): boolean => {
+      const df = nearestFireDist(c.x, c.z);
+      if (strict && (df < CAMP_PILE_MIN_DIST_M || df > CAMP_PILE_MAX_DIST_M)) return false;
+      if (df < CAMP_PILE_GAP_M) return false;
+      if (piles.some((p) => Math.hypot(p.x - c.x, p.z - c.z) < CAMP_PILE_GAP_M)) return false;
+      return true;
+    };
+    if (fires.length) {
+      const perFire = Math.ceil(NIGHT_WOOD_PILE_COUNT / fires.length);
+      for (let i = 0; i < NIGHT_WOOD_PILE_COUNT; i++) {
+        const f = fires[i % fires.length]!;
+        const sector = Math.floor(i / fires.length);
+        const baseAng = (sector / perFire) * Math.PI * 2 + rng() * 0.6;
+        let found: Vec3 | null = null;
+        for (let k = 0; k < 24 && !found; k++) {
+          // Sektor atrofida ±, masofa 28–50 m
+          const ang = baseAng + (k % 2 ? 1 : -1) * Math.floor(k / 2) * 0.35;
+          const dist = 28 + rng() * 22;
+          const x = f.x + Math.cos(ang) * dist;
+          const z = f.z + Math.sin(ang) * dist;
+          const b = this.world.bounds;
+          if (x < b.minX + 3 || x > b.maxX - 3 || z < b.minZ + 3 || z > b.maxZ - 3) continue;
+          const ni = nav.nearest({ x, y: sampleTerrainHeight(this.world.terrain, x, z), z });
+          if (ni < 0 || !roamSet.has(ni)) continue;
+          const c = nav.center(ni);
+          if (!pileOk(c, true)) continue;
+          found = c;
+        }
+        if (found) piles.push(found);
+      }
+    }
+    // Zaxira: qat'iy shartlar bilan tasodifiy tugunlar, keyin faqat oraliq sharti bilan
+    for (const strict of [true, false]) {
+      for (let i = 0; i < 400 && piles.length < NIGHT_WOOD_PILE_COUNT; i++) {
+        const c = randomRoamNode();
+        if (pileOk(c, strict)) piles.push(c);
+      }
+    }
+    while (piles.length < NIGHT_WOOD_PILE_COUNT) piles.push(randomRoamNode());
+    piles.forEach((c, i) => {
+      const id = `pile:${i + 1}`;
+      this.woodPiles.set(id, { id, x: q3(c.x), y: q3(c.y), z: q3(c.z), available: true, respawnAt: 0 });
+    });
+  }
+
+  /** Raund boshi: gulxanlar to'liq boshlang'ich o'tin bilan yonadi, g'aramlar to'la, o'yinchilar o'tinsiz. */
+  private resetCampForRound(): void {
+    for (const f of this.campfires.values()) {
+      f.fuelSec = CAMPFIRE_START_FUEL_SEC;
+      f.lit = true;
+      f.lowWarned = false;
+    }
+    for (const pl of this.woodPiles.values()) {
+      pl.available = true;
+      pl.respawnAt = 0;
+    }
+    this.campRoamCache.clear();
+  }
+
+  private emitCampfireEvent(f: ServerCampfire, kind: CampfireEvent['kind'], by?: ServerPlayer): void {
+    const ev: CampfireEvent = { fireId: f.id, kind, fuelSec: Math.max(0, Math.round(f.fuelSec)) };
+    if (by) {
+      ev.by = by.id;
+      ev.byName = by.name;
+    }
+    this.io.to(this.channel).emit('campfire', ev);
+  }
+
+  /** Har tick ('playing'): o'tin yonadi, "o'chmoqda" ogohlantirishi, o'chish (bo'rilar qorong'i lagerga keladi), g'aramlar to'ladi. */
+  private updateCamp(dt: number, t: number): void {
+    for (const f of this.campfires.values()) {
+      if (!f.lit) continue;
+      f.fuelSec = Math.max(0, f.fuelSec - dt);
+      if (f.fuelSec <= 0) {
+        f.lit = false;
+        f.lowWarned = false;
+        this.campRoamCache.clear();
+        this.emitCampfireEvent(f, 'out');
+        this.systemChat(`🌑 ${f.name} gulxani o'chdi! Bo'rilar qorong'ida yaqinlashadi — tezroq o'tin tashlang.`);
+        for (const w of this.wolves.values()) {
+          if (!w.alive) continue;
+          if (Math.hypot(w.pos.x - f.x, w.pos.z - f.z) <= CAMP_FIRE_OUT_LURE_M) {
+            w.brain.onFireOut({ x: f.x, y: f.y, z: f.z }, t);
+          }
+        }
+      } else if (!f.lowWarned && f.fuelSec <= CAMPFIRE_LOW_FUEL_SEC) {
+        f.lowWarned = true;
+        this.emitCampfireEvent(f, 'low');
+        this.systemChat(`⚠️ ${f.name} gulxani o'chmoqda — o'tin keltiring!`);
+      }
+    }
+    for (const pl of this.woodPiles.values()) {
+      if (!pl.available && t >= pl.respawnAt) pl.available = true;
+    }
+  }
+
+  /** Lager amali uchun darvoza: rejim, raund fazasi, tirik ishtirokchi. */
+  private campActionGate(p: ServerPlayer): CampActionAck | null {
+    if (!this.isNight) return { ok: false, error: 'NOT_NIGHT', wood: p.wood };
+    if (this.phase !== 'playing' || !p.alive || !p.ready || !this.survival?.canPlayerCombat(p.id)) {
+      return { ok: false, error: 'ROUND_NOT_ACTIVE', wood: p.wood };
+    }
+    return null;
+  }
+
+  /** Oyoq nuqtalari orasidagi masofa (XZ) va balandlik farqi (≤ 2 m) bo'yicha yetib bo'ladimi. */
+  private campInReach(p: ServerPlayer, o: { x: number; y: number; z: number }): boolean {
+    return Math.hypot(o.x - p.pos.x, o.z - p.pos.z) <= CAMP_INTERACT_RANGE_M && Math.abs(o.y - p.pos.y) <= 2;
+  }
+
+  /** Spamga qarshi: bir o'yinchi 0.3 s da bitta lager amali (ack'da xato kodi yo'q — klient jim qoladi). */
+  private campRateLimited(p: ServerPlayer): boolean {
+    const t = this.now();
+    if (t - p.lastCampAction < 0.3) return true;
+    p.lastCampAction = t;
+    return false;
+  }
+
+  /** O'tin g'aramidan o'tin olish (odam va bot uchun umumiy mantiq). */
+  private takeWoodCore(p: ServerPlayer, pileId: string): CampActionAck {
+    const gate = this.campActionGate(p);
+    if (gate) return gate;
+    const pile = this.woodPiles.get(pileId);
+    if (!pile) return { ok: false, error: 'NOT_FOUND', wood: p.wood };
+    if (!this.campInReach(p, pile)) return { ok: false, error: 'TOO_FAR', wood: p.wood };
+    if (!pile.available) return { ok: false, error: 'PILE_EMPTY', wood: p.wood };
+    if (p.wood >= WOOD_CARRY_MAX) return { ok: false, error: 'HANDS_FULL', wood: p.wood };
+    if (this.campRateLimited(p)) return { ok: false, wood: p.wood };
+    p.wood = Math.min(WOOD_CARRY_MAX, p.wood + WOOD_PILE_GIVE);
+    pile.available = false;
+    pile.respawnAt = this.now() + WOOD_PILE_RESPAWN_SEC;
+    return { ok: true, wood: p.wood };
+  }
+
+  /** Qo'ldagi barcha o'tinni gulxanga tashlash (odam va bot uchun umumiy mantiq). */
+  private feedFireCore(p: ServerPlayer, fireId: string): CampActionAck {
+    const gate = this.campActionGate(p);
+    if (gate) return gate;
+    const f = this.campfires.get(fireId);
+    if (!f) return { ok: false, error: 'NOT_FOUND', wood: p.wood };
+    if (!this.campInReach(p, f)) return { ok: false, error: 'TOO_FAR', wood: p.wood, fuelSec: Math.round(f.fuelSec) };
+    if (p.wood <= 0) return { ok: false, error: 'NO_WOOD', wood: 0, fuelSec: Math.round(f.fuelSec) };
+    if (f.lit && f.fuelSec >= CAMPFIRE_MAX_FUEL_SEC - 5) {
+      return { ok: false, error: 'FIRE_FULL', wood: p.wood, fuelSec: Math.round(f.fuelSec) };
+    }
+    if (this.campRateLimited(p)) return { ok: false, wood: p.wood, fuelSec: Math.round(f.fuelSec) };
+    const n = p.wood;
+    p.wood = 0;
+    const wasLit = f.lit;
+    f.fuelSec = Math.min(CAMPFIRE_MAX_FUEL_SEC, f.fuelSec + CAMPFIRE_WOOD_FUEL_SEC * n);
+    f.lit = true;
+    f.lowWarned = f.fuelSec <= CAMPFIRE_LOW_FUEL_SEC;
+    if (!wasLit) this.campRoamCache.clear();
+    this.emitCampfireEvent(f, 'fed', p);
+    this.systemChat(
+      wasLit
+        ? `🔥 ${p.name} gulxanga o'tin tashladi (${n})`
+        : `🔥 ${p.name} ${f.name} gulxanini qayta yoqdi (${n} o'tin)`,
+    );
+    return { ok: true, wood: 0, fuelSec: Math.round(f.fuelSec) };
+  }
+
+  onTakeWood(id: string, rawReq: TakeWoodReq | unknown, ack?: (res: CampActionAck) => void): CampActionAck {
+    const p = this.players.get(id);
+    const pileId = readStringField(rawReq, 'pileId');
+    const res: CampActionAck = !p || p.isBot
+      ? { ok: false, error: 'NOT_FOUND', wood: 0 }
+      : this.takeWoodCore(p, pileId);
+    ack?.(res);
+    return res;
+  }
+
+  onFeedFire(id: string, rawReq: FeedFireReq | unknown, ack?: (res: CampActionAck) => void): CampActionAck {
+    const p = this.players.get(id);
+    const fireId = readStringField(rawReq, 'fireId');
+    const res: CampActionAck = !p || p.isBot
+      ? { ok: false, error: 'NOT_FOUND', wood: 0 }
+      : this.feedFireCore(p, fireId);
+    ack?.(res);
+    return res;
+  }
+
+  /** Bot o'tin oladi (odam bilan bir xil tekshiruvlar). */
+  botTakeWood(p: ServerPlayer, pileId: string): CampActionAck {
+    return this.takeWoodCore(p, pileId);
+  }
+
+  /** Bot gulxanga o'tin tashlaydi (odam bilan bir xil tekshiruvlar). */
+  botFeedFire(p: ServerPlayer, fireId: string): CampActionAck {
+    return this.feedFireCore(p, fireId);
+  }
+
+  /**
+   * Botlar uchun lager sayr maqsadi: asosiy (yonib turgan) gulxan, bo'lmasa eng yaqin yonib turgan, bo'lmasa
+   * asosiy gulxan atrofidagi (≤ 10 m) nav tugunlaridan tasodifiy biri. Lager yo'q bo'lsa — xaritada tasodifiy.
+   */
+  pickCampRoamGoal(p: ServerPlayer): Vec3 {
+    const main = this.mainCampfire();
+    const anchor = main && main.lit ? main : this.nearestLitFire(p.pos.x, p.pos.z) ?? main;
+    if (!anchor) return this.nav.randomPoint();
+    let nodes = this.campRoamCache.get(anchor.id);
+    if (!nodes) {
+      nodes = [];
+      const list = this.nav.roamList.length ? this.nav.roamList : this.nav.validList;
+      for (const i of list) {
+        const c = this.nav.center(i);
+        const d = Math.hypot(c.x - anchor.x, c.z - anchor.z);
+        if (d <= CAMP_ROAM_RADIUS_M && d >= 1.5) nodes.push(c);
+      }
+      this.campRoamCache.set(anchor.id, nodes);
+    }
+    if (!nodes.length) return { x: anchor.x, y: anchor.y, z: anchor.z };
+    return nodes[Math.floor(Math.random() * nodes.length)]!;
+  }
+
+  /** Gulxanlar snapshoti (asosiy birinchi). */
+  private campfireSnaps(): CampfireSnap[] {
+    const out: CampfireSnap[] = [];
+    for (const f of this.campfires.values()) {
+      out.push({
+        id: f.id,
+        x: f.x,
+        y: f.y,
+        z: f.z,
+        fuelSec: Math.max(0, Math.round(f.fuelSec)),
+        maxFuelSec: CAMPFIRE_MAX_FUEL_SEC,
+        lit: f.lit,
+        main: f.main,
+      });
+    }
+    return out;
+  }
+
+  /** O'tin g'aramlari snapshoti. */
+  private woodPileSnaps(t: number): WoodPileSnap[] {
+    const out: WoodPileSnap[] = [];
+    for (const pl of this.woodPiles.values()) {
+      const s: WoodPileSnap = { id: pl.id, x: pl.x, y: pl.y, z: pl.z, available: pl.available };
+      if (!pl.available) s.respawnInSec = Math.max(0, Math.ceil(pl.respawnAt - t));
+      out.push(s);
+    }
+    return out;
   }
 
   /** Joriy to'lqin (wolf_night, raund davomida); boshqa hollarda null — ko'paytuvchilar 1. */
@@ -561,8 +1017,22 @@ export class Room {
 
   /** wolf_night: tun/to'lqin holati (faqat 'playing' fazasida), aks holda null. */
   getNightSnap(t: number = this.now()): NightSnap | null {
-    if (!this.isNight || !this.survival || this.phase !== 'playing' || this.nightWaveIdx < 0) return null;
-    const ev = evaluateNightWave(t - this.roundStartedAt, this.survival.getConfig().roundDurationSec);
+    if (!this.isNight || !this.survival) return null;
+    const durationSec = this.survival.getConfig().roundDurationSec;
+    if (this.phase !== 'playing' || this.nightWaveIdx < 0) {
+      // Kutish/sanoq/yakun: o'yinchilar gulxan atrofida turadi — gulxan va g'aramlar ko'rinsin (to'lqin hali yo'q)
+      if (this.phase === 'ended') return null;
+      return {
+        wave: 0,
+        waveCount: NIGHT_WAVE_COUNT,
+        wolvesAlive: 0,
+        nextWaveInSec: 0,
+        dawnInSec: Math.ceil(durationSec),
+        fires: this.campfireSnaps(),
+        piles: this.woodPileSnaps(t),
+      };
+    }
+    const ev = evaluateNightWave(t - this.roundStartedAt, durationSec);
     let wolvesAlive = 0;
     for (const w of this.wolves.values()) if (w.alive) wolvesAlive++;
     return {
@@ -571,6 +1041,8 @@ export class Room {
       wolvesAlive,
       nextWaveInSec: Math.ceil(ev.nextWaveInSec),
       dawnInSec: Math.ceil(ev.dawnInSec),
+      fires: this.campfireSnaps(),
+      piles: this.woodPileSnaps(t),
     };
   }
 
@@ -667,6 +1139,8 @@ export class Room {
 
   isEnemy(a: ServerPlayer, b: ServerPlayer): boolean {
     if (a === b) return false;
+    // Tong otguncha — hamkorlik: o'yinchilar bir-biriga zarar bermaydi (o'q, pichoq, granata, bot nishoni)
+    if (this.isNight) return false;
     return this.opts.mode === 'ffa' || this.isSurvival || a.team !== b.team;
   }
 
@@ -698,6 +1172,8 @@ export class Room {
       grenades: startUnarmed ? 0 : GRENADES_PER_LIFE,
       lastGrenade: 0,
       kills: 0, deaths: 0, ping: 0,
+      wood: 0,
+      lastCampAction: -99,
       brain: null,
       authority: new PlayerMovementAuthority(),
     };
@@ -895,7 +1371,38 @@ export class Room {
     return { id: 'fallback_center', x, y, z, yaw: 0, team: p.team };
   }
 
+  /**
+   * wolf_night: asosiy gulxan atrofidagi halqa (CAMP_SPAWN_RING_M) — o'yinchi indeksiga ko'ra yoyilgan,
+   * relyefga o'tqazilgan, kollayderga tegsa burchak/radius siljitiladi. Gulxanga qaragan holda tug'iladi.
+   */
+  private pickCampSpawn(p: ServerPlayer): SpawnPointDef | null {
+    const main = this.mainCampfire();
+    if (!main) return null;
+    const ids = [...this.players.keys()];
+    const idx = Math.max(0, ids.indexOf(p.id));
+    const n = Math.max(1, ids.length);
+    const base = (idx / n) * Math.PI * 2 + (this.world.publicLayoutSeed % 7) * 0.3;
+    const others = [...this.players.values()].filter((o) => o !== p && o.alive);
+    for (let k = 0; k < 24; k++) {
+      // 0, +½ qadam, −½ qadam, ... burchak siljishi; 8 ta urinishdan keyin radius oshadi
+      const ang = base + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * ((Math.PI * 2) / n) * 0.5;
+      const r = CAMP_SPAWN_RING_M + Math.floor(k / 8) * 0.9;
+      const x = main.x + Math.cos(ang) * r;
+      const z = main.z + Math.sin(ang) * r;
+      const y = sampleTerrainHeight(this.world.terrain, x, z);
+      if (collidesAtWorld(this.world, x, y + 0.05, z)) continue;
+      if (others.some((o) => Math.hypot(o.pos.x - x, o.pos.z - z) < 0.9)) continue;
+      const yaw = Math.atan2(-(main.x - x), -(main.z - z));
+      return { id: `camp:${idx}`, x: q3(x), y: q3(y), z: q3(z), yaw, team: p.team };
+    }
+    return { id: 'camp:center', x: main.x, y: main.y, z: main.z, yaw: 0, team: p.team };
+  }
+
   private pickSpawn(p: ServerPlayer): SpawnPointDef {
+    if (this.isNight) {
+      const camp = this.pickCampSpawn(p);
+      if (camp) return camp;
+    }
     const all = this.world.spawnPoints;
     let cands = this.opts.mode === 'tdm' ? all.filter((s) => s.team === p.team) : all;
     // Jamoa spawnlari bo'lmasa — barcha spawnlar; ular ham bo'lmasa — xavfsiz markaz
@@ -931,7 +1438,8 @@ export class Room {
     p.onGround = true;
     // Yangi hayot har doim tik turgan holatda boshlanadi
     p.crouched = false;
-    p.yaw = this.opts.mode === 'ffa' || this.isSurvival ? Math.random() * Math.PI * 2 : sp.yaw;
+    // wolf_night: gulxanga qarab tug'iladi; FFA/survival — tasodifiy; TDM — spawn yo'nalishi
+    p.yaw = this.isNight ? sp.yaw : this.opts.mode === 'ffa' || this.isSurvival ? Math.random() * Math.PI * 2 : sp.yaw;
     p.pitch = 0;
     p.scoped = false;
     p.stamina = 1;
@@ -940,6 +1448,7 @@ export class Room {
     p.helmet = 0;
     p.hp = MAX_HP;
     p.alive = true;
+    p.wood = 0;
     p.respawnAt = Infinity;
     p.spawnId++;
     p.authority.resetForSpawn(p.spawnId);
@@ -1628,6 +2137,8 @@ export class Room {
     victim.crouched = false;
     victim.authority.clear();
     victim.deaths++;
+    // Qo'ldagi o'tin o'lim bilan yo'qoladi (wolf_night)
+    victim.wood = 0;
     resetServerWeaponSwitchState(victim);
     if (!victim.isBot || this.lootEnabled) {
       // Loot rejimida qo'ldagi qurol (joriy o'qlari bilan) yerga tushadi — g'olib uni olishi mumkin
@@ -1856,6 +2367,9 @@ export class Room {
     this.roundStartedAt = this.now();
     this.nextZoneDamageAt = this.roundStartedAt + ZONE_DAMAGE_INTERVAL_SEC;
 
+    // Tong otguncha: gulxanlar yonadi, g'aramlar to'la (o'yinchilar asosiy gulxan atrofida tug'iladi)
+    if (this.isNight) this.resetCampForRound();
+
     const contenderSet = new Set(contenderIds);
     for (const p of this.players.values()) {
       p.kills = 0;
@@ -1895,6 +2409,9 @@ export class Room {
     if (this.isNight) {
       this.systemChat(`🌙 ${roundId}-tun boshlandi — tong otguncha omon qoling! Qurol va buyumlarni konteynerlardan toping.`);
       this.systemChat(`1-to'lqin: o'rmonda ${this.wolves.size} ta vahshiy bo'ri bor, har to'lqinda ko'payadi va kuchayadi.`);
+      this.systemChat(
+        "🔥 Bo'rilar yonib turgan gulxanga yaqinlashmaydi. O'tin tugamasin — o'rmondagi o'tin g'aramlaridan olib kelib gulxanga tashlang!",
+      );
       return;
     }
     this.systemChat(`Forest Survival — ${roundId}-raund boshlandi! Qurol va buyumlarni konteynerlardan toping.`);
@@ -2064,8 +2581,11 @@ export class Room {
         }
       }
       if (this.survival.getPhase() === 'playing') {
-        // wolf_night: to'lqin jadvali (bo'rilar soni/kuchi) — bo'ri AI dan oldin
-        if (this.isNight) this.updateNightWaves(t);
+        // wolf_night: to'lqin jadvali (bo'rilar soni/kuchi) va lager (o'tin yonishi) — bo'ri AI dan oldin
+        if (this.isNight) {
+          this.updateNightWaves(t);
+          this.updateCamp(dt, t);
+        }
         for (const p of this.players.values()) if (p.brain && p.alive) p.brain.update(dt, t);
         this.updateGrenades(dt, t);
         this.applyZoneDamage(t);
@@ -2135,6 +2655,8 @@ export class Room {
       };
       // O'tirish faqat true bo'lganda yuboriladi (tik turish — maydon yo'q, trafik tejaladi)
       if (p.crouched) snapP.crouched = true;
+      // wolf_night: qo'ldagi o'tin faqat 0 dan katta bo'lsa
+      if (p.wood > 0) snapP.wood = p.wood;
       if (this.isSurvival && this.survival) {
         snapP.survivalRole = this.survival.getPlayerRole(p.id);
         snapP.spectateTargetId = this.survival.getSpectateTarget(p.id);

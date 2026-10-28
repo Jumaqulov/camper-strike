@@ -12,7 +12,13 @@ import {
 import { eyeHeightOf, hitboxScaleOf } from '../shared/stance';
 import { sampleTerrainHeight } from '../shared/world';
 import { WEAPONS, WEAPON_SLOTS, isMeleeWeapon, type WeaponId } from '../shared/weapons';
-import { isWolfThreatState } from '../shared/wolf';
+import {
+  CAMPFIRE_LOW_FUEL_SEC,
+  CAMPFIRE_MAX_FUEL_SEC,
+  CAMP_INTERACT_RANGE_M,
+  WOOD_CARRY_MAX,
+  isWolfThreatState,
+} from '../shared/wolf';
 import { findLocalPath, standingHeights } from './botLocalPath';
 import { applyAuthoritativeWeaponSwitch } from './combat/weaponSwitchAuthority';
 import type { Room, ServerPlayer } from './room';
@@ -51,6 +57,20 @@ interface ZoneTargetCircle {
   cz: number;
   r: number;
 }
+
+/** wolf_night: botning lager vazifasi — g'aramdan o'tin olish yoki gulxanga tashlash. */
+interface BotCampTask {
+  kind: 'take' | 'feed';
+  id: string;
+  /** G'aram / gulxan joyi. */
+  pos: Vec3;
+  /** Yo'l maqsadi: ob'ektdan biroz nari (ustiga chiqmaslik uchun). */
+  approach: Vec3;
+  deadline: number;
+}
+
+/** Bot o'tin g'aramini shu masofadan izlaydi (m). */
+const BOT_WOOD_SEARCH_M = 45;
 
 const BOT_NAMES = [
   'Amaki Bobur',
@@ -134,6 +154,11 @@ export class BotBrain {
   /** Bo'ridan qochish maqsadi (nav tuguni) va u tanlangan vaqt. */
   private wolfFleeGoal: Vec3 | null = null;
   private wolfFleeGoalAt = -99;
+  // --- Lager AI (wolf_night): o'tin olib kelish, gulxanni boqish ---
+  private campTask: BotCampTask | null = null;
+  private campBlacklist = new Map<string, number>();
+  private nextCampThinkAt = 0;
+  private nextCampActAt = 0;
 
   constructor(private room: Room, private me: ServerPlayer) {}
 
@@ -158,6 +183,9 @@ export class BotBrain {
     this.zoneGoal = null;
     this.zoneGoalPoint = null;
     this.lastGoalKey = '';
+    this.campTask = null;
+    this.campBlacklist.clear();
+    this.nextCampThinkAt = 0;
   }
 
   /** Xavfsiz zonadan tashqarida zarar oldi — zona markazi tomon yo'l oladi (survival). */
@@ -225,6 +253,8 @@ export class BotBrain {
 
   private pickRoamGoal(): Vec3 {
     const nav = this.room.nav;
+    // Tong otguncha: botlar lagerdan (gulxandan ~10 m) uzoqlashmaydi
+    if (this.room.isNight) return this.room.pickCampRoamGoal(this.me);
     const zt = this.zoneTarget();
     if (zt) {
       // Survival: faqat xavfsiz zona (maqsad aylana) ichidagi nuqtalar
@@ -556,6 +586,142 @@ export class BotBrain {
     return true;
   }
 
+  // ---------------- Lager AI (wolf_night) ----------------
+
+  private campBlacklisted(id: string, t: number): boolean {
+    const until = this.campBlacklist.get(id);
+    if (until === undefined) return false;
+    if (t >= until) {
+      this.campBlacklist.delete(id);
+      return false;
+    }
+    return true;
+  }
+
+  /** Ob'ektga yondashuv nuqtasi: bot tomonidan `off` m nari (ustiga chiqmaslik uchun). */
+  private campApproach(pos: Vec3, off: number): Vec3 {
+    const me = this.me;
+    const dx = me.pos.x - pos.x;
+    const dz = me.pos.z - pos.z;
+    const dl = Math.hypot(dx, dz) || 1;
+    return { x: pos.x + (dx / dl) * off, y: pos.y, z: pos.z + (dz / dl) * off };
+  }
+
+  private setCampTask(kind: BotCampTask['kind'], id: string, pos: Vec3, t: number): void {
+    const d = Math.hypot(pos.x - this.me.pos.x, pos.z - this.me.pos.z);
+    this.campTask = {
+      kind,
+      id,
+      pos: { x: pos.x, y: pos.y, z: pos.z },
+      approach: this.campApproach(pos, kind === 'feed' ? 1.4 : 1.1),
+      deadline: t + 15 + d / 3,
+    };
+    this.lastGoalKey = '';
+    this.repathAt = 0;
+  }
+
+  /**
+   * Lager vazifasini tanlash (oddiy holat mashinasi):
+   * 1) o'tin bor va gulxan o'chmoqda/o'chgan → tashlash (hamma narsadan ustun — lager o'chsa hamma o'ladi);
+   * 2) qurolsiz bot avval qurol izlaydi (loot AI);
+   * 3) qo'l to'la emas va 45 m ichida to'la g'aram bor → olish;
+   * 4) o'tin bor → sig'adigan (eng kam o'tinli) gulxanga tashlash.
+   */
+  private thinkCamp(t: number, lootNeed: 0 | 1 | 2): void {
+    if (this.campTask) return;
+    const room = this.room;
+    const me = this.me;
+    if (room.campfires.size === 0) return;
+    const dist = (o: { x: number; z: number }) => Math.hypot(o.x - me.pos.x, o.z - me.pos.z);
+
+    if (me.wood > 0) {
+      let best: { id: string; x: number; y: number; z: number } | null = null;
+      let bestD = Infinity;
+      for (const f of room.campfires.values()) {
+        if (this.campBlacklisted(f.id, t)) continue;
+        if (f.lit && f.fuelSec >= CAMPFIRE_LOW_FUEL_SEC) continue;
+        const d = dist(f);
+        if (d < bestD) {
+          bestD = d;
+          best = f;
+        }
+      }
+      if (best) {
+        this.setCampTask('feed', best.id, best, t);
+        return;
+      }
+    }
+    if (lootNeed === 2) return;
+    if (me.wood < WOOD_CARRY_MAX) {
+      let best: { id: string; x: number; y: number; z: number } | null = null;
+      let bestD = Infinity;
+      for (const pl of room.woodPiles.values()) {
+        if (!pl.available || this.campBlacklisted(pl.id, t)) continue;
+        const d = dist(pl);
+        if (d > BOT_WOOD_SEARCH_M || d >= bestD) continue;
+        bestD = d;
+        best = pl;
+      }
+      if (best) {
+        this.setCampTask('take', best.id, best, t);
+        return;
+      }
+    }
+    if (me.wood > 0) {
+      let best: { id: string; x: number; y: number; z: number; fuelSec: number } | null = null;
+      for (const f of room.campfires.values()) {
+        if (this.campBlacklisted(f.id, t)) continue;
+        if (f.lit && f.fuelSec >= CAMPFIRE_MAX_FUEL_SEC - 5) continue;
+        if (dist(f) > 120) continue;
+        if (!best || f.fuelSec < best.fuelSec) best = f;
+      }
+      if (best) this.setCampTask('feed', best.id, best, t);
+    }
+  }
+
+  /**
+   * Lager vazifasi yonida: o'tin oladi / gulxanga tashlaydi. Qaytaradi: bot joyida turib ishlayaptimi
+   * (yetib bormagan bo'lsa false — navigatsiya davom etadi).
+   */
+  private actCamp(t: number, dt: number): boolean {
+    const tgt = this.campTask;
+    if (!tgt) return false;
+    const me = this.me;
+    const room = this.room;
+    // Vazifa eskirdi: g'aramni boshqa birov oldi / gulxan to'ldi
+    if (tgt.kind === 'take') {
+      const pl = room.woodPiles.get(tgt.id);
+      if (!pl || !pl.available || me.wood >= WOOD_CARRY_MAX) {
+        this.campTask = null;
+        return false;
+      }
+    } else {
+      const f = room.campfires.get(tgt.id);
+      if (!f || me.wood <= 0 || (f.lit && f.fuelSec >= CAMPFIRE_MAX_FUEL_SEC - 5)) {
+        this.campTask = null;
+        return false;
+      }
+    }
+    const dx = tgt.pos.x - me.pos.x;
+    const dz = tgt.pos.z - me.pos.z;
+    const d = Math.hypot(dx, dz);
+    if (d > CAMP_INTERACT_RANGE_M - 0.4 || Math.abs(tgt.pos.y - me.pos.y) > 1.8) {
+      if (t > tgt.deadline) {
+        this.campBlacklist.set(tgt.id, t + 20);
+        this.campTask = null;
+      }
+      return false;
+    }
+    this.turnTowards(Math.atan2(-dx, -dz), -0.3, 5, dt);
+    if (t < this.nextCampActAt) return true;
+    this.nextCampActAt = t + 0.4 + Math.random() * 0.2;
+    const res = tgt.kind === 'take' ? room.botTakeWood(me, tgt.id) : room.botFeedFire(me, tgt.id);
+    if (!res.ok && res.error === undefined) return true; // tezlik cheklovi — keyingi urinish
+    this.campBlacklist.set(tgt.id, t + (res.ok ? 3 : 20));
+    this.campTask = null;
+    return true;
+  }
+
   // ---------------- Bo'rilar ----------------
 
   /**
@@ -875,15 +1041,31 @@ export class BotBrain {
           this.nextMedkitAt = t + 4;
           if ((this.room.loot.getPlayerInventorySnap(me.id)?.medkits ?? 0) > 0) this.room.botUseMedkit(me);
         }
-        if (t >= this.nextLootThinkAt) {
-          this.nextLootThinkAt = t + 0.7 + Math.random() * 0.3;
-          this.thinkLoot(t, zt);
+        // Tong otguncha: lager vazifasi (o'tin / gulxan) loot'dan ustun (qurolsiz bot bundan mustasno)
+        if (this.room.isNight) {
+          if (t >= this.nextCampThinkAt) {
+            this.nextCampThinkAt = t + 0.6 + Math.random() * 0.3;
+            this.thinkCamp(t, this.lootNeed(this.room.loot.getPlayerInventorySnap(me.id)));
+          }
+          if (this.campTask) {
+            lootBusy = this.actCamp(t, dt);
+            if (this.campTask && !lootBusy) {
+              goalOverride = this.campTask.approach;
+              goalKey = `camp:${this.campTask.kind}:${this.campTask.id}`;
+            }
+          }
         }
-        if (this.lootTarget) {
-          lootBusy = this.actLoot(t, dt);
-          if (this.lootTarget && !lootBusy) {
-            goalOverride = this.lootTarget.approach;
-            goalKey = `loot:${this.lootTarget.id}`;
+        if (!this.campTask) {
+          if (t >= this.nextLootThinkAt) {
+            this.nextLootThinkAt = t + 0.7 + Math.random() * 0.3;
+            this.thinkLoot(t, zt);
+          }
+          if (this.lootTarget) {
+            lootBusy = this.actLoot(t, dt);
+            if (this.lootTarget && !lootBusy) {
+              goalOverride = this.lootTarget.approach;
+              goalKey = `loot:${this.lootTarget.id}`;
+            }
           }
         }
         if (zt && outsideZone) {

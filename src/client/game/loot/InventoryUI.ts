@@ -4,6 +4,7 @@ import {
   type PlayerInventorySnap,
 } from '../../../shared/loot';
 import { KNIFE, KNIFE_SLOT_KEY, WEAPONS, WEAPON_SLOTS, type WeaponId } from '../../../shared/weapons';
+import { WOOD_CARRY_MAX } from '../../../shared/wolf/camp';
 import { weaponIconHtml } from '../Hud';
 import { onWeaponAssetsReady } from '../WeaponAssetRegistry';
 
@@ -51,6 +52,8 @@ export class InventoryUI {
   private visible = false;
   private snap: PlayerInventorySnap | null = null;
   private lastRenderKey = '';
+  /** "Tong otguncha": qo'ldagi o'tin soni (null — boshqa rejimlar, chip ko'rsatilmaydi). */
+  private wood: number | null = null;
 
   constructor(callbacks: InventoryUICallbacks) {
     this.callbacks = callbacks;
@@ -100,6 +103,13 @@ export class InventoryUI {
     this.render();
   }
 
+  /** O'tin chipi: `null` — yashirin (tun rejimi emas), aks holda "🪵 n/3". */
+  setWood(wood: number | null): void {
+    if (this.wood === wood) return;
+    this.wood = wood;
+    this.render();
+  }
+
   private isUnarmedBannerVisible(): boolean {
     return Boolean(this.visible && this.snap && this.snap.lootPreview && this.snap.equippedWeapon === null);
   }
@@ -119,6 +129,7 @@ export class InventoryUI {
   reset(): void {
     this.snap = null;
     this.visible = false;
+    this.wood = null;
     this.lastRenderKey = '';
     if (this.rootEl) {
       this.rootEl.className = 'hidden';
@@ -164,7 +175,7 @@ export class InventoryUI {
       const a = s.ammo[w];
       return `${w}:${a ? a.mag : 0}/${a ? a.reserve : 0}`;
     }).join('|');
-    const renderKey = `${s.inventoryVersion}|${s.equippedWeapon ?? 'none'}|${s.ownedWeapons.join(',')}|${s.medkits}/${s.maxMedkits}|${s.grenades}/${s.maxGrenades}|${s.armor ?? 0}|${s.helmet ?? 0}|${ammoKey}`;
+    const renderKey = `${s.inventoryVersion}|${s.equippedWeapon ?? 'none'}|${s.ownedWeapons.join(',')}|${s.medkits}/${s.maxMedkits}|${s.grenades}/${s.maxGrenades}|${s.armor ?? 0}|${s.helmet ?? 0}|${ammoKey}|w${this.wood ?? '-'}`;
     if (renderKey === this.lastRenderKey) return;
     this.lastRenderKey = renderKey;
 
@@ -209,6 +220,13 @@ export class InventoryUI {
     const isHandsEmpty = s.equippedWeapon === null;
     const armor = s.armor ?? 0;
     const helmet = s.helmet ?? 0;
+    const wood = this.wood;
+    const woodHtml =
+      wood === null
+        ? ''
+        : `<div class="s06-util-btn wood-chip ${wood > 0 ? 'has-item' : 'empty'}" title="O'tin: g'aramdan [E] bilan oling, gulxanga [E] bilan tashlang (${wood}/${WOOD_CARRY_MAX})">
+          <span class="s06-util-icon">🪵</span><span class="s06-util-count">${wood}/${WOOD_CARRY_MAX}</span>
+        </div>`;
 
     this.stripEl.innerHTML = `
       <div class="s06-inv-weapons">
@@ -241,6 +259,7 @@ export class InventoryUI {
         <div class="s06-util-btn gear-chip ${helmet > 0 ? 'has-item' : 'empty'}" title="Kaska: bosh zararining 50% ini yutadi${helmet > 0 ? ` (mustahkamlik ${Math.round(helmet)})` : ' — yo‘q'}">
           <span class="s06-util-icon">⛑️</span><span class="s06-util-count">${helmet > 0 ? Math.round(helmet) : '—'}</span>
         </div>
+        ${woodHtml}
       </div>
     `;
 

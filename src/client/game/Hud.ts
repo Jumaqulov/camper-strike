@@ -205,6 +205,18 @@ export class Hud {
     else if (level === 'near') el.textContent = "Yaqinda bo'ri bor · sekin yuring";
   }
 
+  private lastCampWarn = '';
+  /** Lager gulxani ("Tong otguncha"): 'low' — o'chmoqda, 'out' — o'chdi, '' — yo'q. */
+  setCampWarning(level: '' | 'low' | 'out'): void {
+    if (level === this.lastCampWarn) return;
+    this.lastCampWarn = level;
+    const el = $('camp-warn');
+    el.classList.toggle('hidden', level === '');
+    el.classList.toggle('out', level === 'out');
+    if (level === 'low') el.textContent = "GULXAN O'CHMOQDA — O'TIN KELTIRING!";
+    else if (level === 'out') el.textContent = "GULXAN O'CHDI — BO'RILAR KELMOQDA!";
+  }
+
   private lastGearKey = '';
   /** Zirh va kaska mustahkamligi (0 = yo'q); ikkalasi 0 bo'lsa qator yashirinadi. */
   setGear(armor: number, helmet: number): void {

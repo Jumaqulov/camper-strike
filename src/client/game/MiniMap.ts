@@ -28,6 +28,12 @@ export interface MiniMapMarker {
   alive: boolean;
 }
 
+/** "Tong otguncha" lageri: gulxanlar (to'q sariq, o'chgani kulrang) va o'tin g'aramlari (jigarrang). */
+export interface MiniMapCamp {
+  fires: readonly { x: number; z: number; lit: boolean; main: boolean }[];
+  piles: readonly { x: number; z: number; available: boolean }[];
+}
+
 interface Poi {
   x: number;
   z: number;
@@ -182,7 +188,12 @@ export class MiniMap {
    * @param me o'yinchi (yoki kuzatuvchi kamerasi) pozitsiyasi va yaw (radian, 0 = -Z)
    * @param allies ko'rsatiladigan jamoadoshlar (raqiblar hech qachon berilmaydi)
    */
-  update(me: { x: number; z: number; yaw: number }, allies: readonly MiniMapMarker[], zone: MiniMapZone | null = null): void {
+  update(
+    me: { x: number; z: number; yaw: number },
+    allies: readonly MiniMapMarker[],
+    zone: MiniMapZone | null = null,
+    camp: MiniMapCamp | null = null,
+  ): void {
     const ctx = this.ctx;
     const size = this.cssSize;
     const half = size / 2;
@@ -282,6 +293,51 @@ export class MiniMap {
       ctx.strokeText(p.name, sx, sz - (whole ? 11 : 9));
       ctx.fillStyle = '#fff4dc';
       ctx.fillText(p.name, sx, sz - (whole ? 11 : 9));
+    }
+
+    // Lager: o'tin g'aramlari (kichik jigarrang), gulxanlar (to'q sariq nuqta + shu'la; o'chgani kulrang)
+    if (camp) {
+      for (const p of camp.piles) {
+        const [sx, sz] = toScreen(p.x, p.z);
+        if (!whole && Math.hypot(sx - half, sz - half) > radius - 5) continue;
+        ctx.globalAlpha = p.available ? 1 : 0.4;
+        ctx.fillStyle = '#a66a2e';
+        ctx.beginPath();
+        ctx.arc(sx, sz, whole ? 3 : 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      for (const f of camp.fires) {
+        let [sx, sz] = toScreen(f.x, f.z);
+        if (!whole) {
+          // Radardan tashqaridagi gulxan chetida ko'rsatiladi (yo'l topish uchun)
+          const ddx = sx - half;
+          const ddz = sz - half;
+          const dist = Math.hypot(ddx, ddz);
+          const lim = radius - 7;
+          if (dist > lim) {
+            sx = half + (ddx / dist) * lim;
+            sz = half + (ddz / dist) * lim;
+          }
+        }
+        const r = (whole ? 4.5 : 4) * (f.main ? 1.2 : 1);
+        if (f.lit) {
+          ctx.fillStyle = 'rgba(255, 140, 40, 0.28)';
+          ctx.beginPath();
+          ctx.arc(sx, sz, r * 2.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = f.lit ? '#ff8c28' : '#7a7a7a';
+        ctx.beginPath();
+        ctx.arc(sx, sz, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = f.lit ? 'rgba(255, 230, 160, 0.9)' : 'rgba(0,0,0,0.8)';
+        ctx.stroke();
+      }
     }
 
     // Jamoadoshlar

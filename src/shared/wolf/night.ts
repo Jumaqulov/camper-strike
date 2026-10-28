@@ -37,6 +37,8 @@ export const NIGHT_DEFAULT_MINUTES = 8;
 export const NIGHT_MIN_MINUTES = 3;
 export const NIGHT_MAX_MINUTES = 20;
 
+import type { CampfireSnap, WoodPileSnap } from './camp';
+
 /** Klientga yuboriladigan tun holati (SurvivalStateSnap.night). */
 export interface NightSnap {
   wave: number;
@@ -46,6 +48,10 @@ export interface NightSnap {
   nextWaveInSec: number;
   /** Tong otguncha qolgan vaqt (s). */
   dawnInSec: number;
+  /** Lager gulxanlari (server tanlagan joylar, o'tin holati bilan). */
+  fires: CampfireSnap[];
+  /** O'tin g'aramlari. */
+  piles: WoodPileSnap[];
 }
 
 export interface NightWaveEval {

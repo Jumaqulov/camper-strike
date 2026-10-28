@@ -16,6 +16,8 @@ import {
   type WolfState,
 } from '../../shared/wolf';
 import { WolfModel, preloadWolfAssets } from './wolf';
+import { CAMP_ERROR_MESSAGES_UZ, CAMP_INTERACT_RANGE_M, CAMPFIRE_LOW_FUEL_SEC, WOOD_CARRY_MAX } from '../../shared/wolf/camp';
+import { CampRenderer, type CampFireView, type CampPileView } from './night';
 import {
   DEFAULT_CONTAINER_EXTRA_MARGIN_M,
   GROUND_ITEM_PICKUP_RADIUS_M,
@@ -24,10 +26,10 @@ import {
   LOOT_ERROR_MESSAGES_UZ,
 } from '../../shared/loot';
 import type {
-  AmmoEvent, ChatMsg, ContainerOpenAck, ContainerOpenReq, EquipWeaponAck, EquipWeaponReq,
-  ExplosionEvent, HitConfirm, HurtEvent, KillEvent, LootPickupAck, LootPickupReq, MatchState, PlayerInputBatchMsg,
+  AmmoEvent, CampActionAck, CampfireEvent, ChatMsg, ContainerOpenAck, ContainerOpenReq, EquipWeaponAck, EquipWeaponReq,
+  ExplosionEvent, FeedFireReq, HitConfirm, HurtEvent, KillEvent, LootPickupAck, LootPickupReq, MatchState, PlayerInputBatchMsg,
   PlayerInventorySnap, PlayerSnap, PublicContainerState, PublicLootItem, RosterEntry, RoomLootSnapshot, ShootMsg, ShotEvent,
-  Snapshot, SpawnEvent, UseMedkitAck, UseMedkitReq, WelcomeMsg,
+  Snapshot, SpawnEvent, TakeWoodReq, UseMedkitAck, UseMedkitReq, WelcomeMsg,
 } from '../../shared/protocol';
 import { unpackGearState } from '../../shared/protocol';
 import { ALL_WEAPON_IDS, KNIFE, KNIFE_SLOT_KEY, WEAPONS, WEAPON_SLOTS, isMeleeWeapon, type WeaponId } from '../../shared/weapons';
@@ -200,6 +202,12 @@ export class Game {
   private zoneSnap: SurvivalZoneSnap | null = null;
   private zoneSnapAt = 0;
   private zoneWall: ZoneWall | null = null;
+  /** "Tong otguncha" lageri: gulxanlar/o'tin g'aramlari renderi (faqat tun rejimida). */
+  private camp: CampRenderer | null = null;
+  /** [E] nishoni — eng yaqin gulxan yoki o'tin g'arami (konteynerdan ustun, agar yaqinroq bo'lsa). */
+  private campTarget: { kind: 'pile' | 'fire'; id: string } | null = null;
+  /** Lager amali so'rovi yuborilgan, ack kutilmoqda (ikki marta bosilmasin). */
+  private campBusy = false;
   /** Shader/tekstura isitish guruhi (bir necha kadr chiziladi, keyin olib tashlanadi) va kadr hisoblagichi. */
   private prewarmGroup: THREE.Group | null = null;
   private prewarmFrames = 0;
@@ -321,6 +329,8 @@ export class Game {
       this.worldDef,
       this.world.stage04a?.containers ?? null,
     );
+    // Lager: PointLight'lar prewarm'dan OLDIN sahnada bo'lsin (yorug'lik soni o'zgarsa shaderlar qayta kompilyatsiya bo'ladi)
+    if (this.isNight) this.camp = new CampRenderer(this.scene);
     this.lootUi = new LootUI({
       onOpenContainer: (containerId) => {
         void this.requestOpenContainer(containerId);
@@ -341,6 +351,8 @@ export class Game {
       },
     });
     this.inventoryUi.setVisible(this.lootPreview);
+    // Tunda o'tin chipi boshidan ko'rinadi (0/3) — o'yinchi mexanikani darhol payqaydi
+    if (this.isNight) this.inventoryUi.setWood(0);
     try {
       this.miniMap = new MiniMap(this.worldDef, $('minimap-wrap'));
     } catch (err) {
@@ -635,6 +647,7 @@ export class Game {
       this.fx.bloodHit(mouth, true);
       if (e.target === this.myId) this.shake = Math.max(this.shake, 0.6);
     });
+    this.on<CampfireEvent>('campfire', (e) => this.onCampfireEvent(e));
     this.on<KillEvent>('kill', (e) => this.onKill(e));
     this.on<ExplosionEvent>('explosion', (e) => this.onExplosion(e));
     this.on<AmmoEvent>('ammo', (e) => {
@@ -920,6 +933,7 @@ export class Game {
       if (s.serverTick !== undefined) {
         this.lastServerTick = s.serverTick;
       }
+      if (this.isNight) this.setMyWood(mine.wood ?? 0);
       if (mine.spectateTargetId && !this.spectator.getTargetId()) {
         this.spectator.setTarget(mine.spectateTargetId);
       }
@@ -995,13 +1009,14 @@ export class Game {
         this.remotes.delete(id);
       }
     }
-    // Ism yorliqlari faqat jamoadoshlar uchun
+    // Ism yorliqlari faqat jamoadoshlar uchun; "Tong otguncha"da hamma ittifoqchi — barchaga do'stona rangda
     for (const rem of this.remotes.values()) {
-      const show = this.mode === 'tdm' && rem.team === this.me.team;
+      const show = this.isNight || (this.mode === 'tdm' && rem.team === this.me.team);
       const key = show ? rem.name + rem.team : '';
       if (key !== rem.tagKey) {
         rem.tagKey = key;
-        rem.model.setNameTag(show ? rem.name : null, rem.team === 'red' ? '#ff9a9a' : '#9ac2ff');
+        const color = this.isNight ? '#a8e6a3' : rem.team === 'red' ? '#ff9a9a' : '#9ac2ff';
+        rem.model.setNameTag(show ? rem.name : null, color);
       }
     }
   }
@@ -1012,6 +1027,12 @@ export class Game {
     if (zone !== this.zoneSnap) {
       this.zoneSnap = zone;
       this.zoneSnapAt = performance.now() / 1000;
+    }
+    // Lager (tun): gulxan/g'aram joylari va o'tin holati — kutish/sanoq va raund davomida keladi
+    // (o'yinchilar sanoq paytida allaqachon gulxan atrofida turadi), yakunda null
+    const night = this.camp ? m.survival?.night ?? null : null;
+    if (this.camp && night && night.fires) {
+      this.camp.sync(night.fires, night.piles ?? [], performance.now() / 1000);
     }
     // Raund/match tugaganda snayper pritseli ochiq qolmasin (handleWeapons bu fazada ishlamaydi)
     if (m.phase !== 'playing' && this.me.scoped) this.me.scoped = false;
@@ -1476,6 +1497,8 @@ export class Game {
   };
 
   private isEnemy(rem: Remote): boolean {
+    // "Tong otguncha": hamma odam ittifoqchi (do'stona o't yo'q) — bashoratli qon faqat bo'rilarga
+    if (this.isNight) return false;
     return this.mode === 'ffa' || isSurvivalMode(this.mode) || rem.team !== this.me.team;
   }
 
@@ -1575,10 +1598,12 @@ export class Game {
     }
 
     this.updateLootInteraction();
+    this.updateCampInteraction();
     this.updateRemotes(dt, t);
     this.fx.update(dt);
     // Konteyner qopqoq animatsiyalari lootWorld.update() ichida yangilanadi (bir kadrda bir marta).
     this.updateCamera(dt, t);
+    this.updateCamp(dt, t);
     if (import.meta.env.DEV && this.collisionDebug?.isEnabled()) {
       const snap = this.lastAuthoritativeSnap;
       this.collisionDebug.update(dt, this.worldDef, {
@@ -1731,9 +1756,10 @@ export class Game {
     const me = this.me;
     const notPlaying = this.isSurvival ? this.match?.phase !== 'playing' : this.match?.phase === 'ended';
 
-    // Stage 06: [E] Konteynerni ochish / buyum olish
+    // Stage 06: [E] Konteynerni ochish / buyum olish; tunda yaqinroq gulxan/g'aram bo'lsa — lager amali
     if (inp.justPressed('KeyE') && !notPlaying) {
-      this.lootUi.triggerPrimaryInteract();
+      if (this.campTarget) this.triggerCampAction();
+      else this.lootUi.triggerPrimaryInteract();
     }
 
     // Stage 06: [H] Aptechka ishlatish
@@ -2142,6 +2168,253 @@ export class Game {
     return best;
   }
 
+  // ================= Lager ("Tong otguncha") =================
+
+  private setMyWood(wood: number): void {
+    const w = Math.max(0, Math.min(WOOD_CARRY_MAX, Math.round(wood)));
+    if (w === this.me.wood) return;
+    this.me.wood = w;
+    this.inventoryUi.setWood(this.isNight ? w : null);
+  }
+
+  private get nowSec(): number {
+    return performance.now() / 1000;
+  }
+
+  /** Lager hodisasi (server broadcast): ovoz, chat xabari, gulxan holatini darhol yangilash. */
+  private onCampfireEvent(e: CampfireEvent): void {
+    if (!this.camp) return;
+    const fire = this.camp.getFires(this.nowSec).find((f) => f.id === e.fireId) ?? null;
+    const pos = fire ? { x: fire.x, y: fire.y + 0.6, z: fire.z } : undefined;
+    const label = fire?.main ? 'Lager gulxani' : 'Gulxan';
+    if (e.kind === 'fed') {
+      this.camp.applyFireEvent(e.fireId, e.fuelSec, true, this.nowSec);
+      this.audio.campfireFeed(pos);
+      if (e.by && e.by !== this.myId) {
+        this.hud.chat({ name: '', team: 'none', system: true, text: `🪵 ${e.byName ?? "Sherik"} ${label.toLowerCase()}ga o'tin tashladi` });
+      }
+    } else if (e.kind === 'out') {
+      this.camp.applyFireEvent(e.fireId, 0, false, this.nowSec);
+      this.audio.campfireOut(pos);
+      this.hud.chat({ name: '', team: 'none', system: true, text: `🔥 ${label} o'chdi — bo'rilar lagerga kira oladi!` });
+    } else if (e.kind === 'low') {
+      this.camp.applyFireEvent(e.fireId, e.fuelSec, true, this.nowSec);
+      if (fire?.main) this.hud.chat({ name: '', team: 'none', system: true, text: `🔥 ${label} o'chmoqda — o'tin keltiring!` });
+    }
+  }
+
+  /** Lager prompti uchun gulxan holati qatori: "🔥 2:30" yoki "O'chgan". */
+  private campStatusHtml(f: CampFireView): string {
+    if (!f.lit) return `<span class="camp-status out">O'chgan</span>`;
+    const total = Math.floor(f.fuelSec);
+    const mm = Math.floor(total / 60);
+    const ss = String(total % 60).padStart(2, '0');
+    const low = f.fuelSec < CAMPFIRE_LOW_FUEL_SEC;
+    return `<span class="camp-status${low ? ' low' : ''}">🔥 ${mm}:${ss}</span>`;
+  }
+
+  /**
+   * [E] nishoni: CAMP_INTERACT_RANGE_M ichidagi eng yaqin (qaragan tomon ustun) bo'sh bo'lmagan o'tin g'arami yoki
+   * gulxan. Konteyner/yerdagi buyum ham bo'lsa — lager obyekti yaqinroq bo'lganda ustun keladi.
+   * updateLootInteraction() dan KEYIN chaqiriladi (uning promptini bekor qilishi mumkin).
+   */
+  private updateCampInteraction(): void {
+    if (!this.camp || !this.camp.hasCamp()) return;
+    const playing = !this.match || this.match.phase === 'playing';
+    if (!this.me.alive || !playing) {
+      this.campTarget = null;
+      this.lootUi.setCustomPrompt(null);
+      return;
+    }
+    const pos = this.me.body.pos;
+    const eye = this.me.eye();
+    const aim = this.me.aimDir();
+    const now = this.nowSec;
+
+    // Nomzod bahosi: masofa minus "qarash" ulushi (qaragan tomondagi obyekt ustun); diapazondan tashqari — null
+    const score = (x: number, y: number, z: number, aimY: number): { score: number; dist: number } | null => {
+      const distH = Math.hypot(x - pos.x, z - pos.z);
+      if (distH > CAMP_INTERACT_RANGE_M || Math.abs(y - pos.y) >= 2) return null;
+      const tx = x - eye.x;
+      const ty = y + aimY - eye.y;
+      const tz = z - eye.z;
+      const len = Math.hypot(tx, ty, tz) || 1;
+      const dot = (tx * aim.x + ty * aim.y + tz * aim.z) / len;
+      return { score: distH - dot, dist: distH };
+    };
+    let bestPile: CampPileView | null = null;
+    let bestFire: CampFireView | null = null;
+    let bestScore = Infinity;
+    let bestDist = Infinity;
+    for (const p of this.camp.getPiles()) {
+      if (!p.available) continue;
+      const s = score(p.x, p.y, p.z, 0.4);
+      if (s && s.score < bestScore) {
+        bestScore = s.score;
+        bestDist = s.dist;
+        bestPile = p;
+      }
+    }
+    for (const f of this.camp.getFires(now)) {
+      const s = score(f.x, f.y, f.z, 0.5);
+      if (s && s.score < bestScore) {
+        bestScore = s.score;
+        bestDist = s.dist;
+        bestFire = f;
+        bestPile = null;
+      }
+    }
+    const bestKind: 'pile' | 'fire' | null = bestFire ? 'fire' : bestPile ? 'pile' : null;
+    if (!bestKind) {
+      this.campTarget = null;
+      this.lootUi.setCustomPrompt(null);
+      return;
+    }
+    // Konteyner yaqinroq va u bilan muloqot mumkin bo'lsa — konteyner qoladi
+    const lootDist = this.lootUi.getInteractableTargetDistance();
+    if (lootDist !== null && lootDist < bestDist) {
+      this.campTarget = null;
+      this.lootUi.setCustomPrompt(null);
+      return;
+    }
+    const wood = this.me.wood;
+    if (bestKind === 'pile' && bestPile) {
+      this.campTarget = { kind: 'pile', id: bestPile.id };
+      if (wood >= WOOD_CARRY_MAX) {
+        this.lootUi.setCustomPrompt({
+          html: `<span>🪵 O'tin g'arami — qo'lingiz to'la (${wood}/${WOOD_CARRY_MAX})</span>`,
+          text: `O'tin g'arami — qo'lingiz to'la (${wood}/${WOOD_CARRY_MAX})`,
+          variantClass: 'empty',
+        });
+      } else {
+        this.lootUi.setCustomPrompt({
+          html: `<span class="key-pill">E</span><span>O'tin olish (${wood}/${WOOD_CARRY_MAX})</span>`,
+          text: `[E] O'tin olish (${wood}/${WOOD_CARRY_MAX})`,
+          variantClass: 'camp',
+        });
+      }
+      return;
+    }
+    if (bestKind === 'fire' && bestFire) {
+      this.campTarget = { kind: 'fire', id: bestFire.id };
+      const status = this.campStatusHtml(bestFire);
+      if (wood > 0) {
+        this.lootUi.setCustomPrompt({
+          html: `<span class="key-pill">E</span><span>Gulxanga o'tin tashlash (${wood} ta)</span>${status}`,
+          text: `[E] Gulxanga o'tin tashlash (${wood} ta)`,
+          variantClass: 'camp',
+        });
+      } else {
+        this.lootUi.setCustomPrompt({
+          html: `<span class="key-pill">E</span><span>Gulxan — o'tin yo'q</span>${status}`,
+          text: `[E] Gulxan — o'tin yo'q`,
+          variantClass: 'empty',
+        });
+      }
+    }
+  }
+
+  /** [E] lager nishonida: g'aramdan o'tin olish yoki gulxanga tashlash (server ack bilan). */
+  private triggerCampAction(): void {
+    const tgt = this.campTarget;
+    if (!tgt || this.campBusy) return;
+    if (tgt.kind === 'pile') {
+      if (this.me.wood >= WOOD_CARRY_MAX) {
+        this.lootUi.showStatus(CAMP_ERROR_MESSAGES_UZ.HANDS_FULL, 'error', 2000);
+        return;
+      }
+      void this.requestTakeWood(tgt.id);
+    } else {
+      if (this.me.wood <= 0) {
+        this.lootUi.showStatus(CAMP_ERROR_MESSAGES_UZ.NO_WOOD, 'error', 2200);
+        return;
+      }
+      void this.requestFeedFire(tgt.id);
+    }
+  }
+
+  /** Umumiy ack ishlovi: o'tin sonini yangilash, xato toast'i. Qaytaradi — ok. */
+  private handleCampAck(ack: CampActionAck | undefined, err: Error | null): boolean {
+    this.campBusy = false;
+    if (err || !ack) {
+      this.lootUi.showStatus('Server javob bermadi — qayta urinib ko\'ring', 'error', 2200);
+      return false;
+    }
+    if (typeof ack.wood === 'number') this.setMyWood(ack.wood);
+    if (!ack.ok) {
+      const msg = ack.error ? CAMP_ERROR_MESSAGES_UZ[ack.error] ?? 'Xato' : 'Xato';
+      this.lootUi.showStatus(msg, 'error', 2400);
+      return false;
+    }
+    return true;
+  }
+
+  private requestTakeWood(pileId: string): Promise<CampActionAck | null> {
+    this.campBusy = true;
+    this.sendInput();
+    const req: TakeWoodReq = { pileId };
+    return new Promise((resolve) => {
+      this.socket.timeout(3000).emit('night:takeWood', req, (err: Error | null, ack?: CampActionAck) => {
+        if (this.disposed) return resolve(null);
+        if (this.handleCampAck(ack, err)) {
+          this.myModel.playInteract();
+          this.audio.switchWeapon();
+          this.lootUi.showStatus(`🪵 O'tin olindi (${this.me.wood}/${WOOD_CARRY_MAX})`, 'success', 1800);
+        }
+        resolve(ack ?? null);
+      });
+    });
+  }
+
+  private requestFeedFire(fireId: string): Promise<CampActionAck | null> {
+    this.campBusy = true;
+    this.sendInput();
+    const req: FeedFireReq = { fireId };
+    return new Promise((resolve) => {
+      this.socket.timeout(3000).emit('night:feedFire', req, (err: Error | null, ack?: CampActionAck) => {
+        if (this.disposed) return resolve(null);
+        if (this.handleCampAck(ack, err)) {
+          this.myModel.playInteract();
+          if (ack?.fuelSec !== undefined) {
+            this.camp?.applyFireEvent(fireId, ack.fuelSec, true, this.nowSec);
+            const total = Math.floor(ack.fuelSec);
+            const mm = Math.floor(total / 60);
+            const ss = String(total % 60).padStart(2, '0');
+            this.lootUi.showStatus(`🔥 O'tin tashlandi — gulxan ${mm}:${ss}`, 'success', 2200);
+          } else {
+            this.lootUi.showStatus(`🔥 O'tin tashlandi`, 'success', 2000);
+          }
+        }
+        resolve(ack ?? null);
+      });
+    });
+  }
+
+  /** Har kadr: gulxan animatsiyasi (kamera pozitsiyasi bilan) va yaqin gulxanlarning chirsillashi. */
+  private updateCamp(dt: number, t: number): void {
+    const camp = this.camp;
+    if (!camp || !camp.hasCamp()) return;
+    camp.update(dt, t, this.camera.position);
+    const cam = this.camera.position;
+    for (const f of camp.getFires(t)) {
+      const dist = Math.hypot(f.x - cam.x, f.y - cam.y, f.z - cam.z);
+      this.audio.campfireCrackle(f.id, { x: f.x, y: f.y + 0.5, z: f.z }, f.flame, dist, f.lit);
+    }
+  }
+
+  /** HUD: asosiy gulxan holati (pill) va ogohlantirish banneri. */
+  private updateCampHud(t: number): void {
+    if (!this.camp) return;
+    const playing = this.match?.phase === 'playing';
+    const main = playing && this.camp.hasCamp() ? this.camp.getMainFire(t) : null;
+    this.survivalUi.setCampStatus(main ? { fuelSec: main.fuelSec, lit: main.lit } : null);
+    if (!main || !this.me.alive) {
+      this.hud.setCampWarning('');
+      return;
+    }
+    this.hud.setCampWarning(!main.lit ? 'out' : main.fuelSec < CAMPFIRE_LOW_FUEL_SEC ? 'low' : '');
+  }
+
   /** HUD: bo'ri xavfi darajasi (quvyapti / yaqinda). */
   private wolfThreatLevel(): '' | 'near' | 'hunt' {
     if (!this.me.alive || this.wolves.size === 0) return '';
@@ -2360,16 +2633,20 @@ export class Game {
       const sp = !me.alive && this.isSurvival ? this.lastSpectatorPose : null;
       const center = sp ? { x: sp.x, z: sp.z, yaw: sp.yaw } : { x: me.body.pos.x, z: me.body.pos.z, yaw: me.yaw };
       const allies: MiniMapMarker[] = [];
-      if (this.mode === 'tdm') {
+      if (this.mode === 'tdm' || this.isNight) {
+        // TDM — jamoadoshlar; tunda hamma ittifoqchi (sariq belgi)
         for (const rem of this.remotes.values()) {
-          if (rem.team !== me.team) continue;
-          allies.push({ x: rem.pos.x, z: rem.pos.z, team: rem.team, alive: rem.alive });
+          if (!this.isNight && rem.team !== me.team) continue;
+          if (this.isNight && !rem.alive) continue;
+          allies.push({ x: rem.pos.x, z: rem.pos.z, team: this.isNight ? 'none' : rem.team, alive: rem.alive });
         }
       }
-      this.miniMap.update(center, allies, this.zoneSnap ? this.currentZoneForMinimap(t) : null);
+      const camp = this.camp?.hasCamp() ? { fires: this.camp.getFires(t), piles: this.camp.getPiles() } : null;
+      this.miniMap.update(center, allies, this.zoneSnap ? this.currentZoneForMinimap(t) : null, camp);
     }
     this.updateZone(t);
     this.hud.setWolfWarning(this.wolfThreatLevel());
+    this.updateCampHud(t);
     if (me.weapon) {
       const a = me.ammo[me.weapon];
       this.hud.setAmmo(me.weapon, a.mag, a.reserve, !!me.reloadWeapon, me.grenades, this.lootPreview ? me.ownedWeapons : undefined);
@@ -2504,8 +2781,12 @@ export class Game {
     this.hud.setLayout(false, false);
     $('pause-menu').classList.add('hidden');
     this.hud.setWolfWarning('');
+    this.hud.setCampWarning('');
     this.removeWolvesExcept(null);
     this.audio.stopWolfVoices();
+    this.audio.stopCampfireSounds();
+    this.camp?.dispose();
+    this.camp = null;
     for (const rem of this.remotes.values()) rem.model.dispose();
     for (const [, mesh] of this.grenadeMeshes) {
       this.scene.remove(mesh);

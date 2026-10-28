@@ -1,12 +1,14 @@
 import type { Server, Socket } from 'socket.io';
 import { clamp } from '../shared/math';
 import type {
+  CampActionAck,
   ClientState,
   ContainerOpenAck,
   ContainerOpenReq,
   CreateRoomOpts,
   EquipWeaponAck,
   EquipWeaponReq,
+  FeedFireReq,
   LootPickupAck,
   LootPickupReq,
   PlayerInputBatchMsg,
@@ -17,6 +19,7 @@ import type {
   RoomInfo,
   RoomLootSnapshot,
   ShootMsg,
+  TakeWoodReq,
   UseMedkitAck,
   UseMedkitReq,
   WelcomeMsg,
@@ -200,6 +203,13 @@ export class Lobby {
       'loot:sync',
       (_data: unknown, ack?: Ack<{ loot: RoomLootSnapshot; inventory: PlayerInventorySnap | null }>) =>
         room?.onRequestLootSync(socket.id, ack),
+    );
+    // Tong otguncha: o'tin g'aramidan o'tin olish / gulxanga tashlash (CampActionAck bilan)
+    socket.on('night:takeWood', (req: TakeWoodReq, ack?: Ack<CampActionAck>) =>
+      room?.onTakeWood(socket.id, req, ack),
+    );
+    socket.on('night:feedFire', (req: FeedFireReq, ack?: Ack<CampActionAck>) =>
+      room?.onFeedFire(socket.id, req, ack),
     );
     socket.on('chat', (text: string) => room?.onChat(socket.id, text));
     socket.on('switchTeam', () => {

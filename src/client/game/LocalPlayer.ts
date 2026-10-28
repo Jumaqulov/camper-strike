@@ -43,6 +43,8 @@ export class LocalPlayer {
   staminaLocked = false;
   armor = 0;
   helmet = 0;
+  /** "Tong otguncha": qo'ldagi o'tin (PlayerSnap.wood dan; yo'q bo'lsa 0). */
+  wood = 0;
 
   constructor(world: WorldDefinition | null = null) {
     this.world = world;

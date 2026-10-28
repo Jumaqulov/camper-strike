@@ -3,19 +3,30 @@ import { describe, it } from 'node:test';
 import type { Server, Socket } from 'socket.io';
 import { sanitizeOpts } from '../../server/lobby';
 import { Room } from '../../server/room';
-import { MATCH_END_DURATION, MAX_HP } from '../constants';
+import { GRENADE_FUSE, MATCH_END_DURATION, MAX_HP } from '../constants';
 import { anglesFromDir, vnorm, vsub, type Vec3 } from '../math';
-import type { CreateRoomOpts, KillEvent, MatchState } from '../protocol';
+import type { CampActionAck, CampfireEvent, ChatMsg, CreateRoomOpts, KillEvent, MatchState, Snapshot } from '../protocol';
 import { emptyAmmo } from '../weapons';
+import { isTerrainWalkable, sampleTerrainHeight } from '../world';
 import {
+  CAMPFIRE_LOW_FUEL_SEC,
+  CAMPFIRE_MAX_FUEL_SEC,
+  CAMPFIRE_RADIUS_M,
+  CAMPFIRE_START_FUEL_SEC,
+  CAMPFIRE_WOOD_FUEL_SEC,
+  CAMP_INTERACT_RANGE_M,
+  NIGHT_CAMPFIRE_COUNT,
   NIGHT_DEFAULT_MINUTES,
   NIGHT_MAX_MINUTES,
   NIGHT_MIN_MINUTES,
   NIGHT_WAVES,
   NIGHT_WAVE_COUNT,
+  NIGHT_WOOD_PILE_COUNT,
   WOLF_CORPSE_SEC,
   WOLF_MAX_HP,
   WOLF_RESPAWN_SEC,
+  WOOD_CARRY_MAX,
+  type WolfBiteEvent,
 } from '../wolf';
 
 interface EmittedRoomEvent {
@@ -134,6 +145,52 @@ function lastMatch(emitted: EmittedRoomEvent[]): MatchState {
   const m = emitted.filter((e) => e.event === 'match').pop()?.payload as MatchState | undefined;
   assert.ok(m, 'match hodisasi yuborilgan');
   return m!;
+}
+
+/** Ikki odam tayyor bo'lib raundni boshlaydi (sanoq 2 s). */
+function startDuoNight(room: Room) {
+  const s1 = createFakeSocket('p1');
+  const s2 = createFakeSocket('p2');
+  room.addHuman(s1.socket, 'Ovchi');
+  room.addHuman(s2.socket, 'Sherik');
+  room.onReady('p1', { world: room.worldMeta() });
+  room.onReady('p2', { world: room.worldMeta() });
+  room.advanceTimeForTest(2.5, 0.25);
+  assert.equal(room.phase, 'playing');
+  return { p1: room.players.get('p1')!, p2: room.players.get('p2')!, s1, s2 };
+}
+
+/** Gulxandan `len` m gacha to'siqsiz yo'nalish (16 ta burchak sinab chiqiladi). */
+function openDirFromFire(room: Room, fire: { x: number; y: number; z: number }, len: number): { dx: number; dz: number } {
+  const nav = room.nav;
+  const a = { x: fire.x, y: fire.y, z: fire.z };
+  for (let k = 0; k < 16; k++) {
+    const ang = (k / 16) * Math.PI * 2;
+    const dx = Math.cos(ang);
+    const dz = Math.sin(ang);
+    const bx = fire.x + dx * len;
+    const bz = fire.z + dz * len;
+    const b = { x: bx, y: sampleTerrainHeight(room.world.terrain, bx, bz), z: bz };
+    if (Math.abs(b.y - a.y) > 0.8) continue;
+    if (nav.nearest(b) < 0) continue;
+    if (nav.segmentClear(a, b)) return { dx, dz };
+  }
+  throw new Error("gulxandan ochiq yo'nalish topilmadi");
+}
+
+function groundAt(room: Room, x: number, z: number): Vec3 {
+  return { x, y: sampleTerrainHeight(room.world.terrain, x, z), z };
+}
+
+function campfireEvents(emitted: EmittedRoomEvent[], kind?: CampfireEvent['kind']): CampfireEvent[] {
+  return emitted
+    .filter((e) => e.event === 'campfire')
+    .map((e) => e.payload as CampfireEvent)
+    .filter((e) => !kind || e.kind === kind);
+}
+
+function systemChats(emitted: EmittedRoomEvent[]): string[] {
+  return emitted.filter((e) => e.event === 'chat').map((e) => (e.payload as ChatMsg).text);
 }
 
 describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
@@ -377,6 +434,355 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       } finally {
         room.destroy();
       }
+    }
+  });
+
+  // ---------------- 2-bosqich: lager (gulxanlar, o'tin), hamkorlik, bo'rilar olovdan qo'rqadi ----------------
+
+  it("7. Hamkorlik: odamlar bir-biriga zarar bermaydi (o'q sherikdan o'tib bo'riga tegadi; granata ham), isEnemy false", () => {
+    const { io, emitted } = createFakeIo();
+    const room = makeNightRoom(io);
+    try {
+      const { p1, p2 } = startDuoNight(room);
+      assert.equal(room.isEnemy(p1, p2), false);
+      assert.equal(room.isEnemy(p2, p1), false);
+      const w = [...room.wolves.values()][0]!;
+      const line = findOpenLine(room, 8);
+      p1.pos = { ...line.a };
+      p1.vel = { x: 0, y: 0, z: 0 };
+      p1.spawnTime = -99;
+      // Sherik otuvchi va bo'ri orasida (3 m), bo'ri 8 m da — o'q sherikdan o'tib bo'riga tegishi kerak
+      const midX = line.a.x + (line.b.x - line.a.x) * (3 / 8);
+      p2.pos = groundAt(room, midX, line.a.z);
+      p2.vel = { x: 0, y: 0, z: 0 };
+      p2.spawnTime = -99;
+      w.pos = { ...line.b };
+      w.vel = { x: 0, y: 0, z: 0 };
+      p1.weapon = 'rifle';
+      p1.ammo.rifle = { mag: 30, reserve: 90 };
+      p1.reloadWeapon = null;
+      p1.switchUntil = 0;
+      const eye = { x: p1.pos.x, y: p1.pos.y + 1.62, z: p1.pos.z };
+      const center = { x: w.pos.x, y: w.pos.y + 0.6, z: w.pos.z };
+      const ang = anglesFromDir(vnorm(vsub(center, eye)));
+      p1.yaw = ang.yaw;
+      p1.pitch = ang.pitch;
+      const wolfHp0 = w.hp;
+      let wolfHit = false;
+      for (let i = 0; i < 6 && !wolfHit; i++) {
+        p1.lastShot = -99;
+        // onShoot bilan bir xil `fire()` yo'li (odam qurol egaligi loot orqali beriladi — bu yerda to'g'ridan-to'g'ri)
+        room.botFire(p1, 0);
+        wolfHit = w.hp < wolfHp0;
+      }
+      assert.equal(p2.hp, MAX_HP, "sherikning joni o'zgarmaydi");
+      assert.ok(wolfHit, `o'q sherikdan o'tib bo'riga tegadi (bo'ri hp ${w.hp}/${wolfHp0})`);
+      assert.ok(!emitted.some((e) => e.event === 'kill'), 'hech kim o‘lmagan');
+
+      // Granata otuvchi oyog'i ostida portlaydi: 2 m dagi sherikga zarar yo'q, o'z-o'ziga zarar saqlanadi
+      room.wolves.clear();
+      p1.grenades = 1;
+      p1.lastGrenade = -99;
+      const g0 = emitted.length;
+      room.throwGrenade(p1, { x: 0, y: -0.2, z: 0 });
+      p2.pos = groundAt(room, line.a.x + 2, line.a.z);
+      const hp2 = p2.hp;
+      let exploded = false;
+      let selfHurt = false;
+      for (let i = 0; i < 40 && !exploded; i++) {
+        room.advanceTimeForTest(0.1, 1 / 30);
+        p2.vel = { x: 0, y: 0, z: 0 };
+        if (p1.hp < MAX_HP) selfHurt = true;
+        p1.hp = MAX_HP;
+        exploded = emitted.slice(g0).some((e) => e.event === 'explosion');
+      }
+      assert.ok(exploded, `granata ${GRENADE_FUSE} s da portlaydi`);
+      assert.equal(p2.hp, hp2, 'granata sherikga zarar bermaydi');
+      assert.ok(selfHurt, "o'z granatasi o'ziga zarar beradi (saqlanadi)");
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("8. Lager joylashuvi: 3 gulxan (asosiy birinchi, yonib turadi), 8 g'aram, yuriladigan yerda, masofalar; o'yinchi asosiy gulxan yonida tug'iladi", () => {
+    const { io, emitted } = createFakeIo();
+    const room = makeNightRoom(io);
+    try {
+      const { p } = startSoloNight(room);
+      const night = room.getNightSnap()!;
+      assert.equal(night.fires.length, NIGHT_CAMPFIRE_COUNT);
+      assert.equal(night.piles.length, NIGHT_WOOD_PILE_COUNT);
+      const main = night.fires[0]!;
+      assert.equal(main.main, true, 'asosiy gulxan birinchi');
+      assert.equal(night.fires.filter((f) => f.main).length, 1);
+      for (const f of night.fires) {
+        assert.equal(f.lit, true);
+        assert.equal(f.fuelSec, CAMPFIRE_START_FUEL_SEC);
+        assert.equal(f.maxFuelSec, CAMPFIRE_MAX_FUEL_SEC);
+        assert.ok(isTerrainWalkable(room.world.terrain, f.x, f.z), `gulxan ${f.id} yuriladigan relyefda`);
+        assert.ok(Math.abs(sampleTerrainHeight(room.world.terrain, f.x, f.z) - f.y) < 0.05, 'y = relyef balandligi');
+        assert.ok(room.nav.nearest({ x: f.x, y: f.y, z: f.z }) >= 0, 'nav tuguni bor');
+      }
+      for (let i = 0; i < night.fires.length; i++) {
+        for (let j = i + 1; j < night.fires.length; j++) {
+          const a = night.fires[i]!;
+          const b = night.fires[j]!;
+          assert.ok(Math.hypot(a.x - b.x, a.z - b.z) >= 60, `gulxanlar ${a.id}/${b.id} ≥ 60 m`);
+        }
+      }
+      for (const pl of night.piles) {
+        assert.equal(pl.available, true);
+        assert.equal(pl.respawnInSec, undefined);
+        assert.ok(isTerrainWalkable(room.world.terrain, pl.x, pl.z), `g'aram ${pl.id} yuriladigan relyefda`);
+        assert.ok(Math.abs(sampleTerrainHeight(room.world.terrain, pl.x, pl.z) - pl.y) < 0.05);
+        const dFire = Math.min(...night.fires.map((f) => Math.hypot(f.x - pl.x, f.z - pl.z)));
+        assert.ok(dFire >= 25 && dFire <= 55, `g'aram ${pl.id} eng yaqin gulxandan 25–55 m (${dFire.toFixed(1)})`);
+        for (const o of night.piles) {
+          if (o === pl) continue;
+          assert.ok(Math.hypot(o.x - pl.x, o.z - pl.z) >= 12, `g'aramlar ${pl.id}/${o.id} ≥ 12 m`);
+        }
+      }
+      // Asosiy gulxan — uylar guruhi hovlisida (POI markazidan ≤ flatRadius)
+      assert.ok(Math.hypot(main.x - 64, main.z - -62) < 19, `asosiy gulxan uylar guruhida (${main.x}, ${main.z})`);
+      // O'yinchi asosiy gulxan atrofidagi halqada tug'iladi
+      assert.ok(Math.hypot(p.pos.x - main.x, p.pos.z - main.z) <= 6, "o'yinchi asosiy gulxandan ≤ 6 m da");
+      assert.equal(p.wood, 0);
+      // MatchState.survival.night ham gulxan/g'aramlarni oladi
+      const m = lastMatch(emitted);
+      assert.equal(m.survival?.night?.fires.length, NIGHT_CAMPFIRE_COUNT);
+      assert.equal(m.survival?.night?.piles.length, NIGHT_WOOD_PILE_COUNT);
+      assert.equal(m.survival?.night?.fires[0]?.main, true);
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("9. O'tin olish / gulxanga tashlash: TOO_FAR, 3 ta o'tin, HANDS_FULL, g'aram bo'shaydi, tashlash +3×60 (chegaralangan), 'fed' hodisasi", () => {
+    const { io, emitted } = createFakeIo();
+    const room = makeNightRoom(io);
+    try {
+      const { p } = startSoloNight(room);
+      room.wolves.clear();
+      p.spawnTime = -99;
+      const night = room.getNightSnap()!;
+      const piles = night.piles;
+      // Uzoqdan — TOO_FAR
+      let res = room.onTakeWood('p1', { pileId: piles[0]!.id });
+      assert.equal(res.ok, false);
+      assert.equal(res.error, 'TOO_FAR');
+      assert.equal(res.wood, 0);
+      // Noma'lum g'aram — NOT_FOUND; bo'lmagan o'yinchi — NOT_FOUND
+      assert.equal(room.onTakeWood('p1', { pileId: 'pile:zzz' }).error, 'NOT_FOUND');
+      assert.equal(room.onTakeWood('nope', { pileId: piles[0]!.id }).error, 'NOT_FOUND');
+
+      let acked: CampActionAck | null = null;
+      for (let i = 0; i < WOOD_CARRY_MAX; i++) {
+        const pl = piles[i]!;
+        p.pos = groundAt(room, pl.x + 1.0, pl.z);
+        p.vel = { x: 0, y: 0, z: 0 };
+        res = room.onTakeWood('p1', { pileId: pl.id }, (a) => (acked = a));
+        assert.equal(res.ok, true, `o'tin ${i + 1}: ${res.error}`);
+        assert.equal(res.wood, i + 1);
+        assert.deepEqual(acked, res, 'ack bilan bir xil');
+        assert.equal(room.woodPiles.get(pl.id)!.available, false, "g'aram bo'shadi");
+        // Bo'sh g'aramdan qayta olish — PILE_EMPTY
+        room.advanceTimeForTest(0.35, 1 / 30);
+        assert.equal(room.onTakeWood('p1', { pileId: pl.id }).error, 'PILE_EMPTY');
+        room.advanceTimeForTest(0.35, 1 / 30);
+      }
+      assert.equal(p.wood, WOOD_CARRY_MAX);
+      // Snapshotda o'tin ko'rinadi; bo'sh g'aramda respawnInSec
+      const snap = emitted.filter((e) => e.event === 'snap').pop()!.payload as Snapshot;
+      assert.equal(snap.players.find((x) => x.id === 'p1')?.wood, WOOD_CARRY_MAX);
+      const n2 = room.getNightSnap()!;
+      const empty = n2.piles.find((x) => x.id === piles[0]!.id)!;
+      assert.equal(empty.available, false);
+      assert.ok((empty.respawnInSec ?? 0) > 60 && (empty.respawnInSec ?? 0) <= 75, `respawnInSec ${empty.respawnInSec}`);
+      // Qo'l to'la
+      const pl4 = piles[3]!;
+      p.pos = groundAt(room, pl4.x + 1.0, pl4.z);
+      res = room.onTakeWood('p1', { pileId: pl4.id });
+      assert.equal(res.error, 'HANDS_FULL');
+      assert.equal(room.woodPiles.get(pl4.id)!.available, true);
+
+      // Gulxan: uzoqdan TOO_FAR, yonida 3×60 qo'shiladi va maksimumda chegaralanadi
+      const fire = room.campfires.get(night.fires[0]!.id)!;
+      res = room.onFeedFire('p1', { fireId: fire.id });
+      assert.equal(res.error, 'TOO_FAR');
+      fire.fuelSec = 100;
+      p.pos = groundAt(room, fire.x + 1.2, fire.z);
+      const fedBefore = campfireEvents(emitted, 'fed').length;
+      res = room.onFeedFire('p1', { fireId: fire.id });
+      assert.equal(res.ok, true, res.error ?? '');
+      assert.equal(res.wood, 0);
+      assert.equal(p.wood, 0);
+      assert.equal(res.fuelSec, CAMPFIRE_MAX_FUEL_SEC, `100 + 3×${CAMPFIRE_WOOD_FUEL_SEC} → ${CAMPFIRE_MAX_FUEL_SEC} da chegaralanadi`);
+      assert.equal(Math.round(fire.fuelSec), CAMPFIRE_MAX_FUEL_SEC);
+      const fed = campfireEvents(emitted, 'fed');
+      assert.equal(fed.length, fedBefore + 1);
+      assert.equal(fed[fed.length - 1]!.fireId, fire.id);
+      assert.equal(fed[fed.length - 1]!.by, 'p1');
+      assert.equal(fed[fed.length - 1]!.byName, 'Ovchi');
+      assert.ok(systemChats(emitted).some((t) => t.includes("Ovchi gulxanga o'tin tashladi (3)")), 'chat xabari');
+      // O'tinsiz — NO_WOOD; to'la gulxan — FIRE_FULL
+      room.advanceTimeForTest(0.35, 1 / 30);
+      assert.equal(room.onFeedFire('p1', { fireId: fire.id }).error, 'NO_WOOD');
+      p.wood = 1;
+      assert.equal(room.onFeedFire('p1', { fireId: fire.id }).error, 'FIRE_FULL');
+      // Tezlik cheklovi: 0.3 s ichida ikkinchi amal xatosiz rad etiladi
+      fire.fuelSec = 100;
+      res = room.onFeedFire('p1', { fireId: fire.id });
+      assert.equal(res.ok, true);
+      p.wood = 1;
+      res = room.onFeedFire('p1', { fireId: fire.id });
+      assert.equal(res.ok, false);
+      assert.equal(res.error, undefined, 'tezlik cheklovi — xato kodi yo‘q');
+      // Boshqa rejimda — NOT_NIGHT
+      const { io: io2 } = createFakeIo();
+      const ffa = makeFfaRoom(io2, 0, 0);
+      try {
+        const s = createFakeSocket('h1');
+        ffa.addHuman(s.socket, 'X');
+        ffa.onReady('h1', { world: ffa.worldMeta() });
+        assert.equal(ffa.onTakeWood('h1', { pileId: 'pile:1' }).error, 'NOT_NIGHT');
+        assert.equal(ffa.getNightSnap(), null);
+      } finally {
+        ffa.destroy();
+      }
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("10. O'tin yonib tugaydi: 'low' hodisasi va ogohlantirish, keyin 'out' — gulxan o'chadi", () => {
+    const { io, emitted } = createFakeIo();
+    const room = makeNightRoom(io);
+    try {
+      const { p } = startSoloNight(room);
+      room.wolves.clear();
+      const fire = room.campfires.get(room.getNightSnap()!.fires[0]!.id)!;
+      const before = Math.round(fire.fuelSec);
+      surviveFor(room, p, 5);
+      assert.ok(fire.fuelSec < before - 4 && fire.fuelSec > before - 6, `o'tin sekundiga 1 kamayadi (${fire.fuelSec})`);
+      assert.equal(campfireEvents(emitted).length, 0, 'hali hodisa yo‘q');
+      fire.fuelSec = CAMPFIRE_LOW_FUEL_SEC + 2;
+      surviveFor(room, p, 3);
+      const low = campfireEvents(emitted, 'low');
+      assert.equal(low.length, 1, "'low' bir marta");
+      assert.equal(low[0]!.fireId, fire.id);
+      assert.ok(systemChats(emitted).some((t) => t.includes("Asosiy lager gulxani o'chmoqda — o'tin keltiring!")));
+      assert.equal(fire.lit, true);
+      surviveFor(room, p, CAMPFIRE_LOW_FUEL_SEC + 2);
+      assert.equal(campfireEvents(emitted, 'low').length, 1, "'low' takrorlanmaydi");
+      const out = campfireEvents(emitted, 'out');
+      assert.equal(out.length, 1);
+      assert.equal(out[0]!.fuelSec, 0);
+      assert.equal(fire.lit, false);
+      assert.equal(fire.fuelSec, 0);
+      assert.ok(systemChats(emitted).some((t) => t.includes("Asosiy lager gulxani o'chdi")));
+      const snapFire = room.getNightSnap()!.fires.find((f) => f.id === fire.id)!;
+      assert.equal(snapFire.lit, false);
+      assert.equal(snapFire.fuelSec, 0);
+      assert.equal(room.litFireContaining(fire.x, fire.z), null);
+      // Qayta yoqish: o'tin tashlansa yonadi
+      p.wood = 1;
+      p.pos = groundAt(room, fire.x + 1.2, fire.z);
+      const res = room.onFeedFire('p1', { fireId: fire.id });
+      assert.equal(res.ok, true);
+      assert.equal(fire.lit, true);
+      assert.equal(res.fuelSec, CAMPFIRE_WOOD_FUEL_SEC);
+      assert.ok(systemChats(emitted).some((t) => t.includes('qayta yoqdi')));
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("11. Bo'ri olovdan qo'rqadi: gulxan yonidagi o'yinchini 15 s tishlamaydi, doiraga kirmaydi; gulxan o'chgach 10 s ichida tishlaydi", () => {
+    const { io, emitted } = createFakeIo();
+    const room = makeNightRoom(io);
+    try {
+      const { p } = startSoloNight(room);
+      p.spawnTime = -99;
+      const w = [...room.wolves.values()][0]!;
+      const fire = room.campfires.get(room.getNightSnap()!.fires[0]!.id)!;
+      const dir = openDirFromFire(room, fire, 16);
+      p.pos = groundAt(room, fire.x + dir.dx * 2, fire.z + dir.dz * 2);
+      p.vel = { x: 0, y: 0, z: 0 };
+      w.pos = groundAt(room, fire.x + dir.dx * 16, fire.z + dir.dz * 16);
+      w.vel = { x: 0, y: 0, z: 0 };
+      w.yaw = Math.atan2(-(p.pos.x - w.pos.x), -(p.pos.z - w.pos.z));
+      w.brain.onDamaged(p, room.now());
+      let minFireDist = Infinity;
+      let bitten = false;
+      for (let i = 0; i < 150; i++) {
+        room.advanceTimeForTest(0.1, 1 / 30);
+        if (p.hp < MAX_HP) bitten = true;
+        p.hp = MAX_HP;
+        p.vel = { x: 0, y: 0, z: 0 };
+        p.pos = groundAt(room, fire.x + dir.dx * 2, fire.z + dir.dz * 2);
+        minFireDist = Math.min(minFireDist, Math.hypot(w.pos.x - fire.x, w.pos.z - fire.z));
+      }
+      assert.equal(bitten, false, "yonib turgan gulxan yonidagi o'yinchi tishlanmaydi");
+      assert.ok(
+        !emitted.some((e) => e.event === 'wolf:bite' && (e.payload as WolfBiteEvent).hit),
+        'tishlash hodisasi yo‘q',
+      );
+      assert.ok(minFireDist >= CAMPFIRE_RADIUS_M - 0.5, `bo'ri gulxanga ${minFireDist.toFixed(1)} m dan yaqin kelmaydi`);
+      assert.equal(w.targetId, 'p1', "bo'ri nishonni ushlab turadi (chetida kutadi)");
+      assert.ok(w.state === 'alert' || w.state === 'howl', `chetida hushyor/uvlaydi (${w.state})`);
+      const dWolfPlayer = Math.hypot(w.pos.x - p.pos.x, w.pos.z - p.pos.z);
+      assert.ok(dWolfPlayer < 16, `bo'ri olov chetiga yaqinlashgan (${dWolfPlayer.toFixed(1)} m)`);
+
+      // Gulxan o'chadi — bo'ri qorong'i lagerga kirib tishlaydi
+      fire.fuelSec = 0;
+      let bittenAfter = false;
+      for (let i = 0; i < 100 && !bittenAfter; i++) {
+        room.advanceTimeForTest(0.1, 1 / 30);
+        if (p.hp < MAX_HP) bittenAfter = true;
+        p.hp = MAX_HP;
+        p.vel = { x: 0, y: 0, z: 0 };
+      }
+      assert.equal(fire.lit, false);
+      assert.equal(campfireEvents(emitted, 'out').length, 1);
+      assert.ok(bittenAfter, "gulxan o'chgach 10 s ichida tishlaydi");
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("12. Bot lagerni boqadi: o'tinli bot 5 m dagi o'chayotgan gulxanga ~20 s ichida o'tin tashlaydi", () => {
+    const { io, emitted } = createFakeIo();
+    const room = makeNightRoom(io, { bots: 1 });
+    try {
+      const { p } = startSoloNight(room);
+      room.wolves.clear();
+      const bot = [...room.players.values()].find((x) => x.isBot)!;
+      assert.ok(bot.alive, 'bot ishtirokchi sifatida tug‘ildi');
+      const fire = room.campfires.get(room.getNightSnap()!.fires[0]!.id)!;
+      assert.ok(Math.hypot(bot.pos.x - fire.x, bot.pos.z - fire.z) <= 6, 'bot ham asosiy gulxan yonida tug‘iladi');
+      // Odam yo'ldan chetda tursin
+      p.pos = groundAt(room, fire.x - 6, fire.z);
+      const dir = openDirFromFire(room, fire, 6);
+      bot.pos = groundAt(room, fire.x + dir.dx * 5, fire.z + dir.dz * 5);
+      bot.vel = { x: 0, y: 0, z: 0 };
+      bot.wood = WOOD_CARRY_MAX;
+      fire.fuelSec = 20;
+      let fedAt = -1;
+      for (let i = 0; i < 200 && fedAt < 0; i++) {
+        room.advanceTimeForTest(0.1, 1 / 30);
+        p.hp = MAX_HP;
+        if (bot.wood === 0) fedAt = i;
+      }
+      assert.ok(fedAt >= 0, `bot 20 s ichida o'tin tashlaydi (fuel=${fire.fuelSec.toFixed(1)}, wood=${bot.wood})`);
+      assert.ok(fire.fuelSec > 150, `gulxan to'ldi: ${fire.fuelSec.toFixed(1)} s`);
+      const fed = campfireEvents(emitted, 'fed');
+      assert.equal(fed.length, 1);
+      assert.equal(fed[0]!.by, bot.id);
+      assert.equal(fed[0]!.byName, bot.name);
+      // Bot o'yinchini nishonga olmaydi (hamkorlik) — joni to'liq
+      assert.equal(p.hp, MAX_HP);
+    } finally {
+      room.destroy();
     }
   });
 });
