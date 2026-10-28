@@ -333,48 +333,287 @@ export class AudioSys {
     this.noise(chain.d, t + 0.08, 0.16, 'bandpass', 1800, 900, 1.6, 0.05, 0.05);
   }
 
-  /** Bo'ri g'ingshidi/irillaydi (sezdi, ovga o'tdi): past arra to'lqini + bo'g'iq shovqin, 0.7 s. */
+  // ---------------- Bo'ri ovozlari ----------------
+  // Barcha bo'ri ovozlari 100–1500 Hz oralig'ida (kichik kolonkalarda ham eshitiladi) va o'q ovoziga
+  // yaqin kuchda. Bir martalik ovozlar (irillash, hurish, uvlash, tishlash) + har bir bo'ri uchun doimiy
+  // pozitsion "ovoz" (nafas/pishillash va ov paytida uzluksiz past irillash) — bo'ri yaqinlashganda
+  // o'yinchi uni ko'rmasdan ham eshitadi.
+
+  /** Pozitsion panner: `refDistance` qanchalik katta bo'lsa, ovoz shunchalik uzoqqa yetadi. */
+  private wolfDest(pos: P3 | undefined, ttlSec: number, refDistance: number): AudioNode | null {
+    const c = this.ctx;
+    if (!c) return null;
+    if (!pos) return this.master;
+    const p = c.createPanner();
+    p.panningModel = 'equalpower';
+    p.distanceModel = 'inverse';
+    p.refDistance = refDistance;
+    p.maxDistance = 300;
+    p.rolloffFactor = 1;
+    if (p.positionX) {
+      p.positionX.value = pos.x;
+      p.positionY.value = pos.y;
+      p.positionZ.value = pos.z;
+    } else {
+      p.setPosition(pos.x, pos.y, pos.z);
+    }
+    p.connect(this.master);
+    window.setTimeout(() => {
+      try {
+        p.disconnect();
+      } catch {
+        /* e'tibor bermaymiz */
+      }
+    }, Math.max(0.5, ttlSec) * 1000);
+    return p;
+  }
+
+  /** Tremolo: `rate` Hz tezlikda `depth` (0..1) chuqurlikda amplituda tebranishi; qaytgan gain'ga ulang. */
+  private tremolo(d: AudioNode, t0: number, dur: number, rate: number, depth: number): GainNode {
+    const c = this.ctx!;
+    const g = c.createGain();
+    g.gain.value = 1 - depth * 0.5;
+    const lfo = c.createOscillator();
+    lfo.type = 'sine';
+    lfo.frequency.value = rate;
+    const lg = c.createGain();
+    lg.gain.value = depth * 0.5;
+    lfo.connect(lg).connect(g.gain);
+    g.connect(d);
+    lfo.start(t0);
+    lfo.stop(t0 + dur + 0.1);
+    return g;
+  }
+
+  /** Irillash (sezdi / quvyapti): tishlangan arra to'lqini + g'ichirlagan shovqin, 14 Hz tremolo bilan, ~0.9 s. */
   wolfGrowl(pos?: P3): void {
-    const d = this.dest(pos, 3);
+    const d = this.wolfDest(pos, 3, 7);
     if (!d) return;
     const t = this.ctx!.currentTime;
-    this.tone(d, t, 'sawtooth', 78, 52, 0.7, 0.16);
-    this.tone(d, t + 0.02, 'sawtooth', 81, 55, 0.68, 0.1);
-    this.noise(d, t, 0.6, 'lowpass', 360, 140, 0.9, 0.12, 0.05);
+    const tr = this.tremolo(d, t, 0.95, 13 + Math.random() * 4, 0.7);
+    this.tone(tr, t, 'sawtooth', 125, 88, 0.9, 0.55);
+    this.tone(tr, t + 0.01, 'sawtooth', 252, 176, 0.85, 0.22);
+    this.tone(tr, t + 0.02, 'square', 63, 44, 0.8, 0.18);
+    this.noise(tr, t, 0.85, 'bandpass', 520, 260, 1.2, 0.45, 0.06);
+    this.noise(d, t + 0.05, 0.5, 'bandpass', 1400, 700, 1.0, 0.18, 0.04);
   }
 
-  /** Tashlanish oldidan qisqa keskin irillash. */
+  /** Hurish (o'yinchini ko'rdi): ikki keskin "vov", 0.5 s — ov boshlanganini bildiradi. */
+  wolfBark(pos?: P3): void {
+    const d = this.wolfDest(pos, 3, 9);
+    if (!d) return;
+    const t = this.ctx!.currentTime;
+    for (const dt of [0, 0.26]) {
+      this.noise(d, t + dt, 0.11, 'bandpass', 1500, 500, 0.9, 0.9, 0.004);
+      this.tone(d, t + dt, 'sawtooth', 420, 160, 0.14, 0.6);
+      this.tone(d, t + dt, 'triangle', 210, 95, 0.16, 0.45);
+    }
+  }
+
+  /** Tashlanish oldidan keskin irillash + jag' shaqillashi, 0.45 s. */
   wolfSnarl(pos?: P3): void {
-    const d = this.dest(pos, 3);
+    const d = this.wolfDest(pos, 3, 8);
     if (!d) return;
     const t = this.ctx!.currentTime;
-    this.tone(d, t, 'sawtooth', 120, 70, 0.32, 0.2);
-    this.noise(d, t, 0.3, 'bandpass', 700, 260, 1.4, 0.16, 0.01);
+    const tr = this.tremolo(d, t, 0.5, 22, 0.6);
+    this.tone(tr, t, 'sawtooth', 190, 95, 0.45, 0.7);
+    this.tone(tr, t, 'square', 95, 48, 0.4, 0.3);
+    this.noise(tr, t, 0.42, 'bandpass', 1300, 480, 1.1, 0.8, 0.008);
+    this.noise(d, t + 0.3, 0.05, 'highpass', 2500, 1200, 1.0, 0.5, 0.002);
   }
 
-  /** Uvlash: uchburchak to'lqin 300 → 540 → 330 Hz, ~2.5 s, yengil vibrato; uzoqdan ham eshitiladi. */
+  /** Uvlash: 330 → 620 → 380 Hz, ~2.8 s, 5.5 Hz vibrato va garmonikalar; 300 m gacha eshitiladi. */
   wolfHowl(pos?: P3): void {
-    const d = this.dest(pos, 5);
+    const d = this.wolfDest(pos, 6, 18);
     if (!d) return;
-    const t = this.ctx!.currentTime;
-    this.tone(d, t, 'triangle', 290, 540, 1.15, 0.2);
-    this.tone(d, t + 0.03, 'sine', 293, 546, 1.12, 0.08);
-    this.tone(d, t + 1.1, 'triangle', 540, 330, 1.4, 0.18);
-    this.tone(d, t + 1.12, 'sine', 546, 334, 1.36, 0.07);
+    const c = this.ctx!;
+    const t = c.currentTime;
+    const mk = (type: OscillatorType, mul: number, gain: number) => {
+      const o = c.createOscillator();
+      o.type = type;
+      o.frequency.setValueAtTime(330 * mul, t);
+      o.frequency.exponentialRampToValueAtTime(620 * mul, t + 1.1);
+      o.frequency.setValueAtTime(620 * mul, t + 1.6);
+      o.frequency.exponentialRampToValueAtTime(380 * mul, t + 2.8);
+      // Vibrato
+      const lfo = c.createOscillator();
+      lfo.frequency.value = 5.5;
+      const lg = c.createGain();
+      lg.gain.value = 9 * mul;
+      lfo.connect(lg).connect(o.frequency);
+      const g = c.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(gain, t + 0.25);
+      g.gain.setValueAtTime(gain, t + 2.0);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 2.9);
+      o.connect(g).connect(d);
+      o.start(t);
+      lfo.start(t);
+      o.stop(t + 3);
+      lfo.stop(t + 3);
+    };
+    mk('triangle', 1, 0.6);
+    mk('sine', 1.005, 0.25);
+    mk('sawtooth', 2, 0.09);
+    mk('sine', 3, 0.05);
+    // Nafas "hhh" boshlanishi
+    this.noise(d, t, 0.3, 'bandpass', 900, 500, 1.2, 0.2, 0.05);
   }
 
-  /** Tishlash: tegsa — jag' "shaq" + bo'g'iq zarba, tegmasa — havoda "shap". */
+  /** Tishlash: tegsa — jag' "shaq" + bo'g'iq zarba + g'ichirlash, tegmasa — havoda "shap". */
   wolfBite(pos: P3 | undefined, hit: boolean): void {
-    const d = this.dest(pos, 3);
+    const d = this.wolfDest(pos, 3, 8);
     if (!d) return;
     const t = this.ctx!.currentTime;
     if (hit) {
-      this.noise(d, t, 0.08, 'highpass', 1800, 600, 1.2, 0.3, 0.003);
-      this.noise(d, t + 0.02, 0.14, 'lowpass', 500, 110, 0.8, 0.45, 0.004);
-      this.tone(d, t + 0.02, 'sine', 200, 80, 0.12, 0.3);
+      this.noise(d, t, 0.06, 'highpass', 2600, 900, 1.2, 0.9, 0.002);
+      this.noise(d, t + 0.02, 0.18, 'lowpass', 700, 120, 0.8, 1.0, 0.004);
+      this.tone(d, t + 0.02, 'sine', 220, 70, 0.16, 0.7);
+      this.noise(d, t + 0.1, 0.35, 'bandpass', 900, 350, 1.4, 0.4, 0.02);
     } else {
-      this.noise(d, t, 0.12, 'bandpass', 950, 450, 1.5, 0.18, 0.01);
+      this.noise(d, t, 0.14, 'bandpass', 1100, 450, 1.3, 0.5, 0.008);
+      this.noise(d, t + 0.05, 0.05, 'highpass', 2200, 1200, 1.0, 0.35, 0.002);
     }
+  }
+
+  // Har bir bo'ri uchun doimiy ovoz: pozitsion panner + nafas (pishillash) + past irillash qatlami
+  private wolfVoices = new Map<
+    string,
+    { panner: PannerNode; breath: GainNode; breathLfo: OscillatorNode; growl: GainNode; growlLfo: OscillatorNode; nodes: AudioNode[] }
+  >();
+
+  private createWolfVoice(id: string): void {
+    const c = this.ctx!;
+    const nodes: AudioNode[] = [];
+    const panner = c.createPanner();
+    panner.panningModel = 'equalpower';
+    panner.distanceModel = 'inverse';
+    panner.refDistance = 5;
+    panner.maxDistance = 120;
+    panner.rolloffFactor = 1.2;
+    panner.connect(this.master);
+
+    // Nafas: shovqin → bandpass 700 Hz → LFO bilan "hah-hah" amplitudasi → gain
+    const bSrc = c.createBufferSource();
+    bSrc.buffer = this.noiseBuf;
+    bSrc.loop = true;
+    const bF = c.createBiquadFilter();
+    bF.type = 'bandpass';
+    bF.frequency.value = 760;
+    bF.Q.value = 0.9;
+    const bAm = c.createGain();
+    bAm.gain.value = 0.5;
+    const breathLfo = c.createOscillator();
+    breathLfo.type = 'sine';
+    breathLfo.frequency.value = 1.8;
+    const bLg = c.createGain();
+    bLg.gain.value = 0.5;
+    breathLfo.connect(bLg).connect(bAm.gain);
+    const breath = c.createGain();
+    breath.gain.value = 0.0001;
+    bSrc.connect(bF).connect(bAm).connect(breath).connect(panner);
+    bSrc.start();
+    breathLfo.start();
+    nodes.push(bSrc, bF, bAm, bLg, breathLfo);
+
+    // Uzluksiz past irillash (ov paytida): ikki arra to'lqini → lowpass → tremolo → gain
+    const g1 = c.createOscillator();
+    g1.type = 'sawtooth';
+    g1.frequency.value = 112;
+    const g2 = c.createOscillator();
+    g2.type = 'sawtooth';
+    g2.frequency.value = 169;
+    const gF = c.createBiquadFilter();
+    gF.type = 'lowpass';
+    gF.frequency.value = 650;
+    const gAm = c.createGain();
+    gAm.gain.value = 0.6;
+    const growlLfo = c.createOscillator();
+    growlLfo.type = 'sine';
+    growlLfo.frequency.value = 15;
+    const gLg = c.createGain();
+    gLg.gain.value = 0.4;
+    growlLfo.connect(gLg).connect(gAm.gain);
+    const growl = c.createGain();
+    growl.gain.value = 0.0001;
+    g1.connect(gF);
+    g2.connect(gF);
+    gF.connect(gAm).connect(growl).connect(panner);
+    g1.start();
+    g2.start();
+    growlLfo.start();
+    nodes.push(g1, g2, gF, gAm, gLg, growlLfo);
+
+    this.wolfVoices.set(id, { panner, breath, breathLfo, growl, growlLfo, nodes });
+  }
+
+  /**
+   * Har kadr: bo'rining pozitsiyasi va holati bo'yicha doimiy ovoz darajasi.
+   * `threat` — ovlayapti (stalk/hunt/attack), `moving` — gorizontal tezlik (m/s), `dist` — tinglovchigacha (m).
+   */
+  wolfVoice(id: string, pos: P3, threat: boolean, alert: boolean, speed: number, dist: number, alive: boolean): void {
+    const c = this.ctx;
+    if (!c) return;
+    let v = this.wolfVoices.get(id);
+    if (!alive || dist > 60) {
+      if (v) this.wolfVoiceRemove(id);
+      return;
+    }
+    if (!v) {
+      this.createWolfVoice(id);
+      v = this.wolfVoices.get(id)!;
+    }
+    const p = v.panner;
+    if (p.positionX) {
+      p.positionX.value = pos.x;
+      p.positionY.value = pos.y;
+      p.positionZ.value = pos.z;
+    } else {
+      p.setPosition(pos.x, pos.y, pos.z);
+    }
+    const now = c.currentTime;
+    // Nafas: tinch — sekin va past, ov — tez va baland ("pishillab" quvadi)
+    const breathLevel = threat ? 0.5 : alert ? 0.3 : 0.16;
+    v.breath.gain.setTargetAtTime(breathLevel, now, 0.25);
+    v.breathLfo.frequency.setTargetAtTime(threat ? 3.4 + Math.min(1.2, speed * 0.15) : alert ? 2.4 : 1.6, now, 0.3);
+    // Uzluksiz irillash faqat ovda (hujumda eng baland)
+    const growlLevel = threat ? 0.32 : alert ? 0.14 : 0.0001;
+    v.growl.gain.setTargetAtTime(growlLevel, now, 0.3);
+  }
+
+  wolfVoiceRemove(id: string): void {
+    const v = this.wolfVoices.get(id);
+    if (!v) return;
+    this.wolfVoices.delete(id);
+    const now = this.ctx?.currentTime ?? 0;
+    try {
+      v.breath.gain.setTargetAtTime(0.0001, now, 0.15);
+      v.growl.gain.setTargetAtTime(0.0001, now, 0.15);
+    } catch {
+      /* e'tibor bermaymiz */
+    }
+    window.setTimeout(() => {
+      for (const n of v.nodes) {
+        try {
+          if (n instanceof AudioScheduledSourceNode) n.stop();
+          n.disconnect();
+        } catch {
+          /* e'tibor bermaymiz */
+        }
+      }
+      try {
+        v.breath.disconnect();
+        v.growl.disconnect();
+        v.panner.disconnect();
+      } catch {
+        /* e'tibor bermaymiz */
+      }
+    }, 600);
+  }
+
+  /** Barcha bo'ri ovozlarini o'chirish (xonadan chiqishda). */
+  stopWolfVoices(): void {
+    for (const id of [...this.wolfVoices.keys()]) this.wolfVoiceRemove(id);
   }
 
   /** Pichoq tanaga tegdi: bo'g'iq "tup" — past shovqin va qisqa past ton. */

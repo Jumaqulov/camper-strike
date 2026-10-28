@@ -2055,32 +2055,47 @@ export class Game {
       const snapSpeed = Math.hypot(s1.x - s0.x, s1.z - s0.z) / dtSnap;
       w.speed = teleport ? 0 : lerp(w.speed, snapSpeed, Math.min(1, dt * 12));
       const newState = s1.state;
+      const mouth = { x: w.pos.x, y: w.pos.y + 0.9, z: w.pos.z };
       if (newState !== w.state) {
         const wasThreat = isWolfThreatState(w.state);
-        if (isWolfThreatState(newState) && !wasThreat && t - w.growlAt > 1.5) {
+        if (newState === 'attack') {
+          this.audio.wolfSnarl(mouth);
+        } else if (newState === 'hunt' && !wasThreat) {
+          // O'yinchini ko'rdi — hurib ovga tushadi
           w.growlAt = t;
-          this.audio.wolfGrowl({ x: w.pos.x, y: w.pos.y + 0.9, z: w.pos.z });
-        } else if (newState === 'attack') {
-          this.audio.wolfSnarl({ x: w.pos.x, y: w.pos.y + 0.9, z: w.pos.z });
-        } else if (newState === 'alert' && t - w.growlAt > 2.5) {
+          this.audio.wolfBark(mouth);
+        } else if ((newState === 'stalk' || newState === 'alert') && !wasThreat && t - w.growlAt > 1.2) {
           w.growlAt = t;
-          this.audio.wolfGrowl({ x: w.pos.x, y: w.pos.y + 0.9, z: w.pos.z });
+          this.audio.wolfGrowl(mouth);
         }
         w.state = newState;
       }
       w.targetId = src.targetId ?? null;
       w.alive = newState !== 'dead';
+      const distToMe = Math.hypot(w.pos.x - this.me.body.pos.x, w.pos.z - this.me.body.pos.z);
+      // Ov davomida 2.5–4 s da bir irillaydi (40 m ichida), hushyor holatda sekinroq
+      const threat = isWolfThreatState(w.state);
+      if (w.alive && w.state !== 'attack' && distToMe < 40) {
+        const interval = threat ? 2.5 + Math.random() * 1.5 : w.state === 'alert' ? 5 : 0;
+        if (interval > 0 && t - w.growlAt > interval) {
+          w.growlAt = t;
+          this.audio.wolfGrowl(mouth);
+        }
+      }
+      // Doimiy ovoz: nafas (pishillash) va ovda uzluksiz irillash — pozitsiyasi har kadr yangilanadi
+      this.audio.wolfVoice(w.id, mouth, threat, w.state === 'alert' || w.state === 'sniff', w.speed, distToMe, w.alive);
       const m = w.model;
       m.root.position.copy(w.pos);
       m.root.rotation.y = w.yaw;
       m.update(dt, { state: w.state, speed: w.speed });
-      // Yugurgan bo'rining panja tovushi (yumshoq, tez)
-      if (w.alive && w.speed > 2.5) {
+      // Yugurgan bo'rining panja tovushi: og'ir, tez (chopganda zarbdor)
+      if (w.alive && w.speed > 2.0) {
         w.stepTimer -= dt;
         if (w.stepTimer <= 0) {
-          w.stepTimer = w.speed > 5 ? 0.17 : 0.3;
+          const gallop = w.speed > 5;
+          w.stepTimer = gallop ? 0.16 : 0.3;
           const surf = detectSurface(this.worldDef, w.pos.x, w.pos.y, w.pos.z);
-          this.audio.footstep({ x: w.pos.x, y: w.pos.y, z: w.pos.z }, 0.22, surf);
+          this.audio.footstep({ x: w.pos.x, y: w.pos.y, z: w.pos.z }, gallop ? 0.6 : 0.35, surf);
         }
       }
     }
@@ -2090,6 +2105,7 @@ export class Game {
   private removeWolvesExcept(keep: Set<string> | null): void {
     for (const [id, w] of this.wolves) {
       if (keep && keep.has(id)) continue;
+      this.audio.wolfVoiceRemove(id);
       this.scene.remove(w.model.root);
       w.model.dispose();
       this.wolves.delete(id);
@@ -2477,6 +2493,7 @@ export class Game {
     $('pause-menu').classList.add('hidden');
     this.hud.setWolfWarning('');
     this.removeWolvesExcept(null);
+    this.audio.stopWolfVoices();
     for (const rem of this.remotes.values()) rem.model.dispose();
     for (const [, mesh] of this.grenadeMeshes) {
       this.scene.remove(mesh);
