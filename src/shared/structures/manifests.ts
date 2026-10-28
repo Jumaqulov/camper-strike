@@ -111,7 +111,7 @@ export function buildWoodStairsLocalBoxes(): LocalBoxSpec[] {
 
   // Tutqich kollayderi yo'q: avval +X chetidagi dasta (keyin faqat yuqori qismi) o'yinchini zinaga kirish va
   // yuqorida burilishda to'sib qo'yardi. Pog'onalar o'zi (har biri 0.2 m ko'tarilish) yon devor vazifasini
-  // yetarlicha bajaradi; GLB dagi dasta faqat vizual.
+  // yetarlicha bajaradi. GLB dagi vizual tutqich ham olib tashlangan (scripts/strip-stairs-handrail.mjs).
   return boxes;
 }
 
@@ -304,9 +304,10 @@ export const BUILDING_MANIFESTS: Record<BuildingAssetId, BuildingAssetManifest> 
   wood_stairs_01: {
     id: 'wood_stairs_01',
     url: BUILDING_GLB_URLS.wood_stairs_01,
-    dimensions: { x: 1.33, y: 4.01, z: 4.04 },
+    // Tutqichsiz (scripts/strip-stairs-handrail.mjs): pog'onalar + ikkala yon taxta
+    dimensions: { x: 1.32, y: 3.02, z: 4.04 },
     boundsMin: [-0.66, -0.01, -4.01],
-    boundsMax: [0.67, 4.0, 0.03],
+    boundsMax: [0.66, 3.01, 0.03],
     materials: ['wood'],
     staticMeshes: ['wood_stairs_01_body'],
     pivots: [],

@@ -359,18 +359,15 @@ function buildProceduralFallbackScene(assetId: BuildingAssetId): THREE.Group {
     }
 
     case 'wood_stairs_01': {
-      // Bounds: x[-0.66, 0.67] y[-0.01, 4.00] z[-4.01, 0.03]
+      // Bounds: x[-0.66, 0.66] y[-0.01, 3.01] z[-4.01, 0.03] — tutqichsiz (GLB bilan mos)
       const stairParts: THREE.BufferGeometry[] = [];
       for (let s = 0; s < 15; s++) {
         const stepY = (s + 0.5) * 0.2;
         const stepZ = -(s + 0.5) * (4.0 / 15);
         stairParts.push(createColoredBoxGeometry(1.2, 0.06, 0.27, 0, stepY, stepZ, 'wood'));
       }
-      // Stringer ramp + handrail posts on +X side up to y=4.00
+      // Stringer ramp (no handrail: it blocked the stair entry and the GLB's rail was removed too)
       stairParts.push(createColoredBoxGeometry(1.2, 0.12, 4.95, 0, 1.48, -2.0, 'wood', 0.6435));
-      stairParts.push(createColoredBoxGeometry(0.08, 1.02, 0.08, 0.62, 0.5, -0.01, 'wood'));
-      stairParts.push(createColoredBoxGeometry(0.08, 1.02, 0.08, 0.63, 3.49, -3.97, 'wood'));
-      stairParts.push(createColoredBoxGeometry(1.33, 0.04, 0.08, 0.005, 0.01, -0.01, 'wood'));
 
       const bodyMesh = new THREE.Mesh(mergeFallbackGeometries(stairParts, 'wood'), woodMat);
       bodyMesh.name = 'wood_stairs_01_body';
