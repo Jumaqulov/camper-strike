@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { Server, Socket } from 'socket.io';
 import { sanitizeOpts } from '../../server/lobby';
-import { Room } from '../../server/room';
+import { Room, type ServerPlayer } from '../../server/room';
+import type { ServerWolf } from '../../server/wolf';
 import { GRENADE_FUSE, MATCH_END_DURATION, MAX_HP } from '../constants';
 import { anglesFromDir, vnorm, vsub, type Vec3 } from '../math';
 import type { CampActionAck, CampfireEvent, ChatMsg, CreateRoomOpts, KillEvent, MatchState, Snapshot } from '../protocol';
@@ -31,6 +32,26 @@ import {
   WOLF_NIGHT_RESPAWN_SEC,
   WOLF_RESPAWN_SEC,
   WOOD_CARRY_MAX,
+  NIGHT_DIFFICULTIES,
+  NIGHT_WOLF_CAP,
+  WOLF_ALPHA_BUFF_RADIUS,
+  WOLF_ALPHA_BUFF_SEC,
+  WOLF_COAT_BLACK,
+  WOLF_COAT_CHARCOAL,
+  WOLF_COAT_RED,
+  WOLF_COAT_TAN,
+  WOLF_COAT_WHITE,
+  WOLF_DAWN_FLEE_SEC,
+  WOLF_HEIGHT,
+  WOLF_MAX_PER_ROOM,
+  WOLF_RADIUS,
+  NIGHT_AWARD_TITLES_UZ,
+  computeNightSummary,
+  nightPlayerScore,
+  nightWolvesForWave,
+  sanitizeNightDifficulty,
+  wolfCoatTraits,
+  type NightPlayerStats,
   type WolfBiteEvent,
 } from '../wolf';
 
@@ -198,6 +219,46 @@ function systemChats(emitted: EmittedRoomEvent[]): string[] {
   return emitted.filter((e) => e.event === 'chat').map((e) => (e.payload as ChatMsg).text);
 }
 
+function lastSnap(emitted: EmittedRoomEvent[]): Snapshot {
+  const s = emitted.filter((e) => e.event === 'snap').pop()?.payload as Snapshot | undefined;
+  assert.ok(s, 'snap hodisasi yuborilgan');
+  return s!;
+}
+
+/** Yakka odamli tunda (1 ishtirokchi) `wave` dagi kutilgan bo'rilar soni. */
+function soloWolves(waveIdx: number, difficulty: keyof typeof NIGHT_DIFFICULTIES = 'normal'): number {
+  return nightWolvesForWave(NIGHT_WAVES[waveIdx]!, 1, difficulty);
+}
+
+/**
+ * O'yinchini ochiq chiziqning bir uchiga, bo'rini 6 m naridagi uchiga qo'yib, bo'ri o'lguncha avtomatdan
+ * otadi (server ichidagi botFire — fire() yo'li; vaqt o'tmaydi, bo'ri joyidan siljimaydi).
+ */
+function shootWolfDead(room: Room, p: ServerPlayer, w: ServerWolf): void {
+  const line = findOpenLine(room, 6);
+  p.pos = { ...line.a };
+  p.vel = { x: 0, y: 0, z: 0 };
+  w.pos = { ...line.b };
+  w.vel = { x: 0, y: 0, z: 0 };
+  p.weapon = 'rifle';
+  p.reloadWeapon = null;
+  p.switchUntil = 0;
+  for (let i = 0; i < 60 && w.alive; i++) {
+    p.ammo.rifle = { mag: 30, reserve: 90 };
+    w.vel = { x: 0, y: 0, z: 0 };
+    const eye = { x: p.pos.x, y: p.pos.y + 1.62, z: p.pos.z };
+    const center = { x: w.pos.x, y: w.pos.y + 0.6, z: w.pos.z };
+    const ang = anglesFromDir(vnorm(vsub(center, eye)));
+    p.yaw = ang.yaw;
+    p.pitch = ang.pitch;
+    p.lastShot = -99;
+    room.botFire(p, 0);
+  }
+  assert.equal(w.alive, false, `bo'ri otib o'ldirildi (hp=${w.hp})`);
+}
+
+const GREY_COATS = [WOLF_COAT_CHARCOAL, WOLF_COAT_TAN];
+
 describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
   it("1. sanitizeOpts: wolf_night saqlanadi, forest_square + loot, tun davomiyligi chegaralanadi, bo'rilar 0; noma'lum rejim → tdm", () => {
     const o = sanitizeOpts(
@@ -222,7 +283,7 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
     assert.equal(fs.bots, 3);
   });
 
-  it("2. Yakka odam botlarsiz raund boshlaydi; zona yo'q, 1-to'lqinda jadvaldagi bo'rilar", () => {
+  it("2. Yakka odam botlarsiz raund boshlaydi; zona yo'q, 1-to'lqinda 1 ishtirokchiga moslangan bo'rilar", () => {
     const { io, emitted } = createFakeIo();
     const room = makeNightRoom(io);
     try {
@@ -235,10 +296,11 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       assert.ok(night, 'tun holati bor');
       assert.equal(night!.wave, 1);
       assert.equal(night!.waveCount, NIGHT_WAVE_COUNT);
-      assert.equal(night!.wolvesAlive, NIGHT_WAVES[0]!.wolves);
+      assert.equal(night!.wolvesAlive, soloWolves(0));
       assert.ok(night!.dawnInSec > 230 && night!.dawnInSec <= 240, `tonggacha ~240 s (${night!.dawnInSec})`);
-      assert.equal(room.wolves.size, NIGHT_WAVES[0]!.wolves);
+      assert.equal(room.wolves.size, soloWolves(0));
       const w = [...room.wolves.values()][0]!;
+      assert.ok(GREY_COATS.includes(w.coat), "1-to'lqinda faqat oddiy bo'rilar");
       assert.equal(w.speedMul, NIGHT_WAVES[0]!.speedMul);
       assert.equal(w.hp, Math.round(WOLF_MAX_HP * NIGHT_WAVES[0]!.hpMul));
       const m = lastMatch(emitted);
@@ -247,14 +309,14 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       assert.equal(m.survival?.night?.wave, 1);
       assert.deepEqual(m.survival?.winnerIds, []);
       // Chat buyrug'i bilan bo'rilar soni o'zgarmaydi
-      assert.equal(room.setWolfCount(4), NIGHT_WAVES[0]!.wolves);
-      assert.equal(room.wolves.size, NIGHT_WAVES[0]!.wolves);
+      assert.equal(room.setWolfCount(4), soloWolves(0));
+      assert.equal(room.wolves.size, soloWolves(0));
     } finally {
       room.destroy();
     }
   });
 
-  it("3. To'lqinlar: 25% va 75% da jadvaldagi bo'rilar (kuchliroq); o'lgan bo'ri qayta tug'iladi", () => {
+  it("3. To'lqinlar: 25% va 75% da moslangan sondagi bo'rilar (kuchliroq); o'lgan bo'ri qayta tug'iladi", () => {
     const { io } = createFakeIo();
     const room = makeNightRoom(io, { timeLimit: 4 });
     try {
@@ -263,19 +325,22 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       // 25% → 2-to'lqin
       surviveFor(room, p, 61);
       assert.equal(room.phase, 'playing', 'yakka tirik qolgan raundni tugatmaydi');
-      assert.equal(room.wolves.size, NIGHT_WAVES[1]!.wolves, '2-to‘lqinda to‘lqin jadvalidagi bo‘rilar');
+      assert.equal(room.wolves.size, soloWolves(1), '2-to‘lqinda 1 ishtirokchiga moslangan bo‘rilar');
       const list2 = [...room.wolves.values()];
-      assert.equal(list2[list2.length - 1]!.speedMul, NIGHT_WAVES[1]!.speedMul, 'yangi bo‘ri 2-to‘lqin kuchida');
+      const newest2 = list2[list2.length - 1]!;
+      // Ko'paytuvchi = to'lqin × qiyinlik (normal = 1) × rang turi
+      assert.equal(newest2.speedMul, NIGHT_WAVES[1]!.speedMul * 1 * wolfCoatTraits(newest2.coat).speedMul, 'yangi bo‘ri 2-to‘lqin kuchida');
       assert.equal(list2[0]!.speedMul, NIGHT_WAVES[0]!.speedMul, 'eski bo‘ri o‘z ko‘rsatkichini saqlaydi');
       assert.equal(room.getNightSnap()!.wave, 2);
       // 75% → 4-to'lqin
       surviveFor(room, p, 120);
       assert.equal(room.phase, 'playing');
-      assert.equal(room.wolves.size, NIGHT_WAVES[3]!.wolves, '4-to‘lqinda to‘lqin jadvalidagi bo‘rilar');
+      assert.equal(room.wolves.size, soloWolves(3), '4-to‘lqinda moslangan bo‘rilar');
       assert.equal(room.getNightSnap()!.wave, 4);
       const newest = [...room.wolves.values()].pop()!;
-      assert.equal(newest.hpMul, NIGHT_WAVES[3]!.hpMul);
-      assert.equal(newest.biteMul, NIGHT_WAVES[3]!.biteMul);
+      const nk = wolfCoatTraits(newest.coat);
+      assert.equal(newest.hpMul, NIGHT_WAVES[3]!.hpMul * 1 * nk.hpMul);
+      assert.equal(newest.biteMul, NIGHT_WAVES[3]!.biteMul * 1 * nk.biteMul);
 
       // Bo'rini o'ldiramiz: 1 hp, ochiq chiziqda otamiz (loot rejimida qurol egaligi tekshirilmasin —
       // server ichidagi botFire orqali, mo'ljal yaw/pitch dan olinadi)
@@ -303,7 +368,8 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
         killed = !w.alive;
       }
       assert.equal(w.alive, false, "bo'ri o'ldi");
-      assert.equal(room.wolves.size, NIGHT_WAVES[3]!.wolves, 'jasad o‘chmaydi — qayta tug‘ilishni kutadi');
+      assert.equal(room.wolves.size, soloWolves(3), 'jasad o‘chmaydi — qayta tug‘ilishni kutadi');
+      assert.equal(w.respawnAt - w.diedAt, NIGHT_DIFFICULTIES.normal.respawnSec, 'qaytish vaqti qiyinlikdan');
       // Tunda qayta tug'ilish WOLF_NIGHT_RESPAWN_SEC (klassikdagi WOLF_RESPAWN_SEC dan tezroq)
       assert.ok(WOLF_NIGHT_RESPAWN_SEC < WOLF_RESPAWN_SEC && WOLF_NIGHT_RESPAWN_SEC > WOLF_CORPSE_SEC);
       surviveFor(room, p, WOLF_NIGHT_RESPAWN_SEC - 1);
@@ -311,8 +377,9 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       surviveFor(room, p, 2);
       assert.equal(room.phase, 'playing');
       assert.equal(w.alive, true, "bo'ri qayta tug'ildi");
-      assert.equal(w.hpMul, NIGHT_WAVES[3]!.hpMul, 'qayta tug‘ilgan bo‘ri joriy to‘lqin kuchida');
-      assert.equal(w.hp, Math.round(WOLF_MAX_HP * NIGHT_WAVES[3]!.hpMul));
+      // Qayta tug'ilganda rang (tur) qaytadan tanlanadi va uning ko'rsatkichlari qo'llanadi
+      assert.equal(w.hpMul, NIGHT_WAVES[3]!.hpMul * 1 * wolfCoatTraits(w.coat).hpMul, 'qayta tug‘ilgan bo‘ri joriy to‘lqin kuchida');
+      assert.equal(w.hp, Math.round(WOLF_MAX_HP * w.hpMul));
     } finally {
       room.destroy();
     }
@@ -341,9 +408,13 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       assert.ok(m.survival?.winnerIds?.includes('p1'), 'MatchState.survival.winnerIds');
       assert.equal(m.winner, 'Ovchi');
       assert.ok(!emitted.some((e) => e.event === 'kill'), 'hech kim o‘lmagan');
+      // Tong otgach bo'rilar qochib ketadi (WOLF_DAWN_FLEE_SEC ichida) — yakun ekrani davomida yo'qoladi
+      assert.ok([...room.wolves.values()].every((w) => w.state === 'flee' || !w.alive), "qolgan bo'rilar qochmoqda");
+      room.advanceTimeForTest(WOLF_DAWN_FLEE_SEC + 0.5, 0.25);
+      assert.equal(room.phase, 'ended');
       assert.equal(room.wolves.size, 0, 'tong otgach bo‘rilar ketadi');
       // Yakunlash ko'rsatuvi o'tgach yakka odam yana sanoqqa o'tadi
-      room.advanceTimeForTest(MATCH_END_DURATION + 0.5, 0.25);
+      room.advanceTimeForTest(MATCH_END_DURATION - WOLF_DAWN_FLEE_SEC, 0.25);
       assert.equal(room.phase, 'countdown');
       assert.deepEqual(room.getSurvivalState()!.winnerIds, []);
     } finally {
@@ -375,7 +446,15 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       const surv = room.getSurvivalState()!;
       assert.equal(surv.winReason, 'draw_no_survivors');
       assert.deepEqual(surv.winnerIds, []);
-      assert.equal(room.wolves.size, 0);
+      assert.equal(room.wolves.size, 0, "bo'rilar yutganda bo'rilar darhol tozalanadi (avvalgidek)");
+      // Natija: tong otmadi, hech kim tirik emas, hamma qiymat 0 — mukofot yo'q
+      const sum = surv.nightSummary!;
+      assert.ok(sum, 'nightSummary yakunda bor');
+      assert.equal(sum.dawn, false);
+      assert.equal(sum.stats.length, 1);
+      assert.equal(sum.stats[0]!.survived, false);
+      assert.deepEqual(sum.awards, []);
+      assert.equal(lastMatch(emitted).survival?.nightSummary?.dawn, false);
     } finally {
       room.destroy();
     }
@@ -934,5 +1013,409 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
     } finally {
       room.destroy();
     }
+  });
+
+  // ---------------- 3-bosqich: qiyinlik, bo'ri turlari, tong otishi, tun natijasi ----------------
+
+  it('17. Tun qiyinligi: sanitizeNightDifficulty/sanitizeOpts, RoomInfo.nightDifficulty faqat wolf_night da', () => {
+    assert.equal(sanitizeNightDifficulty('hard'), 'hard');
+    assert.equal(sanitizeNightDifficulty('easy'), 'easy');
+    assert.equal(sanitizeNightDifficulty('HARD'), 'normal');
+    assert.equal(sanitizeNightDifficulty(undefined), 'normal');
+    assert.equal(sanitizeNightDifficulty(3), 'normal');
+    assert.equal(sanitizeOpts({ mode: 'wolf_night', nightDifficulty: 'hard' }, 'X').nightDifficulty, 'hard');
+    assert.equal(sanitizeOpts({ mode: 'wolf_night', nightDifficulty: 'nope' as unknown as 'hard' }, 'X').nightDifficulty, 'normal');
+    assert.equal(sanitizeOpts({ mode: 'wolf_night' }, 'X').nightDifficulty, 'normal');
+    assert.equal(sanitizeOpts({ mode: 'ffa', nightDifficulty: 'hard' }, 'X').nightDifficulty, undefined, 'boshqa rejimda maydon yo‘q');
+    assert.equal(sanitizeOpts({ mode: 'forest_survival', nightDifficulty: 'hard' }, 'X').nightDifficulty, undefined);
+    const { io } = createFakeIo();
+    const hard = makeNightRoom(io, { nightDifficulty: 'hard' });
+    const def = makeNightRoom(io);
+    const bogus = makeNightRoom(io, { nightDifficulty: 'x' as unknown as 'hard' });
+    const ffa = makeFfaRoom(io, 0, 0);
+    try {
+      assert.equal(hard.nightDifficulty, 'hard');
+      assert.equal(hard.info().nightDifficulty, 'hard');
+      assert.equal(def.info().nightDifficulty, 'normal');
+      assert.equal(bogus.info().nightDifficulty, 'normal', 'xona ham noma‘lum qiymatni tozalaydi');
+      assert.equal(ffa.info().nightDifficulty, undefined);
+    } finally {
+      hard.destroy();
+      def.destroy();
+      bogus.destroy();
+      ffa.destroy();
+    }
+  });
+
+  it("18. To'lqindagi bo'rilar soni tirik ishtirokchilar va qiyinlikka moslanadi, NIGHT_WOLF_CAP dan oshmaydi", () => {
+    // Jadval ~3 ishtirokchi uchun: 'normal' da 3 kishi — aynan NIGHT_WAVES dagi son
+    for (const wave of NIGHT_WAVES) {
+      assert.equal(nightWolvesForWave(wave, 3, 'normal'), wave.wolves, `${wave.wave}-to'lqin, 3 ishtirokchi`);
+      assert.ok(nightWolvesForWave(wave, 1, 'normal') <= wave.wolves, 'yakka — kamroq');
+      assert.ok(nightWolvesForWave(wave, 8, 'normal') >= wave.wolves, "ko'p ishtirokchi — ko'proq");
+      assert.ok(nightWolvesForWave(wave, 3, 'easy') <= wave.wolves);
+      assert.ok(nightWolvesForWave(wave, 3, 'hard') >= wave.wolves);
+      for (let n = 0; n <= 16; n++) {
+        for (const d of ['easy', 'normal', 'hard'] as const) {
+          const k = nightWolvesForWave(wave, n, d);
+          assert.ok(k >= 1 && k <= NIGHT_WOLF_CAP, `1..${NIGHT_WOLF_CAP} (${k})`);
+        }
+      }
+    }
+    assert.equal(nightWolvesForWave(NIGHT_WAVES[3]!, 8, 'hard'), NIGHT_WOLF_CAP);
+    assert.ok(NIGHT_WOLF_CAP > WOLF_MAX_PER_ROOM);
+
+    // Xona: 1 odam + 7 bot, 'hard' — 4-to'lqinda NIGHT_WOLF_CAP ta bo'ri (klassik chegaradan ko'p)
+    const { io } = createFakeIo();
+    const room = makeNightRoom(io, { bots: 7, nightDifficulty: 'hard' });
+    try {
+      const { p } = startSoloNight(room);
+      p.spawnTime = -99;
+      assert.equal(room.getSurvivalState()!.aliveCount, 8);
+      // Statistika har bir ishtirokchi (odam va bot) uchun
+      const stats = room.getNightStatsForTest();
+      assert.equal(stats.length, 8);
+      assert.equal(stats.filter((s) => s.isBot).length, 7);
+      assert.equal(room.wolves.size, nightWolvesForWave(NIGHT_WAVES[0]!, 8, 'hard'));
+      const H = NIGHT_DIFFICULTIES.hard;
+      for (const w of room.wolves.values()) {
+        const k = wolfCoatTraits(w.coat);
+        assert.ok(Math.abs(w.speedMul - NIGHT_WAVES[0]!.speedMul * H.speedMul * k.speedMul) < 1e-9, 'to‘lqin × qiyinlik × tur');
+        assert.ok(Math.abs(w.biteMul - NIGHT_WAVES[0]!.biteMul * H.biteMul * k.biteMul) < 1e-9);
+        assert.equal(w.hp, Math.round(WOLF_MAX_HP * NIGHT_WAVES[0]!.hpMul * H.hpMul * k.hpMul));
+      }
+      // Qiyin tunda o'ldirilgan bo'ri tezroq qaytadi
+      const w0 = [...room.wolves.values()][0]!;
+      shootWolfDead(room, p, w0);
+      assert.equal(w0.respawnAt - w0.diedAt, H.respawnSec);
+      // 4-to'lqingacha (tun 40 s): hamma tirik tutiladi — ishtirokchilar soni 8 bo'lib qoladi
+      room.setSurvivalConfigForTest({ roundDurationSec: 40 });
+      for (let i = 0; i < 400 && room.getNightSnap()!.wave < 4; i++) {
+        room.advanceTimeForTest(0.1, 1 / 30);
+        for (const pl of room.players.values()) pl.hp = MAX_HP;
+      }
+      assert.equal(room.phase, 'playing');
+      assert.equal(room.getNightSnap()!.wave, 4);
+      assert.equal(room.getSurvivalState()!.aliveCount, 8);
+      assert.equal(room.wolves.size, NIGHT_WOLF_CAP, `4-to'lqinda ${NIGHT_WOLF_CAP} ta bo'ri`);
+      assert.ok(room.addWolf() === null, 'chegaradan ortiq bo‘ri qo‘shilmaydi');
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("19. Bo'ri turlari: 1-to'lqinda faqat oddiy, 2-dan chaqqon/soya, 3-dan to'da boshlig'i — bir vaqtda ko'pi bilan bitta", () => {
+    const { io, emitted } = createFakeIo();
+    const room = makeNightRoom(io, { nightDifficulty: 'hard' });
+    try {
+      const { p } = startSoloNight(room);
+      room.setSurvivalConfigForTest({ roundDurationSec: 80 });
+      const seen = new Map<number, Set<number>>();
+      let maxAlpha = 0;
+      let firstAlphaWave = 0;
+      for (let i = 0; i < 300 && room.phase === 'playing'; i++) {
+        room.advanceTimeForTest(0.25, 1 / 30);
+        p.hp = MAX_HP;
+        p.vel = { x: 0, y: 0, z: 0 };
+        const wave = room.getNightSnap()!.wave;
+        const alive = [...room.wolves.values()].filter((w) => w.alive);
+        const alphas = alive.filter((w) => w.coat === WOLF_COAT_WHITE).length;
+        assert.ok(alphas <= 1, `bir vaqtda ko'pi bilan bitta to'da boshlig'i (${alphas})`);
+        maxAlpha = Math.max(maxAlpha, alphas);
+        if (alphas > 0 && !firstAlphaWave) firstAlphaWave = wave;
+        if (!seen.has(wave)) seen.set(wave, new Set());
+        for (const w of alive) {
+          seen.get(wave)!.add(w.coat);
+          if (wave < 3) assert.notEqual(w.coat, WOLF_COAT_WHITE, `${wave}-to'lqinda to'da boshlig'i yo'q`);
+          if (wave < 2) assert.ok(GREY_COATS.includes(w.coat), "1-to'lqinda faqat oddiy bo'rilar");
+          // Tur ko'rsatkichi har doim qo'llangan (to'lqin ko'paytuvchisi bo'ri tug'ilgan to'lqindan)
+          const k = wolfCoatTraits(w.coat);
+          const waveMul = w.hpMul / (k.hpMul * NIGHT_DIFFICULTIES.hard.hpMul);
+          assert.ok(NIGHT_WAVES.some((x) => Math.abs(x.hpMul - waveMul) < 1e-9), `hpMul = to'lqin × qiyinlik × tur (${w.hpMul})`);
+        }
+        // Qayta tug'ilishni tezlashtiramiz: har 1 s da bitta bo'ri "o'ladi" va darhol qaytadi (rang qayta tanlanadi)
+        if (i % 4 === 3 && alive.length) {
+          const w = alive[i % alive.length]!;
+          w.alive = false;
+          w.state = 'dead';
+          w.hp = 0;
+          w.diedAt = room.now() - WOLF_CORPSE_SEC - 0.1;
+          w.respawnAt = room.now();
+        }
+      }
+      assert.ok(seen.get(4), "4-to'lqinga yetildi");
+      assert.equal(maxAlpha, 1, "3-to'lqindan to'da boshlig'i chiqadi");
+      assert.equal(firstAlphaWave, 3, "to'da boshlig'i 3-to'lqin boshida keladi");
+      const laterCoats = new Set([...(seen.get(2) ?? []), ...(seen.get(3) ?? []), ...(seen.get(4) ?? [])]);
+      assert.ok(laterCoats.has(WOLF_COAT_RED) || laterCoats.has(WOLF_COAT_BLACK), "2-to'lqindan chaqqon/soya bo'rilar");
+      assert.ok(systemChats(emitted).some((t) => t.includes("To'da boshlig'i keldi")), 'chatda e‘lon');
+      // Snapshotda rang (klient GLB tanlaydi)
+      const snapWolves = lastSnap(emitted).wolves ?? [];
+      for (const sw of snapWolves) assert.equal(sw.coat, room.wolves.get(sw.id)!.coat);
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("20. To'da boshlig'i: jon/tishlash/tezlik ko'paytuvchilari, katta xitboks, uvlashi yaqin bo'rilarni tezlashtiradi, o'ldirilsa chatda nomi", () => {
+    const { io, emitted } = createFakeIo();
+    const room = makeNightRoom(io);
+    try {
+      const { p } = startSoloNight(room);
+      p.spawnTime = -99;
+      const alpha = [...room.wolves.values()][0]!;
+      const grey = room.addWolf()!;
+      const far = room.addWolf()!;
+      assert.ok(GREY_COATS.includes(grey.coat) && GREY_COATS.includes(far.coat), "1-to'lqin — oddiy bo'rilar");
+      room.setWolfCoatForTest(alpha, WOLF_COAT_WHITE);
+      const A = wolfCoatTraits(WOLF_COAT_WHITE);
+      assert.equal(A.kind, 'alpha');
+      assert.equal(alpha.hpMul, NIGHT_WAVES[0]!.hpMul * 1 * A.hpMul);
+      assert.equal(alpha.hp, Math.round(WOLF_MAX_HP * NIGHT_WAVES[0]!.hpMul * A.hpMul));
+      assert.ok(alpha.hp > grey.hp, 'to‘da boshlig‘i chidamliroq');
+      assert.equal(alpha.biteMul, NIGHT_WAVES[0]!.biteMul * 1 * A.biteMul);
+      assert.equal(alpha.speedMul, NIGHT_WAVES[0]!.speedMul * 1 * A.speedMul);
+
+      // Xitboks masshtabi: oddiy bo'ri xitboksidan tashqarida, boshliqnikida — tegadi
+      const base = { ...alpha.pos };
+      grey.pos = { ...base };
+      const dirX = { x: 1, y: 0, z: 0 };
+      const high = { x: base.x - 10, y: base.y + (WOLF_HEIGHT * (1 + A.scale)) / 2, z: base.z };
+      assert.ok(room.rayVsWolfForTest(high, dirX, alpha, 50) !== null, 'baland nur boshliqqa tegadi');
+      assert.equal(room.rayVsWolfForTest(high, dirX, grey, 50), null, 'oddiy bo‘riga tegmaydi');
+      const side = { x: base.x - 10, y: base.y + 0.5, z: base.z + ((WOLF_RADIUS + 0.25) * (1 + A.scale)) / 2 };
+      assert.ok(room.rayVsWolfForTest(side, dirX, alpha, 50) !== null, 'yon nur boshliqqa tegadi');
+      assert.equal(room.rayVsWolfForTest(side, dirX, grey, 50), null);
+
+      // Uvlash: radius ichidagi boshqa bo'ri tezlashadi, tashqaridagi va boshliqning o'zi — yo'q
+      grey.pos = { x: base.x + 10, y: base.y, z: base.z };
+      far.pos = { x: base.x + WOLF_ALPHA_BUFF_RADIUS + 10, y: base.y, z: base.z };
+      const t0 = room.now();
+      room.wolfHowl(alpha);
+      assert.ok(Math.abs(grey.alphaBuffUntil - (t0 + WOLF_ALPHA_BUFF_SEC)) < 1e-6, 'yaqin bo‘ri tezlashdi');
+      assert.equal(far.alphaBuffUntil, 0, 'uzoqdagi bo‘ri tezlashmaydi');
+      assert.equal(alpha.alphaBuffUntil, 0, 'boshliqning o‘zi tezlashmaydi');
+      grey.alphaBuffUntil = 0;
+      room.wolfHowl(far);
+      assert.equal(grey.alphaBuffUntil, 0, 'oddiy bo‘ri uvlashi tezlashtirmaydi');
+
+      // O'ldirish: chatda tur nomi, statistika
+      room.wolves.delete(grey.id);
+      room.wolves.delete(far.id);
+      const hp0 = alpha.hp;
+      shootWolfDead(room, p, alpha);
+      assert.ok(systemChats(emitted).some((t) => t.includes("Ovchi to'da boshlig'ini o'ldirdi!")), 'chatda tur nomi');
+      const st = room.getNightStatsForTest()[0]!;
+      assert.equal(st.wolfKills, 1);
+      assert.equal(st.alphaKills, 1);
+      assert.equal(st.wolfDamage, hp0, "zarar — bo'rining joni (ortiqcha hisoblanmaydi)");
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("21. Tong otdi: bo'rilar 'flee' — yakun ekranida snapshotda qoladi, tishlamaydi, uzoqlashadi, WOLF_DAWN_FLEE_SEC dan keyin yo'qoladi", () => {
+    const { io, emitted } = createFakeIo();
+    const room = makeNightRoom(io, { timeLimit: 3 });
+    try {
+      const { p } = startSoloNight(room);
+      p.spawnTime = -99;
+      room.setSurvivalConfigForTest({ roundDurationSec: 12 });
+      surviveFor(room, p, 10);
+      assert.equal(room.phase, 'playing');
+      // Tong otishidan oldin bo'rilar o'yinchi yonida hujumda
+      const line = findOpenLine(room, 6);
+      p.pos = { ...line.a };
+      p.vel = { x: 0, y: 0, z: 0 };
+      const wolves = [...room.wolves.values()].filter((w) => w.alive);
+      assert.ok(wolves.length >= 2, `bo'rilar bor (${wolves.length})`);
+      wolves.forEach((w, i) => {
+        w.pos = i === 0 ? groundAt(room, line.a.x + 1.2, line.a.z) : { ...line.b };
+        w.vel = { x: 0, y: 0, z: 0 };
+        w.brain.onDamaged(p, room.now());
+      });
+      for (let i = 0; i < 40 && room.phase === 'playing'; i++) {
+        room.advanceTimeForTest(0.1, 1 / 30);
+        p.hp = MAX_HP;
+        p.vel = { x: 0, y: 0, z: 0 };
+        p.pos = { ...line.a };
+      }
+      assert.equal(room.phase, 'ended');
+      assert.equal(room.getSurvivalState()!.winReason, 'dawn');
+      const tDawn = room.now();
+      const fleeing = [...room.wolves.values()].filter((w) => w.alive);
+      assert.ok(fleeing.length >= 2, `yaqindagi bo'rilar darhol yo'qolmaydi (${fleeing.length})`);
+      for (const w of fleeing) {
+        assert.equal(w.state, 'flee');
+        assert.equal(w.targetId, null);
+        assert.ok(w.fleeUntil <= tDawn + WOLF_DAWN_FLEE_SEC + 1e-6);
+      }
+      const d0 = new Map(fleeing.map((w) => [w.id, Math.hypot(w.pos.x - p.pos.x, w.pos.z - p.pos.z)] as const));
+      const bitesBefore = emitted.filter((e) => e.event === 'wolf:bite').length;
+      let snapsWithFlee = 0;
+      for (let i = 0; i < 30; i++) {
+        room.advanceTimeForTest(0.1, 1 / 30);
+        p.pos = { ...line.a };
+        p.vel = { x: 0, y: 0, z: 0 };
+        if ((lastSnap(emitted).wolves ?? []).some((x) => x.state === 'flee')) snapsWithFlee++;
+        for (const w of room.wolves.values()) {
+          if (w.alive) assert.equal(w.state, 'flee', "'ended' fazasi qochishni idle ga qaytarmaydi");
+        }
+      }
+      assert.equal(p.hp, MAX_HP, 'tong otgach bo‘ri tishlamaydi');
+      assert.equal(emitted.filter((e) => e.event === 'wolf:bite').length, bitesBefore, "wolf:bite hodisasi yo'q");
+      assert.ok(snapsWithFlee >= 25, `yakun ekranida snapshotlarda qochayotgan bo'rilar (${snapsWithFlee})`);
+      for (const sw of lastSnap(emitted).wolves ?? []) {
+        if (sw.state === 'dead') continue;
+        assert.equal(sw.state, 'flee');
+        assert.equal(sw.targetId, undefined);
+      }
+      const still = fleeing.filter((w) => room.wolves.has(w.id));
+      const gains = still.map((w) => Math.hypot(w.pos.x - p.pos.x, w.pos.z - p.pos.z) - d0.get(w.id)!);
+      const avgGain = gains.length ? gains.reduce((a, b) => a + b, 0) / gains.length : Infinity;
+      assert.ok(avgGain > 5, `bo'rilar o'yinchidan uzoqlashadi (o'rtacha +${avgGain.toFixed(1)} m)`);
+      // WOLF_DAWN_FLEE_SEC dan keyin hammasi yo'q, yakun ekrani hali davom etadi
+      room.advanceTimeForTest(tDawn + WOLF_DAWN_FLEE_SEC + 0.3 - room.now(), 1 / 30);
+      assert.equal(room.phase, 'ended');
+      assert.ok(![...room.wolves.values()].some((w) => w.alive), "qochgan bo'rilar xonadan olib tashlandi");
+      assert.ok(!(lastSnap(emitted).wolves ?? []).some((x) => x.state === 'flee'), "snapshotda qochayotgan bo'ri qolmadi");
+      // Keyingi tun sanog'ida bo'ri yo'q (yakun ekrani MATCH_END_DURATION, sanoq 2 s)
+      room.advanceTimeForTest(MATCH_END_DURATION - WOLF_DAWN_FLEE_SEC, 0.25);
+      assert.equal(room.phase, 'countdown');
+      assert.equal(room.wolves.size, 0);
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("22. Tun statistikasi: bo'ri o'ldirish/zarar, o'tin, qayta yoqish; yakunda nightSummary (MVP, mukofotlar), keyingi sanoqda null", () => {
+    const { io, emitted } = createFakeIo();
+    const room = makeNightRoom(io, { timeLimit: 3 });
+    try {
+      const { p } = startSoloNight(room);
+      p.spawnTime = -99;
+      assert.deepEqual(room.getNightStatsForTest(), [
+        { id: 'p1', name: 'Ovchi', isBot: false, wolfKills: 0, alphaKills: 0, wolfDamage: 0, logsFed: 0, relights: 0, survived: false },
+      ]);
+      assert.equal(room.getSurvivalState()!.nightSummary, null, "o'yin davomida natija yo'q");
+      assert.equal(lastMatch(emitted).survival?.nightSummary, null);
+
+      // 1) Bo'ri (150 hp): zarar aynan 150 — o'ldiruvchi o'qning ortiqchasi hisoblanmaydi
+      const w = [...room.wolves.values()][0]!;
+      w.hp = 150;
+      shootWolfDead(room, p, w);
+      assert.ok(systemChats(emitted).some((t) => t.includes("Ovchi vahshiy bo'rini o'ldirdi!")));
+      room.wolves.clear();
+      // 2) Asosiy gulxanga 2 ta o'tin
+      const fires = room.getNightSnap()!.fires;
+      const main = room.campfires.get(fires[0]!.id)!;
+      main.fuelSec = 100;
+      p.pos = groundAt(room, main.x + 1.2, main.z);
+      p.vel = { x: 0, y: 0, z: 0 };
+      p.wood = 2;
+      assert.equal(room.onFeedFire('p1', { fireId: main.id }).ok, true);
+      // 3) 2-gulxan o'chadi va 1 o'tin bilan qayta yoqiladi
+      const f2 = room.campfires.get(fires[1]!.id)!;
+      f2.fuelSec = 0.05;
+      room.advanceTimeForTest(0.4, 1 / 30);
+      assert.equal(f2.lit, false);
+      p.pos = groundAt(room, f2.x + 1.2, f2.z);
+      p.vel = { x: 0, y: 0, z: 0 };
+      p.wood = 1;
+      assert.equal(room.onFeedFire('p1', { fireId: f2.id }).ok, true);
+      const st = room.getNightStatsForTest()[0]!;
+      assert.equal(st.wolfKills, 1);
+      assert.equal(st.alphaKills, 0);
+      assert.equal(st.wolfDamage, 150);
+      assert.equal(st.logsFed, 3);
+      assert.equal(st.relights, 1);
+
+      // Tong otadi
+      room.setSurvivalConfigForTest({ roundDurationSec: 2 });
+      surviveFor(room, p, 3);
+      assert.equal(room.phase, 'ended');
+      const sum = room.getSurvivalState()!.nightSummary!;
+      assert.ok(sum, 'yakunda nightSummary');
+      assert.equal(sum.dawn, true);
+      assert.equal(sum.difficulty, 'normal');
+      assert.equal(sum.stats.length, 1);
+      const s = sum.stats[0]!;
+      assert.equal(s.survived, true);
+      const score = nightPlayerScore(s);
+      assert.equal(score, 1 * 3 + 3 * 2 + 1 * 3 + 4 + 1, 'bo‘ri 3 + o‘tin 6 + yoqish 3 + tong 4 + zarar 1');
+      const byKind = new Map(sum.awards.map((a) => [a.kind, a] as const));
+      assert.deepEqual(
+        [...byKind.keys()].sort(),
+        ['firekeeper', 'hunter', 'mvp', 'woodsman'],
+      );
+      assert.equal(byKind.get('mvp')!.playerId, 'p1');
+      assert.equal(byKind.get('mvp')!.value, score);
+      assert.equal(byKind.get('mvp')!.titleUz, NIGHT_AWARD_TITLES_UZ.mvp);
+      assert.equal(byKind.get('hunter')!.value, 1);
+      assert.equal(byKind.get('woodsman')!.value, 3);
+      assert.equal(byKind.get('firekeeper')!.value, 1);
+      const m = lastMatch(emitted);
+      assert.equal(m.phase, 'ended');
+      assert.deepEqual(m.survival?.nightSummary, sum, 'MatchState.survival.nightSummary');
+      assert.ok(systemChats(emitted).some((t) => t.includes(`🏆 ${NIGHT_AWARD_TITLES_UZ.mvp}: Ovchi (${score} ball)`)), 'MVP chatda');
+
+      // Keyingi sanoq: natija va statistika tozalanadi
+      room.advanceTimeForTest(MATCH_END_DURATION + 0.5, 0.25);
+      assert.equal(room.phase, 'countdown');
+      assert.equal(room.getSurvivalState()!.nightSummary, null);
+      assert.equal(lastMatch(emitted).survival?.nightSummary, null);
+      assert.equal(room.getNightStatsForTest().length, 0);
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("23. computeNightSummary: ball tartibi, teng qiymat (barqaror tartib), nol qiymat — mukofot yo'q", () => {
+    const mk = (id: string, o: Partial<NightPlayerStats> = {}): NightPlayerStats => ({
+      id,
+      name: id.toUpperCase(),
+      isBot: false,
+      wolfKills: 0,
+      alphaKills: 0,
+      wolfDamage: 0,
+      logsFed: 0,
+      relights: 0,
+      survived: false,
+      ...o,
+    });
+    const brief = (sum: ReturnType<typeof computeNightSummary>) => sum.awards.map((a) => [a.kind, a.playerId, a.value]);
+    // Bo'sh ro'yxat
+    assert.deepEqual(computeNightSummary([], 'easy', true), { difficulty: 'easy', dawn: true, stats: [], awards: [] });
+    // Hamma nol — mukofot yo'q, tartib saqlanadi
+    const zeros = computeNightSummary([mk('a'), mk('b'), mk('c')], 'normal', false);
+    assert.deepEqual(zeros.awards, []);
+    assert.deepEqual(zeros.stats.map((x) => x.id), ['a', 'b', 'c']);
+    assert.equal(zeros.dawn, false);
+    // Faqat tongga yetish: MVP (4 ball), boshqa mukofot yo'q
+    const surv = computeNightSummary([mk('a'), mk('b', { survived: true })], 'hard', true);
+    assert.deepEqual(brief(surv), [['mvp', 'b', 4]]);
+    assert.deepEqual(surv.stats.map((x) => x.id), ['b', 'a']);
+    assert.equal(surv.difficulty, 'hard');
+    // Teng ball: kiritish tartibi hal qiladi
+    const tie = computeNightSummary([mk('a', { logsFed: 3 }), mk('b', { relights: 2 })], 'normal', true);
+    assert.deepEqual(brief(tie), [['mvp', 'a', 6], ['woodsman', 'a', 3], ['firekeeper', 'b', 2]]);
+    const tie2 = computeNightSummary([mk('b', { relights: 2 }), mk('a', { logsFed: 3 })], 'normal', true);
+    assert.equal(tie2.awards[0]!.playerId, 'b', 'teng ballda birinchi kelgan');
+    // Teng bo'ri soni: balli yuqorisi (saralangan tartibda birinchi) ovchi
+    const hunt = computeNightSummary([mk('a', { wolfKills: 2 }), mk('b', { wolfKills: 2, logsFed: 1 })], 'normal', true);
+    assert.deepEqual(brief(hunt), [['mvp', 'b', 8], ['hunter', 'b', 2], ['woodsman', 'b', 1]]);
+    // Boshliq +3, zarar /100 pastga yaxlitlanadi
+    const alpha = computeNightSummary([mk('a', { wolfKills: 1, alphaKills: 1, wolfDamage: 399 })], 'normal', true);
+    assert.deepEqual(brief(alpha), [['mvp', 'a', 3 + 3 + 3], ['hunter', 'a', 1]]);
+    // Har mukofot boshqa o'yinchiga
+    const mix = computeNightSummary(
+      [mk('h', { wolfKills: 4 }), mk('w', { logsFed: 5 }), mk('f', { relights: 3, survived: true })],
+      'normal',
+      true,
+    );
+    assert.deepEqual(mix.stats.map((x) => x.id), ['f', 'h', 'w']);
+    assert.deepEqual(brief(mix), [['mvp', 'f', 13], ['hunter', 'h', 4], ['woodsman', 'w', 5], ['firekeeper', 'f', 3]]);
+    for (const a of mix.awards) assert.equal(a.titleUz, NIGHT_AWARD_TITLES_UZ[a.kind]);
+    assert.equal(mix.awards.find((a) => a.kind === 'hunter')!.playerName, 'H');
   });
 });

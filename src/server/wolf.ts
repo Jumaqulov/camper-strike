@@ -5,6 +5,7 @@ import { hitboxScaleOf } from '../shared/stance';
 import { sampleTerrainHeight } from '../shared/world';
 import {
   CAMPFIRE_RADIUS_M,
+  WOLF_ALPHA_BUFF_SPEED_MUL,
   WOLF_ATTACK_COOLDOWN,
   WOLF_ATTACK_DURATION,
   WOLF_BITE_AT,
@@ -41,10 +42,17 @@ export interface ServerWolf extends Body {
   diedAt: number;
   /** Klassik rejimlarda qayta paydo bo'lish vaqti (survivalda Infinity). */
   respawnAt: number;
-  /** To'lqin ko'paytuvchilari (wolf_night; boshqa rejimlarda 1): tezlik, jon (WOLF_MAX_HP ga), tishlash zarari. */
+  /**
+   * Ko'paytuvchilar: to'lqin × tun qiyinligi (faqat wolf_night) × rang turi (WOLF_COAT_TRAITS, barcha rejimlarda) —
+   * tezlik, jon (WOLF_MAX_HP ga), tishlash zarari.
+   */
   speedMul: number;
   hpMul: number;
   biteMul: number;
+  /** To'da boshlig'i uvlagani uchun tezlashuv tugash vaqti (WOLF_ALPHA_BUFF_SPEED_MUL); 0 — yo'q. */
+  alphaBuffUntil: number;
+  /** Tong otdi ('flee'): shu vaqtgacha qochadi, keyin xonadan olib tashlanadi; boshqa holatlarda Infinity. */
+  fleeUntil: number;
   brain: WolfBrain;
 }
 
@@ -58,6 +66,8 @@ const FIRE_STANDOFF_M = CAMPFIRE_RADIUS_M + 1.5;
 /** Sayrda to'xtab hid olish ehtimoli (sekundiga). */
 const ROAM_SNIFF_CHANCE = 0.06;
 const SENSE_INTERVAL = 0.15;
+/** Qochayotgan bo'ri shu oraliqda (s) yoki maqsadga yetganda yangi uzoq maqsad tanlaydi. */
+const FLEE_REGOAL_SEC = 4;
 
 /**
  * Bo'ri sun'iy intellekti: sayr → hid/tovush bo'yicha tekshirish → ov (yugurib quvish) → tashlanib tishlash.
@@ -86,6 +96,11 @@ export class WolfBrain {
   private stuckCheckAt = 0;
   private stuckPos: Vec3 = { x: 0, y: 0, z: 0 };
   private stuckCount = 0;
+  /** Tong otgach qochish maqsadi (uzoqdagi nav tuguni) va tanlangan vaqti. */
+  private fleeGoal: Vec3 | null = null;
+  private fleeGoalAt = 0;
+  /** Joriy tick vaqti (speedFor to'da boshlig'i tezlashuvini shu bilan tekshiradi). */
+  private tNow = 0;
 
   constructor(
     private readonly room: Room,
@@ -101,6 +116,7 @@ export class WolfBrain {
     this.lastSensedPos = null;
     this.investigatePos = null;
     this.roamGoal = null;
+    this.fleeGoal = null;
     this.nextAttackAt = t;
     this.nextSenseAt = t;
     this.stuckCount = 0;
@@ -110,10 +126,31 @@ export class WolfBrain {
     this.setState('idle', t);
   }
 
+  /**
+   * Tong otdi: nishon va izlar tashlanadi, bo'ri eng yaqin o'yinchidan teskari tomonga uzoqdagi nav tuguniga
+   * yugurib qochadi ('flee'). Bu holatda tishlamaydi, nishon olmaydi, olovdan qo'rqmaydi; xona uni
+   * `fleeUntil` dan keyin (yoki hammadan uzoqlashganda) olib tashlaydi.
+   */
+  startFlee(t: number): void {
+    const me = this.me;
+    if (!me.alive) return;
+    this.target = null;
+    this.lastSensedPos = null;
+    this.investigatePos = null;
+    this.roamGoal = null;
+    this.path = [];
+    this.pathIdx = 0;
+    this.repathAt = 0;
+    this.fleeGoal = this.room.pickWolfFleeGoal(me);
+    this.fleeGoalAt = t;
+    me.targetId = null;
+    this.setState('flee', t);
+  }
+
   /** Zarba yedi: hujumchi nishonga aylanadi, hujum paytida bo'lmasa qisqa seskanadi. */
   onDamaged(attacker: ServerPlayer | null, t: number): void {
     const me = this.me;
-    if (!me.alive) return;
+    if (!me.alive || me.state === 'flee') return;
     if (attacker && attacker.alive) {
       this.target = attacker;
       this.lastSensedAt = t;
@@ -128,7 +165,7 @@ export class WolfBrain {
   /** O'q ovozi: nishon bo'lmasa o'sha joyga boradi (hid oladi), bo'lsa izini yangilaydi. */
   onNoise(pos: Vec3, t: number, source: ServerPlayer | null): void {
     const me = this.me;
-    if (!me.alive) return;
+    if (!me.alive || me.state === 'flee') return;
     if (Math.hypot(pos.x - me.pos.x, pos.z - me.pos.z) > WOLF_HEAR_SHOT_RANGE) return;
     if (source && this.target === source) {
       this.lastSensedAt = Math.max(this.lastSensedAt, t - 0.3);
@@ -145,7 +182,7 @@ export class WolfBrain {
   /** Yaqindagi gulxan o'chdi: nishon bo'lmasa qorong'i lagerga borib tekshiradi (wolf_night). */
   onFireOut(pos: Vec3, t: number): void {
     const me = this.me;
-    if (!me.alive || this.target) return;
+    if (!me.alive || this.target || me.state === 'flee') return;
     this.investigatePos = vcopy(pos);
     this.roamGoal = null;
     this.repathAt = 0;
@@ -226,9 +263,10 @@ export class WolfBrain {
     }
   }
 
-  /** Holat tezligi × to'lqin ko'paytuvchisi (wolf_night to'lqinlarida bo'rilar tezlashadi). */
+  /** Holat tezligi × ko'paytuvchi (to'lqin/qiyinlik/rang turi) × to'da boshlig'i uvlashi tezlashuvi. */
   private speedFor(state: WolfState): number {
-    return wolfSpeedForState(state) * (this.me.speedMul || 1);
+    const buff = this.tNow < this.me.alphaBuffUntil ? WOLF_ALPHA_BUFF_SPEED_MUL : 1;
+    return wolfSpeedForState(state) * (this.me.speedMul || 1) * buff;
   }
 
   private turnTowards(yaw: number, dt: number, rate = WOLF_TURN_RATE): void {
@@ -338,6 +376,7 @@ export class WolfBrain {
         }
         this.roamGoal = null;
         this.investigatePos = null;
+        this.fleeGoal = null;
         this.stuckCount = 0;
       }
     } else {
@@ -347,9 +386,37 @@ export class WolfBrain {
     this.stuckCheckAt = t + 1.2;
   }
 
+  /**
+   * Tong otgach qochish: yugurish tezligida uzoq maqsadga nav-graf yo'li bo'ylab; tishlamaydi, nishon olmaydi,
+   * olovdan qo'rqmaydi (gulxan tekshiruvidan oldin chaqiriladi). Raund 'ended' fazasida ham ishlaydi.
+   */
+  private updateFlee(dt: number, t: number): void {
+    const me = this.me;
+    me.targetId = null;
+    if (
+      !this.fleeGoal ||
+      t - this.fleeGoalAt > FLEE_REGOAL_SEC ||
+      Math.hypot(this.fleeGoal.x - me.pos.x, this.fleeGoal.z - me.pos.z) < 1.5
+    ) {
+      this.fleeGoal = this.room.pickWolfFleeGoal(me);
+      this.fleeGoalAt = t;
+      this.repathAt = 0;
+    }
+    const goal = this.fleeGoal;
+    const m = this.followPath(goal, this.speedFor('flee'), t, dt, this.hasDirectLine(goal));
+    applyWorldMovement(me, m.wishX, m.wishZ, false, dt, this.room.world);
+    this.checkStuck(t, m.wishX !== 0 || m.wishZ !== 0);
+  }
+
   update(dt: number, t: number): void {
     const me = this.me;
     if (!me.alive) return;
+    this.tNow = t;
+    // Tong otdi: faza 'ended' bo'lsa ham qochishda davom etadi (pastdagi 'idle' tarmog'i uni bekor qilmasin)
+    if (me.state === 'flee') {
+      this.updateFlee(dt, t);
+      return;
+    }
     if (this.room.phase !== 'playing') {
       if (me.state !== 'idle') this.setState('idle', t);
       me.targetId = null;

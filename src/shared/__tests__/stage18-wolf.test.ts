@@ -6,7 +6,15 @@ import { MAX_HP } from '../constants';
 import { anglesFromDir, vnorm, vsub, type Vec3 } from '../math';
 import type { HurtEvent, KillEvent, Snapshot, WolfBiteEvent, WolfDeathEvent } from '../protocol';
 import { WEAPONS } from '../weapons';
-import { WOLF_MAX_HP, WOLF_RESPAWN_SEC, WOLF_CORPSE_SEC, isWolfThreatState } from '../wolf';
+import {
+  WOLF_COAT_WHITE,
+  WOLF_CORPSE_SEC,
+  WOLF_MAX_HP,
+  WOLF_MAX_PER_ROOM,
+  WOLF_RESPAWN_SEC,
+  isWolfThreatState,
+  wolfCoatTraits,
+} from '../wolf';
 
 interface EmittedRoomEvent {
   room: string;
@@ -292,6 +300,29 @@ describe("Bosqich 18 — Vahshiy bo'ri", () => {
       // Oxirgi tirik p2 — raund tugaydi, bo'rilar tozalanadi
       assert.equal(room.phase, 'ended');
       assert.equal(room.wolves.size, 0, "raund tugagach bo'rilar yo'qoladi");
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("6. Klassik: rang tartibi avvalgidek (0..4), tur ko'rsatkichlari qo'llanadi, chegara WOLF_MAX_PER_ROOM", () => {
+    const { io } = createFakeIo();
+    const room = makeFfaRoom(io, WOLF_MAX_PER_ROOM);
+    try {
+      const list = [...room.wolves.values()];
+      assert.equal(list.length, WOLF_MAX_PER_ROOM);
+      assert.deepEqual(list.map((w) => w.coat), list.map((_, i) => i % 5), 'rang = qo‘shilish tartibi % 5');
+      for (const w of list) {
+        const k = wolfCoatTraits(w.coat);
+        assert.equal(w.speedMul, k.speedMul, 'klassikda to‘lqin/qiyinlik yo‘q — faqat tur');
+        assert.equal(w.biteMul, k.biteMul);
+        assert.equal(w.hp, Math.round(WOLF_MAX_HP * k.hpMul));
+      }
+      assert.equal(list[4]!.coat, WOLF_COAT_WHITE);
+      assert.ok(list[4]!.hp > WOLF_MAX_HP, "oq bo'ri (to'da boshlig'i) chidamliroq");
+      assert.equal(room.setWolfCount(WOLF_MAX_PER_ROOM + 3), WOLF_MAX_PER_ROOM);
+      assert.equal(room.addWolf(), null, 'klassik chegaradan ortiq qo‘shilmaydi');
+      assert.equal(room.info().nightDifficulty, undefined);
     } finally {
       room.destroy();
     }

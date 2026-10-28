@@ -31,7 +31,23 @@ import {
   WOOD_PILE_GAP_M,
   WOOD_PILE_MAX_DIST_M,
   WOOD_PILE_MIN_DIST_M,
-  WOLF_NIGHT_RESPAWN_SEC,
+  NIGHT_DIFFICULTIES,
+  NIGHT_WOLF_CAP,
+  WOLF_ALPHA_BUFF_RADIUS,
+  WOLF_ALPHA_BUFF_SEC,
+  WOLF_COAT_BLACK,
+  WOLF_COAT_CHARCOAL,
+  WOLF_COAT_RED,
+  WOLF_COAT_TAN,
+  WOLF_COAT_WHITE,
+  WOLF_DAWN_FLEE_SEC,
+  computeNightSummary,
+  nightWolvesForWave,
+  sanitizeNightDifficulty,
+  wolfCoatTraits,
+  type NightDifficulty,
+  type NightPlayerStats,
+  type NightRoundSummary,
   isInsideLitCampfire,
   type CampActionAck,
   type CampfireEvent,
@@ -215,6 +231,16 @@ const CAMP_FIRE_OUT_LURE_M = 40;
 const NIGHT_WOLF_SPAWN_CLEARANCE_M = 45;
 /** Botlar lager atrofida sayr qiladigan radius (m). */
 const CAMP_ROAM_RADIUS_M = 10;
+/** Tong otgach qochayotgan bo'ri barcha tirik o'yinchilardan shuncha uzoqlashsa — WOLF_DAWN_FLEE_SEC kutmay yo'qoladi (m). */
+const WOLF_FLEE_GONE_M = 60;
+/**
+ * wolf_night rang turlari (to'lqin bo'yicha): 2-to'lqindan chaqqon (qizil) va tun soyasi (qora) shu ehtimollar
+ * bilan; 3-to'lqindan to'da boshlig'i (oq) — har to'lqin boshida birinchi yangi/qayta tug'ilgan bo'ri, keyin
+ * NIGHT_ALPHA_CHANCE bilan; bir vaqtda ko'pi bilan bittasi tirik. Qolganlari — oddiy (kulrang/qo'ng'ir).
+ */
+const NIGHT_SWIFT_CHANCE = 0.25;
+const NIGHT_SHADOW_CHANCE = 0.2;
+const NIGHT_ALPHA_CHANCE = 0.25;
 
 let roomSeq = 0;
 
@@ -295,6 +321,14 @@ export class Room {
   private wolfCount: number;
   /** wolf_night: joriy to'lqin indeksi (0..NIGHT_WAVE_COUNT-1), raunddan tashqarida -1. */
   private nightWaveIdx = -1;
+  /** wolf_night: lobbida tanlangan tun qiyinligi (boshqa rejimlarda ishlatilmaydi). */
+  readonly nightDifficulty: NightDifficulty;
+  /** wolf_night: shu to'lqinda to'da boshlig'i hali chiqmagan — keyingi yangi/qayta tug'ilgan bo'ri oq bo'ladi. */
+  private nightAlphaDue = false;
+  /** wolf_night: raund davomidagi shaxsiy statistika (ishtirokchilar, raund boshida tiklanadi). */
+  private nightStats = new Map<string, NightPlayerStats>();
+  /** wolf_night: oxirgi tun natijasi (faqat 'ended' fazasida snapshotga chiqadi). */
+  private nightSummary: NightRoundSummary | null = null;
   /** wolf_night: lager gulxanlari va o'tin g'aramlari (joylar xona uchun deterministik; boshqa rejimlarda bo'sh). */
   readonly campfires = new Map<string, ServerCampfire>();
   readonly woodPiles = new Map<string, ServerWoodPile>();
@@ -306,6 +340,7 @@ export class Room {
     this.id = 'r' + ++roomSeq + Math.random().toString(36).slice(2, 6);
     this.isSurvival = isSurvivalMode(opts.mode);
     this.isNight = opts.mode === 'wolf_night';
+    this.nightDifficulty = sanitizeNightDifficulty(opts.nightDifficulty);
     if (this.isSurvival && opts.mapId && opts.mapId !== 'forest_square') {
       throw new Error(`${GAME_MODE_NAMES_UZ[opts.mode]} rejimi faqat forest_square xaritasida yaratilishi mumkin`);
     }
@@ -416,7 +451,14 @@ export class Room {
   }
 
   getSurvivalState(): SurvivalStateSnap | null {
-    return this.survival ? this.survival.getStateSnap(this.now()) : null;
+    if (!this.survival) return null;
+    const snap = this.survival.getStateSnap(this.now());
+    return this.isNight ? { ...snap, nightSummary: this.nightSummaryFor(snap.phase) } : snap;
+  }
+
+  /** wolf_night: tun natijasi faqat 'ended' fazasida (boshqa fazalarda null). */
+  private nightSummaryFor(phase: SurvivalPhase): NightRoundSummary | null {
+    return phase === 'ended' ? this.nightSummary : null;
   }
 
   getRoundId(): number {
@@ -463,6 +505,7 @@ export class Room {
       phase: this.phase,
       minHumans: this.isSurvival ? this.survival?.getConfig().minHumansToStart ?? 1 : undefined,
       wolves: this.wolfCount,
+      ...(this.isNight ? { nightDifficulty: this.nightDifficulty } : {}),
     };
   }
 
@@ -498,6 +541,89 @@ export class Room {
 
   getWolfCount(): number {
     return this.wolfCount;
+  }
+
+  /** Xonadagi bo'rilar chegarasi: wolf_night — NIGHT_WOLF_CAP, klassik/forest_survival — WOLF_MAX_PER_ROOM. */
+  private wolfCap(): number {
+    return this.isNight ? NIGHT_WOLF_CAP : WOLF_MAX_PER_ROOM;
+  }
+
+  /**
+   * Tong otdi: qochish maqsadi — eng yaqin tirik o'yinchidan teskari tomondagi, o'yinchilardan iloji boricha
+   * uzoq nav tuguni (bo'ridan kamida 15 m). O'yinchi bo'lmasa — xaritada tasodifiy.
+   */
+  pickWolfFleeGoal(w: ServerWolf): Vec3 {
+    const alive = [...this.players.values()].filter((p) => p.alive && p.ready);
+    let ax = 0;
+    let az = 0;
+    let nearD = Infinity;
+    for (const p of alive) {
+      const d = Math.hypot(w.pos.x - p.pos.x, w.pos.z - p.pos.z);
+      if (d < nearD) {
+        nearD = d;
+        ax = w.pos.x - p.pos.x;
+        az = w.pos.z - p.pos.z;
+      }
+    }
+    const al = Math.hypot(ax, az);
+    if (al > 1e-3) {
+      ax /= al;
+      az /= al;
+    } else if (alive.length) {
+      ax = -Math.sin(w.yaw);
+      az = -Math.cos(w.yaw);
+    }
+    let best: Vec3 | null = null;
+    let bestScore = -Infinity;
+    for (let i = 0; i < 24; i++) {
+      const c = this.nav.randomPoint();
+      const dx = c.x - w.pos.x;
+      const dz = c.z - w.pos.z;
+      const dl = Math.hypot(dx, dz);
+      if (dl < 15) continue;
+      let minP = Infinity;
+      for (const p of alive) minP = Math.min(minP, Math.hypot(p.pos.x - c.x, p.pos.z - c.z));
+      // O'yinchilardan uzoqlik + o'yinchidan teskari yo'nalish (orqaga, o'yinchi yonidan o'tib qochmasin)
+      const score = Math.min(minP, 120) + ((dx * ax + dz * az) / dl) * 40;
+      if (score > bestScore) {
+        bestScore = score;
+        best = c;
+      }
+    }
+    return best ?? this.nav.randomPoint();
+  }
+
+  /** Boshqa tirik to'da boshlig'i (oq bo'ri) bormi (`self` hisobga olinmaydi). */
+  private hasLivingAlpha(self: ServerWolf | null): boolean {
+    for (const o of this.wolves.values()) {
+      if (o !== self && o.alive && o.coat === WOLF_COAT_WHITE) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Yangi/qayta tug'ilayotgan bo'ri rangi. Klassik rejimlar: avvalgidek (`wolves.size % 5`, qayta tug'ilganda
+   * o'zgarmaydi). wolf_night: to'lqin bo'yicha (NIGHT_SWIFT/SHADOW/ALPHA_CHANCE izohiga qarang).
+   */
+  private pickWolfCoat(self: ServerWolf | null): number {
+    if (!this.isNight) return self ? self.coat : this.wolves.size % 5;
+    const wave = this.nightWaveIdx + 1;
+    if (wave >= 3 && !this.hasLivingAlpha(self) && (this.nightAlphaDue || Math.random() < NIGHT_ALPHA_CHANCE)) {
+      this.nightAlphaDue = false;
+      return WOLF_COAT_WHITE;
+    }
+    if (wave >= 2) {
+      const r = Math.random();
+      if (r < NIGHT_SWIFT_CHANCE) return WOLF_COAT_RED;
+      if (r < NIGHT_SWIFT_CHANCE + NIGHT_SHADOW_CHANCE) return WOLF_COAT_BLACK;
+    }
+    return Math.random() < 0.5 ? WOLF_COAT_CHARCOAL : WOLF_COAT_TAN;
+  }
+
+  /** Testlar uchun: bo'ri rangini (turini) majburan o'rnatib, ko'rsatkichlarini qayta hisoblaydi. */
+  setWolfCoatForTest(w: ServerWolf, coat: number): void {
+    w.coat = coat;
+    this.applyWaveStats(w);
   }
 
   /** O'yinchilardan uzoqdagi (≥ 35 m, iloji bo'lsa) nav tuguni — bo'ri paydo bo'ladigan joy. */
@@ -843,6 +969,11 @@ export class Room {
     f.lit = true;
     f.lowWarned = f.fuelSec <= CAMPFIRE_LOW_FUEL_SEC;
     if (!wasLit) this.campRoamCache.clear();
+    const st = this.nightStats.get(p.id);
+    if (st) {
+      st.logsFed += n;
+      if (!wasLit) st.relights++;
+    }
     this.emitCampfireEvent(f, 'fed', p);
     this.systemChat(
       wasLit
@@ -940,22 +1071,33 @@ export class Room {
     return NIGHT_WAVES[Math.min(this.nightWaveIdx, NIGHT_WAVES.length - 1)] ?? null;
   }
 
-  /** Yangi paydo bo'lgan/qayta tug'ilgan bo'riga joriy to'lqin ko'paytuvchilarini beradi (jon shu asosda). */
+  /**
+   * Yangi paydo bo'lgan/qayta tug'ilgan bo'riga ko'paytuvchilarni beradi: joriy to'lqin × tun qiyinligi
+   * (faqat wolf_night) × rang turi (barcha rejimlarda); jon shu asosda.
+   */
   private applyWaveStats(w: ServerWolf): void {
     const wave = this.currentNightWave();
-    w.speedMul = wave ? wave.speedMul : 1;
-    w.hpMul = wave ? wave.hpMul : 1;
-    w.biteMul = wave ? wave.biteMul : 1;
+    const diff = this.isNight ? NIGHT_DIFFICULTIES[this.nightDifficulty] : null;
+    const kind = wolfCoatTraits(w.coat);
+    w.speedMul = (wave ? wave.speedMul : 1) * (diff ? diff.speedMul : 1) * kind.speedMul;
+    w.hpMul = (wave ? wave.hpMul : 1) * (diff ? diff.hpMul : 1) * kind.hpMul;
+    w.biteMul = (wave ? wave.biteMul : 1) * (diff ? diff.biteMul : 1) * kind.biteMul;
     w.hp = Math.max(1, Math.round(WOLF_MAX_HP * w.hpMul));
   }
 
+  /** wolf_night: to'da boshlig'i paydo bo'lganini chatda e'lon qiladi. */
+  private announceAlpha(w: ServerWolf): void {
+    if (!this.isNight || w.coat !== WOLF_COAT_WHITE) return;
+    this.systemChat(`🐺 ${wolfCoatTraits(w.coat).nameUz} keldi! Oq bo'ri katta va chidamli, uvlasa atrofdagi bo'rilar tezlashadi.`);
+  }
+
   addWolf(): ServerWolf | null {
-    if (this.wolves.size >= WOLF_MAX_PER_ROOM) return null;
+    if (this.wolves.size >= this.wolfCap()) return null;
     const sp = this.pickWolfSpawn();
     const id = `wolf:${++this.wolfSeq}`;
     const w: ServerWolf = {
       id,
-      coat: this.wolves.size % 5,
+      coat: this.pickWolfCoat(null),
       pos: { x: sp.x, y: sp.y, z: sp.z },
       vel: { x: 0, y: 0, z: 0 },
       onGround: true,
@@ -969,12 +1111,15 @@ export class Room {
       speedMul: 1,
       hpMul: 1,
       biteMul: 1,
+      alphaBuffUntil: 0,
+      fleeUntil: Infinity,
       brain: null as unknown as WolfBrain,
     };
     this.applyWaveStats(w);
     w.brain = new WolfBrain(this, w);
     w.brain.onSpawn(this.now());
     this.wolves.set(id, w);
+    this.announceAlpha(w);
     return w;
   }
 
@@ -983,14 +1128,18 @@ export class Room {
     w.pos = { x: sp.x, y: sp.y, z: sp.z };
     w.vel = { x: 0, y: 0, z: 0 };
     w.onGround = true;
-    // wolf_night: qayta tug'ilgan bo'ri joriy (kuchliroq) to'lqin ko'rsatkichlarini oladi
+    // wolf_night: qayta tug'ilgan bo'ri yangi rang (tur) va joriy (kuchliroq) to'lqin ko'rsatkichlarini oladi
+    w.coat = this.pickWolfCoat(w);
     this.applyWaveStats(w);
     w.alive = true;
     w.state = 'idle';
     w.targetId = null;
     w.diedAt = 0;
     w.respawnAt = Infinity;
+    w.alphaBuffUntil = 0;
+    w.fleeUntil = Infinity;
     w.brain.onSpawn(this.now());
+    this.announceAlpha(w);
   }
 
   /** O'lgan bo'ri shu rejimda qayta tug'iladimi (klassik va wolf_night — ha; forest_survival — jasad o'chadi). */
@@ -998,15 +1147,31 @@ export class Room {
     return !this.isSurvival || this.isNight;
   }
 
+  /** Qochayotgan bo'ri ketib bo'ldimi: WOLF_DAWN_FLEE_SEC o'tdi yoki barcha tirik o'yinchilardan WOLF_FLEE_GONE_M uzoqda. */
+  private wolfFledAway(w: ServerWolf, t: number): boolean {
+    if (t >= w.fleeUntil) return true;
+    for (const p of this.players.values()) {
+      if (!p.alive || !p.ready) continue;
+      if (Math.hypot(p.pos.x - w.pos.x, p.pos.z - w.pos.z) <= WOLF_FLEE_GONE_M) return false;
+    }
+    return true;
+  }
+
   /** Bo'rilar AI, jasadlar va qayta paydo bo'lish — har tick. */
   private updateWolves(dt: number, t: number): void {
     for (const [id, w] of this.wolves) {
       if (w.alive) {
+        // Tong otgach qochgan bo'ri yo'qoladi (klient snapshotda yo'q bo'rini sahnadan olib tashlaydi)
+        if (w.state === 'flee' && this.wolfFledAway(w, t)) {
+          this.wolves.delete(id);
+          continue;
+        }
         w.brain.update(dt, t);
         continue;
       }
       if (t - w.diedAt < WOLF_CORPSE_SEC) continue;
-      if (!this.wolvesRespawn()) {
+      // Survival raundidan tashqarida (tong otgandan keyingi yakun ekrani) jasad qayta tug'ilmaydi — o'chadi
+      if (!this.wolvesRespawn() || (this.isSurvival && this.phase !== 'playing')) {
         this.wolves.delete(id);
       } else if (t >= w.respawnAt && this.phase === 'playing') {
         this.respawnWolf(w);
@@ -1067,25 +1232,50 @@ export class Room {
     };
   }
 
+  /** wolf_night: hozir tirik ishtirokchilar soni (odam + bot), kamida 1 — to'lqindagi bo'rilar soni shunga moslanadi. */
+  private aliveNightContenders(): number {
+    if (!this.survival) return 1;
+    let n = 0;
+    for (const p of this.players.values()) if (p.alive && this.survival.isAliveContender(p.id)) n++;
+    return Math.max(1, n);
+  }
+
   /**
-   * wolf_night: har tick to'lqinni jadvaldan hisoblaydi; to'lqin o'zgarganda bo'rilar soni oshiriladi
-   * (yangilari joriy to'lqin ko'paytuvchilari bilan; tirik eskilar o'zinikini saqlaydi).
+   * wolf_night: har tick to'lqinni jadvaldan hisoblaydi; to'lqin o'zgarganda bo'rilar soni
+   * nightWolvesForWave (to'lqin × tirik ishtirokchilar × qiyinlik, ≤ NIGHT_WOLF_CAP) ga oshiriladi —
+   * yangilari joriy to'lqin ko'paytuvchilari bilan; tirik eskilar o'zinikini saqlaydi. Tun ichida son
+   * kamaymaydi (ishtirokchilar o'lib ketsa ham ko'rinib turgan bo'ri yo'qolib qolmasin).
    */
   private updateNightWaves(t: number): void {
     if (!this.isNight || !this.survival || this.phase !== 'playing') return;
     const ev = evaluateNightWave(t - this.roundStartedAt, this.survival.getConfig().roundDurationSec);
     const idx = ev.wave.wave - 1;
     if (idx === this.nightWaveIdx) return;
+    const firstWave = this.nightWaveIdx < 0;
     this.nightWaveIdx = idx;
-    this.wolfCount = clamp(ev.wave.wolves, 0, WOLF_MAX_PER_ROOM);
+    // 3-to'lqindan har to'lqin boshida to'da boshlig'i chiqadi (tirigi bo'lmasa)
+    this.nightAlphaDue = ev.wave.wave >= 3 && !this.hasLivingAlpha(null);
+    const n = nightWolvesForWave(ev.wave, this.aliveNightContenders(), this.nightDifficulty);
+    this.wolfCount = clamp(firstWave ? n : Math.max(n, this.wolfCount), 0, NIGHT_WOLF_CAP);
     this.syncWolvesToCount();
     if (idx > 0) this.systemChat(`🌙 ${ev.wave.wave}-to'lqin: bo'rilar ko'paydi va kuchaydi!`);
   }
 
-  /** Bo'ri uvladi — klientlarga pozitsion ovoz uchun. */
+  /**
+   * Bo'ri uvladi — klientlarga pozitsion ovoz uchun. To'da boshlig'ining uvlashi WOLF_ALPHA_BUFF_RADIUS dagi
+   * boshqa tirik bo'rilarni WOLF_ALPHA_BUFF_SEC davomida tezlashtiradi (WolfBrain.speedFor).
+   */
   wolfHowl(w: ServerWolf): void {
     const ev: WolfHowlEvent = { id: w.id, x: q3(w.pos.x), y: q3(w.pos.y), z: q3(w.pos.z) };
     this.io.to(this.channel).emit('wolf:howl', ev);
+    if (w.alive && wolfCoatTraits(w.coat).kind === 'alpha') {
+      const until = this.now() + WOLF_ALPHA_BUFF_SEC;
+      for (const o of this.wolves.values()) {
+        if (o === w || !o.alive || o.state === 'flee') continue;
+        if (Math.hypot(o.pos.x - w.pos.x, o.pos.z - w.pos.z) > WOLF_ALPHA_BUFF_RADIUS) continue;
+        o.alphaBuffUntil = Math.max(o.alphaBuffUntil, until);
+      }
+    }
   }
 
   /** Bo'ri tishladi (WolfBrain hujum klipining 0.30 s lahzasida chaqiradi). */
@@ -1115,6 +1305,9 @@ export class Room {
   /** O'q/granata bo'riga tegdi. */
   private damageWolf(w: ServerWolf, attacker: ServerPlayer, amount: number, from: Vec3): void {
     if (!w.alive || amount <= 0 || this.phase !== 'playing') return;
+    // wolf_night statistikasi: haqiqatda olingan jon (o'ldiruvchi zarbaning ortiqchasi hisoblanmaydi)
+    const st = this.nightStats.get(attacker.id);
+    if (st) st.wolfDamage += Math.min(amount, Math.max(0, w.hp));
     w.hp -= amount;
     const dx = w.pos.x - from.x;
     const dz = w.pos.z - from.z;
@@ -1134,24 +1327,40 @@ export class Room {
     w.state = 'dead';
     w.targetId = null;
     w.diedAt = this.now();
-    // Klassik va wolf_night (tun shafqatsiz): qayta tug'iladi; forest_survival: jasad o'chadi
-    w.respawnAt = this.wolvesRespawn() ? w.diedAt + (this.isNight ? WOLF_NIGHT_RESPAWN_SEC : WOLF_RESPAWN_SEC) : Infinity;
+    // Klassik va wolf_night (tun shafqatsiz): qayta tug'iladi; forest_survival: jasad o'chadi.
+    // Tunda qaytish vaqti qiyinlikka bog'liq (NIGHT_DIFFICULTIES[...].respawnSec)
+    const respawnSec = this.isNight ? NIGHT_DIFFICULTIES[this.nightDifficulty].respawnSec : WOLF_RESPAWN_SEC;
+    w.respawnAt = this.wolvesRespawn() ? w.diedAt + respawnSec : Infinity;
+    const kind = wolfCoatTraits(w.coat);
+    const st = this.nightStats.get(killer.id);
+    if (st) {
+      st.wolfKills++;
+      if (kind.kind === 'alpha') st.alphaKills++;
+    }
     const ev: WolfDeathEvent = { id: w.id, killerId: killer.id, killerName: killer.name };
     this.io.to(this.channel).emit('wolf:death', ev);
-    this.systemChat(`${killer.name} vahshiy bo'rini o'ldirdi!`);
+    // Tur nomi qaratqich kelishigida: "vahshiy bo'rini", "to'da boshlig'ini", "tun soyasini"
+    const nameAcc = kind.nameUz.charAt(0).toLowerCase() + kind.nameUz.slice(1) + 'ni';
+    this.systemChat(`${killer.name} ${nameAcc} o'ldirdi!`);
   }
 
-  /** Bo'ri xitboksi: gavda atrofidagi AABB (uzunligi 2 m bo'lgani uchun kengroq). */
+  /** Bo'ri xitboksi: gavda atrofidagi AABB (uzunligi 2 m bo'lgani uchun kengroq); rang turi masshtabiga mos. */
   private rayVsWolf(origin: Vec3, dir: Vec3, w: ServerWolf, maxT: number): number | null {
-    const r = WOLF_RADIUS + 0.25;
+    const s = wolfCoatTraits(w.coat).scale;
+    const r = (WOLF_RADIUS + 0.25) * s;
     const h = rayBox(
       origin,
       dir,
       { x: w.pos.x - r, y: w.pos.y, z: w.pos.z - r },
-      { x: w.pos.x + r, y: w.pos.y + WOLF_HEIGHT, z: w.pos.z + r },
+      { x: w.pos.x + r, y: w.pos.y + WOLF_HEIGHT * s, z: w.pos.z + r },
       maxT,
     );
     return h ? h.t : null;
+  }
+
+  /** Testlar uchun: bo'ri xitboksiga nur tegadimi (masofa yoki null). */
+  rayVsWolfForTest(origin: Vec3, dir: Vec3, w: ServerWolf, maxT: number): number | null {
+    return this.rayVsWolf(origin, dir, w, maxT);
   }
 
   isFull(): boolean {
@@ -2398,7 +2607,8 @@ export class Room {
       }
       for (const w of this.wolves.values()) {
         if (!w.alive) continue;
-        const center = { x: w.pos.x, y: w.pos.y + 0.6, z: w.pos.z };
+        // Gavda markazi rang turi masshtabiga mos (to'da boshlig'i balandroq)
+        const center = { x: w.pos.x, y: w.pos.y + 0.6 * wolfCoatTraits(w.coat).scale, z: w.pos.z };
         const d = vdist(origin, center);
         if (d > GRENADE_RADIUS) continue;
         const blocked = raycastWorld(this.world, origin, vnorm(vsub(center, origin)), d);
@@ -2465,8 +2675,11 @@ export class Room {
     // Bo'rilar raund boshida o'yinchilardan uzoqda paydo bo'ladi
     this.wolves.clear();
     if (this.isNight) {
-      // Tong otguncha: 1-to'lqin (NIGHT_WAVES[0]) — bo'rilar soni/kuchini jadval belgilaydi
+      // Tong otguncha: shaxsiy statistika noldan; 1-to'lqin (NIGHT_WAVES[0]) — bo'rilar soni/kuchini jadval,
+      // tirik ishtirokchilar soni va qiyinlik belgilaydi
+      this.resetNightStats(contenderIds);
       this.nightWaveIdx = -1;
+      this.nightAlphaDue = false;
       this.updateNightWaves(this.roundStartedAt);
     } else {
       this.syncWolvesToCount();
@@ -2478,7 +2691,10 @@ export class Room {
     this.sendMatch();
     if (this.isNight) {
       this.systemChat(`🌙 ${roundId}-tun boshlandi — tong otguncha omon qoling! Qurol va buyumlarni konteynerlardan toping.`);
-      this.systemChat(`1-to'lqin: o'rmonda ${this.wolves.size} ta vahshiy bo'ri bor, har to'lqinda ko'payadi va kuchayadi.`);
+      this.systemChat(
+        `1-to'lqin: o'rmonda ${this.wolves.size} ta vahshiy bo'ri bor, har to'lqinda ko'payadi va kuchayadi ` +
+          `(qiyinlik: ${NIGHT_DIFFICULTIES[this.nightDifficulty].nameUz}).`,
+      );
       this.systemChat(
         "🔥 Bo'rilar yonib turgan gulxanga yaqinlashmaydi. O'tin tugamasin — o'rmondagi o'tin g'aramlaridan olib kelib gulxanga tashlang!",
       );
@@ -2501,9 +2717,18 @@ export class Room {
     this.phase = 'ended';
     this.phaseEndsAt = this.survival.getPhaseEndsAt();
     this.clearGrenades();
-    this.wolves.clear();
-    this.nightWaveIdx = -1;
     const dawn = winReason === 'dawn';
+    if (dawn && this.isNight) {
+      // Tong otdi: bo'rilar darhol yo'qolmaydi — o'rmonga qochadi ('flee'), WOLF_DAWN_FLEE_SEC dan keyin
+      // (yoki hammadan uzoqlashganda) o'chadi; jasadlar WOLF_CORPSE_SEC dan keyin o'chadi
+      this.startWolfDawnFlee(this.now());
+    } else {
+      this.wolves.clear();
+    }
+    this.nightWaveIdx = -1;
+    this.nightAlphaDue = false;
+    // Tun natijasi sendMatch dan oldin: 'ended' holatidagi birinchi match hodisasida ham bo'lsin
+    if (this.isNight) this.finishNightStats(dawn);
     this.winner = winnerId ? (winnerName || winnerId) : dawn ? winnerName : 'draw';
     for (const p of this.players.values()) {
       resetServerWeaponSwitchState(p);
@@ -2522,6 +2747,60 @@ export class Room {
     } else {
       this.systemChat('Raund durang bilan yakunlandi!');
     }
+    const mvp = this.nightSummary?.awards.find((a) => a.kind === 'mvp');
+    if (this.isNight && mvp) this.systemChat(`🏆 ${mvp.titleUz}: ${mvp.playerName} (${mvp.value} ball)`);
+  }
+
+  /** Tong otdi: barcha tirik bo'rilar 'flee' holatiga o'tadi (tishlamaydi, nishon olmaydi, olovdan qo'rqmaydi). */
+  private startWolfDawnFlee(t: number): void {
+    for (const w of this.wolves.values()) {
+      if (!w.alive) continue;
+      w.alphaBuffUntil = 0;
+      w.fleeUntil = t + WOLF_DAWN_FLEE_SEC;
+      w.brain.startFlee(t);
+    }
+  }
+
+  /** wolf_night: raund boshida har bir ishtirokchi (odam va bot) uchun nol statistika; natija tozalanadi. */
+  private resetNightStats(contenderIds: readonly string[]): void {
+    this.nightStats.clear();
+    this.nightSummary = null;
+    for (const id of contenderIds) {
+      const p = this.players.get(id);
+      if (!p) continue;
+      this.nightStats.set(id, {
+        id,
+        name: p.name,
+        isBot: p.isBot,
+        wolfKills: 0,
+        alphaKills: 0,
+        wolfDamage: 0,
+        logsFed: 0,
+        relights: 0,
+        survived: false,
+      });
+    }
+  }
+
+  /**
+   * wolf_night raundi tugadi: kim tirik qolgani yoziladi (tong otganda — birgalikdagi g'oliblar, aks holda
+   * hech kim) va computeNightSummary bilan natija/mukofotlar hisoblanadi (yakun ekranida yuboriladi).
+   */
+  private finishNightStats(dawn: boolean): void {
+    const survivors = new Set(dawn && this.survival ? this.survival.getWinnerIds() : []);
+    const list: NightPlayerStats[] = [];
+    for (const st of this.nightStats.values()) {
+      const p = this.players.get(st.id);
+      if (p) st.name = p.name;
+      st.survived = survivors.has(st.id) && !!p?.alive;
+      list.push({ ...st });
+    }
+    this.nightSummary = computeNightSummary(list, this.nightDifficulty, dawn);
+  }
+
+  /** Testlar uchun: joriy raund statistikasi (nusxa). */
+  getNightStatsForTest(): NightPlayerStats[] {
+    return [...this.nightStats.values()].map((s) => ({ ...s }));
   }
 
   private handleSurvivalPreRoundReset(
@@ -2536,6 +2815,9 @@ export class Room {
     this.clearGrenades();
     this.wolves.clear();
     this.nightWaveIdx = -1;
+    this.nightAlphaDue = false;
+    this.nightStats.clear();
+    this.nightSummary = null;
     // Tong otguncha: sanoq paytida ham gulxan/g'aramlar snapshotga chiqadi — o'tgan tunning o'chgan gulxanlari
     // va bo'sh g'aramlari ko'rinib qolmasin (raund boshida yana bir bor tiklanadi)
     if (this.isNight) this.resetCampForRound();
@@ -2807,8 +3089,8 @@ export class Room {
         survival: {
           ...surv,
           zone: this.getZoneSnap(t),
-          // wolf_night: tun/to'lqin holati (forest_survival payloadi o'zgarmaydi)
-          ...(this.isNight ? { night: this.getNightSnap(t) } : {}),
+          // wolf_night: tun/to'lqin holati va yakundagi natija (forest_survival payloadi o'zgarmaydi)
+          ...(this.isNight ? { night: this.getNightSnap(t), nightSummary: this.nightSummaryFor(surv.phase) } : {}),
         },
       };
       this.io.to(this.channel).emit('match', m);

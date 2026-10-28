@@ -1,4 +1,4 @@
-import type { NightSnap } from '../wolf/night';
+import type { NightRoundSummary, NightSnap } from '../wolf/night';
 import type { SurvivalZoneSnap } from './zone';
 export type SurvivalPhase = 'waiting' | 'countdown' | 'playing' | 'ended';
 
@@ -68,6 +68,8 @@ export interface SurvivalStateSnap {
   night?: NightSnap | null;
   /** wolf_night: tong otganda birgalikda g'olib bo'lgan tirik ishtirokchilar. */
   winnerIds?: string[];
+  /** wolf_night: tun natijasi — shaxsiy statistika va mukofotlar (faqat 'ended' fazasida). */
+  nightSummary?: NightRoundSummary | null;
 }
 
 export interface SurvivalRoundEvaluation {

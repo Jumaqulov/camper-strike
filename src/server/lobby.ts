@@ -25,7 +25,13 @@ import type {
   WelcomeMsg,
 } from '../shared/protocol';
 import { CLASSIC_MAX_BOTS, GAME_MODE_NAMES_UZ, SURVIVAL_MAX_BOTS, isSurvivalMode, type GameMode } from '../shared/constants';
-import { NIGHT_DEFAULT_MINUTES, NIGHT_MAX_MINUTES, NIGHT_MIN_MINUTES, WOLF_MAX_PER_ROOM } from '../shared/wolf';
+import {
+  NIGHT_DEFAULT_MINUTES,
+  NIGHT_MAX_MINUTES,
+  NIGHT_MIN_MINUTES,
+  WOLF_MAX_PER_ROOM,
+  sanitizeNightDifficulty,
+} from '../shared/wolf';
 import { DEFAULT_PUBLIC_LAYOUT_SEED, type MapId } from '../shared/world';
 import { Room } from './room';
 
@@ -90,6 +96,8 @@ export function sanitizeOpts(raw: Partial<CreateRoomOpts> | undefined, owner: st
   }
   // Vahshiy bo'rilar: barcha rejimlarda ixtiyoriy (standart 0); Tong otguncha — to'lqinlar boshqaradi (0)
   opts.wolves = night ? 0 : num(raw?.wolves, 0, 0, WOLF_MAX_PER_ROOM);
+  // Tong otguncha: tun qiyinligi (noma'lum qiymat → standart); boshqa rejimlarda maydon yo'q
+  if (night) opts.nightDifficulty = sanitizeNightDifficulty(raw?.nightDifficulty);
   return opts;
 }
 

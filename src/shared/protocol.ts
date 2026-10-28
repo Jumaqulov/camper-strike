@@ -2,7 +2,7 @@ import type { GameMode, Team } from './constants';
 import type { Vec3 } from './math';
 import type { SurvivalPhase, SurvivalPlayerRole, SurvivalStateSnap, SurvivalWinReason } from './survival';
 import type { WeaponId } from './weapons';
-import type { WolfSnap } from './wolf';
+import type { NightDifficulty, WolfSnap } from './wolf';
 import type { MapId, WorldMeta } from './world';
 
 // ---------- Lobby ----------
@@ -28,6 +28,8 @@ export interface RoomInfo {
   minHumans?: number;
   /** Xonadagi vahshiy bo'rilar soni (0 — yo'q). */
   wolves?: number;
+  /** wolf_night: tun qiyinligi. */
+  nightDifficulty?: NightDifficulty;
 }
 
 export interface CreateRoomOpts {
@@ -47,6 +49,8 @@ export interface CreateRoomOpts {
   minHumans?: number;
   /** Vahshiy bo'rilar soni 0..WOLF_MAX_PER_ROOM (standart 0). */
   wolves?: number;
+  /** wolf_night: tun qiyinligi (standart NIGHT_DEFAULT_DIFFICULTY); boshqa rejimlarda e'tiborsiz. */
+  nightDifficulty?: NightDifficulty;
 }
 
 export interface WelcomeMsg {

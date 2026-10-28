@@ -14,6 +14,7 @@ export type WolfState =
   | 'attack' // tashlanib tishlayapti
   | 'hit' // zarba yedi (qisqa seskanish)
   | 'howl' // uvlayapti
+  | 'flee' // tong otdi — o'rmonga qochib ketyapti (Run klipi; tishlamaydi)
   | 'dead'; // o'lgan (jasad bir necha soniya qoladi)
 
 /** Snapshotdagi bo'ri (har tick). */
@@ -113,6 +114,53 @@ export const WOLF_HOWL_MAX_SEC = 55;
 /** Xonadagi bo'rilar sonining chegarasi. */
 export const WOLF_MAX_PER_ROOM = 6;
 
+// ---------- Rang bo'yicha bo'ri turlari ----------
+
+/** Rang indeksi (`WolfSnap.coat`) — klientdagi `WOLF_COAT_URLS` tartibi bilan bir xil. */
+export const WOLF_COAT_CHARCOAL = 0;
+export const WOLF_COAT_RED = 1;
+export const WOLF_COAT_TAN = 2;
+export const WOLF_COAT_BLACK = 3;
+export const WOLF_COAT_WHITE = 4;
+
+export type WolfKind = 'grey' | 'swift' | 'shadow' | 'alpha';
+
+export interface WolfCoatTraits {
+  kind: WolfKind;
+  /** Killfeed / chat nomi. */
+  nameUz: string;
+  /** Asosiy (va to'lqin) ko'rsatkichlari ustidan ko'paytuvchilar. */
+  speedMul: number;
+  hpMul: number;
+  biteMul: number;
+  /** Modelning ko'rinish masshtabi (xitboks ham shunga mos kengayadi). */
+  scale: number;
+  /** "Soya": klientda nafas/xirillash yaqindan eshitiladi, HUD "yaqinda bo'ri" ogohlantirishi kechroq. */
+  stealthy: boolean;
+}
+
+/**
+ * charcoal/tan — oddiy kulrang bo'ri; red — chaqqon (tez, zaif); black — tun soyasi (sezdirmay keladi);
+ * white — to'da boshlig'i (katta, chidamli; uvlashi atrofdagi bo'rilarni qisqa vaqt tezlashtiradi).
+ */
+export const WOLF_COAT_TRAITS: readonly WolfCoatTraits[] = [
+  { kind: 'grey', nameUz: "Vahshiy bo'ri", speedMul: 1, hpMul: 1, biteMul: 1, scale: 1, stealthy: false },
+  { kind: 'swift', nameUz: "Chaqqon bo'ri", speedMul: 1.15, hpMul: 0.7, biteMul: 0.85, scale: 0.92, stealthy: false },
+  { kind: 'grey', nameUz: "Vahshiy bo'ri", speedMul: 1, hpMul: 1, biteMul: 1, scale: 1, stealthy: false },
+  { kind: 'shadow', nameUz: "Tun soyasi", speedMul: 1.03, hpMul: 0.95, biteMul: 1.1, scale: 1, stealthy: true },
+  { kind: 'alpha', nameUz: "To'da boshlig'i", speedMul: 0.95, hpMul: 1.9, biteMul: 1.35, scale: 1.22, stealthy: false },
+];
+
+/** Noma'lum coat → oddiy bo'ri. */
+export function wolfCoatTraits(coat: number | undefined): WolfCoatTraits {
+  return (Number.isInteger(coat) ? WOLF_COAT_TRAITS[coat!] : undefined) ?? WOLF_COAT_TRAITS[0]!;
+}
+
+/** To'da boshlig'ining uvlashi shu radiusdagi (m) bo'rilarni WOLF_ALPHA_BUFF_SEC davomida tezlashtiradi. */
+export const WOLF_ALPHA_BUFF_RADIUS = 30;
+export const WOLF_ALPHA_BUFF_SEC = 8;
+export const WOLF_ALPHA_BUFF_SPEED_MUL = 1.15;
+
 export const WOLF_NAME_UZ = "Vahshiy bo'ri";
 
 /** Bo'ri ID formati (`wolf:3`); KillEvent/HurtEvent da hujumchi sifatida ishlatiladi. */
@@ -126,6 +174,7 @@ export function wolfSpeedForState(state: WolfState): number {
     case 'stalk':
       return WOLF_STALK_SPEED;
     case 'hunt':
+    case 'flee':
       return WOLF_RUN_SPEED;
     case 'idle':
     case 'sniff':
