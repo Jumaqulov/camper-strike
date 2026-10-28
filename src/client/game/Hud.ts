@@ -161,11 +161,26 @@ export class Hud {
   private centerTimer = 0;
   private lastHp = -1;
   private lastAmmoKey = '';
+  /**
+   * Ikonkali (base64 <img>) qismlar alohida kalit bilan: #weapon-slots, qurol nomi va granata qatori faqat
+   * slotlar/qurol/ikonkalar o'zgarganda qayta quriladi — o'q sonlari har o'qda matn sifatida joyida yangilanadi.
+   */
+  private lastSlotsKey = '';
+  private lastWeaponNameKey = '';
+  private lastGrenadesKey = '';
 
   constructor() {
     onWeaponAssetsReady(() => {
-      this.lastAmmoKey = '';
+      // GLB ikonkalari tayyor bo'ldi — ikonkali qismlar ham qayta chizilsin
+      this.resetAmmoKeys();
     });
+  }
+
+  private resetAmmoKeys(): void {
+    this.lastAmmoKey = '';
+    this.lastSlotsKey = '';
+    this.lastWeaponNameKey = '';
+    this.lastGrenadesKey = '';
   }
 
   show(v: boolean): void {
@@ -254,25 +269,37 @@ export class Hud {
     if (key === this.lastAmmoKey) return;
     this.lastAmmoKey = key;
 
+    const slotsKey = `${weapon ?? 'none'}|${ownedKey}`;
+    if (slotsKey !== this.lastSlotsKey) {
+      this.lastSlotsKey = slotsKey;
+      $('weapon-slots').innerHTML = this.slotsHtml(weapon, ownedWeapons);
+    }
+    const grenadesKey = String(grenades);
+    if (grenadesKey !== this.lastGrenadesKey) {
+      this.lastGrenadesKey = grenadesKey;
+      $('grenades').innerHTML = `${weaponIconHtml('grenade')} <span>GRANATA [G] ×${grenades}</span>`;
+    }
+    const nameKey = `${weapon ?? 'none'}|${weapon ? reloading : false}`;
+    const nameChanged = nameKey !== this.lastWeaponNameKey;
+    this.lastWeaponNameKey = nameKey;
+
     if (!weapon) {
-      $('weapon-name').innerHTML = `<span>✋ Bo'sh qo'l</span>`;
+      if (nameChanged) $('weapon-name').innerHTML = `<span>✋ Bo'sh qo'l</span>`;
       $('ammo-mag').textContent = '—';
       $('ammo-mag').classList.remove('low');
       $('ammo-reserve').textContent = '—';
-      $('grenades').innerHTML = `${weaponIconHtml('grenade')} <span>GRANATA [G] ×${grenades}</span>`;
-      $('weapon-slots').innerHTML = this.slotsHtml(null, ownedWeapons);
       $('reload-hint').classList.add('hidden');
       return;
     }
 
     const def = WEAPONS[weapon];
     const melee = isMeleeWeapon(weapon);
-    $('weapon-name').innerHTML = `${weaponIconHtml(weapon)} <span>${def.name}${reloading ? " — o'qlanmoqda..." : ''}</span>`;
+    if (nameChanged) {
+      $('weapon-name').innerHTML = `${weaponIconHtml(weapon)} <span>${def.name}${reloading ? " — o'qlanmoqda..." : ''}</span>`;
+    }
     $('ammo-mag').textContent = melee ? '∞' : String(mag);
     $('ammo-mag').classList.toggle('low', !melee && mag <= Math.ceil(def.magSize * 0.25));
     $('ammo-reserve').textContent = melee ? '—' : String(reserve);
-    $('grenades').innerHTML = `${weaponIconHtml('grenade')} <span>GRANATA [G] ×${grenades}</span>`;
-    $('weapon-slots').innerHTML = this.slotsHtml(weapon, ownedWeapons);
     $('reload-hint').classList.toggle('hidden', melee || !(mag === 0 && reserve > 0 && !reloading));
   }
 
@@ -483,6 +510,6 @@ export class Hud {
     this.scope(false);
     this.setDevStats(null);
     this.lastHp = -1;
-    this.lastAmmoKey = '';
+    this.resetAmmoKeys();
   }
 }

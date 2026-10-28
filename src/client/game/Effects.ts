@@ -109,6 +109,14 @@ interface DroppedWeapon {
 const UP = new THREE.Vector3(0, 1, 0);
 const tmpV = new THREE.Vector3();
 const tmpC = new THREE.Color();
+/**
+ * Bo'sh turgan trasser/tutun obyektlari soni chegarasi (har biri o'z materiali bilan — alohida so'nish
+ * shaffofligi saqlanadi). Har o'qda yangi material yaratib-dispose qilish o'rniga qayta ishlatiladi:
+ * GC bosimi yo'q va oxirgi material dispose bo'lganda shader dasturi o'chirilib, keyingi o'qda qayta
+ * kompilyatsiya bo'lmaydi.
+ */
+const TRACER_POOL_MAX = 96;
+const SMOKE_POOL_MAX = 96;
 
 /** Vizual va fizik effektlar: 3D uchuvchi gilzalar, qurol tutuni, o'q izlari, uchqunlar, qon, portlashlar. */
 export class Effects {
@@ -116,6 +124,7 @@ export class Effects {
   private blood: ParticlePool;
   private debris: ParticlePool;
   private tracers: Timed<THREE.Mesh>[] = [];
+  private tracerPool: THREE.Mesh[] = [];
   private tracerGeo = new THREE.CylinderGeometry(1, 1, 1, 6, 1, true);
   private shells: ShellCasing[] = [];
   private droppedWeapons: DroppedWeapon[] = [];
@@ -129,6 +138,7 @@ export class Effects {
   private decalMat: THREE.MeshBasicMaterial;
   private smokeTex: THREE.Texture;
   private smokes: Timed<THREE.Sprite>[] = [];
+  private smokePool: THREE.Sprite[] = [];
   private fireballs: Timed<THREE.Mesh>[] = [];
   private fireGeo = new THREE.SphereGeometry(1, 16, 12);
   private boomLight: THREE.PointLight;
@@ -161,11 +171,48 @@ export class Effects {
     scene.add(this.boomLight);
   }
 
+  /** Puldan (yoki yangi) trasser: har biri o'z materialiga ega, rang/shaffoflik qayta o'rnatiladi. */
+  private acquireTracer(color: THREE.ColorRepresentation): THREE.Mesh {
+    const pooled = this.tracerPool.pop();
+    if (pooled) {
+      const mat = pooled.material as THREE.MeshBasicMaterial;
+      mat.color.set(color);
+      mat.opacity = 0.9;
+      return pooled;
+    }
+    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
+    return new THREE.Mesh(this.tracerGeo, mat);
+  }
+
+  private releaseTracer(m: THREE.Mesh): void {
+    this.scene.remove(m);
+    if (this.tracerPool.length < TRACER_POOL_MAX) this.tracerPool.push(m);
+    else (m.material as THREE.Material).dispose();
+  }
+
+  /** Puldan (yoki yangi) tutun spraiti; pozitsiya/masshtab/userData ni chaqiruvchi o'rnatadi. */
+  private acquireSmoke(color: THREE.ColorRepresentation, opacity: number): THREE.Sprite {
+    const pooled = this.smokePool.pop();
+    if (pooled) {
+      pooled.material.color.set(color);
+      pooled.material.opacity = opacity;
+      return pooled;
+    }
+    return new THREE.Sprite(
+      new THREE.SpriteMaterial({ map: this.smokeTex, color, transparent: true, depthWrite: false, opacity }),
+    );
+  }
+
+  private releaseSmoke(s: THREE.Sprite): void {
+    this.scene.remove(s);
+    if (this.smokePool.length < SMOKE_POOL_MAX) this.smokePool.push(s);
+    else s.material.dispose();
+  }
+
   tracer(from: THREE.Vector3, to: THREE.Vector3, color = '#ffe9a0', width = 0.015, life = 0.085): void {
     const len = from.distanceTo(to);
     if (len < 0.5) return;
-    const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
-    const m = new THREE.Mesh(this.tracerGeo, mat);
+    const m = this.acquireTracer(color);
     m.position.copy(from).add(to).multiplyScalar(0.5);
     m.quaternion.setFromUnitVectors(UP, tmpV.copy(to).sub(from).normalize());
     m.scale.set(width, len, width);
@@ -183,9 +230,7 @@ export class Effects {
         const dist = Math.min(45, from.distanceTo(to));
         const steps = Math.min(6, Math.floor(dist / 6));
         for (let i = 1; i <= steps; i++) {
-          const s = new THREE.Sprite(
-            new THREE.SpriteMaterial({ map: this.smokeTex, color: '#dceef2', transparent: true, depthWrite: false, opacity: 0.35 }),
-          );
+          const s = this.acquireSmoke('#dceef2', 0.35);
           s.position.copy(from).lerp(to, (i * 6) / Math.max(1, from.distanceTo(to)));
           s.scale.setScalar(0.32);
           s.userData.vy = 0.25;
@@ -211,9 +256,7 @@ export class Effects {
   /** Stvoldan chiqadigan porox tutuni va olov uchqunlari + 3D uchib tushadigan gilza fizikasi */
   muzzleBlast(muzzlePos: THREE.Vector3, ejectPos: THREE.Vector3, rightDir: THREE.Vector3, weapon: WeaponId): void {
     // 1. Stvol tutuni
-    const puff = new THREE.Sprite(
-      new THREE.SpriteMaterial({ map: this.smokeTex, color: '#d8d2c5', transparent: true, depthWrite: false, opacity: 0.48 }),
-    );
+    const puff = this.acquireSmoke('#d8d2c5', 0.48);
     puff.position.copy(muzzlePos);
     puff.scale.setScalar(weapon === 'shotgun' || weapon === 'sniper' ? 0.52 : 0.32);
     puff.userData.vy = 0.55;
@@ -342,7 +385,7 @@ export class Effects {
       this.debris.spawn(p, v, tmpC.set('#3a3020'), 0.8 + Math.random() * 0.6);
     }
     for (let i = 0; i < 14; i++) {
-      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.smokeTex, color: '#777064', transparent: true, depthWrite: false, opacity: 0.8 }));
+      const s = this.acquireSmoke('#777064', 0.8);
       s.position.copy(p).add(new THREE.Vector3((Math.random() - 0.5) * 2.5, Math.random() * 1.5, (Math.random() - 0.5) * 2.5));
       s.scale.setScalar(1.5 + Math.random() * 1.5);
       s.userData.vy = 0.6 + Math.random() * 0.8;
@@ -366,8 +409,7 @@ export class Effects {
       const t = this.tracers[i];
       t.life -= dt;
       if (t.life <= 0) {
-        this.scene.remove(t.obj);
-        (t.obj.material as THREE.Material).dispose();
+        this.releaseTracer(t.obj);
         this.tracers.splice(i, 1);
       } else {
         (t.obj.material as THREE.MeshBasicMaterial).opacity = 0.85 * (t.life / t.max);
@@ -394,8 +436,7 @@ export class Effects {
       s.obj.scale.multiplyScalar(1 + s.obj.userData.grow * dt * 0.3);
       s.obj.material.opacity = 0.75 * (s.life / s.max);
       if (s.life <= 0) {
-        this.scene.remove(s.obj);
-        s.obj.material.dispose();
+        this.releaseSmoke(s.obj);
         this.smokes.splice(i, 1);
       }
     }
@@ -462,9 +503,21 @@ export class Effects {
   }
 
   dispose(): void {
-    for (const t of this.tracers) (t.obj.material as THREE.Material).dispose();
+    for (const t of this.tracers) {
+      this.scene.remove(t.obj);
+      (t.obj.material as THREE.Material).dispose();
+    }
+    for (const m of this.tracerPool) (m.material as THREE.Material).dispose();
     for (const f of this.fireballs) (f.obj.material as THREE.Material).dispose();
-    for (const s of this.smokes) s.obj.material.dispose();
+    for (const s of this.smokes) {
+      this.scene.remove(s.obj);
+      s.obj.material.dispose();
+    }
+    for (const s of this.smokePool) s.material.dispose();
+    this.tracers = [];
+    this.tracerPool = [];
+    this.smokes = [];
+    this.smokePool = [];
     for (const sh of this.shells) this.scene.remove(sh.mesh);
     for (const dw of this.droppedWeapons) this.disposeDroppedGroup(dw.group);
     for (const pool of [this.sparks, this.blood, this.debris]) {
