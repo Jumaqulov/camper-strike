@@ -101,6 +101,37 @@ function reindexPoiFurniture(
   }));
 }
 
+/**
+ * 8×4 loft kulbasi (`buildCabin8x4Prefab`, yaw = 0) loftining ochiq g'arbiy cheti (zal tomon) uchun yog'och
+ * to'siq: zina maydonchasi (z 0.25..1.45) ochiq qoladi. `cabinOrigin.y` — kulba pol balandligi.
+ */
+function buildLoftGuardRailProp(siteId: string, cabinOrigin: Vec3): PrefabPlacement {
+  return {
+    objectId: `poi:${siteId}:prop:loft_guard_rail`,
+    prefabId: 'cabin:loft_guard_rail',
+    groundToTerrain: false,
+    transform: {
+      position: { x: q3(cabinOrigin.x + 4.06), y: q3(cabinOrigin.y + 3.0), z: q3(cabinOrigin.z + 2.725) },
+      yaw: 0,
+      scale: { x: 1, y: 1, z: 1 },
+    },
+    parts: [
+      {
+        localId: 'rail',
+        offset: { x: 0, y: 0.55, z: 0 },
+        size: { x: 0.12, y: 1.1, z: 2.45 },
+        mat: 'crate',
+        colliderTag: 'structure',
+        hasCollider: true,
+        hasVisual: true,
+        visualCategory: 'structure',
+        batchKey: 'poi:wood_stack',
+        batchMode: 'static_box',
+      },
+    ],
+  };
+}
+
 // ---------------- 1. POI: O'rmonchi Uyi (poi_ranger_house) ----------------
 
 function buildRangerHouseSite(
@@ -179,7 +210,8 @@ function buildRangerHouseSite(
   ];
 
   // Stage 08A: Outdoor woodpile is now provided by `lumber_stack_01` GLB in `outdoorPlacements.ts`
-  const props: PrefabPlacement[] = [];
+  // Kulba 2 qavatli (loft) — kemping kulbasidagi kabi loft chetida to'siq
+  const props: PrefabPlacement[] = [buildLoftGuardRailProp(site.id, origin)];
 
   return {
     buildings: [cabin],
@@ -324,31 +356,7 @@ function buildCabinClusterSite(
 
   // Central courtyard well / bench prop
   const props: PrefabPlacement[] = [
-    {
-      // Loftning ochiq g'arbiy cheti (zal tomon) uchun yog'och to'siq: zina maydonchasi (z 0.25..1.45) ochiq qoladi
-      objectId: `poi:${site.id}:prop:loft_guard_rail`,
-      prefabId: 'cabin:loft_guard_rail',
-      groundToTerrain: false,
-      transform: {
-        position: { x: q3(origin0.x + 4.06), y: q3(floorY + 3.0), z: q3(origin0.z + 2.725) },
-        yaw: 0,
-        scale: { x: 1, y: 1, z: 1 },
-      },
-      parts: [
-        {
-          localId: 'rail',
-          offset: { x: 0, y: 0.55, z: 0 },
-          size: { x: 0.12, y: 1.1, z: 2.45 },
-          mat: 'crate',
-          colliderTag: 'structure',
-          hasCollider: true,
-          hasVisual: true,
-          visualCategory: 'structure',
-          batchKey: 'poi:wood_stack',
-          batchMode: 'static_box',
-        },
-      ],
-    },
+    buildLoftGuardRailProp(site.id, origin0),
     {
       objectId: `poi:${site.id}:prop:courtyard_bench_01`,
       prefabId: 'cluster:courtyard_bench',

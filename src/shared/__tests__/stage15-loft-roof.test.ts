@@ -62,4 +62,21 @@ describe('Bosqich 15 — loft kulbasi: to‘liq 2-qavat, qattiq qiya tom, tutqic
     const nearEave = raycastWorld(world, { x: lx, y: lowestRoof + 6, z: loft.max.z + 0.2 }, { x: 0, y: -1, z: 0 }, 10);
     assert.ok(nearEave && nearEave.colliderId?.includes('roof_slope_step'), 'chetga yaqin joyda ham tom qattiq');
   });
+
+  it("3. Ikkala loft kulbasida (kemping va o'rmonchi uyi) loftning ochiq cheti to'siq bilan yopilgan, zina maydonchasi ochiq", () => {
+    const world = createWorldDefinition({ mapId: 'forest_square', publicLayoutSeed: 6501 } as never);
+    for (const poi of ['poi_cabin_cluster', 'poi_ranger_house']) {
+      const loft = world.colliders.find((c) => c.id.startsWith(`poi:${poi}:bld:0:`) && c.id.includes('mod_03:wood_floor_01'));
+      assert.ok(loft, `${poi}: loft pol plitasi`);
+      const rail = world.colliders.find((c) => c.id.startsWith(`poi:${poi}:prop:loft_guard_rail`));
+      assert.ok(rail, `${poi}: loft to'sig'i kollayderi`);
+      assert.equal(rail.min.y, loft.max.y, `${poi}: to'siq loft polida turadi`);
+      assert.ok(rail.max.y - rail.min.y >= 1.0, `${poi}: to'siq kamida 1 m baland`);
+      assert.equal(rail.min.x, loft.min.x, `${poi}: to'siq loftning g'arbiy chetida`);
+      // Zina yuqori pog'onasi to'siq bilan yopilmaydi
+      const topStep = world.colliders.find((c) => c.id.startsWith(`poi:${poi}:bld:0:`) && c.id.includes('stair_step_15'));
+      assert.ok(topStep, `${poi}: zina yuqori pog'onasi`);
+      assert.ok(topStep.max.z <= rail.min.z, `${poi}: zina maydonchasi ochiq`);
+    }
+  });
 });

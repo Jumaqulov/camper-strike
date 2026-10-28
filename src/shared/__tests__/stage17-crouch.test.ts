@@ -399,6 +399,6 @@ describe("Bosqich 17 — o'tirish (crouch): umumiy simulyatsiya + server", () =>
 
   it('f) determinizm: forest_square seed 6501 gameplayHash o‘zgarmagan', () => {
     const w = createWorldDefinition({ mapId: 'forest_square', publicLayoutSeed: 6501 });
-    assert.equal(w.gameplayHash, 'b9f85b7f2fe01575');
+    assert.equal(w.gameplayHash, 'a746d9f39e5ba0b2');
   });
 });
