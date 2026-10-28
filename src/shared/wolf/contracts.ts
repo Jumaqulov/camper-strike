@@ -27,7 +27,7 @@ export interface WolfSnap {
   state: WolfState;
   /** Hozir ovlanayotgan o'yinchi (faqat stalk/hunt/attack holatlarida). */
   targetId?: string;
-  /** Rang varianti 0..4 (klient modeli uchun; hozircha 0 — charcoal). */
+  /** Rang varianti 0..4: charcoal, red, tan, black, white (klient `WOLF_COAT_URLS` bo'yicha GLB tanlaydi). */
   coat?: number;
 }
 

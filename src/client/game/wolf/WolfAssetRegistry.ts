@@ -5,9 +5,19 @@ import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js
 /**
  * Vahshiy bo'ri GLB (`scripts/generate-wolf-glb.mjs`): bitta skinlangan mesh (wolf_main + wolf_eyes),
  * 24 suyak, 9 klip, 4 soket. Bu registr personaj registriga o'xshash: bir marta yuklaydi, tekshiradi,
- * har bo'ri uchun SkeletonUtils.clone bilan mustaqil nusxa beradi.
+ * har bo'ri uchun SkeletonUtils.clone bilan mustaqil nusxa beradi. Har rang varianti (coat) — alohida GLB
+ * (bir xil mesh, rig va kliplar, boshqa vertex ranglar), shuning uchun shablon har coat uchun alohida.
  */
 export const WOLF_GLB_URL = '/models/characters/feral_wolf_rigged.glb';
+/** Rang variantlari: `WolfSnap.coat` indeksi bo'yicha (generator tartibi: charcoal, red, tan, black, white). */
+export const WOLF_COAT_URLS = [
+  WOLF_GLB_URL,
+  '/models/characters/feral_wolf_red_rigged.glb',
+  '/models/characters/feral_wolf_tan_rigged.glb',
+  '/models/characters/feral_wolf_black_rigged.glb',
+  '/models/characters/feral_wolf_white_rigged.glb',
+] as const;
+export const WOLF_COAT_COUNT = WOLF_COAT_URLS.length;
 export const WOLF_CLIPS = ['Idle', 'Sniff', 'Alert', 'Walk', 'Run', 'Howl', 'Attack', 'Hit', 'Death'] as const;
 export type WolfClipName = (typeof WOLF_CLIPS)[number];
 export const WOLF_SOCKETS = ['socket_mouth', 'socket_eyes', 'socket_back', 'socket_nose'] as const;
@@ -44,12 +54,34 @@ export interface WolfInstance {
 
 type AssetState = 'idle' | 'loading' | 'ready' | 'failed';
 
-let state: AssetState = 'idle';
-let template: WolfAssetTemplate | null = null;
-let clipMap: ReadonlyMap<WolfClipName, THREE.AnimationClip> | null = null;
-let preloadPromise: Promise<void> | null = null;
-let warned = false;
-const readyListeners = new Set<() => void>();
+interface CoatEntry {
+  url: string;
+  state: AssetState;
+  template: WolfAssetTemplate | null;
+  clipMap: ReadonlyMap<WolfClipName, THREE.AnimationClip> | null;
+  preloadPromise: Promise<void> | null;
+  /** 'failed' tarmoq xatosidan (validatsiyadan emas): keyingi preload chaqiruvi yana urinadi. */
+  failedOnNetwork: boolean;
+  warned: boolean;
+  readyListeners: Set<() => void>;
+}
+
+const coats: CoatEntry[] = WOLF_COAT_URLS.map((url) => ({
+  url,
+  state: 'idle',
+  template: null,
+  clipMap: null,
+  preloadPromise: null,
+  failedOnNetwork: false,
+  warned: false,
+  readyListeners: new Set(),
+}));
+
+/** Noma'lum / diapazondan tashqari coat → 0 (charcoal). */
+function coatEntry(coat: number | undefined): CoatEntry {
+  const i = Number.isInteger(coat) && coat! >= 0 && coat! < WOLF_COAT_COUNT ? coat! : 0;
+  return coats[i]!;
+}
 
 function countTriangles(geo: THREE.BufferGeometry | undefined | null): number {
   if (!geo) return 0;
@@ -128,9 +160,9 @@ function buildClipMap(clips: readonly THREE.AnimationClip[]): ReadonlyMap<WolfCl
   return m;
 }
 
-function notifyReady(): void {
-  const ls = [...readyListeners];
-  readyListeners.clear();
+function notifyReady(e: CoatEntry): void {
+  const ls = [...e.readyListeners];
+  e.readyListeners.clear();
   for (const cb of ls) {
     try {
       cb();
@@ -140,68 +172,85 @@ function notifyReady(): void {
   }
 }
 
-function adopt(t: WolfAssetTemplate): void {
+function adopt(e: CoatEntry, t: WolfAssetTemplate): void {
   if (t.validation.ok) {
-    template = t;
-    clipMap = buildClipMap(t.clips);
-    state = 'ready';
-    notifyReady();
+    e.template = t;
+    e.clipMap = buildClipMap(t.clips);
+    e.state = 'ready';
+    notifyReady(e);
   } else {
-    template = null;
-    clipMap = null;
-    state = 'failed';
-    if (!warned) {
-      warned = true;
-      console.warn(`[WolfAssetRegistry] '${WOLF_GLB_URL}' validation failed: ${t.validation.errors.join('; ')}`);
+    e.template = null;
+    e.clipMap = null;
+    e.state = 'failed';
+    if (!e.warned) {
+      e.warned = true;
+      console.warn(`[WolfAssetRegistry] '${e.url}' validation failed: ${t.validation.errors.join('; ')}`);
     }
   }
 }
 
-/** Bir martalik yuklash; xatoda 'failed' (bo'ri procedural zaxira bilan chiziladi). Node/testda no-op. */
-export function preloadWolfAssets(): Promise<void> {
-  if (preloadPromise) return preloadPromise;
-  if (typeof window === 'undefined' || typeof fetch !== 'function') {
-    preloadPromise = Promise.resolve();
-    return preloadPromise;
+function preloadCoat(e: CoatEntry): Promise<void> {
+  if (e.preloadPromise) return e.preloadPromise;
+  if (e.state === 'ready' || (e.state === 'failed' && !e.failedOnNetwork)) {
+    e.preloadPromise = Promise.resolve();
+    return e.preloadPromise;
   }
-  state = 'loading';
-  preloadPromise = (async () => {
+  if (typeof window === 'undefined' || typeof fetch !== 'function') {
+    e.preloadPromise = Promise.resolve();
+    return e.preloadPromise;
+  }
+  e.state = 'loading';
+  e.failedOnNetwork = false;
+  e.preloadPromise = (async () => {
     // Tarmoq xatosida (server qayta ishga tushayotganda) bir necha marta qayta urinamiz
     const delays = [1500, 4000, 10000];
     for (let attempt = 0; ; attempt++) {
       try {
-        const res = await fetch(WOLF_GLB_URL, { cache: attempt === 0 ? 'default' : 'reload' });
+        const res = await fetch(e.url, { cache: attempt === 0 ? 'default' : 'reload' });
         if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
         const tpl = await parseWolfGlb(await res.arrayBuffer());
-        if (state !== 'loading') return;
-        adopt(tpl);
+        if (e.state !== 'loading') return;
+        adopt(e, tpl);
         return;
       } catch (err) {
-        if (state !== 'loading') return;
+        if (e.state !== 'loading') return;
         if (attempt < delays.length) {
-          console.warn(`[WolfAssetRegistry] '${WOLF_GLB_URL}' yuklanmadi, ${delays[attempt]! / 1000} s dan keyin qayta urinish:`, err);
+          console.warn(`[WolfAssetRegistry] '${e.url}' yuklanmadi, ${delays[attempt]! / 1000} s dan keyin qayta urinish:`, err);
           await new Promise((r) => setTimeout(r, delays[attempt]));
-          if (state !== 'loading') return;
+          if (e.state !== 'loading') return;
           continue;
         }
-        state = 'failed';
-        if (!warned) {
-          warned = true;
-          console.warn(`[WolfAssetRegistry] '${WOLF_GLB_URL}' yuklanmadi, procedural zaxira:`, err);
+        // Keyingi preload chaqiruvi (yangi bo'ri / keyingi xona) yana urinadi
+        e.state = 'failed';
+        e.failedOnNetwork = true;
+        e.preloadPromise = null;
+        if (!e.warned) {
+          e.warned = true;
+          console.warn(`[WolfAssetRegistry] '${e.url}' yuklanmadi, procedural zaxira:`, err);
         }
         return;
       }
     }
   })();
-  return preloadPromise;
+  return e.preloadPromise;
 }
 
-export function isWolfAssetReady(): boolean {
-  return state === 'ready' && template !== null;
+/**
+ * Bir martalik yuklash; xatoda 'failed' (bo'ri procedural zaxira bilan chiziladi). `coat` berilmasa —
+ * barcha rang variantlari. Node/testda no-op.
+ */
+export function preloadWolfAssets(coat?: number): Promise<void> {
+  if (coat === undefined) return Promise.all(coats.map(preloadCoat)).then(() => undefined);
+  return preloadCoat(coatEntry(coat));
 }
 
-export function onWolfAssetReady(cb: () => void): () => void {
-  if (isWolfAssetReady()) {
+export function isWolfAssetReady(coat = 0): boolean {
+  const e = coatEntry(coat);
+  return e.state === 'ready' && e.template !== null;
+}
+
+export function onWolfAssetReady(cb: () => void, coat = 0): () => void {
+  if (isWolfAssetReady(coat)) {
     let cancelled = false;
     queueMicrotask(() => {
       if (!cancelled) cb();
@@ -210,17 +259,19 @@ export function onWolfAssetReady(cb: () => void): () => void {
       cancelled = true;
     };
   }
-  readyListeners.add(cb);
+  const e = coatEntry(coat);
+  e.readyListeners.add(cb);
   return () => {
-    readyListeners.delete(cb);
+    e.readyListeners.delete(cb);
   };
 }
 
 /** Mustaqil bo'ri nusxasi (o'z suyaklari, umumiy geometriya/material/kliplar). Tayyor bo'lmasa null. */
-export function instantiateWolf(): WolfInstance | null {
-  const tpl = template;
-  const cm = clipMap;
-  if (state !== 'ready' || !tpl || !cm) return null;
+export function instantiateWolf(coat = 0): WolfInstance | null {
+  const e = coatEntry(coat);
+  const tpl = e.template;
+  const cm = e.clipMap;
+  if (e.state !== 'ready' || !tpl || !cm) return null;
   let root: THREE.Object3D;
   try {
     root = cloneSkinned(tpl.scene);
@@ -270,17 +321,23 @@ export function instantiateWolf(): WolfInstance | null {
   };
 }
 
-/** Test ilgagi: tayyor shablonni o'rnatadi yoki `null` bilan registrni tiklaydi. */
-export function registerWolfTemplateForTest(t: WolfAssetTemplate | null): void {
-  warned = false;
-  if (!t) {
-    state = 'idle';
-    template = null;
-    clipMap = null;
-    preloadPromise = null;
-    readyListeners.clear();
-    return;
+/**
+ * Test ilgagi: tayyor shablonni o'rnatadi yoki `null` bilan registrni tiklaydi.
+ * `coat` berilmasa — barcha rang variantlariga.
+ */
+export function registerWolfTemplateForTest(t: WolfAssetTemplate | null, coat?: number): void {
+  for (const e of coat === undefined ? coats : [coatEntry(coat)]) {
+    e.warned = false;
+    e.failedOnNetwork = false;
+    if (!t) {
+      e.state = 'idle';
+      e.template = null;
+      e.clipMap = null;
+      e.preloadPromise = null;
+      e.readyListeners.clear();
+      continue;
+    }
+    e.preloadPromise = Promise.resolve();
+    adopt(e, t);
   }
-  preloadPromise = Promise.resolve();
-  adopt(t);
 }

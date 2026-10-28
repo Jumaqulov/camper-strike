@@ -6,6 +6,7 @@ import { NIGHT_DEFAULT_MINUTES, NIGHT_MAX_MINUTES, NIGHT_MIN_MINUTES } from '../
 import { validateWorldCompatibility, type MapId } from '../shared/world';
 import { AudioSys } from './game/Audio';
 import { preloadBuildingAssets } from './game/buildings';
+import { preloadCharacterAssets } from './game/character/CharacterAssetRegistry';
 import { preloadContainerAssets } from './game/containers';
 import { preloadForestAssets } from './game/ForestAssetRegistry';
 import { Game } from './game/Game';
@@ -26,9 +27,12 @@ void preloadBuildingAssets();
 void preloadInteriorAssets();
 void preloadContainerAssets();
 void preloadGrassAssets();
+// Zaxira tana yo'q: personaj GLB xonaga kirishdan oldin tayyor bo'lmasa o'yinchilar ko'rinmay turadi
+void preloadCharacterAssets();
 
 let game: Game | null = null;
 let entered = false;
+let joining = false;
 let toastTimer = 0;
 
 // Helper: safe DOM lookups
@@ -333,6 +337,8 @@ socket.on('connect', () => {
 
 socket.on('disconnect', () => {
   updateConnStatus('disconnected');
+  // Uzilishda joinRoom javobi kelmaydi — keyingi kirish bloklanib qolmasin
+  joining = false;
   if (game) {
     game.destroy();
     game = null;
@@ -486,8 +492,12 @@ function renderRooms(rooms: RoomInfo[]): void {
 }
 
 function joinRoom(roomId: string): void {
+  // KIRISH tugmasini ikki marta bosish ikkinchi joinRoom yuborib, ikkinchi Game yaratmasin
+  if (joining || game) return;
+  joining = true;
   audio.init();
   socket.emit('joinRoom', { roomId }, (res: { ok: boolean; error?: string; welcome?: WelcomeMsg }) => {
+    joining = false;
     if (!res.ok || !res.welcome) return toast(res.error ?? "Xonaga kirib bo'lmadi");
     startGame(res.welcome);
   });

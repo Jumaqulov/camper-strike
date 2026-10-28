@@ -97,6 +97,8 @@ let lastError: string | null = null;
 let lastValidation: CharacterValidation | null = null;
 let loadMs: number | null = null;
 let preloadPromise: Promise<void> | null = null;
+/** 'failed' tarmoq xatosidan (validatsiyadan emas): keyingi preload chaqiruvi yana urinadi. */
+let failedOnNetwork = false;
 let warnedOnce = false;
 const readyListeners = new Set<() => void>();
 
@@ -281,11 +283,12 @@ function adoptTemplate(t: CharacterAssetTemplate): void {
 /**
  * Singleton loader for the Camper Buddy GLB: fetches + parses once, validates, and notifies listeners.
  * Never rejects; on any failure the state becomes 'failed' and players stay invisible (there is no fallback body).
+ * After a network failure (retries exhausted) the next call — e.g. the next Stickman — starts over.
  * In Node/test (no `window`/`fetch`) it is a no-op — tests register a parsed template directly.
  */
 export function preloadCharacterAssets(): Promise<void> {
   if (preloadPromise) return preloadPromise;
-  if (state === 'ready' || state === 'failed') {
+  if (state === 'ready' || (state === 'failed' && !failedOnNetwork)) {
     preloadPromise = Promise.resolve();
     return preloadPromise;
   }
@@ -295,6 +298,7 @@ export function preloadCharacterAssets(): Promise<void> {
   }
 
   state = 'loading';
+  failedOnNetwork = false;
   const t0 = nowMs();
   preloadPromise = (async () => {
     // Tarmoq/HTTP xatosi (masalan, server qayta ishga tushayotgan lahzada) bir martalik bo'lmasin:
@@ -322,6 +326,8 @@ export function preloadCharacterAssets(): Promise<void> {
         }
         loadMs = Math.round(nowMs() - t0);
         state = 'failed';
+        failedOnNetwork = true;
+        preloadPromise = null;
         warnOnce(`[CharacterAssetRegistry] '${CAMPER_BUDDY_URL}' yuklanmadi (qayta urinishlar tugadi) — o'yinchilar model yuklanmaguncha ko'rinmaydi:`, err);
         return;
       }
@@ -471,6 +477,7 @@ export function registerCharacterTemplateForTest(t: CharacterAssetTemplate | nul
   disposedInstances = 0;
   loadMs = null;
   warnedOnce = false;
+  failedOnNetwork = false;
   if (!t) {
     state = 'idle';
     template = null;

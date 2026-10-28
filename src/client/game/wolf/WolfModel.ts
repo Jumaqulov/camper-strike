@@ -52,12 +52,13 @@ export class WolfModel {
   private disposed = false;
   private lastState: WolfState = 'idle';
 
-  constructor() {
-    void preloadWolfAssets();
-    if (isWolfAssetReady()) this.attach();
+  /** @param coat rang varianti (`WolfSnap.coat`, 0..4) */
+  constructor(private readonly coat = 0) {
+    void preloadWolfAssets(coat);
+    if (isWolfAssetReady(coat)) this.attach();
     if (!this.inst) {
       this.buildFallback();
-      this.unsubReady = onWolfAssetReady(() => this.attach());
+      this.unsubReady = onWolfAssetReady(() => this.attach(), coat);
     }
   }
 
@@ -67,7 +68,7 @@ export class WolfModel {
 
   private attach(): void {
     if (this.inst || this.disposed) return;
-    const inst = instantiateWolf();
+    const inst = instantiateWolf(this.coat);
     if (!inst) return;
     this.inst = inst;
     this.root.add(inst.root);

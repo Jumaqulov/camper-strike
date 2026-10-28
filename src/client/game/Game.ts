@@ -321,8 +321,9 @@ export class Game {
     this.myModel.setWeapon(initialWeapon);
     this.myModel.setNameTag(this.myName, '#ffe082', false);
     this.scene.add(this.myModel.root);
-    // Xonada bo'ri bo'lsa modelini oldindan yuklaymiz (birinchi bo'ri ko'ringanda zaxira ko'rinmasin)
-    if (welcome.room.wolves) void preloadWolfAssets();
+    // Xonada bo'ri bo'lsa (Tong otguncha — to'lqinlar, room.wolves = 0) barcha rang variantlarini oldindan
+    // yuklaymiz (birinchi bo'ri ko'ringanda zaxira ko'rinmasin)
+    if (welcome.room.wolves || this.isNight) void preloadWolfAssets();
 
     this.lootWorld = new LootWorldRenderer(
       this.scene,
@@ -2064,7 +2065,7 @@ export class Game {
       seen.add(id);
       let w = this.wolves.get(id);
       if (!w) {
-        const model = new WolfModel();
+        const model = new WolfModel(s0.coat ?? 0);
         this.scene.add(model.root);
         w = {
           id,
