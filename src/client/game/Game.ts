@@ -211,6 +211,9 @@ export class Game {
   /** Shader/tekstura isitish guruhi (bir necha kadr chiziladi, keyin olib tashlanadi) va kadr hisoblagichi. */
   private prewarmGroup: THREE.Group | null = null;
   private prewarmFrames = 0;
+  /** Prewarm uchun qurilgan qurollar va zona devori — guruh olib tashlanganda bo'shatiladi (finishPrewarm). */
+  private prewarmGuns: THREE.Object3D[] = [];
+  private prewarmWall: ZoneWall | null = null;
   private frameNo = 0;
   /** Avtomatik sifat nazorati (kuchsiz GPU): kadr vaqti yig'indisi va ketma-ket "yomon" soniyalar. */
   private perfAccumMs = 0;
@@ -1032,6 +1035,9 @@ export class Game {
     const night = this.camp ? m.survival?.night ?? null : null;
     if (this.camp && night && night.fires) {
       this.camp.sync(night.fires, night.piles ?? [], performance.now() / 1000);
+    } else if (this.camp) {
+      // Jonli holat yo'q (yakun) — gulxanlar natijalar ekranida o'z-o'zidan "yonib tugamasin"
+      this.camp.freezeFuel(performance.now() / 1000);
     }
     // Raund/match tugaganda snayper pritseli ochiq qolmasin (handleWeapons bu fazada ishlamaydi)
     if (m.phase !== 'playing' && this.me.scoped) this.me.scoped = false;
@@ -1433,10 +1439,12 @@ export class Game {
           gun.group.position.set(-3 - k * 1.2, 0, 0);
           k++;
           g.add(gun.group);
+          this.prewarmGuns.push(gun.group);
         }
       }
       if (this.isSurvival) {
         const wall = new ZoneWall(this.scene);
+        this.prewarmWall = wall;
         wall.update({ cx: 0, cz: 0, radius: 6 }, -400, true, 0);
         this.scene.remove(wall.root);
         g.add(wall.root);
@@ -1451,9 +1459,36 @@ export class Game {
       this.renderer.compile(this.scene, this.camera);
     } catch (err) {
       console.warn('[prewarm] o\'tkazib yuborildi:', err);
-      if (this.prewarmGroup) this.scene.remove(this.prewarmGroup);
-      this.prewarmGroup = null;
+      this.finishPrewarm();
     }
+  }
+
+  /**
+   * Prewarm guruhini sahnadan olib, o'zi qurgan resurslarni bo'shatadi. Qurol materiallari umumiy (sharedAsset) va
+   * ataylab dispose qilinmaydi — kompilyatsiya qilingan shaderlar keshda qolishi prewarm'ning maqsadi; procedural
+   * qurol geometriyalari esa har nusxada alohida (GLB bo'laklari sharedAsset). Zona devori tashlanmaydi: haqiqiy
+   * devor sifatida qayta ishlatiladi (materiali allaqachon kompilyatsiya qilingan), devor bor bo'lsa — dispose.
+   */
+  private finishPrewarm(): void {
+    if (this.prewarmGroup) this.scene.remove(this.prewarmGroup);
+    this.prewarmGroup = null;
+    for (const gun of this.prewarmGuns) {
+      gun.removeFromParent();
+      gun.traverse((o) => {
+        if (o instanceof THREE.Mesh && o.geometry && !o.geometry.userData?.sharedAsset) o.geometry.dispose();
+      });
+    }
+    this.prewarmGuns = [];
+    const wall = this.prewarmWall;
+    this.prewarmWall = null;
+    if (!wall) return;
+    if (this.zoneWall || this.disposed) {
+      wall.dispose();
+      return;
+    }
+    wall.update(null, 0, false, 0);
+    this.scene.add(wall.root);
+    this.zoneWall = wall;
   }
 
   // ================= O'yin sikli =================
@@ -1467,10 +1502,7 @@ export class Game {
     const dt = Math.min(0.05, rawDt);
     this.last = now;
     this.frameNo++;
-    if (this.prewarmGroup && ++this.prewarmFrames > 3) {
-      this.scene.remove(this.prewarmGroup);
-      this.prewarmGroup = null;
-    }
+    if (this.prewarmGroup && ++this.prewarmFrames > 3) this.finishPrewarm();
     this.trackPerformance(rawDtMs, now);
     if (import.meta.env.DEV) {
       if (this.devElapsed < 0) {
@@ -1544,6 +1576,7 @@ export class Game {
       const fwd = syn ? syn.fwd : active ? Number(inp.down('KeyW')) - Number(inp.down('KeyS')) : 0;
       const right = syn ? syn.right : active ? Number(inp.down('KeyD')) - Number(inp.down('KeyA')) : 0;
       const jump = syn ? syn.jump : active && inp.down('Space');
+      // Diqqat: `walk` aslida SPRINT (Shift) — protokol mosligi uchun maydon nomi `walk` qolgan (PlayerInputCmd.walk)
       const walk = syn ? syn.walk : active && (inp.down('ShiftLeft') || inp.down('ShiftRight'));
       // O'tirish: Alt (chap/o'ng) yoki C bosib turilganda; qo'yib yuborilganda server tepada joy bo'lsa turg'izadi
       const crouch = syn
@@ -2180,25 +2213,22 @@ export class Game {
     return performance.now() / 1000;
   }
 
-  /** Lager hodisasi (server broadcast): ovoz, chat xabari, gulxan holatini darhol yangilash. */
+  /**
+   * Lager hodisasi (server broadcast): ovoz va gulxan holatini darhol yangilash. Chat xabarini (o'tin tashladi /
+   * o'chmoqda / o'chdi) server o'zi systemChat bilan yuboradi — bu yerda takrorlanmaydi; HUD banneri updateCampHud da.
+   */
   private onCampfireEvent(e: CampfireEvent): void {
     if (!this.camp) return;
     const fire = this.camp.getFires(this.nowSec).find((f) => f.id === e.fireId) ?? null;
     const pos = fire ? { x: fire.x, y: fire.y + 0.6, z: fire.z } : undefined;
-    const label = fire?.main ? 'Lager gulxani' : 'Gulxan';
     if (e.kind === 'fed') {
       this.camp.applyFireEvent(e.fireId, e.fuelSec, true, this.nowSec);
       this.audio.campfireFeed(pos);
-      if (e.by && e.by !== this.myId) {
-        this.hud.chat({ name: '', team: 'none', system: true, text: `🪵 ${e.byName ?? "Sherik"} ${label.toLowerCase()}ga o'tin tashladi` });
-      }
     } else if (e.kind === 'out') {
       this.camp.applyFireEvent(e.fireId, 0, false, this.nowSec);
       this.audio.campfireOut(pos);
-      this.hud.chat({ name: '', team: 'none', system: true, text: `🔥 ${label} o'chdi — bo'rilar lagerga kira oladi!` });
     } else if (e.kind === 'low') {
       this.camp.applyFireEvent(e.fireId, e.fuelSec, true, this.nowSec);
-      if (fire?.main) this.hud.chat({ name: '', team: 'none', system: true, text: `🔥 ${label} o'chmoqda — o'tin keltiring!` });
     }
   }
 
@@ -2341,8 +2371,9 @@ export class Game {
     }
     if (typeof ack.wood === 'number') this.setMyWood(ack.wood);
     if (!ack.ok) {
-      const msg = ack.error ? CAMP_ERROR_MESSAGES_UZ[ack.error] ?? 'Xato' : 'Xato';
-      this.lootUi.showStatus(msg, 'error', 2400);
+      // Xato kodisiz rad etish — server spam-limiti (0.3 s): ataylab jim, "Xato" toast'i ko'rsatilmaydi
+      if (!ack.error) return false;
+      this.lootUi.showStatus(CAMP_ERROR_MESSAGES_UZ[ack.error] ?? 'Xato', 'error', 2400);
       return false;
     }
     return true;
@@ -2776,6 +2807,7 @@ export class Game {
     this.browserGuard.dispose();
     this.zoneWall?.dispose();
     this.zoneWall = null;
+    this.finishPrewarm();
     this.hud.setZoneWarning(false, 0);
     this.chatOpen = false;
     this.hud.setChatOpen(false);

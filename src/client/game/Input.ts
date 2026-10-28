@@ -19,8 +19,15 @@ export function shouldBlockGameKey(ev: Pick<KeyboardEvent, 'code' | 'altKey' | '
   );
 }
 
-function isTextInputTarget(t: EventTarget | null): boolean {
-  return typeof HTMLInputElement !== 'undefined' && t instanceof HTMLInputElement;
+/**
+ * Matn kiritiladigan joymi (o'yin tugmalari va preventDefault unga tegmasin): <input>, <textarea> yoki
+ * contenteditable element (`isContentEditable` ota-onadan meros olingan holatni ham hisobga oladi).
+ */
+export function isTextEntryTarget(t: EventTarget | null): boolean {
+  if (!t) return false;
+  if (typeof HTMLInputElement !== 'undefined' && t instanceof HTMLInputElement) return true;
+  if (typeof HTMLTextAreaElement !== 'undefined' && t instanceof HTMLTextAreaElement) return true;
+  return (t as { isContentEditable?: unknown }).isContentEditable === true;
 }
 
 /** Klaviatura + sichqoncha (pointer lock) boshqaruvi. */
@@ -42,7 +49,7 @@ export class Input {
     this.on(document, 'keydown', (e) => {
       const ev = e as KeyboardEvent;
       // chat inputi o'z tugmalarini o'zi boshqaradi
-      if (isTextInputTarget(ev.target)) return;
+      if (isTextEntryTarget(ev.target)) return;
       if (this.locked && shouldBlockGameKey(ev)) ev.preventDefault();
       if (!this.keys.has(ev.code)) this.pressed.add(ev.code);
       this.keys.add(ev.code);
@@ -50,7 +57,7 @@ export class Input {
     this.on(document, 'keyup', (e) => {
       const ev = e as KeyboardEvent;
       // Firefox: yolg'iz Alt qo'yib yuborilganda menyu satri ochilmasin
-      if (this.locked && !isTextInputTarget(ev.target) && (ev.code === 'AltLeft' || ev.code === 'AltRight')) {
+      if (this.locked && !isTextEntryTarget(ev.target) && (ev.code === 'AltLeft' || ev.code === 'AltRight')) {
         ev.preventDefault();
       }
       this.keys.delete(ev.code);

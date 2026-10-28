@@ -500,7 +500,11 @@ function getOrCreateFallbackAsset(assetId: BuildingAssetId): CachedBuildingAsset
 }
 
 function notifyReadyListeners(): void {
-  for (const cb of readyListeners) {
+  // Bir martalik hodisa (preload faqat bir marta, xatoda ham fallback bilan yakunlanadi): chaqirilgach
+  // ro'yxat tozalanadi — keyin qo'shilganlar onBuildingAssetsReady da darhol chaqiriladi
+  const listeners = [...readyListeners];
+  readyListeners.clear();
+  for (const cb of listeners) {
     try {
       cb();
     } catch (err) {

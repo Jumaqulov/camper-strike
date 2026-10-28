@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { Input } from '../Input';
+import { Input, isTextEntryTarget } from '../Input';
 import { createBrowserGuard, GUARD_KEYS, LEAVE_GUARD_GRACE_MS } from '../BrowserGuard';
 import { loadSettings, saveSettings, type GameSettings } from '../../settings';
 
@@ -259,6 +259,26 @@ describe('Input — o\'yin paytida brauzer yorliqlarini bloklash', () => {
     input.dispose();
   });
 
+  it('textarea va contenteditable ham matn kiritish joyi: tugmalarga tegmaydi', () => {
+    class FakeTextAreaElement extends FakeTarget {}
+    setGlobal('HTMLTextAreaElement', FakeTextAreaElement);
+    const editable = Object.assign(new FakeTarget(), { isContentEditable: true });
+    assert.equal(isTextEntryTarget(new FakeInputElement() as unknown as EventTarget), true);
+    assert.equal(isTextEntryTarget(new FakeTextAreaElement() as unknown as EventTarget), true);
+    assert.equal(isTextEntryTarget(editable as unknown as EventTarget), true);
+    assert.equal(isTextEntryTarget(env.doc as unknown as EventTarget), false, 'oddiy element emas');
+    assert.equal(isTextEntryTarget(null), false);
+
+    const input = makeInput();
+    env.setLocked(true);
+    for (const target of [new FakeTextAreaElement(), editable]) {
+      assert.equal(key('keydown', { code: 'KeyD', altKey: true, target }).defaultPrevented, false);
+      assert.equal(key('keyup', { code: 'AltLeft', target }).defaultPrevented, false);
+    }
+    assert.equal(input.down('KeyD'), false, 'o\'yinga yetmaydi');
+    input.dispose();
+  });
+
   it('Alt keyup (Firefox menyu satri) faqat lock paytida bloklanadi', () => {
     const input = makeInput();
     assert.equal(key('keyup', { code: 'AltLeft' }).defaultPrevented, false);
@@ -357,6 +377,10 @@ describe('BrowserGuard', () => {
     guard.beforeLock();
     assert.equal(kb.calls.length, 1);
     assert.equal(env.log.filter((l) => l === 'requestFullscreen').length, 1);
+
+    // Matn maydonidagi (contenteditable) Esc pointer lockni bo'shatmaydi
+    key('keydown', { code: 'Escape', target: Object.assign(new FakeTarget(), { isContentEditable: true }) });
+    assert.equal(input.locked, true);
 
     // Qisqa Esc (Keyboard Lock ostida sahifaga yetadi) → pointer lock bo'shaydi, to'liq ekran qoladi
     key('keydown', { code: 'Escape' });

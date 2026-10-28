@@ -347,6 +347,11 @@ export interface CachedWeaponTemplate {
 const templateCache = new Map<WeaponId, CachedWeaponTemplate>();
 const failedWeapons = new Set<WeaponId>();
 let preloadPromise: Promise<void> | null = null;
+/**
+ * Brauzerdagi yuklash yakunlandi (ba'zi GLB lar xato bergan bo'lishi mumkin). Shundan keyin kutadigan narsa yo'q:
+ * yangi tinglovchi darhol chaqiriladi, aks holda qisman xatodan keyin qo'shilganlar hech qachon ishlamas edi.
+ */
+let preloadSettled = false;
 const readyListeners = new Set<() => void>();
 
 function countTris(slices: MergedMeshSlice[]): number {
@@ -549,7 +554,12 @@ export function preloadWeaponAssets(): Promise<void> {
         }),
     ),
   ).then(() => {
-    for (const cb of readyListeners) {
+    preloadSettled = true;
+    // Bir martalik hodisa: tinglovchilar chaqirilgach ro'yxat tozalanadi (yopilmalar — masalan, yuklanish
+    // paytida qurilgan qurol guruhlari — abadiy ushlanib qolmasin)
+    const listeners = [...readyListeners];
+    readyListeners.clear();
+    for (const cb of listeners) {
       try {
         cb();
       } catch (e) {
@@ -562,7 +572,7 @@ export function preloadWeaponAssets(): Promise<void> {
 }
 
 export function onWeaponAssetsReady(cb: () => void): () => void {
-  if (templateCache.size === ALL_WEAPON_IDS.length) {
+  if (preloadSettled || templateCache.size === ALL_WEAPON_IDS.length) {
     cb();
     return () => {};
   }

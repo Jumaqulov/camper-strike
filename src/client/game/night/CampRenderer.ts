@@ -393,6 +393,8 @@ export class CampRenderer {
   private piles = new Map<string, PileInst>();
   private lightPool: THREE.PointLight[] = [];
   private built = false;
+  /** Jonli tun holati kelmayapti (raund yakuni: snapshot'da night null) — o'tin ekstrapolyatsiyasi to'xtatilgan. */
+  private fuelFrozen = false;
   private time = 0;
   private readonly assets: SharedCampAssets;
 
@@ -447,6 +449,20 @@ export class CampRenderer {
       if (changed) this.applyPileState(inst);
     }
     this.built = true;
+    this.fuelFrozen = false;
+  }
+
+  /**
+   * Server tun holatini yubormay qo'ydi (raund yakuni / natijalar ekrani): joriy ekstrapolyatsiya qilingan o'tin
+   * qotiriladi — aks holda gulxanlar natijalar ekranida "yonib tugab" o'chib qoladi. Keyingi sync() davom ettiradi.
+   */
+  freezeFuel(nowSec: number): void {
+    if (this.fuelFrozen) return;
+    for (const f of this.fires.values()) {
+      f.snap = { ...f.snap, fuelSec: this.fuelAt(f, nowSec) };
+      f.snapAt = nowSec;
+    }
+    this.fuelFrozen = true;
   }
 
   /** Gulxan hodisasi (server broadcast) — snapshotni kutmasdan darhol aks ettiramiz. */
@@ -463,9 +479,10 @@ export class CampRenderer {
     return this.built && this.fires.size > 0;
   }
 
-  /** Ekstrapolyatsiya qilingan qolgan o'tin (s): yonayotgan gulxanda sekundiga 1 kamayadi. */
+  /** Ekstrapolyatsiya qilingan qolgan o'tin (s): yonayotgan gulxanda sekundiga 1 kamayadi (freezeFuel da — yo'q). */
   fuelAt(inst: { snap: CampfireSnap; snapAt: number }, nowSec: number): number {
     if (!inst.snap.lit) return 0;
+    if (this.fuelFrozen) return Math.max(0, inst.snap.fuelSec);
     return Math.max(0, inst.snap.fuelSec - Math.max(0, nowSec - inst.snapAt));
   }
 

@@ -3,7 +3,7 @@ import { io } from 'socket.io-client';
 import { isSurvivalMode, type GameMode } from '../shared/constants';
 import type { CreateRoomOpts, ReadyAck, RoomInfo, WelcomeMsg } from '../shared/protocol';
 import { NIGHT_DEFAULT_MINUTES, NIGHT_MAX_MINUTES, NIGHT_MIN_MINUTES } from '../shared/wolf/night';
-import { validateWorldCompatibility, type MapId } from '../shared/world';
+import { createWorldDefinition, extractWorldMeta, validateWorldCompatibility, type MapId } from '../shared/world';
 import { AudioSys } from './game/Audio';
 import { preloadBuildingAssets } from './game/buildings';
 import { preloadCharacterAssets } from './game/character/CharacterAssetRegistry';
@@ -504,19 +504,28 @@ function joinRoom(roomId: string): void {
 }
 
 function startGame(welcome: WelcomeMsg): void {
-  show('game');
-  const gameRoot = getEl('game-root');
-  if (!gameRoot) return;
-
-  // WebGL 3D sahna faqat xonaga kirganda ishga tushiriladi
-  game = new Game(gameRoot, socket, welcome, audio, settings, () => leaveGame());
-  const clientWorld = game.getWorldMeta();
+  // Xarita mosligi WebGL sahnadan OLDIN tekshiriladi (faqat umumiy dunyo ta'rifi, WebGL yo'q) — nomuvofiqlikda
+  // butun Game qurilib, darhol buzilmasin. Game konstruktori xuddi shu ta'rifni oladi (forest_square keshlangan).
+  const clientWorld = extractWorldMeta(
+    createWorldDefinition({
+      mapId: welcome.world.mapId,
+      worldVersion: welcome.world.worldVersion,
+      publicLayoutSeed: welcome.world.publicLayoutSeed,
+    }),
+  );
   const check = validateWorldCompatibility(welcome.world, clientWorld);
   if (!check.ok) {
     toast(check.reason ?? 'Xarita versiyasi server bilan mos kelmadi');
     leaveGame();
     return;
   }
+
+  show('game');
+  const gameRoot = getEl('game-root');
+  if (!gameRoot) return;
+
+  // WebGL 3D sahna faqat xonaga kirganda ishga tushiriladi
+  game = new Game(gameRoot, socket, welcome, audio, settings, () => leaveGame());
   socket.emit('ready', { world: clientWorld }, (res?: ReadyAck) => {
     if (res && !res.ok) {
       toast(res.error ?? 'Xarita versiyasi server bilan mos kelmadi');

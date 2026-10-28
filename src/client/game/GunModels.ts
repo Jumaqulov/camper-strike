@@ -894,9 +894,13 @@ onWeaponAssetsReady(() => {
 export function getWeaponIcons3D(): Record<WeaponId | 'grenade', string> {
   if (cachedIcons3D) return cachedIcons3D;
   const out = {} as Record<WeaponId | 'grenade', string>;
+  // Ikonkalar alohida (vaqtinchalik) WebGL kontekstida chiziladi; GLB kelgach yana bir marta qayta quriladi.
+  // dispose() kontekstni bo'shatmaydi — forceContextLoss() siz har qurishda bitta "osilib qolgan" kontekst
+  // GC gacha yashaydi ("Too many active WebGL contexts" va o'yin kontekstining yo'qolishi xavfi).
+  let renderer: THREE.WebGLRenderer | null = null;
   try {
     const H = 108;
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
     renderer.setPixelRatio(2);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.45;
@@ -975,13 +979,21 @@ export function getWeaponIcons3D(): Record<WeaponId | 'grenade', string> {
 
       out[id] = c2d.toDataURL('image/png');
       scene.remove(pivot);
+      // Procedural qurol/granata geometriyalari har nusxada alohida (materiallar va GLB bo'laklari umumiy)
+      pivot.traverse((o) => {
+        if (o instanceof THREE.Mesh && o.geometry && !o.geometry.userData?.sharedAsset) o.geometry.dispose();
+      });
     }
 
-    renderer.dispose();
     iconsBuiltWithGlb = Boolean(getCachedWeaponTemplate('rifle'));
     cachedIcons3D = out;
   } catch {
     cachedIcons3D = out;
+  } finally {
+    if (renderer) {
+      renderer.dispose();
+      renderer.forceContextLoss();
+    }
   }
   return out;
 }

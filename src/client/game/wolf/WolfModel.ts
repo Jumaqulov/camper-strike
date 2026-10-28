@@ -8,8 +8,28 @@ export interface WolfModelState {
   speed: number;
 }
 
-/** Holat → klip. Idle/sniff harakatda Walk ga o'tadi. */
-function clipFor(s: WolfModelState): WolfClipName {
+/** Klip tabiiy tezliklari (m/s, timeScale 1): Run 2.4 m/0.6 s = 4 m/s, Walk 1.2 m/s. */
+const RUN_CLIP_SPEED = 4.0;
+const WALK_CLIP_SPEED = 1.2;
+const CLIP_TIMESCALE_MIN = 0.6;
+const CLIP_TIMESCALE_MAX = 2.2;
+/**
+ * Walk klipi ko'pi bilan 1.2 × 2.2 ≈ 2.64 m/s ga yetadi — undan tez harakatda (masalan, olovdan WOLF_RUN_SPEED
+ * bilan qochayotgan 'alert' bo'ri yoki stalk 4.2 m/s) oyoqlar sirpanadi, shuning uchun har qanday holatda Run.
+ * Run eng sekini 4 × 0.6 = 2.4 m/s; gisterezis (kirish 2.8 / chiqish 2.5) snapshot shovqinida almashib turmaslik uchun.
+ */
+export const WOLF_RUN_CLIP_ENTER_SPEED = 2.8;
+export const WOLF_RUN_CLIP_EXIT_SPEED = 2.5;
+
+/** Holat → klip. Idle/sniff harakatda Walk ga o'tadi; Walk sig'magan tezlikda (gisterezis bilan) Run. */
+export function wolfClipFor(s: WolfModelState, current: WolfClipName | null = null): WolfClipName {
+  const clip = baseClipFor(s);
+  if (clip !== 'Walk') return clip;
+  const runAbove = current === 'Run' ? WOLF_RUN_CLIP_EXIT_SPEED : WOLF_RUN_CLIP_ENTER_SPEED;
+  return s.speed > runAbove ? 'Run' : 'Walk';
+}
+
+function baseClipFor(s: WolfModelState): WolfClipName {
   switch (s.state) {
     case 'hunt':
       return s.speed > 0.5 ? 'Run' : 'Alert';
@@ -169,16 +189,16 @@ export class WolfModel {
       this.lastState = s.state;
       return;
     }
-    const clip = clipFor(s);
+    const clip = wolfClipFor(s, this.current);
     // Hujum/zarba/uvlash har safar boshidan (holatga qayta kirganda), looplar davom etadi
     const restart = s.state !== this.lastState && !LOOPING.has(clip);
     this.play(clip, restart);
     this.lastState = s.state;
     if (this.current === 'Run' || this.current === 'Walk') {
-      // Yurish/yugurish tezligini haqiqiy tezlikka moslash (Run: 2.4 m/0.6 s = 4 m/s, Walk: 1.2 m/s)
-      const base = this.current === 'Run' ? 4.0 : 1.2;
+      // Yurish/yugurish tezligini haqiqiy tezlikka moslash
+      const base = this.current === 'Run' ? RUN_CLIP_SPEED : WALK_CLIP_SPEED;
       const a = this.actions.get(this.current);
-      if (a) a.setEffectiveTimeScale(THREE.MathUtils.clamp(s.speed / base, 0.6, 2.2));
+      if (a) a.setEffectiveTimeScale(THREE.MathUtils.clamp(s.speed / base, CLIP_TIMESCALE_MIN, CLIP_TIMESCALE_MAX));
     }
     this.mixer.update(dt);
   }

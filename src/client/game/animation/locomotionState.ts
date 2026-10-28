@@ -13,13 +13,15 @@
  *  2. Idle↔Walk↔Run use hysteresis bands (enter/exit thresholds below) plus a minimum dwell time.
  *  3. Leaving the ground only counts as airborne after AIR_COYOTE_TIME of continuous air time.
  *
- * Tuning (game: WALK_SPEED 3.0, RUN_SPEED 6.5, jump air time ≈ 2·7.6/22 ≈ 0.69 s):
+ * Tuning (game, shared/constants.ts: WALK_SPEED 4.2, RUN_SPEED 6.5 (sprint), CROUCH_SPEED 2.1,
+ * jump air time ≈ 2·7.6/22 ≈ 0.69 s; clip natural speeds 3.0 walk / 6.5 run — plain walking at 4.2 m/s
+ * plays Walk at timeScale ≈ 1.4, inside WALK_TIMESCALE_MAX):
  *  - Walk enter > 0.7 m/s, exit to Idle < 0.4 m/s. Exit is deliberately above 0.3 m/s: a standing remote
  *    whose speed flickers 0 / 0.6 (±0.6 noise rectified at 0) smooths to ≈0.3 ± 0.04 and must still
- *    settle to Idle instead of moon-walking in place. Accelerating 0→3 m/s crosses 0.7 smoothed in ≈30 ms.
+ *    settle to Idle instead of moon-walking in place. Accelerating 0→4.2 m/s crosses 0.7 smoothed in ≈22 ms.
  *  - Run enter > 4.9 m/s, exit to Walk < 4.3 m/s. The 0.6 m/s band is ~15× the residual ripple of
- *    ±0.6 m/s alternating noise after smoothing (≈ ±0.04 m/s at 60 Hz), so it never thrashes,
- *    while staying far from both natural speeds (3.0 walk / 6.5 run) so timeScale clamps rarely bite.
+ *    ±0.6 m/s alternating noise after smoothing (≈ ±0.04 m/s at 60 Hz), so it never thrashes;
+ *    plain walking (4.2, below RUN_EXIT) stays Walk and sprinting (6.5) is well above RUN_ENTER.
  *  - When (re)entering locomotion from a non-locomotion state the band midpoints are used
  *    (0.55 m/s Idle/Walk, 4.6 m/s Walk/Run) since there is no "current" loco state to hysterese on.
  */

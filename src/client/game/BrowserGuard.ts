@@ -1,5 +1,5 @@
 import { saveSettings, type GameSettings } from '../settings';
-import type { Input } from './Input';
+import { isTextEntryTarget, type Input } from './Input';
 
 /**
  * BrowserGuard — o'yin paytida brauzer / OT yorliqlaridan himoya.
@@ -92,10 +92,6 @@ function keyboardApi(): KeyboardLockApi | null {
 
 function isSecure(): boolean {
   return typeof window !== 'undefined' && window.isSecureContext === true;
-}
-
-function isTextInputTarget(t: EventTarget | null): boolean {
-  return typeof HTMLInputElement !== 'undefined' && t instanceof HTMLInputElement;
 }
 
 const HINT_SUPPORTED = "To'liq ekrandan chiqish: Esc ni ~2 soniya bosib turing (qisqa Esc — pauza).";
@@ -204,7 +200,7 @@ export function createBrowserGuard(opts: BrowserGuardOptions): BrowserGuard {
   // ochilishi uchun o'zimiz chiqaramiz (to'liq ekran qoladi). Qulfsiz holatda ham zararsiz.
   const onKeyDown = (e: Event) => {
     const ev = e as KeyboardEvent;
-    if (ev.code !== 'Escape' || isTextInputTarget(ev.target)) return;
+    if (ev.code !== 'Escape' || isTextEntryTarget(ev.target)) return;
     if (document.pointerLockElement) document.exitPointerLock();
   };
 

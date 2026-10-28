@@ -217,6 +217,7 @@ export class LocalPlayer {
     this.staminaLocked = Boolean(state.staminaLocked);
   }
 
+  /** `walk` — Shift = SPRINT (protokoldagi `PlayerInputCmd.walk` nomi tarixiy, o'zgartirilmagan). */
   move(dt: number, fwd: number, right: number, jump: boolean, walk: boolean, crouch = false): PlayerInputCmd {
     const state = this.getMovementState();
     const cmd = this.prediction.recordAndStepInput(
