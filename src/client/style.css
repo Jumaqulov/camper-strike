@@ -1108,7 +1108,7 @@ html, body {
     repeating-linear-gradient(179deg, rgba(0, 0, 0, 0.1) 0 1px, rgba(0, 0, 0, 0) 1px 6px),
     linear-gradient(180deg, var(--wd-light, #ffd94f) 0%, var(--wd-base, #f3b62a) 55%, var(--wd-dark, #c98d12) 100%);
   box-shadow: 0 3px 0 var(--wd-edge, #4a2f06), 0 8px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  transform: rotate(-1deg);
+  transform: none;
 }
 .s07-win-sign.is-other { --wd-light: #77d684; --wd-base: #3f9d4c; --wd-dark: #276a33; --wd-edge: #0f3418; --wd-paint: #f4ffea; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6); }
 .s07-win-sign.is-draw { --wd-light: #b8b3a6; --wd-base: #8d877a; --wd-dark: #605b50; --wd-edge: #2b2822; --wd-paint: #1d1a14; }
@@ -1137,7 +1137,9 @@ html, body {
     linear-gradient(180deg, #f3e4c2 0%, #e6d3a8 100%);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(120, 80, 30, 0.25);
   color: #2b1b08;
-  transform: rotate(0.4deg);
+  transform: none;
+  text-shadow: none;
+  -webkit-font-smoothing: antialiased;
 }
 .s07-win-table {
   width: 100%;
@@ -1146,6 +1148,7 @@ html, body {
   text-align: left;
 }
 .s07-win-table th {
+  text-shadow: none;
   padding: 5px 8px;
   border-bottom: 2px solid rgba(90, 60, 20, 0.35);
   color: #6b4a1c;
@@ -1155,6 +1158,7 @@ html, body {
   text-transform: uppercase;
 }
 .s07-win-table td {
+  text-shadow: none;
   padding: 6px 8px;
   border-bottom: 1px dashed rgba(90, 60, 20, 0.25);
   color: #2b1b08;
@@ -1163,6 +1167,7 @@ html, body {
 .s07-win-table tr:last-child td { border-bottom: 0; }
 .s07-win-table .s07-kills { text-align: center; width: 54px; }
 .s07-rank {
+  text-shadow: none;
   display: inline-block;
   min-width: 30px;
   padding: 2px 6px;
@@ -1172,6 +1177,7 @@ html, body {
   font-weight: 900;
 }
 .s07-tag {
+  text-shadow: none;
   margin-left: 7px;
   padding: 1px 7px;
   border-radius: 999px;
