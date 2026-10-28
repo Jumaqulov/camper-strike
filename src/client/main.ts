@@ -367,6 +367,12 @@ function applyModeSelection(mode: string): void {
 
   const minHumansField = getEl<HTMLElement>('room-min-humans-field');
   if (minHumansField) minHumansField.style.display = mode === 'forest_survival' ? '' : 'none';
+  // Survivalda hisob chegarasi yo'q (oxirgi tirik qolgan g'olib) — maydon yashiriladi
+  const scoreField = getEl<HTMLElement>('room-score-field');
+  if (scoreField) scoreField.style.display = mode === 'forest_survival' ? 'none' : '';
+  const lootField = getEl<HTMLElement>('room-loot-preview-field');
+  const lootHint = getEl<HTMLElement>('room-loot-preview-hint');
+  const timeInput = getEl<HTMLInputElement>('room-time');
 
   if (mode === 'forest_survival') {
     if (mapSel) mapSel.value = 'forest_square';
@@ -384,6 +390,9 @@ function applyModeSelection(mode: string): void {
       lootPreviewChk.checked = true;
       lootPreviewChk.disabled = true;
     }
+    lootField?.classList.add('is-locked');
+    if (lootHint) lootHint.textContent = 'Survivalda doim yoqilgan: qurol va buyumlar konteynerlardan topiladi';
+    if (timeInput && Number(timeInput.value) > 15) timeInput.value = '3';
   } else {
     if (scoreInput) {
       scoreInput.disabled = false;
@@ -393,6 +402,9 @@ function applyModeSelection(mode: string): void {
       lootPreviewChk.disabled = false;
       lootPreviewChk.checked = false;
     }
+    lootField?.classList.remove('is-locked');
+    if (lootHint) lootHint.textContent = 'Qurol va buyumlar konteynerlardan topiladi';
+    if (timeInput && Number(timeInput.value) < 5) timeInput.value = '10';
     if (botsInput) {
       botsInput.disabled = false;
       botsInput.max = '16';
@@ -413,14 +425,8 @@ function renderRooms(rooms: RoomInfo[]): void {
   }
   list.innerHTML = rooms
     .map((r) => {
-      const mapLabel =
-        r.world?.mapId === 'forest_square'
-          ? '🌲 Forest Square (256×256, 6 POI)'
-          : r.world?.mapId === 'forest_assets_preview'
-            ? '🏚️ Forest Assets Preview (04A)'
-            : r.world?.mapId === 'forest_sample'
-              ? "🌲 Forest Preview (96×96)"
-              : '🌲 O‘rmon xaritasi';
+      // Lobbida faqat Forest Square taklif qilinadi; boshqa xarita ID lari (eski/test xonalari) umumiy nom bilan
+      const mapLabel = r.world?.mapId === 'forest_square' ? '🌲 Forest Square (256×256)' : "🌲 O'rmon xaritasi";
       const lootBadge =
         r.mode === 'forest_survival'
           ? ` · <b style="color:#4ade80;">🌲 Oxirgi tirik qolgan · Qurolsiz boshlash</b>`

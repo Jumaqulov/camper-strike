@@ -216,74 +216,73 @@
             <div class="panel create-panel">
               <div class="panel-title">Yangi xona yaratish</div>
 
-              <!-- Rejim kartalari (tezkor tanlov) -->
-              <div class="mode-cards-header">O'yin rejimi tanlovi:</div>
-              <div class="mode-cards" id="lobby-mode-cards">
-                <div class="mode-card featured active" data-mode="forest_survival">
-                  <div class="mode-card-badge">TAVSIYA</div>
-                  <div class="mode-card-title">🌲 Forest Survival</div>
-                  <div class="mode-card-desc">256×256 O'rmon · 6 POI · Qurolsiz start · Loot</div>
-                </div>
-                <div class="mode-card" data-mode="tdm">
-                  <div class="mode-card-title">⚔️ TDM Jamoaviy</div>
-                  <div class="mode-card-desc">Qizil vs Ko'k jamoaviy jang</div>
-                </div>
-                <div class="mode-card" data-mode="ffa">
-                  <div class="mode-card-title">🎯 FFA Hamma qarshi</div>
-                  <div class="mode-card-desc">Klassik individual duel</div>
-                </div>
-              </div>
-
-              <label class="field">Rejim
-                <select id="room-mode">
-                  <option value="forest_survival">🌲 Forest Survival (Oxirgi tirik qolgan)</option>
-                  <option value="tdm" selected>Jamoaviy (Qizil vs Ko'k)</option>
-                  <option value="ffa">Hamma hammaga qarshi</option>
-                </select>
-              </label>
-
-              <label class="field">Xona nomi <input id="room-name" maxlength="24" placeholder="Mening xonam" /></label>
-
-              <label class="field">Xarita
-                <select id="room-map">
-                  <optgroup label="Asosiy xarita">
-                    <option value="forest_square" selected>🌲 Forest Square (256×256, 6 POI)</option>
-                  </optgroup>
-                  <optgroup label="Boshqa xaritalar">
-                    <option value="forest_assets_preview">🏚️ Forest Assets Preview (04A Binolar &amp; Interyer)</option>
-                    <option value="forest_sample">🌲 Forest Preview (96×96 O'rmon)</option>
-                  </optgroup>
-                </select>
-              </label>
-
-              <label class="field" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:4px 0 8px;">
-                <input id="room-loot-preview" type="checkbox" style="width:18px;height:18px;accent-color:#f59e0b;" />
-                <span>📦 Qurolsiz boshlash + Loot sinovi (Bosqich 06)</span>
-              </label>
-
-              <label class="field">Maks. o'yinchi <input id="room-max" type="number" min="1" max="16" value="10" /></label>
-              <label class="field" id="room-min-humans-field" title="Survival: shuncha odam tayyor bo'lgach raund boshlanadi (botlar hisobga olinmaydi)">Start uchun odamlar <input id="room-min-humans" type="number" min="1" max="16" value="1" /></label>
-
-              <!-- Qo'shimcha sozlamalar (Accordion) -->
-              <details class="accordion-panel" id="advanced-settings-accordion">
-                <summary class="accordion-summary">
-                  <span class="accordion-title">⚙️ Qo'shimcha sozlamalar</span>
-                  <span class="accordion-hint">(botlar, vaqt, ochko)</span>
-                  <span class="accordion-arrow">▾</span>
-                </summary>
-                <div class="accordion-content">
-                  <div class="row">
-                    <label class="field">Botlar soni <input id="room-bots" type="number" min="0" max="16" value="4" /></label>
-                    <label class="field">Vaqt (daqiqa) <input id="room-time" type="number" min="1" max="60" value="10" /></label>
+              <!-- 1. Rejim: kartalar (yashirin select mantiq uchun saqlanadi) -->
+              <section class="cf-section">
+                <div class="cf-label"><span class="cf-step">1</span>Rejim</div>
+                <div class="mode-cards" id="lobby-mode-cards">
+                  <div class="mode-card featured active" data-mode="forest_survival">
+                    <div class="mode-card-badge">Tavsiya</div>
+                    <div class="mode-card-title">🌲 Forest Survival</div>
+                    <div class="mode-card-desc">Oxirgi tirik qolgan g'olib. Qurolsiz start, loot konteynerlardan, zona torayadi.</div>
                   </div>
-                  <div class="row">
-                    <label class="field">Hisob chegarasi <input id="room-score" type="number" min="1" max="500" value="50" /></label>
-                    <label class="field" title="O'rmonda yuradigan vahshiy bo'rilar: hid va o'q ovozidan topadi, tishlaydi; zinaga chiqolmaydi">🐺 Bo'rilar <input id="room-wolves" type="number" min="0" max="4" value="0" /></label>
+                  <div class="mode-card" data-mode="tdm">
+                    <div class="mode-card-title">⚔️ Jamoaviy (TDM)</div>
+                    <div class="mode-card-desc">Qizil va Ko'k jamoa. Hisob chegarasiga birinchi yetgan g'olib.</div>
+                  </div>
+                  <div class="mode-card" data-mode="ffa">
+                    <div class="mode-card-title">🎯 Hamma qarshi (FFA)</div>
+                    <div class="mode-card-desc">Har kim o'zi uchun. Eng ko'p o'ldirgan g'olib.</div>
                   </div>
                 </div>
-              </details>
+                <select id="room-mode" class="cf-hidden" aria-hidden="true" tabindex="-1">
+                  <option value="forest_survival" selected>Forest Survival</option>
+                  <option value="tdm">Jamoaviy (TDM)</option>
+                  <option value="ffa">Hamma qarshi (FFA)</option>
+                </select>
+              </section>
 
-              <button id="btn-create" class="btn primary big">XONA YARATISH</button>
+              <!-- 2. Xona va o'yinchilar -->
+              <section class="cf-section">
+                <div class="cf-label"><span class="cf-step">2</span>Xona</div>
+                <div class="cf-grid">
+                  <label class="field cf-span2">Xona nomi <input id="room-name" maxlength="24" placeholder="Mening xonam" /></label>
+                  <label class="field">👤 Maks. o'yinchi <input id="room-max" type="number" min="1" max="16" value="10" /></label>
+                  <label class="field" id="room-min-humans-field" title="Shuncha odam tayyor bo'lgach raund boshlanadi (botlar hisobga olinmaydi)">🚦 Start uchun odam <input id="room-min-humans" type="number" min="1" max="16" value="1" /></label>
+                </div>
+                <div class="cf-info">
+                  <span class="cf-info-icon">🗺️</span>
+                  <span><b>Forest Square</b> · 256×256 o'rmon · 6 ta joy (POI) · kulbalar va minora</span>
+                </div>
+                <select id="room-map" class="cf-hidden" aria-hidden="true" tabindex="-1">
+                  <option value="forest_square" selected>Forest Square</option>
+                </select>
+              </section>
+
+              <!-- 3. Raqiblar -->
+              <section class="cf-section">
+                <div class="cf-label"><span class="cf-step">3</span>Raqiblar</div>
+                <div class="cf-grid">
+                  <label class="field" title="Server boshqaradigan botlar: barcha rejimlarda, survivalda loot yig'adi">🤖 Botlar <input id="room-bots" type="number" min="0" max="16" value="4" /></label>
+                  <label class="field" title="Vahshiy bo'rilar: hid va o'q ovozidan topadi, quvib tishlaydi, zinaga chiqolmaydi">🐺 Bo'rilar <input id="room-wolves" type="number" min="0" max="4" value="0" /></label>
+                </div>
+                <div class="cf-hint">Bo'ri hid va o'q ovozidan topadi, sprintdan tez yuguradi, lekin 2-qavatga chiqolmaydi.</div>
+              </section>
+
+              <!-- 4. Raund qoidalari -->
+              <section class="cf-section">
+                <div class="cf-label"><span class="cf-step">4</span>Raund</div>
+                <div class="cf-grid">
+                  <label class="field">⏱ Vaqt (daqiqa) <input id="room-time" type="number" min="1" max="60" value="10" /></label>
+                  <label class="field" id="room-score-field">🎯 Hisob chegarasi <input id="room-score" type="number" min="1" max="500" value="50" /></label>
+                </div>
+                <label class="cf-toggle" id="room-loot-preview-field">
+                  <input id="room-loot-preview" type="checkbox" />
+                  <span class="cf-toggle-track" aria-hidden="true"></span>
+                  <span class="cf-toggle-text"><b>📦 Qurolsiz start + loot</b><small id="room-loot-preview-hint">Qurol va buyumlar konteynerlardan topiladi</small></span>
+                </label>
+              </section>
+
+              <button id="btn-create" class="btn primary big">▶ XONA YARATISH</button>
 
               <div class="lan-box">
                 <div class="lan-title">Boshqa kompyuterlardan ulanish manzili:</div>
