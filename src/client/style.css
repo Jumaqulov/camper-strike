@@ -164,15 +164,13 @@ html, body {
 #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; font-weight: 700; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); font-family: 'Bahnschrift', 'Segoe UI', 'Roboto', system-ui, sans-serif; }
 /* Survival: yuqoridagi status panelini SurvivalUI chizadi — TDM hisob/taymer paneli takror bo'lmasin */
 #hud.survival #top-bar { display: none; }
-/* Loot rejimi: qurol slotlari va granata soni pastdagi inventar panelida bor — o'ng paneldan olib tashlaymiz */
-#hud.loot #weapon-slots, #hud.loot #grenades { display: none; }
-#hud.loot #hud-ammo { min-width: 180px; }
-#hud.loot #weapon-name { font-size: 14px; }
-/* Loot rejimida pastki markaziy inventar paneliga joy bo'lsin: chap/o'ng panellar ixcham */
-#hud.loot #hud-health { width: 200px; }
+/* Loot rejimi: qurol slotlari, granata va jihoz pastdagi inventar panelida — chap/o'ng panellar ixcham */
+#hud.loot #weapon-slots, #hud.loot #grenades, #hud.loot #gear-row { display: none; }
+#hud.loot #hud-ammo { min-width: 170px; }
+#hud.loot #hud-health { width: 190px; }
 #hud.loot .rv-tag { display: none; }
-#hud.loot .hp-row { font-size: 30px; }
-#hud.loot .ammo-row { font-size: 34px; }
+#hud.loot .hp-row { font-size: 28px; }
+#hud.loot .ammo-row { font-size: 32px; }
 
 #crosshair { position: absolute; left: 50%; top: 50%; width: 0; height: 0; --gap: 6px; }
 #crosshair .ch { position: absolute; background: #7dff6b; box-shadow: 0 0 2px #000; }
@@ -298,77 +296,49 @@ html, body {
 .chat-line.faded { opacity: 0; }
 #chat.open .chat-line.faded { opacity: 1; }
 #chat-input { pointer-events: auto; margin-top: 6px; width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--accent); background: rgba(0, 0, 0, 0.7); color: #fff; font-size: 14px; outline: none; }
-
-#hud-health { position: absolute; left: 16px; bottom: 16px; width: 270px; background: rgba(36, 26, 16, 0.78); border: 2px solid rgba(217, 155, 82, 0.55); padding: 10px 14px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); }
+/* Pastki HUD panellari: qorong'i yog'och taxta (menyu tugmalari va natijalar taxtasi bilan bir uslub) */
+#hud-health, #hud-ammo, #stage06-inventory-strip {
+  border: 2px solid #24130a;
+  border-radius: 9px 12px 8px 13px / 12px 8px 13px 9px;
+  background:
+    repeating-linear-gradient(179deg, rgba(0, 0, 0, 0.12) 0 1px, rgba(0, 0, 0, 0) 1px 7px),
+    repeating-linear-gradient(181deg, rgba(255, 255, 255, 0.045) 0 2px, rgba(0, 0, 0, 0) 2px 15px),
+    radial-gradient(90% 70% at 18% 20%, rgba(255, 236, 200, 0.1), rgba(0, 0, 0, 0) 60%),
+    linear-gradient(180deg, rgba(104, 64, 32, 0.94) 0%, rgba(74, 44, 18, 0.94) 60%, rgba(54, 30, 14, 0.96) 100%);
+  box-shadow: 0 3px 0 #24130a, 0 10px 24px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 236, 200, 0.3), inset 0 -3px 6px rgba(0, 0, 0, 0.35);
+}
+#hud-health { position: absolute; left: 16px; bottom: 16px; width: 250px; padding: 9px 14px 10px; }
 .rv-tag { font-size: 10px; color: #ffd15c; letter-spacing: 1.2px; margin-bottom: 2px; }
-.hp-row { display: flex; align-items: center; gap: 10px; font-size: 34px; }
-.hp-icon { font-size: 26px; }
-#hp-bar { height: 8px; background: rgba(255, 255, 255, 0.15); border-radius: 4px; overflow: hidden; margin-top: 4px; }
+.hp-row { display: flex; align-items: center; gap: 10px; font-size: 32px; color: #fff0c8; }
+.hp-icon { font-size: 24px; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6)); }
+#hp-bar { height: 9px; background: rgba(0, 0, 0, 0.45); border-radius: 5px; overflow: hidden; margin-top: 4px; box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.7); }
 #hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #ff4d4d, #ffd24d 50%, #5fd068); background-size: 260px 100%; transition: width 0.2s; }
-/* Stamina (sprint) chizig'i: to'liq bo'lsa yashirin, tugaganda qizil */
-#stamina-bar { height: 4px; margin-top: 5px; background: rgba(255, 255, 255, 0.12); border-radius: 2px; overflow: hidden; transition: opacity 0.35s; }
+#hp-value.low { color: #ff6b5a; animation: blink 0.8s infinite; }
+#stamina-bar { height: 4px; margin-top: 5px; background: rgba(0, 0, 0, 0.4); border-radius: 2px; overflow: hidden; transition: opacity 0.35s; }
 #stamina-bar.full { opacity: 0; }
 #stamina-fill { height: 100%; width: 100%; background: #ffd15c; transition: width 0.12s linear, background 0.2s; }
 #stamina-bar.locked #stamina-fill { background: #ff6b5a; }
-/* Zirh / kaska ko'rsatkichi (loot rejimi) */
-#gear-row { display: flex; gap: 10px; margin-top: 5px; font-size: 11px; letter-spacing: 0.4px; color: #bfdbfe; }
+#gear-row { display: flex; gap: 10px; margin-top: 5px; font-size: 11px; letter-spacing: 0.4px; color: #cfe3ff; }
 #gear-row.hidden { display: none; }
 #gear-row span:empty { display: none; }
 
-/* Survival: xavfsiz zonadan tashqarida ogohlantirish */
-#zone-warn {
-  position: absolute; left: 50%; top: 112px; transform: translateX(-50%);
-  padding: 7px 16px; border-radius: 8px; white-space: nowrap;
-  font: 800 12px/1 Bahnschrift, "Segoe UI", sans-serif; letter-spacing: 1px; text-transform: uppercase;
-  color: #fff1f0; background: rgba(160, 24, 16, 0.78); border: 1px solid rgba(255, 120, 100, 0.7);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45); animation: zone-warn-pulse 0.9s ease-in-out infinite;
-  pointer-events: none;
-}
-#zone-warn.hidden { display: none; }
-@keyframes zone-warn-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-#hud.zone-outside::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none;
-  box-shadow: inset 0 0 120px 40px rgba(200, 30, 20, 0.35);
-  animation: zone-warn-pulse 1.2s ease-in-out infinite;
-}
-/* Bo'ri xavfi: yaqinda (sariq), quvyapti (qizil, pulsatsiya + ekran cheti qoraygan) */
-#wolf-warn {
-  position: absolute; left: 50%; top: 146px; transform: translateX(-50%);
-  padding: 6px 14px; border-radius: 8px; white-space: nowrap;
-  font: 800 12px/1 Bahnschrift, "Segoe UI", sans-serif; letter-spacing: 1px; text-transform: uppercase;
-  color: #1a1407; background: rgba(255, 176, 32, 0.9); border: 1.5px solid #3a2a08;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45); pointer-events: none;
-}
-#wolf-warn.hunt {
-  color: #fff; background: rgba(150, 18, 18, 0.92); border-color: #ff9a9a;
-  animation: zone-warn-pulse 0.5s ease-in-out infinite;
-}
-#wolf-warn.hidden { display: none; }
-#hud.wolf-hunted::before {
-  content: ''; position: absolute; inset: 0; pointer-events: none;
-  box-shadow: inset 0 0 140px 50px rgba(20, 5, 5, 0.55);
-  animation: zone-warn-pulse 0.5s ease-in-out infinite;
-}
-
 #team-badge { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 13px; letter-spacing: 2px; padding: 5px 14px; border-radius: 20px; background: rgba(30, 89, 54, 0.85); border: 1.5px solid #f2e8cf; }
-
-#hud-ammo { position: absolute; right: 16px; bottom: 16px; text-align: right; background: rgba(36, 26, 16, 0.78); border: 2px solid rgba(217, 155, 82, 0.55); padding: 10px 16px; border-radius: 12px; min-width: 235px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); }
-.rv-cam-hint { font-size: 11px; color: #ffd15c; margin-top: 4px; letter-spacing: 0.4px; }
-#weapon-name { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; font-size: 15px; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; }
+#hud-ammo { position: absolute; right: 16px; bottom: 16px; text-align: right; padding: 9px 16px 10px; min-width: 225px; }
+.rv-cam-hint { font-size: 10px; color: #d5c8b2; margin-top: 4px; letter-spacing: 0.4px; opacity: 0.85; }
+#weapon-name { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; font-size: 14px; color: #ffd15c; letter-spacing: 1px; text-transform: uppercase; }
 #weapon-name .w-img-3d,
 #weapon-name .w-svg { height: 28px; width: auto; }
-.ammo-row { font-size: 40px; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.ammo-row .sep { color: var(--muted); margin: 0 6px; font-size: 26px; }
-#ammo-reserve { font-size: 24px; color: var(--muted); }
-#ammo-mag.low { color: var(--red); }
-#grenades { display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 13px; color: #dbe4ec; }
+.ammo-row { font-size: 38px; line-height: 1.1; font-variant-numeric: tabular-nums; color: #fff0c8; }
+.ammo-row .sep { color: #a89a80; margin: 0 6px; font-size: 24px; }
+#ammo-mag.low { color: #ff6b5a; animation: blink 0.8s infinite; }
+#grenades { display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 12px; color: #ead9bf; }
 #grenades .w-img-3d,
 #grenades .w-svg { height: 22px; width: auto; }
-#weapon-slots { display: flex; gap: 6px; justify-content: flex-end; margin-bottom: 8px; }
-.slot { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; padding: 3px 8px; border-radius: 7px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255,255,255,0.12); color: var(--muted); }
+#weapon-slots { display: flex; gap: 5px; justify-content: flex-end; margin-bottom: 8px; }
+.slot { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; padding: 3px 7px; border-radius: 6px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(36, 19, 10, 0.9); color: #d5c8b2; box-shadow: inset 0 1px 0 rgba(255, 236, 200, 0.12); }
 .slot .w-img-3d,
 .slot .w-svg { height: 22px; width: auto; opacity: 0.82; }
-.slot.active { background: linear-gradient(180deg, #ffca4b, #e8920c); color: #1b1200; border-color: #fff2b2; text-shadow: none; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+.slot.active { background: linear-gradient(180deg, #ffd94f, #f3b62a 55%, #c98d12); color: #2a1a05; border-color: #4a2f06; text-shadow: none; transform: translateY(-2px); box-shadow: 0 3px 0 #4a2f06, 0 6px 12px rgba(0, 0, 0, 0.45); }
 .slot.active .w-img-3d,
 .slot.active .w-svg { opacity: 1; }
 
@@ -703,7 +673,7 @@ html, body {
   color: #fef3c7;
 }
 
-/* ---------- Inventar HUD (InventoryUI.ts) ---------- */
+/* ---------- Inventar HUD (InventoryUI.ts): ixcham yog'och taxtachalar ---------- */
 #stage06-inventory-hud {
   position: fixed;
   bottom: 54px;
@@ -715,7 +685,6 @@ html, body {
   gap: 6px;
   z-index: 11;
   pointer-events: none;
-  font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
   user-select: none;
 }
 
@@ -731,7 +700,7 @@ html, body {
   gap: 6px;
   padding: 2px 10px;
   border-radius: 6px;
-  background: rgba(36, 26, 16, 0.6);
+  background: rgba(36, 26, 16, 0.7);
   color: #ffd166;
   font-size: 11px;
   font-weight: 800;
@@ -741,17 +710,11 @@ html, body {
   white-space: nowrap;
 }
 
-/* Inventar paneli: HUD panellari bilan bir xil to'q yog'och/shisha ko'rinish */
 #stage06-inventory-strip {
   display: flex;
   align-items: stretch;
-  gap: 5px;
-  padding: 5px 6px;
-  border-radius: 12px;
-  background: rgba(36, 26, 16, 0.8);
-  border: 2px solid rgba(217, 155, 82, 0.55);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(6px);
+  gap: 6px;
+  padding: 6px 7px;
   pointer-events: auto;
 }
 
@@ -761,183 +724,89 @@ html, body {
   gap: 4px;
 }
 
+/* Qurol taxtachasi: [raqam + ikonka] / [nom · o'q] */
 .s06-inv-slot {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 1px;
-  min-width: 78px;
-  padding: 3px 7px 3px 6px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #d8ccb4;
+  gap: 2px;
+  min-width: 74px;
+  padding: 4px 6px 3px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(36, 19, 10, 0.9);
+  color: #d5c8b2;
   cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 236, 200, 0.12);
   transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
   text-align: left;
 }
-
-.s06-inv-slot.locked {
-  opacity: 0.42;
-  cursor: not-allowed;
-  background: rgba(0, 0, 0, 0.25);
-  border-style: dashed;
-}
-
-.s06-inv-slot.owned:hover {
-  background: rgba(255, 196, 68, 0.15);
-  border-color: rgba(255, 196, 68, 0.58);
-}
-
+.s06-inv-slot.locked { opacity: 0.4; cursor: not-allowed; border-style: dashed; }
+.s06-inv-slot.locked .s06-slot-icon { filter: grayscale(1); }
+.s06-inv-slot.owned:hover { background: rgba(255, 196, 68, 0.16); border-color: rgba(255, 196, 68, 0.6); }
 .s06-inv-slot.equipped {
-  background: linear-gradient(180deg, #ffca4b, #e8920c);
-  border: 1px solid #fff2b2;
-  color: #1b1200;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(180deg, #ffd94f, #f3b62a 55%, #c98d12);
+  border-color: #4a2f06;
+  color: #2a1a05;
+  box-shadow: 0 3px 0 #4a2f06, 0 6px 12px rgba(0, 0, 0, 0.45);
   transform: translateY(-2px);
   text-shadow: none;
 }
-
-.s06-slot-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 800;
-}
-
+.s06-slot-top { display: flex; align-items: center; gap: 6px; height: 24px; }
+.s06-slot-icon { display: inline-flex; align-items: center; height: 24px; }
+.s06-slot-icon .w-img-3d,
+.s06-slot-icon .w-svg { height: 24px; width: auto; }
+.s06-slot-bottom { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
 .s06-slot-key {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; padding: 0 4px; border-radius: 4px;
+  background: rgba(0, 0, 0, 0.45); color: #ffd166;
+  font-size: 10px; font-weight: 900; line-height: 15px;
+}
+.s06-inv-slot.equipped .s06-slot-key { background: #4a2f06; color: #ffd94f; }
+.s06-slot-name { font-size: 9px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; color: #fff4dc; white-space: nowrap; }
+.s06-inv-slot.equipped .s06-slot-name { color: #2a1a05; }
+.s06-slot-ammo { font-size: 11px; font-weight: 800; color: #e8dcc4; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.s06-inv-slot.locked .s06-slot-ammo { color: #9a8f7a; }
+.s06-inv-slot.equipped .s06-slot-ammo { color: #2a1a05; }
+
+.s06-inv-divider { width: 2px; background: rgba(0, 0, 0, 0.4); box-shadow: 1px 0 0 rgba(255, 236, 200, 0.12); margin: 2px 1px; border-radius: 1px; }
+
+.s06-inv-utils { display: flex; align-items: stretch; gap: 4px; }
+
+/* Buyum chiplari: ikonka + soni (+ tugma) */
+.s06-util-btn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-width: 16px;
-  padding: 0 4px;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.35);
-  color: #ffd166;
-  font-size: 10px;
-  font-weight: 900;
-  line-height: 15px;
-}
-
-.s06-inv-slot.equipped .s06-slot-key {
-  background: rgba(0, 0, 0, 0.55);
-  color: #ffd166;
-}
-
-.s06-slot-state {
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: 0.6px;
-  color: #9a8f7a;
-  text-transform: uppercase;
-}
-
-.s06-inv-slot.equipped .s06-slot-state {
-  color: #3a2400;
-}
-
-.s06-slot-name {
-  font-size: 11px;
-  font-weight: 900;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(36, 19, 10, 0.9);
   color: #fff4dc;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.s06-inv-slot.equipped .s06-slot-name {
-  color: #1b1200;
-}
-
-.s06-slot-sub {
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #9a8f7a;
-  font-variant-numeric: tabular-nums;
-}
-
-.s06-inv-slot.owned .s06-slot-sub {
-  color: #e8dcc4;
-}
-
-.s06-inv-slot.equipped .s06-slot-sub {
-  color: #3a2400;
-}
-
-.s06-inv-divider {
-  width: 1px;
-  background: rgba(255, 255, 255, 0.14);
-  margin: 2px 2px;
-}
-
-.s06-inv-utils {
-  display: flex;
-  align-items: stretch;
-  gap: 4px;
-}
-
-.s06-util-btn {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 1px;
-  padding: 3px 7px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff4dc;
-  font-size: 10.5px;
+  font-size: 13px;
   font-weight: 900;
-  letter-spacing: 0.3px;
   cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 236, 200, 0.12);
   transition: background 0.12s ease, border-color 0.12s ease;
   white-space: nowrap;
 }
-
-.s06-util-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 209, 102, 0.55);
-}
-
-.s06-util-btn.medkit-btn.has-medkit {
-  border-color: rgba(74, 222, 128, 0.55);
-  background: rgba(22, 101, 52, 0.35);
-  color: #dcfce7;
-}
-
-.s06-util-btn.gear-chip.has-gear {
-  border-color: rgba(96, 165, 250, 0.6);
-  background: rgba(30, 64, 120, 0.35);
-  color: #dbeafe;
-}
-
-.s06-util-btn.unarm-btn.active {
-  border-color: #ffd166;
-  background: rgba(255, 196, 56, 0.2);
-  color: #fff7db;
-}
-
-.s06-util-sub {
-  font-size: 10px;
-  font-weight: 700;
-  color: #9a8f7a;
-}
-
+.s06-util-btn:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 209, 102, 0.55); }
+.s06-util-icon { display: inline-flex; align-items: center; font-size: 16px; line-height: 1; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6)); }
+.s06-util-icon .w-img-3d,
+.s06-util-icon .w-svg { height: 20px; width: auto; }
+.s06-util-count { font-variant-numeric: tabular-nums; min-width: 12px; text-align: center; }
+.s06-util-btn.empty { opacity: 0.5; }
+.s06-util-btn.empty .s06-util-icon { filter: grayscale(1) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6)); }
+.s06-util-btn.medkit-btn.has-item { border-color: rgba(74, 222, 128, 0.6); background: rgba(22, 101, 52, 0.45); color: #dcfce7; }
+.s06-util-btn.gear-chip.has-item { border-color: rgba(96, 165, 250, 0.6); background: rgba(30, 64, 120, 0.45); color: #dbeafe; }
+.s06-util-btn.unarm-btn.active { border-color: #4a2f06; background: linear-gradient(180deg, #ffd94f, #f3b62a 55%, #c98d12); color: #2a1a05; }
 .s06-util-key {
-  display: inline-block;
-  min-width: 14px;
-  padding: 0 4px;
-  margin-left: 4px;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.35);
-  color: #ffd166;
-  font-size: 10px;
-  line-height: 15px;
-  text-align: center;
+  display: inline-block; min-width: 14px; padding: 0 4px; border-radius: 4px;
+  background: rgba(0, 0, 0, 0.45); color: #ffd166;
+  font-size: 10px; line-height: 15px; text-align: center;
 }
+.s06-util-btn.unarm-btn.active .s06-util-key { background: #4a2f06; color: #ffd94f; }
 
 /* ---------- Survival HUD (SurvivalUI.ts) ---------- */
 #stage07-survival-hud {

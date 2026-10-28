@@ -4,6 +4,8 @@ import {
   type PlayerInventorySnap,
 } from '../../../shared/loot';
 import { KNIFE, KNIFE_SLOT_KEY, WEAPONS, WEAPON_SLOTS, type WeaponId } from '../../../shared/weapons';
+import { weaponIconHtml } from '../Hud';
+import { onWeaponAssetsReady } from '../WeaponAssetRegistry';
 
 export interface InventoryUICallbacks {
   onSelectWeapon: (weapon: WeaponId | null) => void;
@@ -80,6 +82,11 @@ export class InventoryUI {
     this.rootEl = root;
     this.bannerEl = banner;
     this.stripEl = strip;
+    // 3D qurol ikonkalari keyinroq tayyor bo'ladi — kelganda panel qayta chiziladi
+    onWeaponAssetsReady(() => {
+      this.lastRenderKey = '';
+      this.render();
+    });
   }
 
   updateInventory(snap: PlayerInventorySnap | null): void {
@@ -176,63 +183,63 @@ export class InventoryUI {
 
     if (!this.stripEl) return;
 
+    // Ixcham yog'och taxtacha: [tugma raqami + ikonka] ustida, [nom + o'q] ostida; matnli holatlar tooltip'da
+    const slotHtml = (w: WeaponId, key: number, owned: boolean, equipped: boolean, ammoText: string, tip: string) => `
+        <button type="button" class="s06-inv-slot ${equipped ? 'owned equipped' : owned ? 'owned' : 'locked'}"
+          data-weapon="${escapeHtml(w)}" ${!owned ? 'disabled' : ''} title="${escapeHtml(tip)}">
+          <span class="s06-slot-top"><span class="s06-slot-key">${key}</span><span class="s06-slot-icon">${weaponIconHtml(w)}</span></span>
+          <span class="s06-slot-bottom"><span class="s06-slot-name">${escapeHtml(WEAPONS[w].name)}</span><span class="s06-slot-ammo">${escapeHtml(ammoText)}</span></span>
+        </button>`;
+
     const weaponsHtml = WEAPON_SLOTS.map((w, idx) => {
       const def = WEAPONS[w];
       const isOwned = s.ownedWeapons.includes(w);
       const isEquipped = s.equippedWeapon === w;
       const ammo = s.ammo[w] ?? { mag: 0, reserve: 0 };
-
-      const stateClass = isEquipped ? 'owned equipped' : isOwned ? 'owned' : 'locked';
-      const stateLabel = isEquipped ? "Qo'lda" : isOwned ? 'Tayyor' : 'Yo’q';
-      const subLabel = isOwned ? `${ammo.mag} / ${ammo.reserve}` : 'Topilmagan';
-
-      return `
-        <button type="button" class="s06-inv-slot ${stateClass}" data-weapon="${escapeHtml(w)}" ${!isOwned ? 'disabled' : ''}>
-          <div class="s06-slot-top">
-            <span class="s06-slot-name"><span class="s06-slot-key">${idx + 1}</span> ${escapeHtml(def.name)}</span>
-            <span class="s06-slot-state">${escapeHtml(stateLabel)}</span>
-          </div>
-          <div class="s06-slot-sub">${escapeHtml(subLabel)}</div>
-        </button>
-      `;
+      const tip = isEquipped
+        ? `${def.name} — qo'lda (${ammo.mag}/${ammo.reserve})`
+        : isOwned
+          ? `${def.name} — [${idx + 1}] bilan oling (${ammo.mag}/${ammo.reserve})`
+          : `${def.name} — hali topilmagan, konteynerlardan qidiring`;
+      return slotHtml(w, idx + 1, isOwned, isEquipped, isOwned ? `${ammo.mag}/${ammo.reserve}` : '—', tip);
     }).join('');
 
     const maxMedkits = s.maxMedkits ?? MAX_MEDKITS_PER_PLAYER;
     const maxGrenades = s.maxGrenades ?? MAX_GRENADES_LOOT_MODE;
     const isHandsEmpty = s.equippedWeapon === null;
+    const armor = s.armor ?? 0;
+    const helmet = s.helmet ?? 0;
 
     this.stripEl.innerHTML = `
       <div class="s06-inv-weapons">
         ${weaponsHtml}
-        <button type="button" class="s06-inv-slot owned ${s.equippedWeapon === KNIFE ? 'equipped' : ''}" data-weapon="${KNIFE}">
-          <div class="s06-slot-top">
-            <span class="s06-slot-name"><span class="s06-slot-key">${KNIFE_SLOT_KEY}</span> ${escapeHtml(WEAPONS.knife.name)}</span>
-            <span class="s06-slot-state">${s.equippedWeapon === KNIFE ? "Qo'lda" : 'Har doim'}</span>
-          </div>
-          <div class="s06-slot-sub">∞ · yaqin masofa</div>
-        </button>
+        ${slotHtml(
+          KNIFE,
+          KNIFE_SLOT_KEY,
+          true,
+          s.equippedWeapon === KNIFE,
+          '∞',
+          s.equippedWeapon === KNIFE ? "Pichoq — qo'lda" : `Pichoq — har doim bor, [${KNIFE_SLOT_KEY}] bilan oling`,
+        )}
       </div>
       <div class="s06-inv-divider"></div>
       <div class="s06-inv-utils">
-        <button type="button" class="s06-util-btn medkit-btn ${s.medkits > 0 ? 'has-medkit' : ''}" data-action="medkit">
-          <span>Aptechka ×${s.medkits}/${maxMedkits}<span class="s06-util-key">H</span></span>
-          <span class="s06-util-sub">${s.medkits > 0 ? '+45 HP' : "Yo'q"}</span>
+        <button type="button" class="s06-util-btn medkit-btn ${s.medkits > 0 ? 'has-item' : 'empty'}" data-action="medkit"
+          title="Aptechka [H]: +45 HP (${s.medkits}/${maxMedkits})">
+          <span class="s06-util-icon">🩹</span><span class="s06-util-count">${s.medkits}</span><span class="s06-util-key">H</span>
         </button>
-        <div class="s06-util-btn" style="cursor: default;">
-          <span>Granata ×${s.grenades}/${maxGrenades}<span class="s06-util-key">G</span></span>
-          <span class="s06-util-sub">${s.grenades > 0 ? 'Uloqtirish' : "Yo'q"}</span>
+        <div class="s06-util-btn grenade-chip ${s.grenades > 0 ? 'has-item' : 'empty'}" title="Granata [G]: uloqtirish (${s.grenades}/${maxGrenades})">
+          <span class="s06-util-icon">${weaponIconHtml('grenade')}</span><span class="s06-util-count">${s.grenades}</span><span class="s06-util-key">G</span>
         </div>
-        <button type="button" class="s06-util-btn unarm-btn ${isHandsEmpty ? 'active' : ''}" data-action="unarm">
-          <span>Bo'sh qo'l<span class="s06-util-key">0</span></span>
-          <span class="s06-util-sub">${isHandsEmpty ? 'Faol' : 'Qurolni yechish'}</span>
+        <button type="button" class="s06-util-btn unarm-btn ${isHandsEmpty ? 'active' : ''}" data-action="unarm"
+          title="Bo'sh qo'l [0]: qurolni yechish${isHandsEmpty ? ' (hozir faol)' : ''}">
+          <span class="s06-util-icon">✋</span><span class="s06-util-key">0</span>
         </button>
-        <div class="s06-util-btn gear-chip ${(s.armor ?? 0) > 0 ? 'has-gear' : ''}" style="cursor: default;">
-          <span>Zirh ${(s.armor ?? 0) > 0 ? `${s.armor}` : '—'}</span>
-          <span class="s06-util-sub">${(s.armor ?? 0) > 0 ? '−40% zarar' : "Yo'q"}</span>
+        <div class="s06-util-btn gear-chip ${armor > 0 ? 'has-item' : 'empty'}" title="Zirh nimcha: tana zararining 40% ini yutadi${armor > 0 ? ` (mustahkamlik ${Math.round(armor)})` : ' — yo‘q'}">
+          <span class="s06-util-icon">🦺</span><span class="s06-util-count">${armor > 0 ? Math.round(armor) : '—'}</span>
         </div>
-        <div class="s06-util-btn gear-chip ${(s.helmet ?? 0) > 0 ? 'has-gear' : ''}" style="cursor: default;">
-          <span>Kaska ${(s.helmet ?? 0) > 0 ? `${s.helmet}` : '—'}</span>
-          <span class="s06-util-sub">${(s.helmet ?? 0) > 0 ? '−50% bosh' : "Yo'q"}</span>
+        <div class="s06-util-btn gear-chip ${helmet > 0 ? 'has-item' : 'empty'}" title="Kaska: bosh zararining 50% ini yutadi${helmet > 0 ? ` (mustahkamlik ${Math.round(helmet)})` : ' — yo‘q'}">
+          <span class="s06-util-icon">⛑️</span><span class="s06-util-count">${helmet > 0 ? Math.round(helmet) : '—'}</span>
         </div>
       </div>
     `;
