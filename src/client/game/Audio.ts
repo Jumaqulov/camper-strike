@@ -12,6 +12,9 @@ export type AmbientProfile = 'forest' | 'arena';
 /** Masofaviy otishma: shu masofadan boshlab past chastota filtri va aks-sado qo'shiladi (m). */
 const DISTANT_SHOT_FROM = 22;
 const DISTANT_SHOT_FULL = 150;
+/** Qadam tovushi: shu masofagacha to'liq, undan keyin kvadratik so'nadi va chegaradan nari chalinmaydi (m). */
+const FOOTSTEP_FULL_DIST = 3;
+const FOOTSTEP_MAX_DIST = 30;
 
 /**
  * Barcha ovozlar WebAudio yordamida protsedural tarzda yaratiladi (tashqi fayllar kerak emas).
@@ -687,6 +690,14 @@ export class AudioSys {
 
   /** Qadam tovushi yuzaga qarab: maysa (yumshoq), shag'al (g'ichirlash), tuproq, yog'och (taqillash), tosh, metall. */
   footstep(pos?: P3, vol = 0.25, surface: SurfaceKind = 'grass'): void {
+    if (pos) {
+      // Qadamlar faqat yaqindan eshitiladi: panner'ning sust (1/d) so'nishi ustiga aniq chegara va
+      // kuchli so'nish — 30 m dan nari umuman chalinmaydi, 10 m da ~kuchning uchdan biri, 3 m da to'liq.
+      const dist = Math.hypot(pos.x - this.listenerPos.x, pos.y - this.listenerPos.y, pos.z - this.listenerPos.z);
+      if (dist > FOOTSTEP_MAX_DIST) return;
+      const k = 1 - Math.max(0, dist - FOOTSTEP_FULL_DIST) / (FOOTSTEP_MAX_DIST - FOOTSTEP_FULL_DIST);
+      vol *= k * k;
+    }
     const d = this.dest(pos);
     if (!d) return;
     const t = this.ctx!.currentTime;
