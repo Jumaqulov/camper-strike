@@ -6,8 +6,9 @@ import {
   SpectatorController,
   type SpectatableTarget,
 } from '../../client/game/survival/SpectatorController';
-import { sanitizeOpts } from '../../server/lobby';
+import { Lobby, sanitizeOpts } from '../../server/lobby';
 import { Room } from '../../server/room';
+import { SurvivalRoundController } from '../../server/survival';
 import { EYE_HEIGHT, GRENADES_PER_LIFE, MAX_HP, RESPAWN_TIME, SURVIVAL_MAX_BOTS } from '../constants';
 import { getForestSquarePoiSites } from '../forestSquare';
 import { hasLineOfSightToContainer } from '../loot';
@@ -1952,5 +1953,55 @@ describe('STAGE 07 — Forest Survival Mode, Round Lifecycle, Elimination, Spect
     } finally {
       room.destroy();
     }
+  });
+
+  it("19. setConfig minPlayersToStart ni 1 gacha qabul qiladi (wolf_night yakka); 0 → 1", () => {
+    const ctrl = new SurvivalRoundController(
+      {
+        getPlayers: () => [],
+        getPlayerById: () => undefined,
+        onRoundStart: () => {},
+        onRoundEnd: () => {},
+        onPreRoundReset: () => {},
+      },
+      { minPlayersToStart: 2 },
+    );
+    ctrl.setConfig({ minPlayersToStart: 1 }, 0);
+    assert.equal(ctrl.getConfig().minPlayersToStart, 1, 'yakka o‘yinchi rejimi uchun 1 saqlanadi');
+    ctrl.setConfig({ minPlayersToStart: 0 }, 0);
+    assert.equal(ctrl.getConfig().minPlayersToStart, 1, 'kamida 1');
+    ctrl.setConfig({ minPlayersToStart: 3 }, 0);
+    assert.equal(ctrl.getConfig().minPlayersToStart, 3);
+  });
+
+  it("20. Lobby: xonasiz `ready` ham ack qaytaradi (klient osilib qolmaydi)", () => {
+    const got: { onConnection?: (s: Socket) => void; ack?: { ok: boolean; error?: string } } = {};
+    const io = {
+      on(event: string, cb: (s: Socket) => void) {
+        if (event === 'connection') got.onConnection = cb;
+      },
+      to() {
+        return { emit() {}, volatile: { emit() {} } };
+      },
+    } as unknown as Server;
+    new Lobby(io);
+    const handlers = new Map<string, (...args: unknown[]) => void>();
+    const socket = {
+      id: 'lobby_p1',
+      join() {},
+      leave() {},
+      emit() {},
+      on(event: string, h: (...args: unknown[]) => void) {
+        handlers.set(event, h);
+      },
+    } as unknown as Socket;
+    assert.ok(got.onConnection, 'connection handler ro‘yxatdan o‘tdi');
+    got.onConnection(socket);
+    handlers.get('ready')!({ world: undefined }, (res: { ok: boolean; error?: string }) => {
+      got.ack = res;
+    });
+    assert.ok(got.ack, 'ack chaqirildi');
+    assert.equal(got.ack.ok, false);
+    assert.ok(got.ack.error);
   });
 });

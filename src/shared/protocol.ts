@@ -139,19 +139,6 @@ export interface Snapshot {
   wolves?: WolfSnap[];
 }
 
-export interface InputAckEvent {
-  spawnId: number;
-  lastProcessedInputSeq: number;
-  serverTick: number;
-  x: number;
-  y: number;
-  z: number;
-  vx: number;
-  vy: number;
-  vz: number;
-  onGround: boolean;
-}
-
 export interface RosterEntry {
   id: string;
   name: string;

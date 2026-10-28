@@ -39,6 +39,7 @@ import {
   type FeedFireReq,
   type TakeWoodReq,
   type WoodPileSnap,
+  NIGHT_DEFAULT_MINUTES,
   NIGHT_MAX_MINUTES,
   NIGHT_MIN_MINUTES,
   NIGHT_WAVES,
@@ -65,10 +66,10 @@ import {
 import { WolfBrain, type ServerWolf } from './wolf';
 import type {
   ChatMsg, ClientState, ContainerOpenAck, ContainerOpenReq, CreateRoomOpts, EquipWeaponAck, EquipWeaponReq,
-  HitConfirm, HurtEvent, InputAckEvent, KillEvent, LootPickupAck, LootPickupReq, MatchState,
+  HitConfirm, HurtEvent, KillEvent, LootPickupAck, LootPickupReq, MatchState,
   PlayerInputBatchMsg, PlayerInputCmd, PlayerInventorySnap, PlayerSnap, ReadyAck, ReadyMsg,
   RoomInfo, RoomLootSnapshot, RosterEntry, ShootMsg, ShotEvent, Snapshot, SpawnEvent,
-  SurvivalConfig, SurvivalPhase, SurvivalStateSnap, UseMedkitAck, UseMedkitReq, WelcomeMsg,
+  SurvivalConfig, SurvivalPhase, SurvivalStateSnap, SurvivalWinReason, UseMedkitAck, UseMedkitReq, WelcomeMsg,
 } from '../shared/protocol';
 import { packGearState } from '../shared/protocol';
 import { eyeHeightOf, hitboxScaleOf } from '../shared/stance';
@@ -159,6 +160,9 @@ export interface ServerPlayer extends Body {
   wood: number;
   /** wolf_night: oxirgi lager amali (o'tin olish/tashlash) vaqti — spamga qarshi (0.3 s). */
   lastCampAction: number;
+  /** Loot so'rovlari tezligi (faqat odamlar, token bucket): qolgan so'rovlar va oxirgi to'ldirish vaqti. */
+  lootTokens: number;
+  lootTokensAt: number;
   brain: BotBrain | null;
   authority: PlayerMovementAuthority;
 }
@@ -214,7 +218,15 @@ const CAMP_ROAM_RADIUS_M = 10;
 
 let roomSeq = 0;
 
-type LootGateRejectCode = 'PLAYER_NOT_FOUND' | 'ROUND_NOT_ACTIVE';
+type LootGateRejectCode = 'PLAYER_NOT_FOUND' | 'ROUND_NOT_ACTIVE' | 'RATE_LIMITED';
+
+/**
+ * Odamning loot so'rovlari (ochish/olish/qurollanish/aptechka) chegarasi: zaxira LOOT_REQ_BURST, sekundiga
+ * LOOT_REQ_PER_SEC to'ladi. Odam bunchalik tez bosa olmaydi — faqat so'rov toshqinini to'xtatadi.
+ * Botlar darvozadan o'tmaydi (botOpenContainer/botPickupItem), ularga ta'sir qilmaydi.
+ */
+const LOOT_REQ_BURST = 60;
+const LOOT_REQ_PER_SEC = 30;
 
 /** Xom so'rovdan satr maydonini o'qiydi; yo'q yoki satr bo'lmasa — ''. */
 function readStringField(rawReq: unknown, key: string): string {
@@ -329,11 +341,11 @@ export class Room {
         },
         this.isNight
           ? {
-              // Tong otguncha: yakka o'yinchi ham o'ynaydi, tun = timeLimit daqiqa (3..20), zona yo'q,
+              // Tong otguncha: yakka o'yinchi ham o'ynaydi, tun = timeLimit daqiqa (3..20, berilmasa lobbidagi standart), zona yo'q,
               // raund oxirgi tirik qolganda tugamaydi — tong otganda barcha tirik ishtirokchilar g'olib
               minPlayersToStart: 1,
               countdownDurationSec: opts.countdownSec ?? 10,
-              roundDurationSec: clamp(opts.timeLimit || NIGHT_MIN_MINUTES, NIGHT_MIN_MINUTES, NIGHT_MAX_MINUTES) * 60,
+              roundDurationSec: clamp(opts.timeLimit || NIGHT_DEFAULT_MINUTES, NIGHT_MIN_MINUTES, NIGHT_MAX_MINUTES) * 60,
               endedDisplayDurationSec: MATCH_END_DURATION,
               zoneEnabled: false,
               minHumansToStart: Math.max(1, Math.floor(opts.minHumans ?? 1)),
@@ -808,7 +820,10 @@ export class Room {
     return { ok: true, wood: p.wood };
   }
 
-  /** Qo'ldagi barcha o'tinni gulxanga tashlash (odam va bot uchun umumiy mantiq). */
+  /**
+   * Qo'ldagi o'tinni gulxanga tashlash (odam va bot uchun umumiy mantiq): faqat sig'adigan o'tinlar tashlanadi —
+   * gulxanni to'ldirish uchun kerakli son (oxirgisi qisman ketishi mumkin), qolgani qo'lda qoladi.
+   */
   private feedFireCore(p: ServerPlayer, fireId: string): CampActionAck {
     const gate = this.campActionGate(p);
     if (gate) return gate;
@@ -820,8 +835,9 @@ export class Room {
       return { ok: false, error: 'FIRE_FULL', wood: p.wood, fuelSec: Math.round(f.fuelSec) };
     }
     if (this.campRateLimited(p)) return { ok: false, wood: p.wood, fuelSec: Math.round(f.fuelSec) };
-    const n = p.wood;
-    p.wood = 0;
+    const fits = Math.max(1, Math.ceil((CAMPFIRE_MAX_FUEL_SEC - f.fuelSec) / CAMPFIRE_WOOD_FUEL_SEC));
+    const n = Math.min(p.wood, fits);
+    p.wood -= n;
     const wasLit = f.lit;
     f.fuelSec = Math.min(CAMPFIRE_MAX_FUEL_SEC, f.fuelSec + CAMPFIRE_WOOD_FUEL_SEC * n);
     f.lit = true;
@@ -833,7 +849,7 @@ export class Room {
         ? `🔥 ${p.name} gulxanga o'tin tashladi (${n})`
         : `🔥 ${p.name} ${f.name} gulxanini qayta yoqdi (${n} o'tin)`,
     );
-    return { ok: true, wood: 0, fuelSec: Math.round(f.fuelSec) };
+    return { ok: true, wood: p.wood, fuelSec: Math.round(f.fuelSec) };
   }
 
   onTakeWood(id: string, rawReq: TakeWoodReq | unknown, ack?: (res: CampActionAck) => void): CampActionAck {
@@ -1179,6 +1195,8 @@ export class Room {
       kills: 0, deaths: 0, ping: 0,
       wood: 0,
       lastCampAction: -99,
+      lootTokens: LOOT_REQ_BURST,
+      lootTokensAt: 0,
       brain: null,
       authority: new PlayerMovementAuthority(),
     };
@@ -1223,6 +1241,8 @@ export class Room {
     }
     this.players.delete(victim.id);
     this.loot.removePlayer(victim.id);
+    // Olib tashlangan botning uchayotgan granatasi ham zarar beradi (removePlayer bilan bir xil)
+    this.keepDepartedForGrenades(victim);
     this.survival?.onPlayerRemoved(victim.id, this.now());
     this.rosterDirty = true;
     if (this.isSurvival) this.sendMatch();
@@ -1335,11 +1355,7 @@ export class Room {
     this.players.delete(id);
     this.loot.removePlayer(id);
     p.socket?.leave(this.channel);
-    if (this.grenades.some((g) => g.owner === id)) {
-      p.socket = null;
-      p.brain = null;
-      this.departed.set(id, p);
-    }
+    this.keepDepartedForGrenades(p);
     this.rosterDirty = true;
     if (this.humanCount() === 0) {
       this.destroy();
@@ -1609,7 +1625,10 @@ export class Room {
     const dirs: Vec3[] = [];
     for (let i = 0; i < def.pellets; i++) dirs.push(spreadDir(aim, def.pellets > 1 ? def.spread : base));
     if (def.pellets > 1 && extraSpread > 0) for (let i = 0; i < dirs.length; i++) dirs[i] = spreadDir(dirs[i], extraSpread * 0.5);
-    return this.fire(p, def, eye, dirs, 1);
+    const fired = this.fire(p, def, eye, dirs, 1);
+    // Loot inventari ham joriy o'q sonini bilsin (bot o'lganda tushadigan qurol, botning loot ehtiyoji)
+    if (fired && this.lootEnabled) this.loot.syncPlayerFromServerPlayer(p.id, p);
+    return fired;
   }
 
   /** Pichoq zarbasi yelpig'ichi: avtoritativ yaw/pitch dan markaz, ±7° yon va 5° pastroq yo'nalishlar. */
@@ -1802,8 +1821,9 @@ export class Room {
     a.mag += take;
     a.reserve -= take;
     p.socket?.emit('ammo', { weapon: w, mag: a.mag, reserve: a.reserve });
+    // Botlar ham sinxronlanadi (inventardagi o'q eskirib qolmasin); inventar holati faqat odamga yuboriladi
+    if (!p.isBot || this.lootEnabled) this.loot.syncPlayerFromServerPlayer(p.id, p);
     if (!p.isBot) {
-      this.loot.syncPlayerFromServerPlayer(p.id, p);
       const invSnap = this.loot.getPlayerInventorySnap(p.id);
       if (invSnap) p.socket?.emit('inventory:state', invSnap);
     }
@@ -1821,8 +1841,9 @@ export class Room {
     if (this.isSurvival && this.survival && !this.survival.canPlayerCombat(p.id)) return;
     p.grenades--;
     p.lastGrenade = t;
+    // Botlar ham sinxronlanadi — aks holda loot AI eski granata sonini ko'radi
+    if (!p.isBot || this.lootEnabled) this.loot.syncPlayerFromServerPlayer(p.id, p);
     if (!p.isBot) {
-      this.loot.syncPlayerFromServerPlayer(p.id, p);
       const invSnap = this.loot.getPlayerInventorySnap(p.id);
       if (invSnap) p.socket?.emit('inventory:state', invSnap);
     }
@@ -1846,7 +1867,8 @@ export class Room {
 
   /**
    * Loot so'rovlari uchun umumiy darvoza: o'yinchi topilmasa/bot/tayyor emas — PLAYER_NOT_FOUND,
-   * survivalda raund faol bo'lmasa (tirik o'yinchi uchun) — ROUND_NOT_ACTIVE. Aks holda o'yinchini qaytaradi.
+   * so'rovlar juda tez kelsa — RATE_LIMITED, survivalda raund faol bo'lmasa (tirik o'yinchi uchun) — ROUND_NOT_ACTIVE.
+   * Aks holda o'yinchini qaytaradi.
    */
   private lootRequestGate(
     id: string,
@@ -1856,6 +1878,13 @@ export class Room {
     if (!p || p.isBot || !p.ready) {
       return { p: null, code: 'PLAYER_NOT_FOUND', requestId: readStringField(rawReq, 'requestId') };
     }
+    const t = this.now();
+    p.lootTokens = Math.min(LOOT_REQ_BURST, p.lootTokens + Math.max(0, t - p.lootTokensAt) * LOOT_REQ_PER_SEC);
+    p.lootTokensAt = t;
+    if (p.lootTokens < 1) {
+      return { p, code: 'RATE_LIMITED', requestId: readStringField(rawReq, 'requestId') };
+    }
+    p.lootTokens -= 1;
     if (this.isSurvival && this.phase !== 'playing' && p.alive) {
       return { p, code: 'ROUND_NOT_ACTIVE', requestId: readStringField(rawReq, 'requestId') };
     }
@@ -2153,7 +2182,9 @@ export class Room {
     victim.wood = 0;
     resetServerWeaponSwitchState(victim);
     if (!victim.isBot || this.lootEnabled) {
-      // Loot rejimida qo'ldagi qurol (joriy o'qlari bilan) yerga tushadi — g'olib uni olishi mumkin
+      // Loot rejimida qo'ldagi qurol (joriy o'qlari bilan) yerga tushadi — g'olib uni olishi mumkin.
+      // Avval inventarni o'yinchining haqiqiy holatidan yangilaymiz (botlarning o'q soni eskirgan bo'lishi mumkin)
+      if (this.lootEnabled) this.loot.syncPlayerFromServerPlayer(victim.id, victim);
       const dropped = this.loot.dropWeaponOnDeath(victim.id, victim.weapon, victim.pos, victim.yaw);
       this.loot.onPlayerDeath(victim.id);
       // Klientdagi inventar paneli o'lgan o'yinchining eski yuklamasini ko'rsatib turmasin
@@ -2310,17 +2341,44 @@ export class Room {
       });
     } finally {
       this.deferWinCheck = prevDefer;
+      // Butun to'plam portlab bo'lgach (bir tickda bir egasining ikki granatasi ham zarar bersin) tozalaymiz
+      this.pruneDeparted();
     }
+  }
+
+  /** Granatalarni tozalash (raund boshi/oxiri): chiqib ketganlar ro'yxati ham bo'shaydi — aks holda yozuvlar qolib ketardi. */
+  private clearGrenades(): void {
+    this.grenades = [];
+    this.departed.clear();
+  }
+
+  /** Hali granatasi uchayotgan chiqib ketgan o'yinchini (odam yoki olib tashlangan bot) saqlab qo'yadi. */
+  private keepDepartedForGrenades(p: ServerPlayer): void {
+    if (!this.grenades.some((g) => g.owner === p.id)) return;
+    p.socket = null;
+    p.brain = null;
+    this.departed.set(p.id, p);
+  }
+
+  /** Granatasi qolmagan chiqib ketganlarni unutadi. */
+  private pruneDeparted(): void {
+    if (this.departed.size === 0) return;
+    for (const id of [...this.departed.keys()]) {
+      if (!this.grenades.some((g) => g.owner === id)) this.departed.delete(id);
+    }
+  }
+
+  /** Testlar uchun: granata egasi sifatida saqlanayotgan chiqib ketganlar soni. */
+  getDepartedCountForTest(): number {
+    return this.departed.size;
   }
 
   private explode(g: ServerGrenadeRecord) {
     if (!isValidGrenadeRecord(g)) return;
     this.io.to(this.channel).emit('explosion', { x: q3(g.pos.x), y: q3(g.pos.y), z: q3(g.pos.z) });
-    // Xonadan chiqib ketgan o'yinchining granatasi ham zarar beradi (departed ro'yxatidan olinadi)
+    // Xonadan chiqib ketgan o'yinchining granatasi ham zarar beradi (departed ro'yxatidan olinadi;
+    // ro'yxat updateGrenades oxirida tozalanadi)
     const owner = this.players.get(g.owner) ?? this.departed.get(g.owner);
-    if (this.departed.has(g.owner) && !this.grenades.some((o) => o !== g && o.owner === g.owner)) {
-      this.departed.delete(g.owner);
-    }
     if (!owner || this.phase !== 'playing') return;
     const origin = { x: g.pos.x, y: g.pos.y + 0.15, z: g.pos.z };
     const prevDefer = this.deferWinCheck;
@@ -2363,7 +2421,7 @@ export class Room {
     this.roundId = roundId;
     this.phase = 'playing';
     this.winner = '';
-    this.grenades = [];
+    this.clearGrenades();
     this.scores = { red: 0, blue: 0 };
     this.matchEndsAt = this.survival.getPhaseEndsAt();
     this.phaseEndsAt = 0;
@@ -2436,13 +2494,13 @@ export class Room {
     roundId: number,
     winnerId: string | null,
     winnerName: string,
-    winReason: string,
+    winReason: SurvivalWinReason,
   ): void {
     void roundId;
     if (!this.survival) return;
     this.phase = 'ended';
     this.phaseEndsAt = this.survival.getPhaseEndsAt();
-    this.grenades = [];
+    this.clearGrenades();
     this.wolves.clear();
     this.nightWaveIdx = -1;
     const dawn = winReason === 'dawn';
@@ -2475,14 +2533,18 @@ export class Room {
     this.phase = nextPhase;
     this.phaseEndsAt = this.survival.getPhaseEndsAt();
     this.winner = '';
-    this.grenades = [];
+    this.clearGrenades();
     this.wolves.clear();
     this.nightWaveIdx = -1;
+    // Tong otguncha: sanoq paytida ham gulxan/g'aramlar snapshotga chiqadi — o'tgan tunning o'chgan gulxanlari
+    // va bo'sh g'aramlari ko'rinib qolmasin (raund boshida yana bir bor tiklanadi)
+    if (this.isNight) this.resetCampForRound();
     const roundLootSeed = ((this.secretLootSeed + roundId * 104729) >>> 0) || 1;
     this.loot.resetForRound(roundId, roundLootSeed);
     for (const p of this.players.values()) {
       p.kills = 0;
       p.deaths = 0;
+      p.wood = 0;
       resetServerWeaponSwitchState(p);
       p.scoped = false;
       if (p.ready) {
@@ -2516,7 +2578,7 @@ export class Room {
   private endMatch() {
     this.phase = 'ended';
     this.phaseEndsAt = this.now() + MATCH_END_DURATION;
-    this.grenades = [];
+    this.clearGrenades();
     if (this.opts.mode === 'tdm') {
       const { red, blue } = this.scores;
       this.winner = red > blue ? 'red' : blue > red ? 'blue' : 'draw';
@@ -2685,6 +2747,9 @@ export class Room {
     if (this.wolves.size > 0) {
       const wolves: WolfSnap[] = [];
       for (const w of this.wolves.values()) {
+        // Jasad WOLF_CORPSE_SEC dan keyin snapshotdan chiqadi (qayta tug'ilishni kutayotgan bo'ri ko'rinmaydi;
+        // klient snapshotda yo'q bo'rini sahnadan olib tashlaydi, qayta tug'ilganda yangidan yaratadi)
+        if (!w.alive && t - w.diedAt >= WOLF_CORPSE_SEC) continue;
         const ws: WolfSnap = {
           id: w.id,
           x: q3(w.pos.x), y: q3(w.pos.y), z: q3(w.pos.z),
@@ -2696,7 +2761,7 @@ export class Room {
         if (w.targetId) ws.targetId = w.targetId;
         wolves.push(ws);
       }
-      snap.wolves = wolves;
+      if (wolves.length) snap.wolves = wolves;
     }
     this.io.to(this.channel).volatile.emit('snap', snap);
   }

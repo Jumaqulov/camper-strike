@@ -28,6 +28,7 @@ import {
   WOOD_PILE_RESPAWN_SEC,
   WOLF_CORPSE_SEC,
   WOLF_MAX_HP,
+  WOLF_NIGHT_RESPAWN_SEC,
   WOLF_RESPAWN_SEC,
   WOOD_CARRY_MAX,
   type WolfBiteEvent,
@@ -303,7 +304,11 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       }
       assert.equal(w.alive, false, "bo'ri o'ldi");
       assert.equal(room.wolves.size, NIGHT_WAVES[3]!.wolves, 'jasad o‘chmaydi — qayta tug‘ilishni kutadi');
-      surviveFor(room, p, WOLF_CORPSE_SEC + WOLF_RESPAWN_SEC + 1);
+      // Tunda qayta tug'ilish WOLF_NIGHT_RESPAWN_SEC (klassikdagi WOLF_RESPAWN_SEC dan tezroq)
+      assert.ok(WOLF_NIGHT_RESPAWN_SEC < WOLF_RESPAWN_SEC && WOLF_NIGHT_RESPAWN_SEC > WOLF_CORPSE_SEC);
+      surviveFor(room, p, WOLF_NIGHT_RESPAWN_SEC - 1);
+      assert.equal(w.alive, false, 'qayta tug‘ilish vaqtigacha jasad');
+      surviveFor(room, p, 2);
       assert.equal(room.phase, 'playing');
       assert.equal(w.alive, true, "bo'ri qayta tug'ildi");
       assert.equal(w.hpMul, NIGHT_WAVES[3]!.hpMul, 'qayta tug‘ilgan bo‘ri joriy to‘lqin kuchida');
@@ -508,7 +513,7 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
     }
   });
 
-  it("8. Lager joylashuvi: 3 gulxan (asosiy birinchi, yonib turadi), 8 g'aram, yuriladigan yerda, masofalar; o'yinchi asosiy gulxan yonida tug'iladi", () => {
+  it("8. Lager joylashuvi: 3 gulxan (asosiy birinchi, yonib turadi), 12 g'aram, yuriladigan yerda, masofalar; o'yinchi asosiy gulxan yonida tug'iladi", () => {
     const { io, emitted } = createFakeIo();
     const room = makeNightRoom(io);
     try {
@@ -561,7 +566,7 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
     }
   });
 
-  it("9. O'tin olish / gulxanga tashlash: TOO_FAR, 3 ta o'tin, HANDS_FULL, g'aram bo'shaydi, tashlash +3×60 (chegaralangan), 'fed' hodisasi", () => {
+  it("9. O'tin olish / gulxanga tashlash: TOO_FAR, 3 ta o'tin, HANDS_FULL, g'aram bo'shaydi, har o'tin +45 s — faqat sig'adigani tashlanadi, 'fed' hodisasi", () => {
     const { io, emitted } = createFakeIo();
     const room = makeNightRoom(io);
     try {
@@ -609,7 +614,8 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       assert.equal(res.error, 'HANDS_FULL');
       assert.equal(room.woodPiles.get(pl4.id)!.available, true);
 
-      // Gulxan: uzoqdan TOO_FAR, yonida 3×60 qo'shiladi va maksimumda chegaralanadi
+      // Gulxan: uzoqdan TOO_FAR; yonida faqat sig'adigan o'tin tashlanadi (100 s + 2×45 → 180 da chegara),
+      // ortiqchasi qo'lda qoladi
       const fire = room.campfires.get(night.fires[0]!.id)!;
       res = room.onFeedFire('p1', { fireId: fire.id });
       assert.equal(res.error, 'TOO_FAR');
@@ -618,23 +624,28 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       const fedBefore = campfireEvents(emitted, 'fed').length;
       res = room.onFeedFire('p1', { fireId: fire.id });
       assert.equal(res.ok, true, res.error ?? '');
-      assert.equal(res.wood, 0);
-      assert.equal(p.wood, 0);
-      assert.equal(res.fuelSec, CAMPFIRE_MAX_FUEL_SEC, `100 + 3×${CAMPFIRE_WOOD_FUEL_SEC} → ${CAMPFIRE_MAX_FUEL_SEC} da chegaralanadi`);
+      const used = Math.ceil((CAMPFIRE_MAX_FUEL_SEC - 100) / CAMPFIRE_WOOD_FUEL_SEC);
+      assert.equal(used, 2);
+      assert.equal(res.wood, WOOD_CARRY_MAX - used, "sig'magan o'tin qo'lda qoladi");
+      assert.equal(p.wood, WOOD_CARRY_MAX - used);
+      assert.equal(res.fuelSec, CAMPFIRE_MAX_FUEL_SEC, `100 + ${used}×${CAMPFIRE_WOOD_FUEL_SEC} → ${CAMPFIRE_MAX_FUEL_SEC} da chegaralanadi`);
       assert.equal(Math.round(fire.fuelSec), CAMPFIRE_MAX_FUEL_SEC);
       const fed = campfireEvents(emitted, 'fed');
       assert.equal(fed.length, fedBefore + 1);
       assert.equal(fed[fed.length - 1]!.fireId, fire.id);
       assert.equal(fed[fed.length - 1]!.by, 'p1');
       assert.equal(fed[fed.length - 1]!.byName, 'Ovchi');
-      assert.ok(systemChats(emitted).some((t) => t.includes("Ovchi gulxanga o'tin tashladi (3)")), 'chat xabari');
-      // O'tinsiz — NO_WOOD; to'la gulxan — FIRE_FULL
+      assert.ok(systemChats(emitted).some((t) => t.includes(`Ovchi gulxanga o'tin tashladi (${used})`)), 'chat xabari');
+      // To'la gulxan — FIRE_FULL (o'tin qo'lda qoladi); o'tinsiz — NO_WOOD
       room.advanceTimeForTest(0.35, 1 / 30);
+      const full = room.onFeedFire('p1', { fireId: fire.id });
+      assert.equal(full.error, 'FIRE_FULL');
+      assert.equal(full.wood, WOOD_CARRY_MAX - used);
+      p.wood = 0;
       assert.equal(room.onFeedFire('p1', { fireId: fire.id }).error, 'NO_WOOD');
-      p.wood = 1;
-      assert.equal(room.onFeedFire('p1', { fireId: fire.id }).error, 'FIRE_FULL');
       // Tezlik cheklovi: 0.3 s ichida ikkinchi amal xatosiz rad etiladi
       fire.fuelSec = 100;
+      p.wood = 1;
       res = room.onFeedFire('p1', { fireId: fire.id });
       assert.equal(res.ok, true);
       p.wood = 1;
@@ -785,6 +796,141 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       assert.equal(fed[0]!.byName, bot.name);
       // Bot o'yinchini nishonga olmaydi (hamkorlik) — joni to'liq
       assert.equal(p.hp, MAX_HP);
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("13. Keyingi tun sanog'ida lager tiklangan: gulxanlar yonib turibdi (boshlang'ich o'tin), g'aramlar to'la, qo'lda o'tin yo'q", () => {
+    const { io } = createFakeIo();
+    const room = makeNightRoom(io, { timeLimit: 3 });
+    try {
+      const { p } = startSoloNight(room);
+      room.wolves.clear();
+      p.spawnTime = -99;
+      room.setSurvivalConfigForTest({ roundDurationSec: 20 });
+      const fire = room.campfires.get(room.getNightSnap()!.fires[0]!.id)!;
+      const pile = [...room.woodPiles.values()][0]!;
+      fire.fuelSec = 0.5;
+      pile.available = false;
+      pile.respawnAt = room.now() + 999;
+      surviveFor(room, p, 2);
+      assert.equal(fire.lit, false, "gulxan o'chdi");
+      p.wood = 2;
+      surviveFor(room, p, 30);
+      assert.equal(room.phase, 'ended');
+      room.advanceTimeForTest(MATCH_END_DURATION + 0.5, 0.25);
+      assert.equal(room.phase, 'countdown');
+      const night = room.getNightSnap()!;
+      assert.ok(night, 'sanoqda ham tun holati yuboriladi');
+      for (const f of night.fires) {
+        assert.equal(f.lit, true, `gulxan ${f.id} yana yonadi`);
+        assert.equal(f.fuelSec, CAMPFIRE_START_FUEL_SEC);
+      }
+      assert.ok(night.piles.every((x) => x.available), "g'aramlar to'la");
+      assert.equal(p.wood, 0, "o'tgan tunning o'tini qolmaydi");
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it('14. timeLimit berilmasa tun lobbidagi standart davomiylikda (NIGHT_DEFAULT_MINUTES)', () => {
+    const { io } = createFakeIo();
+    const room = makeNightRoom(io, { timeLimit: undefined as unknown as number });
+    try {
+      assert.equal(room.survival!.getConfig().roundDurationSec, NIGHT_DEFAULT_MINUTES * 60);
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("15. Qurolsiz bot bo'ridan gulxan doirasidan chiqib qochmaydi; tashqarida bo'lsa yaqin gulxanga yuguradi", () => {
+    const run = (place: (r: Room, fire: Vec3, dir: { dx: number; dz: number }) => { bot: Vec3; wolf: Vec3 }) => {
+      const { io } = createFakeIo();
+      const room = makeNightRoom(io, { bots: 1 });
+      try {
+        const { p } = startSoloNight(room);
+        const night = room.getNightSnap()!;
+        const fire = room.campfires.get(night.fires[0]!.id)!;
+        // Odam boshqa gulxan yonida — bo'ri faqat botni ko'radi
+        const far = night.fires[1]!;
+        const keep = [...room.wolves.values()][0]!;
+        for (const id of [...room.wolves.keys()]) if (id !== keep.id) room.wolves.delete(id);
+        const bot = [...room.players.values()].find((x) => x.isBot)!;
+        bot.weapon = null;
+        bot.ammo = emptyAmmo();
+        bot.spawnTime = -99;
+        const dir = openDirFromFire(room, fire, 16);
+        const pos = place(room, { x: fire.x, y: fire.y, z: fire.z }, dir);
+        bot.pos = pos.bot;
+        bot.vel = { x: 0, y: 0, z: 0 };
+        keep.pos = pos.wolf;
+        keep.vel = { x: 0, y: 0, z: 0 };
+        keep.brain.onDamaged(bot, room.now());
+        const fireDist = () => Math.hypot(bot.pos.x - fire.x, bot.pos.z - fire.z);
+        const track: number[] = [];
+        for (let i = 0; i < 60; i++) {
+          room.advanceTimeForTest(0.1, 1 / 30);
+          p.pos = groundAt(room, far.x + 1, far.z);
+          p.vel = { x: 0, y: 0, z: 0 };
+          p.hp = MAX_HP;
+          track.push(fireDist());
+        }
+        return { track, botHp: bot.hp, wolfTarget: keep.targetId, botId: bot.id };
+      } finally {
+        room.destroy();
+      }
+    };
+
+    // a) Bot doira ichida (markazdan 4 m), bo'ri o'sha tomonda doiradan tashqarida — bot doirada qoladi
+    const a = run((r, f, d) => ({
+      bot: groundAt(r, f.x + d.dx * 4, f.z + d.dz * 4),
+      wolf: groundAt(r, f.x + d.dx * 11, f.z + d.dz * 11),
+    }));
+    assert.ok(Math.max(...a.track) <= CAMPFIRE_RADIUS_M, `bot doiradan chiqmaydi (max ${Math.max(...a.track).toFixed(1)} m)`);
+    assert.equal(a.botHp, MAX_HP, 'gulxan doirasidagi botni bo‘ri tishlamaydi');
+
+    // b) Bot doiradan tashqarida (12 m), bo'ri yon tomondan keladi — bot gulxanga yuguradi va doirada qoladi
+    const b = run((r, f, d) => {
+      const bx = f.x + d.dx * 12;
+      const bz = f.z + d.dz * 12;
+      return { bot: groundAt(r, bx, bz), wolf: groundAt(r, bx - d.dz * 10, bz + d.dx * 10) };
+    });
+    const firstIn = b.track.findIndex((x) => x <= CAMPFIRE_RADIUS_M);
+    assert.ok(firstIn >= 0 && firstIn <= 40, `bot 4 s ichida gulxan doirasiga kiradi (${firstIn}, min ${Math.min(...b.track).toFixed(1)} m)`);
+    assert.ok(b.track.slice(firstIn).every((x) => x <= CAMPFIRE_RADIUS_M), 'kirgach doirada qoladi');
+  });
+
+  it("16. Gulxan doirasidagi o'q ovozi: bo'ri chetigacha borib tekshiradi, olovga kirib-chiqib tebranmaydi", () => {
+    const { io } = createFakeIo();
+    const room = makeNightRoom(io);
+    try {
+      const { p } = startSoloNight(room);
+      const night = room.getNightSnap()!;
+      const fire = room.campfires.get(night.fires[0]!.id)!;
+      const far = night.fires[1]!;
+      const w = [...room.wolves.values()][0]!;
+      for (const id of [...room.wolves.keys()]) if (id !== w.id) room.wolves.delete(id);
+      const dir = openDirFromFire(room, fire, 16);
+      w.pos = groundAt(room, fire.x + dir.dx * 16, fire.z + dir.dz * 16);
+      w.vel = { x: 0, y: 0, z: 0 };
+      w.brain.onNoise({ x: fire.x, y: fire.y + 1.5, z: fire.z }, room.now(), null);
+      let minD = Infinity;
+      let burningTicks = 0;
+      let sniffed = false;
+      for (let i = 0; i < 120 && !sniffed; i++) {
+        room.advanceTimeForTest(1 / 30, 1 / 30);
+        p.pos = groundAt(room, far.x + 1, far.z);
+        p.vel = { x: 0, y: 0, z: 0 };
+        p.hp = MAX_HP;
+        const d = Math.hypot(w.pos.x - fire.x, w.pos.z - fire.z);
+        minD = Math.min(minD, d);
+        if (room.litFireContaining(w.pos.x, w.pos.z, 1)) burningTicks++;
+        if (w.state === 'sniff') sniffed = true;
+      }
+      assert.ok(sniffed, "bo'ri olov chetida hid oladi (tekshiruv tugadi)");
+      assert.equal(burningTicks, 0, "bo'ri olov doirasiga (+1 m) kirmaydi");
+      assert.ok(minD >= CAMPFIRE_RADIUS_M + 1, `chetida to'xtaydi (min ${minD.toFixed(1)} m)`);
     } finally {
       room.destroy();
     }

@@ -269,7 +269,8 @@ export function generateRoomContainersAndLoot(
         slotCatalogIds.push(getAmmoCatalogId(w1));
         slotCatalogIds.push(rng() < 0.5 ? 'heal:medkit' : 'throwable:grenade');
         if (targetItemCount >= 3) {
-          const w2 = weaponOrder[(WEAPON_SLOTS.indexOf(w1) + 1) % weaponOrder.length]!;
+          // Ikkinchi o'q turi — aralashtirilgan tartibda keyingisi (w1 bilan bir xil indeks ro'yxatidan, takrorlanmaydi)
+          const w2 = weaponOrder[(weaponOrder.indexOf(w1) + 1) % weaponOrder.length]!;
           slotCatalogIds.push(getAmmoCatalogId(w2));
         }
       } else {

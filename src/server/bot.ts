@@ -4,6 +4,7 @@ import { applyWorldMovement, collidesAtWorld, raycastWorld } from '../shared/phy
 import {
   DEFAULT_CONTAINER_EXTRA_MARGIN_M,
   GROUND_ITEM_PICKUP_RADIUS_M,
+  MAX_AMMO_RESERVE,
   hasLineOfSightToContainer,
   type PlayerInventorySnap,
   type PublicContainerState,
@@ -15,6 +16,7 @@ import { WEAPONS, WEAPON_SLOTS, isMeleeWeapon, type WeaponId } from '../shared/w
 import {
   CAMPFIRE_LOW_FUEL_SEC,
   CAMPFIRE_MAX_FUEL_SEC,
+  CAMPFIRE_RADIUS_M,
   CAMP_INTERACT_RANGE_M,
   WOOD_CARRY_MAX,
   isWolfThreatState,
@@ -73,6 +75,10 @@ interface BotCampTask {
 const BOT_WOOD_SEARCH_M = 45;
 /** Bot o'tin olib kelishga faqat gulxan o'tini shu qiymatdan (s) kamayganda chiqadi. */
 const BOT_FETCH_FUEL_SEC = 60;
+/** Bo'ridan qochgan bot shu masofadagi (m) yonib turgan gulxanga yuguradi (wolf_night). */
+const BOT_FLEE_TO_FIRE_M = 30;
+/** Gulxan doirasida panalangan bot olov markazidan shuncha (m) nari turadi — o'tin tashlash masofasida. */
+const BOT_FIRE_SHELTER_OFFSET_M = 1.5;
 
 const BOT_NAMES = [
   'Amaki Bobur',
@@ -138,8 +144,6 @@ export class BotBrain {
   private reactDamageAt = 0;
   private grenadeCheckAt = 0;
   private walkMode = false;
-  /** Survival: zona markazi (zonadan tashqarida zarar olganda o'rnatiladi). */
-  private zoneGoal: Vec3 | null = null;
   // --- Loot AI (lootEnabled xonalar) ---
   private lootTarget: BotLootTarget | null = null;
   private lootBlacklist = new Map<string, number>();
@@ -182,7 +186,6 @@ export class BotBrain {
     this.lootBlacklist.clear();
     this.lootSkippedItems.clear();
     this.nextLootThinkAt = 0;
-    this.zoneGoal = null;
     this.zoneGoalPoint = null;
     this.lastGoalKey = '';
     this.campTask = null;
@@ -190,9 +193,8 @@ export class BotBrain {
     this.nextCampThinkAt = 0;
   }
 
-  /** Xavfsiz zonadan tashqarida zarar oldi — zona markazi tomon yo'l oladi (survival). */
-  onZoneDamaged(cx: number, cz: number): void {
-    this.zoneGoal = { x: cx, y: this.me.pos.y, z: cz };
+  /** Xavfsiz zonadan tashqarida zarar oldi — zona ichidagi nuqtani qayta tanlab, darhol yo'l izlaydi (survival). */
+  onZoneDamaged(_cx: number, _cz: number): void {
     this.zoneGoalPoint = null;
     this.repathAt = 0;
   }
@@ -284,10 +286,10 @@ export class BotBrain {
 
   // ---------------- Survival zona ----------------
 
-  /** Maqsad (keyingi) aylana; butun xaritani qoplaydigan boshlang'ich zona uchun null. */
+  /** Maqsad (keyingi) aylana; zona bo'lmasa null. */
   private zoneTarget(): ZoneTargetCircle | null {
     const z = this.room.getZoneSnap();
-    if (!z || z.targetRadius >= 150) return null;
+    if (!z) return null;
     return { cx: z.targetCx, cz: z.targetCz, r: z.targetRadius };
   }
 
@@ -341,13 +343,19 @@ export class BotBrain {
     return 0;
   }
 
-  private wantsItem(it: PublicLootItem, inv: PlayerInventorySnap): boolean {
+  private wantsItem(it: Readonly<PublicLootItem>, inv: PlayerInventorySnap): boolean {
     if (this.lootSkippedItems.has(it.id)) return false;
     switch (it.kind) {
       case 'weapon': {
         const w = it.weaponId;
         if (!w) return false;
-        if (inv.ownedWeapons.includes(w)) return false;
+        if (inv.ownedWeapons.includes(w)) {
+          // Bor qurolning ikkinchi nusxasi — o'q manbai (o'qlari zaxiraga qo'shiladi): o'qi tugayotgan bo'lsa olamiz
+          if (isMeleeWeapon(w)) return false;
+          const a = inv.ammo[w];
+          const carries = (it.initialMag ?? 0) + (it.initialReserve ?? WEAPONS[w].magSize) > 0;
+          return carries && a.mag + a.reserve < WEAPONS[w].magSize && a.reserve < MAX_AMMO_RESERVE[w];
+        }
         return inv.ownedWeapons.length < inv.maxWeaponSlots;
       }
       case 'ammo': {
@@ -386,7 +394,7 @@ export class BotBrain {
    * Konteyner atrofidan ko'z balandligida LOS bo'lgan turish nuqtalari (oldi birinchi, keyin halqa).
    * Bo'sh ro'yxat — konteynerga yetib bo'lmaydi (devor ichida va h.k.).
    */
-  private approachCandidates(c: PublicContainerState): Vec3[] {
+  private approachCandidates(c: Pick<PublicContainerState, 'id' | 'yaw'> & { position: Readonly<Vec3> }): Vec3[] {
     const world = this.room.world;
     const out: Vec3[] = [];
     const tryPos = (x: number, z: number, y: number) => {
@@ -417,6 +425,12 @@ export class BotBrain {
     return out;
   }
 
+  /** Ochilgan konteyner buyumlaridan birortasi shartga mosmi (massiv yaratmasdan). */
+  private anyItem(items: ReadonlyMap<string, Readonly<PublicLootItem>>, pred: (it: Readonly<PublicLootItem>) => boolean): boolean {
+    for (const it of items.values()) if (pred(it)) return true;
+    return false;
+  }
+
   /** Yaqin-atrofdan foydali konteyner/yer buyumini tanlaydi. */
   private thinkLoot(t: number, zt: ZoneTargetCircle | null): void {
     if (this.lootTarget) return;
@@ -425,12 +439,13 @@ export class BotBrain {
     const need = this.lootNeed(inv);
     if (need === 0 || !inv) return;
     const maxDist = need === 2 ? 160 : 45;
-    const snap = this.room.loot.getPublicLootSnapshot();
+    // Nusxasiz o'qish (to'liq snapshot har think'da klonlanmaydi); tanlangan maqsad uchun joylar nusxalanadi
+    const view = this.room.loot.botLootView();
 
     let best: BotLootTarget | null = null;
     let bestScore = Infinity;
 
-    for (const g of snap.groundItems) {
+    for (const g of view.groundItems) {
       if (this.lootBlacklisted(g.id, t)) continue;
       if (need === 2 && g.kind !== 'weapon') continue;
       if (!this.wantsItem(g, inv)) continue;
@@ -443,7 +458,7 @@ export class BotBrain {
         best = {
           kind: 'ground',
           id: g.id,
-          pos: g.position,
+          pos: { x: g.position.x, y: g.position.y, z: g.position.z },
           reach: GROUND_ITEM_PICKUP_RADIUS_M - 0.4,
           approach: { x: g.position.x, y: g.position.y, z: g.position.z },
           candidates: [{ x: g.position.x, y: g.position.y, z: g.position.z }],
@@ -454,10 +469,10 @@ export class BotBrain {
       }
     }
 
-    for (const c of snap.containers) {
+    for (const c of view.containers) {
       if (this.lootBlacklisted(c.id, t)) continue;
       if (c.status === 'empty') continue;
-      if (c.opened && !c.items.some((it) => this.wantsItem(it, inv))) continue;
+      if (c.opened && !this.anyItem(c.items, (it) => this.wantsItem(it, inv))) continue;
       if (zt && !this.insideCircle(c.position, zt, 2)) continue;
       const d = Math.hypot(c.position.x - me.pos.x, c.position.z - me.pos.z);
       if (d > maxDist) continue;
@@ -465,7 +480,7 @@ export class BotBrain {
       // Qurolsiz bot qurol bo'lishi ehtimoli yuqori konteynerlarni (qurol shkafi, ta'minot qutisi) afzal ko'radi.
       let score = d + (c.opened ? 0 : 4);
       if (need === 2) {
-        if (c.opened && c.items.some((it) => it.kind === 'weapon')) score -= 30;
+        if (c.opened && this.anyItem(c.items, (it) => it.kind === 'weapon')) score -= 30;
         else if (c.kind === 'weapon_locker') score -= 18;
         else if (c.kind === 'supply_crate') score -= 8;
         else if (c.kind === 'ammo_box') score += 12;
@@ -483,7 +498,7 @@ export class BotBrain {
         best = {
           kind: 'container',
           id: c.id,
-          pos: c.position,
+          pos: { x: c.position.x, y: c.position.y, z: c.position.z },
           reach: c.interactionRadius + DEFAULT_CONTAINER_EXTRA_MARGIN_M - 0.05,
           approach: candidates[0]!,
           candidates,
@@ -795,8 +810,17 @@ export class BotBrain {
       return 'fight';
     }
 
-    // Qochish: bo'ridan teskari yo'nalishda ~14 m — yo'li bor nav tuguniga, yo'l bo'ylab yugurib
     const speed = RUN_SPEED * (weapon ? WEAPONS[weapon].speedMul : 1);
+    // Yonib turgan gulxan doirasidamiz (wolf_night): bo'ri olovga kirmaydi va tishlamaydi — doiradan chiqib
+    // qochmaymiz, gulxanning bo'riga teskari tomonida kutamiz
+    const shelter = this.room.litFireContaining(me.pos.x, me.pos.z, 0);
+    if (shelter) {
+      this.shelterAtFire(shelter, w.pos, speed, dt, t);
+      return 'flee';
+    }
+
+    // Qochish: bo'ridan teskari yo'nalishda ~14 m — yo'li bor nav tuguniga, yo'l bo'ylab yugurib
+    // (yaqinda yonib turgan gulxan bo'lsa — o'sha tomonga, pickWolfFleeGoal)
     if (
       !this.wolfFleeGoal ||
       t - this.wolfFleeGoalAt > 1.5 ||
@@ -838,15 +862,68 @@ export class BotBrain {
   }
 
   /**
-   * Qochish maqsadi: bo'ridan teskari yo'nalish atrofida (0°, ±30°, ±60°, ±95°, ±130°) ~14 m dagi nav
-   * tugunlari sinab chiqiladi — bo'ridan kamida 4 m uzoqlashtiradigan va yo'li bor birinchisi olinadi
-   * (to'g'ri qochish devorga olib borsa, yon tomonga o'tiladi). Topilmasa — xom teskari nuqta, yo'lsiz.
+   * Gulxan doirasida bo'ridan panalanish: olov markazidan bo'riga teskari tomonda BOT_FIRE_SHELTER_OFFSET_M
+   * dagi nuqtada turadi (doira ichida qoladi), bo'riga qaraydi; qo'lda o'tin bo'lsa shu yerdan tashlaydi.
+   */
+  private shelterAtFire(fire: { id: string; x: number; z: number }, wolfPos: Vec3, speed: number, dt: number, t: number): void {
+    const me = this.me;
+    this.wolfFleeGoal = null;
+    this.path = [];
+    this.pathIdx = 0;
+    this.repathAt = 0;
+    this.lastGoalKey = 'wolf:shelter';
+    const al = Math.hypot(fire.x - wolfPos.x, fire.z - wolfPos.z) || 1;
+    const hx = fire.x + ((fire.x - wolfPos.x) / al) * BOT_FIRE_SHELTER_OFFSET_M;
+    const hz = fire.z + ((fire.z - wolfPos.z) / al) * BOT_FIRE_SHELTER_OFFSET_M;
+    const gx = hx - me.pos.x;
+    const gz = hz - me.pos.z;
+    const gl = Math.hypot(gx, gz);
+    let wishX = 0;
+    let wishZ = 0;
+    if (gl > 0.6) {
+      wishX = (gx / gl) * speed * 0.7;
+      wishZ = (gz / gl) * speed * 0.7;
+      this.turnTowards(Math.atan2(-gx, -gz), 0, 6, dt);
+    } else {
+      this.turnTowards(Math.atan2(-(wolfPos.x - me.pos.x), -(wolfPos.z - me.pos.z)), 0, 4, dt);
+    }
+    if (me.wood > 0 && t >= this.nextCampActAt && Math.hypot(fire.x - me.pos.x, fire.z - me.pos.z) <= CAMP_INTERACT_RANGE_M - 0.3) {
+      // To'la gulxan FIRE_FULL bilan rad etiladi — o'tin qo'lda qoladi
+      this.nextCampActAt = t + 0.5;
+      this.room.botFeedFire(me, fire.id);
+    }
+    applyWorldMovement(me, wishX, wishZ, false, dt, this.room.world);
+  }
+
+  /**
+   * Qochish maqsadi: wolf_night da BOT_FLEE_TO_FIRE_M ichida yonib turgan gulxan bo'lsa va bo'ri yo'lni
+   * to'smasa — gulxan markazidagi nav tuguni (doiraga kirgach shelterAtFire). Aks holda bo'ridan teskari
+   * yo'nalish atrofida (0°, ±30°, ±60°, ±95°, ±130°) ~14 m dagi nav tugunlari sinab chiqiladi — bo'ridan
+   * kamida 4 m uzoqlashtiradigan va yo'li bor birinchisi olinadi (to'g'ri qochish devorga olib borsa, yon
+   * tomonga o'tiladi). Topilmasa — xom teskari nuqta, yo'lsiz.
    */
   private pickWolfFleeGoal(wolfPos: Vec3, dH: number): { goal: Vec3; path: Vec3[] } {
     const me = this.me;
     const nav = this.room.nav;
     const ax = (me.pos.x - wolfPos.x) / dH;
     const az = (me.pos.z - wolfPos.z) / dH;
+    const fire = this.room.nearestLitFire(me.pos.x, me.pos.z);
+    if (fire) {
+      const fdx = fire.x - me.pos.x;
+      const fdz = fire.z - me.pos.z;
+      const fd = Math.hypot(fdx, fdz) || 1e-3;
+      // (ax, az) — bo'ridan bizga: bo'ri gulxan tomonida va uning narigi chetidan oldinda bo'lsa, yo'l to'silgan
+      const wolfAhead = -(fdx * ax + fdz * az) / fd;
+      const wolfInWay = wolfAhead > 0.5 && dH < fd + CAMPFIRE_RADIUS_M;
+      if (fd <= BOT_FLEE_TO_FIRE_M && !wolfInWay) {
+        const ni = nav.nearest({ x: fire.x, y: fire.y, z: fire.z });
+        if (ni >= 0) {
+          const c = nav.center(ni);
+          const path = nav.findPath(me.pos, c);
+          if (path.length) return { goal: c, path };
+        }
+      }
+    }
     let best: { goal: Vec3; path: Vec3[]; score: number } | null = null;
     for (const deg of [0, 30, -30, 60, -60, 95, -95, 130, -130]) {
       const a = (deg * Math.PI) / 180;

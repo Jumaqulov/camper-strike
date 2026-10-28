@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { Server, Socket } from 'socket.io';
 import { sanitizeOpts } from '../../server/lobby';
+import { generateRoomContainersAndLoot } from '../../server/loot';
 import { Room } from '../../server/room';
 import { EYE_HEIGHT, GRENADES_PER_LIFE, MAX_HP } from '../constants';
 import { getForestSquarePoiSites } from '../forestSquare';
@@ -12,7 +13,7 @@ import {
   type LootCatalogId,
 } from '../loot';
 import { vdist, vnorm, vsub, type Vec3 } from '../math';
-import { raycastWorld } from '../physics';
+import { collidesAtWorld, raycastWorld } from '../physics';
 import type { ShotEvent } from '../protocol';
 import { fullAmmo, WEAPONS, WEAPON_SLOTS, type WeaponId } from '../weapons';
 import { sampleTerrainHeight } from '../world';
@@ -1153,6 +1154,113 @@ describe('STAGE 06 — Server-Authoritative Loot, Containers, Inventory, Unarmed
       } finally {
         room.destroy();
       }
+    }
+  });
+
+  it("9. Konteynerda (ammo_box ham) bir xil o'q turi ikki marta tushmaydi", () => {
+    const { io } = createFakeIo();
+    const room = new Room(
+      { name: 'Ammo Box', mode: 'ffa', bots: 0, maxPlayers: 4, timeLimit: 10, scoreLimit: 25, mapId: 'forest_square', publicLayoutSeed: 6501, lootPreview: true },
+      io,
+      () => {},
+    );
+    try {
+      // Hozirgi forest_square da ammo_box 2 anchorli (3-slot tushmaydi) — anchorlar ko'paysa ham takror bo'lmasin
+      for (let seed = 1; seed <= 100; seed++) {
+        const containers = generateRoomContainersAndLoot(room.world, seed * 7919, 'ammo_test');
+        for (const c of containers.values()) {
+          const ammoIds = [...c.items.values()].filter((it) => it.kind === 'ammo').map((it) => it.catalogId);
+          assert.equal(new Set(ammoIds).size, ammoIds.length, `seed ${seed}, ${c.id}: takroriy o'q turi (${ammoIds.join(', ')})`);
+        }
+      }
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("10. Yerdagi buyumni to'siq (daraxt tanasi) orqali olib bo'lmaydi — LOS_BLOCKED; ochiq tomondan olinadi", () => {
+    const { io } = createFakeIo();
+    const room = new Room(
+      { name: 'Ground LOS', mode: 'ffa', bots: 0, maxPlayers: 4, timeLimit: 10, scoreLimit: 25, mapId: 'forest_square', publicLayoutSeed: 6501, lootPreview: true },
+      io,
+      () => {},
+    );
+    try {
+      const world = room.world;
+      const lift = (p: Vec3, h: number): Vec3 => ({ x: p.x, y: p.y + h, z: p.z });
+      const rayBlocked = (a: Vec3, b: Vec3): boolean => {
+        const d = vdist(a, b);
+        return !!raycastWorld(world, a, vnorm(vsub(b, a)), d);
+      };
+      // Daraxt: tana orqasida (1.1 m) buyum, oldida (1.1 m) to'silgan o'yinchi, yonida (ochiq) o'yinchi
+      let setup: { item: Vec3; blocked: Vec3; open: Vec3 } | null = null;
+      for (const col of world.colliders) {
+        if (col.tag !== 'tree' || setup) continue;
+        const cx = (col.min.x + col.max.x) / 2;
+        const cz = (col.min.z + col.max.z) / 2;
+        if (col.max.x - col.min.x > 1.2) continue;
+        const at = (x: number, z: number): Vec3 => ({ x, y: sampleTerrainHeight(world.terrain, x, z), z });
+        const item = at(cx + 1.1, cz);
+        const blocked = at(cx - 1.1, cz);
+        const open = at(cx + 1.1, cz + 1.3);
+        const pts = [item, blocked, open];
+        if (pts.some((p) => collidesAtWorld(world, p.x, p.y + 0.05, p.z))) continue;
+        if (Math.max(...pts.map((p) => p.y)) - Math.min(...pts.map((p) => p.y)) > 0.3) continue;
+        const eyeB = lift(blocked, EYE_HEIGHT);
+        const eyeO = lift(open, EYE_HEIGHT);
+        if (!rayBlocked(eyeB, lift(item, 0.42)) || !rayBlocked(eyeB, lift(item, 0.72))) continue;
+        if (rayBlocked(eyeO, lift(item, 0.42))) continue;
+        setup = { item, blocked, open };
+      }
+      assert.ok(setup, 'sinov uchun daraxt topildi');
+      const { item, blocked, open } = setup!;
+      const internal = room.loot as unknown as { inventories: Map<string, { ownedWeapons: Set<WeaponId> }> };
+      room.loot.initPlayer('victim', 1);
+      internal.inventories.get('victim')!.ownedWeapons.add('rifle');
+      const dropped = room.loot.dropWeaponOnDeath('victim', 'rifle', item, 0);
+      assert.ok(dropped, 'qurol yerga tushdi');
+      room.loot.initPlayer('looter', 1);
+      const req = (requestId: string) => ({ requestId, containerId: null, itemId: dropped!.id, roundId: room.loot.getRoundId(), spawnId: 1 });
+
+      const behind = room.loot.pickupItem({ id: 'looter', alive: true, pos: blocked, spawnId: 1 }, req('g_blocked'));
+      assert.equal(behind.ok, false);
+      assert.equal(behind.code, 'LOS_BLOCKED', `tana orqasidan: ${behind.code}`);
+      assert.equal(room.loot.getPublicLootSnapshot().groundItems.length, 1, 'buyum yerda qoladi');
+
+      const visible = room.loot.pickupItem({ id: 'looter', alive: true, pos: open, spawnId: 1 }, req('g_open'));
+      assert.equal(visible.ok, true, `ochiq tomondan olinadi: ${visible.code}`);
+      assert.equal(room.loot.getPublicLootSnapshot().groundItems.length, 0);
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("11. Loot so'rovlari toshqini: odamga zaxira (60) dan keyin RATE_LIMITED, vaqt o'tgach yana qabul qilinadi", () => {
+    const { io } = createFakeIo();
+    const room = new Room(
+      { name: 'Rate Limit', mode: 'ffa', bots: 1, maxPlayers: 4, timeLimit: 10, scoreLimit: 25, mapId: 'forest_square', publicLayoutSeed: 6501, lootPreview: true },
+      io,
+      () => {},
+    );
+    try {
+      const s = createFakeSocket('rl_p1');
+      room.addHuman(s.socket, 'Spammer');
+      room.onReady('rl_p1', { world: room.worldMeta() });
+      // Qo'lda boshqariladigan vaqt: toshqin bir lahzada keladi
+      room.advanceTimeForTest(0.05);
+      const codes: (string | undefined)[] = [];
+      for (let i = 0; i < 70; i++) {
+        codes.push(room.onUseMedkit('rl_p1', { requestId: `rl_${i}`, roundId: room.loot.getRoundId(), spawnId: 1 }).code);
+      }
+      assert.ok(codes.slice(0, 60).every((c) => c !== 'RATE_LIMITED'), 'birinchi 60 ta so‘rov cheklanmaydi');
+      assert.ok(codes.slice(60).every((c) => c === 'RATE_LIMITED'), `zaxiradan keyin RATE_LIMITED (${codes.slice(60).join(',')})`);
+      room.advanceTimeForTest(1);
+      assert.notEqual(room.onUseMedkit('rl_p1', { requestId: 'rl_after', roundId: room.loot.getRoundId(), spawnId: 1 }).code, 'RATE_LIMITED');
+      // Bot so'rovlari darvozadan o'tmaydi — cheklov botga ta'sir qilmaydi
+      const bot = [...room.players.values()].find((p) => p.isBot)!;
+      for (let i = 0; i < 80; i++) room.botUseMedkit(bot);
+    } finally {
+      room.destroy();
     }
   });
 });

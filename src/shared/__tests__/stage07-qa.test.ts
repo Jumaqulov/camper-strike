@@ -1329,4 +1329,64 @@ describe('STAGE 07-QA — Forest Survival Stabilization & Adversarial Audit Suit
       room.destroy();
     }
   });
+
+  it("6. Chiqib ketgan egasining granatasi: olib tashlangan botniki ham zarar beradi; raund oxirida 'departed' tozalanadi", () => {
+    const { io } = createFakeIo();
+    const room = new Room(
+      { name: 'Departed', mode: 'ffa', bots: 1, maxPlayers: 4, timeLimit: 10, scoreLimit: 25, mapId: 'forest_square', publicLayoutSeed: 6501 },
+      io,
+      () => {},
+    );
+    try {
+      const s1 = createFakeSocket('p1');
+      const s2 = createFakeSocket('p2');
+      room.addHuman(s1.socket, 'Qurbon');
+      room.addHuman(s2.socket, 'Ketuvchi');
+      room.onReady('p1', { world: room.worldMeta() });
+      room.onReady('p2', { world: room.worldMeta() });
+      room.advanceTimeForTest(0.2, 1 / 30);
+      const p1 = room.players.get('p1')!;
+      const bot = [...room.players.values()].find((p) => p.isBot)!;
+      assert.ok(bot.alive, 'bot tug‘ildi');
+      // Bot oyog'i ostiga granata tashlaydi; p1 har qadamda granata ustida turadi (sakrab ketsa ham yonida)
+      const site = getForestSquarePoiSites(6501).find((s) => s.id === 'poi_service_station')!;
+      const bx = site.center.x - 6;
+      const bz = site.center.z + 6;
+      bot.pos = { x: bx, y: sampleTerrainHeight(room.world.terrain, bx, bz), z: bz };
+      bot.vel = { x: 0, y: 0, z: 0 };
+      bot.grenades = 1;
+      bot.lastGrenade = -99;
+      room.throwGrenade(bot, { x: 0, y: -1, z: 0 });
+      assert.equal(getRoomGrenades(room).length, 1, 'granata uchmoqda');
+      assert.equal(room.removeBot(), true, 'bot olib tashlandi');
+      assert.equal(room.getDepartedCountForTest(), 1, 'granatasi bor bot departed ro‘yxatida');
+      const hp0 = MAX_HP;
+      let exploded = false;
+      for (let i = 0; i < 120 && !exploded; i++) {
+        const g = getRoomGrenades(room)[0]!;
+        p1.pos = { x: g.pos.x, y: sampleTerrainHeight(room.world.terrain, g.pos.x, g.pos.z), z: g.pos.z };
+        p1.vel = { x: 0, y: 0, z: 0 };
+        p1.hp = hp0;
+        p1.spawnTime = -99;
+        room.advanceTimeForTest(1 / 30, 1 / 30);
+        exploded = getRoomGrenades(room).length === 0;
+      }
+      assert.ok(exploded, 'granata portladi');
+      assert.ok(p1.hp < hp0, `olib tashlangan botning granatasi zarar beradi (hp ${p1.hp})`);
+      assert.equal(room.getDepartedCountForTest(), 0, 'portlagach departed tozalandi');
+
+      // Odam granata otib chiqib ketadi, granata portlamay turib raund tugaydi — departed ham tozalanadi
+      const p2 = room.players.get('p2')!;
+      p2.grenades = 1;
+      p2.lastGrenade = -99;
+      room.throwGrenade(p2, { x: 0, y: 1, z: 0 });
+      room.removePlayer('p2');
+      assert.equal(room.getDepartedCountForTest(), 1);
+      (room as unknown as { endMatch(): void }).endMatch();
+      assert.equal(getRoomGrenades(room).length, 0);
+      assert.equal(room.getDepartedCountForTest(), 0, 'raund oxirida departed bo‘shaydi (oqish yo‘q)');
+    } finally {
+      room.destroy();
+    }
+  });
 });

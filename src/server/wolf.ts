@@ -2,6 +2,7 @@ import { WALK_SPEED } from '../shared/constants';
 import { angleDiff, vcopy, vdist, type Vec3 } from '../shared/math';
 import { applyWorldMovement, raycastWorld, type Body } from '../shared/physics';
 import { hitboxScaleOf } from '../shared/stance';
+import { sampleTerrainHeight } from '../shared/world';
 import {
   CAMPFIRE_RADIUS_M,
   WOLF_ATTACK_COOLDOWN,
@@ -281,6 +282,32 @@ export class WolfBrain {
     return { wishX: m.wishX, wishZ: m.wishZ };
   }
 
+  /**
+   * Yonib turgan gulxan doirasidagi (+1 m, olovdan qochish chegarasi) maqsadni doira chetiga — FIRE_STANDOFF_M
+   * da, bo'ri turgan tomonga — suradi. Aks holda bo'ri maqsadga yurish bilan olovdan qochish orasida tebranadi.
+   */
+  private outsideLitFire(goal: Vec3): Vec3 {
+    const fire = this.room.litFireContaining(goal.x, goal.z, 1);
+    if (!fire) return goal;
+    const me = this.me;
+    let dx = me.pos.x - fire.x;
+    let dz = me.pos.z - fire.z;
+    let dl = Math.hypot(dx, dz);
+    if (dl < 1e-3) {
+      dx = goal.x - fire.x;
+      dz = goal.z - fire.z;
+      dl = Math.hypot(dx, dz);
+    }
+    if (dl < 1e-3) {
+      dx = 1;
+      dz = 0;
+      dl = 1;
+    }
+    const x = fire.x + (dx / dl) * FIRE_STANDOFF_M;
+    const z = fire.z + (dz / dl) * FIRE_STANDOFF_M;
+    return { x, y: sampleTerrainHeight(this.room.world.terrain, x, z), z };
+  }
+
   private hasDirectLine(goal: Vec3): boolean {
     const me = this.me;
     const dH = Math.hypot(goal.x - me.pos.x, goal.z - me.pos.z);
@@ -388,7 +415,8 @@ export class WolfBrain {
       const dH = Math.hypot(tgt.pos.x - me.pos.x, tgt.pos.z - me.pos.z);
       const dy = tgt.pos.y - me.pos.y;
       const fresh = t - this.lastSensedAt < 1.0;
-      const goal = fresh ? tgt.pos : (this.lastSensedPos ?? tgt.pos);
+      // Eskirgan iz gulxan doirasida qolgan bo'lsa — chetigacha boradi (olovga kirib-chiqib tebranmaydi)
+      const goal = fresh ? tgt.pos : this.outsideLitFire(this.lastSensedPos ?? tgt.pos);
       const unreachable = dy > WOLF_UNREACHABLE_DY && dH < 8;
       // Nishon yonib turgan gulxan doirasida: olovga kirmaydi — chetida (R + 1.5 m) to'xtab qaraydi, uvlaydi
       const fire = this.room.litFireContaining(tgt.pos.x, tgt.pos.z, 0);
@@ -468,6 +496,8 @@ export class WolfBrain {
         }
       }
     } else if (this.investigatePos) {
+      // Gulxan doirasidagi joy (o'q ovozi, hid, qayta yoqilgan gulxan) chetidan tekshiriladi
+      this.investigatePos = this.outsideLitFire(this.investigatePos);
       const goal = this.investigatePos;
       if (me.state !== 'stalk') this.setState('stalk', t);
       const m = this.followPath(goal, this.speedFor('stalk'), t, dt, this.hasDirectLine(goal));

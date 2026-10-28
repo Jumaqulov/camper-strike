@@ -189,13 +189,18 @@ describe("Bosqich 18 — Vahshiy bo'ri", () => {
       assert.equal(p1.kills, 0, "bo'ri o'ldirish hisobga yozilmaydi");
       const hc = s1.events.filter((e) => e.event === 'hitConfirm');
       assert.ok(hc.length > 0, 'otuvchi hitConfirm oladi');
-      // Jasad bir necha soniya qoladi, keyin klassik rejimda bo'ri qayta paydo bo'ladi
-      room.advanceTimeForTest(WOLF_CORPSE_SEC + 0.5, 0.25);
+      // Jasad bir necha soniya snapshotda qoladi, keyin klassik rejimda bo'ri qayta paydo bo'ladi
+      const lastSnapWolves = () => (emitted.filter((e) => e.event === 'snap').pop()?.payload as Snapshot).wolves ?? [];
+      room.advanceTimeForTest(WOLF_CORPSE_SEC - 1, 0.25);
+      assert.ok(lastSnapWolves().some((x) => x.id === w.id && x.state === 'dead'), 'jasad snapshotda ko‘rinadi');
+      room.advanceTimeForTest(1.5, 0.25);
       assert.equal(room.wolves.size, 1, 'klassikda jasad o‘chmaydi, bo‘ri qayta tug‘ilishini kutadi');
+      assert.ok(!lastSnapWolves().some((x) => x.id === w.id), `jasad ${WOLF_CORPSE_SEC} s dan keyin snapshotdan chiqadi`);
       room.advanceTimeForTest(WOLF_RESPAWN_SEC, 0.25);
       const w2 = wolfOf(room);
       assert.equal(w2.alive, true, "bo'ri qayta paydo bo'ldi");
       assert.equal(w2.hp, WOLF_MAX_HP);
+      assert.ok(lastSnapWolves().some((x) => x.id === w2.id && x.state !== 'dead'), 'qayta tug‘ilgan bo‘ri snapshotga qaytadi');
     } finally {
       room.destroy();
     }

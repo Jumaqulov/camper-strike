@@ -73,7 +73,8 @@ export class SurvivalRoundController {
 
   setConfig(partial: Partial<SurvivalConfig>, now: number): void {
     if (partial.minPlayersToStart !== undefined && Number.isFinite(partial.minPlayersToStart)) {
-      this.config.minPlayersToStart = Math.max(2, Math.floor(partial.minPlayersToStart));
+      // Kamida 1 (Tong otguncha yakka o'ynaladi; forest_survival konstruktorda 2 bilan yaratiladi)
+      this.config.minPlayersToStart = Math.max(1, Math.floor(partial.minPlayersToStart));
     }
     if (
       partial.countdownDurationSec !== undefined &&

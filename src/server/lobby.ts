@@ -175,7 +175,8 @@ export class Lobby {
     });
 
     socket.on('ready', (msg?: ReadyMsg, ack?: Ack<ReadyAck>) => {
-      if (!room) return;
+      // Xonasiz `ready`: klient ack kutib osilib qolmasin
+      if (!room) return ack?.({ ok: false, error: 'Xona topilmadi' });
       const res = room.onReady(socket.id, msg, ack);
       if (!res.ok) {
         room = null;

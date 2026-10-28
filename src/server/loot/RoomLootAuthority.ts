@@ -48,6 +48,19 @@ export interface ServerPlayerInventory {
   helmet: number;
 }
 
+/** Bot loot AI uchun konteynerning faqat o'qiladigan ko'rinishi (ichki yozuv, nusxasiz). */
+export interface BotContainerView {
+  readonly id: string;
+  readonly kind: ServerContainerRecord['kind'];
+  readonly position: Readonly<Vec3>;
+  readonly yaw: number;
+  readonly interactionRadius: number;
+  readonly status: ServerContainerRecord['status'];
+  readonly opened: boolean;
+  /** Faqat `opened === true` bo'lsa o'qing. */
+  readonly items: ReadonlyMap<string, Readonly<PublicLootItem>>;
+}
+
 export interface LootAuthorityStats {
   containersOpened: number;
   itemsPickedUp: number;
@@ -479,6 +492,14 @@ export class RoomLootAuthority {
     };
   }
 
+  /**
+   * Botlar uchun nusxasiz o'qish (har think'da butun snapshot klonlanmasin): authority'ning ichki yozuvlari.
+   * Faqat o'qing, o'zgartirmang; yopiq konteynerning `items` ini o'qimang (u klientlarga ham ko'rinmaydi).
+   */
+  botLootView(): { containers: Iterable<BotContainerView>; groundItems: Iterable<Readonly<PublicLootItem>> } {
+    return { containers: this.containers.values(), groundItems: this.groundItems.values() };
+  }
+
   getAuthoritativeContainerIds(): string[] {
     return [...this.containers.keys()];
   }
@@ -764,6 +785,16 @@ export class RoomLootAuthority {
             ok: false, requestId: req.requestId, itemId: req.itemId, containerId: null,
             roundId: this.roundId, spawnId: currentSpawnId,
             code: 'OUT_OF_RANGE', message: LOOT_ERROR_MESSAGES_UZ.OUT_OF_RANGE,
+          };
+        }
+        // Konteyner bilan bir xil LOS: devor / pol (loft, ayvon) orqali yerdagi buyumni olib bo'lmaydi
+        const groundEye: Vec3 = { x: player.pos.x, y: player.pos.y + eyeHeightOf(player), z: player.pos.z };
+        if (!hasLineOfSightToContainer(this.world, groundEye, ground.position, ground.id)) {
+          this.stats.rejectedPickupLos++;
+          return {
+            ok: false, requestId: req.requestId, itemId: req.itemId, containerId: null,
+            roundId: this.roundId, spawnId: currentSpawnId,
+            code: 'LOS_BLOCKED', message: LOOT_ERROR_MESSAGES_UZ.LOS_BLOCKED,
           };
         }
         const gErr = this.applyItemToInventory(inv, ground);

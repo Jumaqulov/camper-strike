@@ -3,7 +3,10 @@ import { describe, it } from 'node:test';
 import type { Server, Socket } from 'socket.io';
 import { Room } from '../../server/room';
 import { MAX_HP } from '../constants';
+import type { Vec3 } from '../math';
 import type { MatchState } from '../protocol';
+import type { WeaponId } from '../weapons';
+import { sampleTerrainHeight } from '../world';
 
 interface EmittedRoomEvent {
   room: string;
@@ -284,4 +287,80 @@ describe('Bosqich 10 — Forest Survival botlari (loot AI)', () => {
       room.destroy();
     }
   });
+
+  it("6. Loot rejimi: botdan tushgan qurol haqiqiy o'q soni bilan; o'qi tugagan bot yerdagi xuddi shu qurolni o'q uchun oladi", () => withSeededRandom(0x10ad_0065, () => {
+    const { io } = createFakeIo();
+    const room = new Room(
+      { name: 'Bot Ammo', mode: 'ffa', bots: 1, maxPlayers: 4, timeLimit: 10, scoreLimit: 25, mapId: 'forest_square', publicLayoutSeed: 6501, lootPreview: true },
+      io,
+      () => {},
+    );
+    try {
+      const s1 = createFakeSocket('p1');
+      room.addHuman(s1.socket, 'Kuzatuvchi');
+      room.onReady('p1', { world: room.worldMeta() });
+      room.advanceTimeForTest(0.2, 1 / 30);
+      const p1 = room.players.get('p1')!;
+      const bot = [...room.players.values()].find((p) => p.isBot)!;
+      const internal = room.loot as unknown as { inventories: Map<string, { ownedWeapons: Set<WeaponId> }> };
+      // Ochiq joy: nav tuguni va 3 m yonidagi to'siqsiz nuqta
+      let spot: { a: Vec3; b: Vec3 } | null = null;
+      for (const i of room.nav.roamList) {
+        const a = room.nav.center(i);
+        const b = { x: a.x + 3, y: sampleTerrainHeight(room.world.terrain, a.x + 3, a.z), z: a.z };
+        if (Math.abs(b.y - a.y) < 0.3 && room.nav.segmentClear(a, b) && Math.hypot(a.x - p1.pos.x, a.z - p1.pos.z) > 60) {
+          spot = { a, b };
+          break;
+        }
+      }
+      assert.ok(spot, 'ochiq joy topildi');
+      const keepAway = () => {
+        p1.pos = { x: spot!.a.x + 90, y: sampleTerrainHeight(room.world.terrain, spot!.a.x + 90, spot!.a.z), z: spot!.a.z };
+        p1.vel = { x: 0, y: 0, z: 0 };
+        p1.hp = MAX_HP;
+      };
+      keepAway();
+
+      // 1) Bot avtomat bilan 5 marta otadi, keyin o'ladi — yerdagi qurolda joriy (25/60) o'q
+      internal.inventories.get(bot.id)!.ownedWeapons.add('rifle');
+      bot.weapon = 'rifle';
+      bot.ammo.rifle = { mag: 30, reserve: 60 };
+      bot.reloadWeapon = null;
+      room.loot.syncPlayerFromServerPlayer(bot.id, bot);
+      for (let i = 0; i < 5; i++) {
+        bot.lastShot = -99;
+        assert.equal(room.botFire(bot, 0), true);
+      }
+      assert.equal(bot.ammo.rifle.mag, 25);
+      bot.pos = { ...spot!.a };
+      (room as unknown as { kill(v: unknown, k: unknown, w: string, h: boolean): void }).kill(bot, p1, 'rifle', false);
+      const drop = room.loot.getPublicLootSnapshot().groundItems.find((g) => g.weaponId === 'rifle');
+      assert.ok(drop, 'botning quroli yerga tushdi');
+      assert.equal(drop!.initialMag, 25, "tushgan qurolda botning haqiqiy magazini (eskirgan 30 emas)");
+      assert.equal(drop!.initialReserve, 60);
+
+      // 2) Bot qayta tug'iladi: avtomati bor, lekin o'qi tugagan — yonidagi (3 m) avtomatni o'q uchun oladi
+      room.advanceTimeForTest(4, 1 / 30);
+      keepAway();
+      assert.ok(bot.alive, 'bot qayta tug‘ildi');
+      room.loot.initPlayer(bot.id, bot.spawnId);
+      internal.inventories.get(bot.id)!.ownedWeapons.add('rifle');
+      bot.weapon = 'rifle';
+      bot.ammo.rifle = { mag: 0, reserve: 0 };
+      bot.reloadWeapon = null;
+      room.loot.syncPlayerFromServerPlayer(bot.id, bot);
+      bot.pos = { ...spot!.b };
+      bot.vel = { x: 0, y: 0, z: 0 };
+      // Qayta tug'ilish kutilganda tanlangan loot maqsadi tozalansin (yangi holatdan qaror qilsin)
+      bot.brain!.onSpawn();
+      for (let i = 0; i < 80 && bot.ammo.rifle.mag + bot.ammo.rifle.reserve === 0; i++) {
+        room.advanceTimeForTest(0.1, 1 / 30);
+        keepAway();
+      }
+      assert.ok(bot.ammo.rifle.mag + bot.ammo.rifle.reserve > 0, "o'qsiz bot yerdagi avtomatdan o'q oldi");
+      assert.ok(!room.loot.getPublicLootSnapshot().groundItems.some((g) => g.id === drop!.id), 'yerdagi qurol olindi');
+    } finally {
+      room.destroy();
+    }
+  }));
 });
