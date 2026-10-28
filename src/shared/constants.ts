@@ -68,6 +68,14 @@ export const GRENADE_DAMAGE = 120;
 export const GRENADE_THROW_SPEED = 17;
 export const MATCH_END_DURATION = 10;
 
+// Botlar soni chegaralari (xona yaratishda ham, /addbot da ham)
+/** Survival rejimlarida (loot AI) botlar maksimumi. */
+export const SURVIVAL_MAX_BOTS = 8;
+/** Klassik rejimlarda (tdm/ffa) botlar maksimumi. */
+export const CLASSIC_MAX_BOTS = 16;
+/** Xonadagi jami o'yinchilar (odamlar + botlar) maksimumi. */
+export const ROOM_MAX_TOTAL_PLAYERS = 24;
+
 // Xitbokslar (oyoq nuqtasiga nisbatan)
 export const BODY_HITBOX = { radius: 0.32, bottom: 0, top: 1.42 };
 export const HEAD_HITBOX = { radius: 0.21, bottom: 1.42, top: 1.86 };

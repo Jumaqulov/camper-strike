@@ -24,7 +24,7 @@ import type {
   UseMedkitReq,
   WelcomeMsg,
 } from '../shared/protocol';
-import { GAME_MODE_NAMES_UZ, isSurvivalMode, type GameMode } from '../shared/constants';
+import { CLASSIC_MAX_BOTS, GAME_MODE_NAMES_UZ, SURVIVAL_MAX_BOTS, isSurvivalMode, type GameMode } from '../shared/constants';
 import { NIGHT_DEFAULT_MINUTES, NIGHT_MAX_MINUTES, NIGHT_MIN_MINUTES, WOLF_MAX_PER_ROOM } from '../shared/wolf';
 import { DEFAULT_PUBLIC_LAYOUT_SEED, type MapId } from '../shared/world';
 import { Room } from './room';
@@ -69,7 +69,7 @@ export function sanitizeOpts(raw: Partial<CreateRoomOpts> | undefined, owner: st
     mode,
     // Survival rejimlari: botlar loot AI bilan ishtirok etadi (0–8; Tong otguncha — standart 2);
     // klassik (loot rejimi bilan ham) 0–16
-    bots: survival ? num(raw?.bots, night ? 2 : 3, 0, 8) : num(raw?.bots, 4, 0, 16),
+    bots: survival ? num(raw?.bots, night ? 2 : 3, 0, SURVIVAL_MAX_BOTS) : num(raw?.bots, 4, 0, CLASSIC_MAX_BOTS),
     // Tong otguncha yakka o'yinchi bilan ham o'ynaladi (maxPlayers kamida 1)
     maxPlayers: num(raw?.maxPlayers, 10, mode === 'forest_survival' ? 2 : 1, 16),
     // Tong otguncha: tun davomiyligi (daqiqa) — NIGHT_MIN..NIGHT_MAX, standart NIGHT_DEFAULT
@@ -163,6 +163,8 @@ export class Lobby {
     socket.on('joinRoom', (data: { roomId?: string }, ack?: Ack<{ ok: boolean; error?: string; welcome?: WelcomeMsg }>) => {
       const r = data?.roomId ? this.rooms.get(data.roomId) : undefined;
       if (!r || r.destroyed) return ack?.({ ok: false, error: 'Xona topilmadi' });
+      // Shu xonaga qayta kirish: leave() yagona odam chiqqanda xonani yo'q qilardi va o'yinchi o'lik xonaga tushardi
+      if (r === room) return ack?.({ ok: false, error: 'Siz allaqachon shu xonadasiz' });
       if (r.isFull()) return ack?.({ ok: false, error: "Xona to'la" });
       leave();
       socket.leave('lobby');

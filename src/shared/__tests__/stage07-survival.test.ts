@@ -8,7 +8,7 @@ import {
 } from '../../client/game/survival/SpectatorController';
 import { sanitizeOpts } from '../../server/lobby';
 import { Room } from '../../server/room';
-import { EYE_HEIGHT, GRENADES_PER_LIFE, MAX_HP, RESPAWN_TIME } from '../constants';
+import { EYE_HEIGHT, GRENADES_PER_LIFE, MAX_HP, RESPAWN_TIME, SURVIVAL_MAX_BOTS } from '../constants';
 import { getForestSquarePoiSites } from '../forestSquare';
 import { hasLineOfSightToContainer } from '../loot';
 import { vdist, vnorm, vsub, type Vec3 } from '../math';
@@ -1905,6 +1905,50 @@ describe('STAGE 07 — Forest Survival Mode, Round Lifecycle, Elimination, Spect
         `bosh zarari ${rawHead - absorbedHead} bo'lishi kerak (loss=${headLoss})`,
       );
       assert.equal(tank.armor, 100 - absorbedBody, 'bosh otishmasi nimchaga tegmaydi');
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("18. Raund paytida /removebot tirik botni olmaydi (bepul g'alaba yo'q), /addbot survival limitidan oshmaydi", () => {
+    const { io, emitted } = createFakeIo();
+    const room = new Room(
+      {
+        name: 'Removebot Exploit Room',
+        mode: 'forest_survival',
+        mapId: 'forest_square',
+        bots: 1,
+        maxPlayers: 8,
+        timeLimit: 3,
+        scoreLimit: 1,
+        publicLayoutSeed: 6501,
+        countdownSec: 2,
+      },
+      io,
+      () => {},
+    );
+
+    try {
+      const sock1 = createFakeSocket('p1');
+      room.addHuman(sock1.socket, 'Solo');
+      room.onReady('p1', { world: room.worldMeta() });
+      room.advanceTimeForTest(2.5, 0.25);
+      assert.equal(room.phase, 'playing');
+
+      room.onChat('p1', '/removebot');
+      assert.equal(room.phase, 'playing', 'tirik bot olib tashlanmaydi — raund davom etadi');
+      assert.equal(room.botCount(), 1);
+      assert.equal(room.getSurvivalState()!.winnerId ?? null, null);
+      const chats = emitted.filter((e) => e.event === 'chat').map((e) => (e.payload as { text: string }).text);
+      assert.ok(chats.some((t) => t.includes("tirik botni olib tashlab bo'lmaydi")), 'rad etish xabari chatda');
+
+      for (let i = 0; i < 12; i++) room.onChat('p1', '/addbot');
+      assert.equal(room.botCount(), SURVIVAL_MAX_BOTS, '/addbot survival bot limitidan oshmaydi');
+
+      // Raund paytida qo'shilgan botlar kuzatuvchi — ularni olib tashlash mumkin
+      room.onChat('p1', '/removebot');
+      assert.equal(room.botCount(), SURVIVAL_MAX_BOTS - 1);
+      assert.equal(room.phase, 'playing');
     } finally {
       room.destroy();
     }

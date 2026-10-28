@@ -1,7 +1,8 @@
 import type { Server, Socket } from 'socket.io';
 import {
-  GAME_MODE_NAMES_UZ, GRENADE_DAMAGE, GRENADE_FUSE, GRENADE_RADIUS, GRENADE_THROW_SPEED, GRENADES_PER_LIFE,
-  MATCH_END_DURATION, MAX_HP, RESPAWN_TIME, SPAWN_PROTECTION, TEAM_NAMES, TICK_RATE, isSurvivalMode, type Team,
+  CLASSIC_MAX_BOTS, GAME_MODE_NAMES_UZ, GRENADE_DAMAGE, GRENADE_FUSE, GRENADE_RADIUS, GRENADE_THROW_SPEED,
+  GRENADES_PER_LIFE, MATCH_END_DURATION, MAX_HP, RESPAWN_TIME, ROOM_MAX_TOTAL_PLAYERS, SPAWN_PROTECTION,
+  SURVIVAL_MAX_BOTS, TEAM_NAMES, TICK_RATE, isSurvivalMode, type Team,
 } from '../shared/constants';
 import { clamp, createSeededRng, isVec3, q3, spreadDir, vdist, vnorm, vsub, type Vec3 } from '../shared/math';
 import {
@@ -1206,7 +1207,11 @@ export class Room {
   }
 
   removeBot(): boolean {
-    const bots = [...this.players.values()].filter((p) => p.isBot);
+    let bots = [...this.players.values()].filter((p) => p.isBot);
+    // Survival raundi davomida tirik ishtirokchi botni olib tashlash raundni "raqib chiqib ketdi" bilan
+    // yakunlab yuborardi (bepul g'alaba) — raund paytida faqat halok bo'lgan / kuzatuvchi botlar olinadi
+    const survival = this.survival;
+    if (survival && survival.getPhase() === 'playing') bots = bots.filter((b) => !survival.isAliveContender(b.id));
     if (!bots.length) return false;
     // eng ko'p o'yinchisi bor jamoadan olib tashlash
     let victim = bots[bots.length - 1];
@@ -2019,7 +2024,8 @@ export class Room {
   private chatCommand(p: ServerPlayer, cmd: string) {
     const c = cmd.toLowerCase();
     if (c === '/addbot') {
-      if (this.players.size >= 24) return this.systemChat('Botlar soni maksimal');
+      const maxBots = this.isSurvival ? SURVIVAL_MAX_BOTS : CLASSIC_MAX_BOTS;
+      if (this.players.size >= ROOM_MAX_TOTAL_PLAYERS || this.botCount() >= maxBots) return this.systemChat('Botlar soni maksimal');
       const b = this.addBot();
       this.balanceBots();
       this.systemChat(`${p.name} bot qo'shdi: ${b.name}`);
@@ -2028,6 +2034,8 @@ export class Room {
       if (this.removeBot()) {
         this.balanceBots();
         this.systemChat(`${p.name} bitta botni olib tashladi`);
+      } else if (this.botCount() > 0) {
+        this.systemChat("Raund davomida tirik botni olib tashlab bo'lmaydi");
       }
     } else if (c === '/addwolf' || c === '/removewolf') {
       if (this.isNight) return this.systemChat("Tong otguncha rejimida bo'rilar to'lqinlar bilan keladi — son o'zgartirilmaydi");
