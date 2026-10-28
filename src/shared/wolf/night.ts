@@ -23,11 +23,13 @@ export interface NightWave {
 
 /** To'lqinlar: oxirgisi eng kuchli. Bo'rilar soni WOLF_MAX_PER_ROOM dan oshmasligi kerak. */
 export const NIGHT_WAVES: readonly NightWave[] = [
-  { wave: 1, wolves: 1, speedMul: 0.92, hpMul: 0.85, biteMul: 1.0 },
-  { wave: 2, wolves: 2, speedMul: 1.0, hpMul: 1.0, biteMul: 1.0 },
-  { wave: 3, wolves: 3, speedMul: 1.06, hpMul: 1.15, biteMul: 1.1 },
-  { wave: 4, wolves: 4, speedMul: 1.12, hpMul: 1.3, biteMul: 1.2 },
+  { wave: 1, wolves: 2, speedMul: 0.95, hpMul: 0.9, biteMul: 1.0 },
+  { wave: 2, wolves: 3, speedMul: 1.03, hpMul: 1.05, biteMul: 1.1 },
+  { wave: 3, wolves: 4, speedMul: 1.1, hpMul: 1.25, biteMul: 1.2 },
+  { wave: 4, wolves: 6, speedMul: 1.18, hpMul: 1.45, biteMul: 1.3 },
 ];
+/** Tunda o'ldirilgan bo'ri shuncha soniyadan keyin qaytadan keladi (klassik rejimdagi 25 s dan tezroq). */
+export const WOLF_NIGHT_RESPAWN_SEC = 14;
 
 /** Har to'lqinning boshlanishi — tun davomiyligi ulushida. */
 export const NIGHT_WAVE_STARTS: readonly number[] = [0, 0.25, 0.5, 0.75];

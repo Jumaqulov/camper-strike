@@ -22,6 +22,10 @@ import {
   NIGHT_WAVES,
   NIGHT_WAVE_COUNT,
   NIGHT_WOOD_PILE_COUNT,
+  WOOD_PILE_GAP_M,
+  WOOD_PILE_MAX_DIST_M,
+  WOOD_PILE_MIN_DIST_M,
+  WOOD_PILE_RESPAWN_SEC,
   WOLF_CORPSE_SEC,
   WOLF_MAX_HP,
   WOLF_RESPAWN_SEC,
@@ -217,7 +221,7 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
     assert.equal(fs.bots, 3);
   });
 
-  it("2. Yakka odam botlarsiz raund boshlaydi; zona yo'q, 1-to'lqinda 1 ta bo'ri", () => {
+  it("2. Yakka odam botlarsiz raund boshlaydi; zona yo'q, 1-to'lqinda jadvaldagi bo'rilar", () => {
     const { io, emitted } = createFakeIo();
     const room = makeNightRoom(io);
     try {
@@ -230,9 +234,9 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       assert.ok(night, 'tun holati bor');
       assert.equal(night!.wave, 1);
       assert.equal(night!.waveCount, NIGHT_WAVE_COUNT);
-      assert.equal(night!.wolvesAlive, 1);
+      assert.equal(night!.wolvesAlive, NIGHT_WAVES[0]!.wolves);
       assert.ok(night!.dawnInSec > 230 && night!.dawnInSec <= 240, `tonggacha ~240 s (${night!.dawnInSec})`);
-      assert.equal(room.wolves.size, 1);
+      assert.equal(room.wolves.size, NIGHT_WAVES[0]!.wolves);
       const w = [...room.wolves.values()][0]!;
       assert.equal(w.speedMul, NIGHT_WAVES[0]!.speedMul);
       assert.equal(w.hp, Math.round(WOLF_MAX_HP * NIGHT_WAVES[0]!.hpMul));
@@ -242,14 +246,14 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       assert.equal(m.survival?.night?.wave, 1);
       assert.deepEqual(m.survival?.winnerIds, []);
       // Chat buyrug'i bilan bo'rilar soni o'zgarmaydi
-      assert.equal(room.setWolfCount(4), 1);
-      assert.equal(room.wolves.size, 1);
+      assert.equal(room.setWolfCount(4), NIGHT_WAVES[0]!.wolves);
+      assert.equal(room.wolves.size, NIGHT_WAVES[0]!.wolves);
     } finally {
       room.destroy();
     }
   });
 
-  it("3. To'lqinlar: 25% da 2, 75% da 4 bo'ri (kuchliroq); o'lgan bo'ri qayta tug'iladi", () => {
+  it("3. To'lqinlar: 25% va 75% da jadvaldagi bo'rilar (kuchliroq); o'lgan bo'ri qayta tug'iladi", () => {
     const { io } = createFakeIo();
     const room = makeNightRoom(io, { timeLimit: 4 });
     try {
@@ -258,15 +262,15 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       // 25% → 2-to'lqin
       surviveFor(room, p, 61);
       assert.equal(room.phase, 'playing', 'yakka tirik qolgan raundni tugatmaydi');
-      assert.equal(room.wolves.size, 2, '2-to‘lqinda 2 bo‘ri');
+      assert.equal(room.wolves.size, NIGHT_WAVES[1]!.wolves, '2-to‘lqinda to‘lqin jadvalidagi bo‘rilar');
       const list2 = [...room.wolves.values()];
-      assert.equal(list2[1]!.speedMul, NIGHT_WAVES[1]!.speedMul);
+      assert.equal(list2[list2.length - 1]!.speedMul, NIGHT_WAVES[1]!.speedMul, 'yangi bo‘ri 2-to‘lqin kuchida');
       assert.equal(list2[0]!.speedMul, NIGHT_WAVES[0]!.speedMul, 'eski bo‘ri o‘z ko‘rsatkichini saqlaydi');
       assert.equal(room.getNightSnap()!.wave, 2);
       // 75% → 4-to'lqin
       surviveFor(room, p, 120);
       assert.equal(room.phase, 'playing');
-      assert.equal(room.wolves.size, 4, '4-to‘lqinda 4 bo‘ri');
+      assert.equal(room.wolves.size, NIGHT_WAVES[3]!.wolves, '4-to‘lqinda to‘lqin jadvalidagi bo‘rilar');
       assert.equal(room.getNightSnap()!.wave, 4);
       const newest = [...room.wolves.values()].pop()!;
       assert.equal(newest.hpMul, NIGHT_WAVES[3]!.hpMul);
@@ -298,7 +302,7 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
         killed = !w.alive;
       }
       assert.equal(w.alive, false, "bo'ri o'ldi");
-      assert.equal(room.wolves.size, 4, 'jasad o‘chmaydi — qayta tug‘ilishni kutadi');
+      assert.equal(room.wolves.size, NIGHT_WAVES[3]!.wolves, 'jasad o‘chmaydi — qayta tug‘ilishni kutadi');
       surviveFor(room, p, WOLF_CORPSE_SEC + WOLF_RESPAWN_SEC + 1);
       assert.equal(room.phase, 'playing');
       assert.equal(w.alive, true, "bo'ri qayta tug'ildi");
@@ -536,10 +540,10 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
         assert.ok(isTerrainWalkable(room.world.terrain, pl.x, pl.z), `g'aram ${pl.id} yuriladigan relyefda`);
         assert.ok(Math.abs(sampleTerrainHeight(room.world.terrain, pl.x, pl.z) - pl.y) < 0.05);
         const dFire = Math.min(...night.fires.map((f) => Math.hypot(f.x - pl.x, f.z - pl.z)));
-        assert.ok(dFire >= 25 && dFire <= 55, `g'aram ${pl.id} eng yaqin gulxandan 25–55 m (${dFire.toFixed(1)})`);
+        assert.ok(dFire >= WOOD_PILE_MIN_DIST_M && dFire <= WOOD_PILE_MAX_DIST_M, `g'aram ${pl.id} eng yaqin gulxandan ${WOOD_PILE_MIN_DIST_M}–${WOOD_PILE_MAX_DIST_M} m (${dFire.toFixed(1)})`);
         for (const o of night.piles) {
           if (o === pl) continue;
-          assert.ok(Math.hypot(o.x - pl.x, o.z - pl.z) >= 12, `g'aramlar ${pl.id}/${o.id} ≥ 12 m`);
+          assert.ok(Math.hypot(o.x - pl.x, o.z - pl.z) >= WOOD_PILE_GAP_M, `g'aramlar ${pl.id}/${o.id} ≥ ${WOOD_PILE_GAP_M} m`);
         }
       }
       // Asosiy gulxan — uylar guruhi hovlisida (POI markazidan ≤ flatRadius)
@@ -597,7 +601,7 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       const n2 = room.getNightSnap()!;
       const empty = n2.piles.find((x) => x.id === piles[0]!.id)!;
       assert.equal(empty.available, false);
-      assert.ok((empty.respawnInSec ?? 0) > 60 && (empty.respawnInSec ?? 0) <= 75, `respawnInSec ${empty.respawnInSec}`);
+      assert.ok((empty.respawnInSec ?? 0) > WOOD_PILE_RESPAWN_SEC - 15 && (empty.respawnInSec ?? 0) <= WOOD_PILE_RESPAWN_SEC, `respawnInSec ${empty.respawnInSec}`);
       // Qo'l to'la
       const pl4 = piles[3]!;
       p.pos = groundAt(room, pl4.x + 1.0, pl4.z);

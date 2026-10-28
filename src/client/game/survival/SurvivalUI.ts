@@ -22,12 +22,18 @@ function formatNightPillUz(n: NightSnap): string {
 }
 
 /** Asosiy lager gulxani holati (pill): "🔥 Lager m:ss" (kam o'tin — 'low'), o'chgan — "🔥 O'CHDI" ('out'). */
-export function formatCampPillUz(fuelSec: number, lit: boolean): { text: string; cls: '' | 'low' | 'out' } {
-  if (!lit || fuelSec <= 0) return { text: "🔥 O'CHDI", cls: 'out' };
+export function formatCampPillUz(
+  fuelSec: number,
+  lit: boolean,
+  pileM: number | null = null,
+): { text: string; cls: '' | 'low' | 'out' } {
+  // Eng yaqin o'tin g'aramigacha masofa (qo'l to'la bo'lmasa) — o'tin topish oson bo'lsin
+  const pile = pileM !== null ? ` · 🪵 ${Math.round(pileM)} m` : '';
+  if (!lit || fuelSec <= 0) return { text: `🔥 O'CHDI${pile}`, cls: 'out' };
   const total = Math.max(0, Math.floor(fuelSec));
   const mm = Math.floor(total / 60);
   const ss = String(total % 60).padStart(2, '0');
-  return { text: `🔥 Lager ${mm}:${ss}`, cls: fuelSec < CAMPFIRE_LOW_FUEL_SEC ? 'low' : '' };
+  return { text: `🔥 Lager ${mm}:${ss}${pile}`, cls: fuelSec < CAMPFIRE_LOW_FUEL_SEC ? 'low' : '' };
 }
 
 export interface SurvivalUICallbacks {
@@ -95,7 +101,7 @@ export class SurvivalUI {
   private spectatorPose: SpectatorCameraPose | null = null;
   private killerHtml = '';
   /** Asosiy gulxan holati (Game har kadr ekstrapolyatsiya qilib beradi); null — lager yo'q. */
-  private camp: { fuelSec: number; lit: boolean } | null = null;
+  private camp: { fuelSec: number; lit: boolean; pileM?: number | null } | null = null;
 
   private spectatorBannerVisible = false;
   private winnerOverlayVisible = false;
@@ -204,7 +210,7 @@ export class SurvivalUI {
   }
 
   /** Asosiy lager gulxani holati (tun rejimi) — pill'da "🔥 Lager m:ss" sifatida chiqadi. */
-  setCampStatus(camp: { fuelSec: number; lit: boolean } | null): void {
+  setCampStatus(camp: { fuelSec: number; lit: boolean; pileM?: number | null } | null): void {
     this.camp = camp;
   }
 
@@ -302,7 +308,7 @@ export class SurvivalUI {
 
     // Tunda zona yo'q — pillda to'lqin/tong ma'lumoti ko'rsatiladi
     const nightText = night && snap.phase === 'playing' && snap.night ? formatNightPillUz(snap.night) : '';
-    const campPill = night && snap.phase === 'playing' && this.camp ? formatCampPillUz(this.camp.fuelSec, this.camp.lit) : null;
+    const campPill = night && snap.phase === 'playing' && this.camp ? formatCampPillUz(this.camp.fuelSec, this.camp.lit, this.camp.pileM ?? null) : null;
     const pillKey = `${snap.roundId}|${snap.phase}|${snap.timeLeft}|${countLabel}|${
       !night && snap.phase === 'playing' && snap.zone
         ? `${formatZoneStatusUz(snap.zone)}|${snap.zone.shrinking ? 1 : 0}`

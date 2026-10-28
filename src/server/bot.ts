@@ -71,6 +71,8 @@ interface BotCampTask {
 
 /** Bot o'tin g'aramini shu masofadan izlaydi (m). */
 const BOT_WOOD_SEARCH_M = 45;
+/** Bot o'tin olib kelishga faqat gulxan o'tini shu qiymatdan (s) kamayganda chiqadi. */
+const BOT_FETCH_FUEL_SEC = 60;
 
 const BOT_NAMES = [
   'Amaki Bobur',
@@ -652,7 +654,16 @@ export class BotBrain {
       }
     }
     if (lootNeed === 2) return;
-    if (me.wood < WOOD_CARRY_MAX) {
+    // Botlar o'tinni faqat biror gulxan haqiqatan kamayganda (yoki o'chganda) tashiydi —
+    // o'tin tashish asosan odamlarning ishi, aks holda o'yin juda oson bo'lib qoladi
+    let fireNeedsWood = false;
+    for (const f of room.campfires.values()) {
+      if (!f.lit || f.fuelSec < BOT_FETCH_FUEL_SEC) {
+        fireNeedsWood = true;
+        break;
+      }
+    }
+    if (me.wood < WOOD_CARRY_MAX && fireNeedsWood) {
       let best: { id: string; x: number; y: number; z: number } | null = null;
       let bestD = Infinity;
       for (const pl of room.woodPiles.values()) {

@@ -27,6 +27,10 @@ import {
   WOOD_CARRY_MAX,
   WOOD_PILE_GIVE,
   WOOD_PILE_RESPAWN_SEC,
+  WOOD_PILE_GAP_M,
+  WOOD_PILE_MAX_DIST_M,
+  WOOD_PILE_MIN_DIST_M,
+  WOLF_NIGHT_RESPAWN_SEC,
   isInsideLitCampfire,
   type CampActionAck,
   type CampfireEvent,
@@ -195,9 +199,9 @@ const CAMP_FIRE_POI_ORDER: readonly ForestSquarePoiId[] = [
 const CAMP_FIRE_NAMES_UZ = ['Asosiy lager', '2-lager', '3-lager', '4-lager', '5-lager'];
 /** Gulxanlar orasidagi eng kam masofa, g'aram–gulxan oralig'i va g'aramlar orasidagi eng kam masofa (m). */
 const CAMP_FIRE_MIN_GAP_M = 60;
-const CAMP_PILE_MIN_DIST_M = 25;
-const CAMP_PILE_MAX_DIST_M = 55;
-const CAMP_PILE_GAP_M = 12;
+const CAMP_PILE_MIN_DIST_M = WOOD_PILE_MIN_DIST_M;
+const CAMP_PILE_MAX_DIST_M = WOOD_PILE_MAX_DIST_M;
+const CAMP_PILE_GAP_M = WOOD_PILE_GAP_M;
 /** Gulxan atrofida kollayder bo'lmasligi kerak bo'lgan radius (devor ichida yonmasin). */
 const CAMP_FIRE_CLEARANCE_M = 1.6;
 /** Gulxan o'chganda shu masofadagi bo'rilar qorong'i lagerga keladi (m). */
@@ -683,10 +687,10 @@ export class Room {
         const sector = Math.floor(i / fires.length);
         const baseAng = (sector / perFire) * Math.PI * 2 + rng() * 0.6;
         let found: Vec3 | null = null;
-        for (let k = 0; k < 24 && !found; k++) {
+        for (let k = 0; k < 60 && !found; k++) {
           // Sektor atrofida ±, masofa 28–50 m
           const ang = baseAng + (k % 2 ? 1 : -1) * Math.floor(k / 2) * 0.35;
-          const dist = 28 + rng() * 22;
+          const dist = CAMP_PILE_MIN_DIST_M + 2 + rng() * (CAMP_PILE_MAX_DIST_M - CAMP_PILE_MIN_DIST_M - 4);
           const x = f.x + Math.cos(ang) * dist;
           const z = f.z + Math.sin(ang) * dist;
           const b = this.world.bounds;
@@ -702,7 +706,7 @@ export class Room {
     }
     // Zaxira: qat'iy shartlar bilan tasodifiy tugunlar, keyin faqat oraliq sharti bilan
     for (const strict of [true, false]) {
-      for (let i = 0; i < 400 && piles.length < NIGHT_WOOD_PILE_COUNT; i++) {
+      for (let i = 0; i < 1500 && piles.length < NIGHT_WOOD_PILE_COUNT; i++) {
         const c = randomRoamNode();
         if (pileOk(c, strict)) piles.push(c);
       }
@@ -1114,7 +1118,7 @@ export class Room {
     w.targetId = null;
     w.diedAt = this.now();
     // Klassik va wolf_night (tun shafqatsiz): qayta tug'iladi; forest_survival: jasad o'chadi
-    w.respawnAt = this.wolvesRespawn() ? w.diedAt + WOLF_RESPAWN_SEC : Infinity;
+    w.respawnAt = this.wolvesRespawn() ? w.diedAt + (this.isNight ? WOLF_NIGHT_RESPAWN_SEC : WOLF_RESPAWN_SEC) : Infinity;
     const ev: WolfDeathEvent = { id: w.id, killerId: killer.id, killerName: killer.name };
     this.io.to(this.channel).emit('wolf:death', ev);
     this.systemChat(`${killer.name} vahshiy bo'rini o'ldirdi!`);

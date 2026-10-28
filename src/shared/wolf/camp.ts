@@ -9,22 +9,28 @@
  */
 
 /** Yonib turgan gulxan bo'rini shu radiusda (m) ushlab turadi. */
-export const CAMPFIRE_RADIUS_M = 9;
+export const CAMPFIRE_RADIUS_M = 7.5;
 /** Gulxan o'tin sig'imi (s), raund boshidagi o'tin, bitta o'tin qo'shadigan vaqt, "o'chmoqda" ogohlantirish chegarasi. */
-export const CAMPFIRE_MAX_FUEL_SEC = 240;
-export const CAMPFIRE_START_FUEL_SEC = 150;
-export const CAMPFIRE_WOOD_FUEL_SEC = 60;
-export const CAMPFIRE_LOW_FUEL_SEC = 40;
+export const CAMPFIRE_MAX_FUEL_SEC = 180;
+export const CAMPFIRE_START_FUEL_SEC = 90;
+export const CAMPFIRE_WOOD_FUEL_SEC = 45;
+export const CAMPFIRE_LOW_FUEL_SEC = 30;
 /** O'yinchi ko'tarib yura oladigan o'tin soni. */
 export const WOOD_CARRY_MAX = 3;
 /** Bo'shagan o'tin g'arami qayta to'lish vaqti (s) va har olishda beriladigan o'tin. */
-export const WOOD_PILE_RESPAWN_SEC = 75;
+export const WOOD_PILE_RESPAWN_SEC = 45;
 export const WOOD_PILE_GIVE = 1;
 /** O'tin olish / gulxanga tashlash masofasi (m, oyoq nuqtalari orasida). */
 export const CAMP_INTERACT_RANGE_M = 2.6;
 /** Lagerdagi gulxanlar va o'tin g'aramlari soni (server tanlaydi). */
 export const NIGHT_CAMPFIRE_COUNT = 3;
-export const NIGHT_WOOD_PILE_COUNT = 8;
+export const NIGHT_WOOD_PILE_COUNT = 12;
+/** O'tin g'aramlari eng yaqin gulxandan shu oraliqda (m) va bir-biridan kamida GAP uzoqda joylashadi. */
+export const WOOD_PILE_MIN_DIST_M = 16;
+export const WOOD_PILE_MAX_DIST_M = 42;
+export const WOOD_PILE_GAP_M = 10;
+/** O'tin g'arami belgisi (🪵) shu masofadan ko'rinadi (m). */
+export const WOOD_PILE_BEACON_RANGE_M = 45;
 /** Asosiy lager gulxani atrofida o'yinchilar paydo bo'ladigan halqa radiusi (m). */
 export const CAMP_SPAWN_RING_M = 3.2;
 

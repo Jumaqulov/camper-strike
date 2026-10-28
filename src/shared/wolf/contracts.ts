@@ -111,7 +111,7 @@ export const WOLF_HOWL_MIN_SEC = 28;
 export const WOLF_HOWL_MAX_SEC = 55;
 
 /** Xonadagi bo'rilar sonining chegarasi. */
-export const WOLF_MAX_PER_ROOM = 4;
+export const WOLF_MAX_PER_ROOM = 6;
 
 export const WOLF_NAME_UZ = "Vahshiy bo'ri";
 

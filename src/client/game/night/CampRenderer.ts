@@ -1,6 +1,12 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { CAMPFIRE_LOW_FUEL_SEC, NIGHT_CAMPFIRE_COUNT, type CampfireSnap, type WoodPileSnap } from '../../../shared/wolf/camp';
+import {
+  CAMPFIRE_LOW_FUEL_SEC,
+  NIGHT_CAMPFIRE_COUNT,
+  WOOD_PILE_BEACON_RANGE_M,
+  type CampfireSnap,
+  type WoodPileSnap,
+} from '../../../shared/wolf/camp';
 import { radialTexture } from '../Textures';
 
 /**
@@ -352,6 +358,33 @@ interface FireInst {
 interface PileInst {
   snap: WoodPileSnap;
   mesh: THREE.Mesh;
+  /** Ustidagi 🪵 belgisi — uzoqdan ko'rinib, g'aramni topishni osonlashtiradi. */
+  beacon: THREE.Sprite;
+}
+
+let beaconTexture: THREE.CanvasTexture | null = null;
+/** 🪵 belgisi: qorong'i dumaloq fon ustida emoji (canvas → sprite teksturasi, bir marta). */
+function getBeaconTexture(): THREE.CanvasTexture {
+  if (beaconTexture) return beaconTexture;
+  const size = 128;
+  const c = document.createElement('canvas');
+  c.width = size;
+  c.height = size;
+  const g = c.getContext('2d')!;
+  g.beginPath();
+  g.arc(size / 2, size / 2, size / 2 - 4, 0, Math.PI * 2);
+  g.fillStyle = 'rgba(20, 12, 6, 0.78)';
+  g.fill();
+  g.lineWidth = 5;
+  g.strokeStyle = '#ffb020';
+  g.stroke();
+  g.font = '72px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.fillText('🪵', size / 2, size / 2 + 4);
+  beaconTexture = new THREE.CanvasTexture(c);
+  beaconTexture.colorSpace = THREE.SRGBColorSpace;
+  return beaconTexture;
 }
 
 export class CampRenderer {
@@ -597,9 +630,28 @@ export class CampRenderer {
     mesh.castShadow = false;
     mesh.receiveShadow = true;
     this.root.add(mesh);
-    const inst: PileInst = { snap: p, mesh };
+    // Belgi: har g'aram uchun alohida material (masofaga qarab shaffofligi o'zgaradi), tumandan ta'sirlanmaydi
+    const beaconMat = new THREE.SpriteMaterial({ map: getBeaconTexture(), transparent: true, depthWrite: false, fog: false });
+    const beacon = new THREE.Sprite(beaconMat);
+    beacon.name = `woodpile_beacon_${p.id}`;
+    beacon.position.set(p.x, p.y + 1.7, p.z);
+    beacon.scale.setScalar(0.85);
+    beacon.renderOrder = 5;
+    this.root.add(beacon);
+    const inst: PileInst = { snap: p, mesh, beacon };
     this.applyPileState(inst);
     return inst;
+  }
+
+  /** Eng yaqin olish mumkin bo'lgan g'aramgacha masofa (m), yo'q bo'lsa null. */
+  nearestAvailablePileDist(x: number, z: number): number | null {
+    let best: number | null = null;
+    for (const p of this.piles.values()) {
+      if (!p.snap.available) continue;
+      const d = Math.hypot(p.snap.x - x, p.snap.z - z);
+      if (best === null || d < best) best = d;
+    }
+    return best;
   }
 
   private applyPileState(inst: PileInst): void {
@@ -611,6 +663,8 @@ export class CampRenderer {
 
   private removePile(id: string, inst: PileInst): void {
     this.root.remove(inst.mesh);
+    this.root.remove(inst.beacon);
+    inst.beacon.material.dispose();
     this.piles.delete(id);
   }
 
@@ -619,6 +673,18 @@ export class CampRenderer {
     if (!this.built) return;
     this.time += dt;
     const t = this.time;
+    // G'aram belgilari: faqat olish mumkin bo'lganlarda, 45 m gacha, uzoqlashgan sari xiralashadi va kattalashadi
+    for (const p of this.piles.values()) {
+      const dist = Math.hypot(p.snap.x - camPos.x, p.snap.z - camPos.z);
+      const show = p.snap.available && dist < WOOD_PILE_BEACON_RANGE_M && dist > 2.5;
+      p.beacon.visible = show;
+      if (show) {
+        const k = 1 - dist / WOOD_PILE_BEACON_RANGE_M;
+        p.beacon.material.opacity = 0.35 + 0.65 * k;
+        p.beacon.scale.setScalar(0.85 + dist * 0.02);
+        p.beacon.position.y = p.snap.y + 1.7 + Math.sin(t * 2 + p.snap.x) * 0.06;
+      }
+    }
     for (const f of this.fires.values()) {
       const dist = Math.hypot(f.snap.x - camPos.x, f.snap.z - camPos.z);
       const fuel = this.fuelAt(f, nowSec);

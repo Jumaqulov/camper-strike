@@ -2407,7 +2407,12 @@ export class Game {
     if (!this.camp) return;
     const playing = this.match?.phase === 'playing';
     const main = playing && this.camp.hasCamp() ? this.camp.getMainFire(t) : null;
-    this.survivalUi.setCampStatus(main ? { fuelSec: main.fuelSec, lit: main.lit } : null);
+    // Qo'l to'la bo'lmasa — eng yaqin g'aramgacha masofa (o'tin topishga yo'l-yo'riq)
+    const pileM =
+      main && this.me.alive && this.me.wood < WOOD_CARRY_MAX
+        ? this.camp.nearestAvailablePileDist(this.me.body.pos.x, this.me.body.pos.z)
+        : null;
+    this.survivalUi.setCampStatus(main ? { fuelSec: main.fuelSec, lit: main.lit, pileM } : null);
     if (!main || !this.me.alive) {
       this.hud.setCampWarning('');
       return;
