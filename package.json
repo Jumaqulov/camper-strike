@@ -9,7 +9,7 @@
   "description": "Camper Strike 65 - 3D LAN multiplayer FPS: TDM / FFA / Forest Survival (Three.js + Socket.IO)",
   "scripts": {
     "dev": "concurrently -k -n server,client -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
-    "dev:server": "tsx watch src/server/index.ts",
+    "dev:server": "tsx watch src/server/index.ts --port 3000",
     "dev:client": "vite",
     "build": "vite build",
     "start": "npm run build && tsx src/server/index.ts",

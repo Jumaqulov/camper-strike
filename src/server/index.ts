@@ -11,7 +11,10 @@ import { Lobby } from './lobby';
 import { getNav } from './navgraph';
 import { validateMapSpawns } from './room';
 
-const PORT = Number(process.env.PORT) || SERVER_PORT;
+// `--port N` (dev:server skriptida — Vite proxy 3000 ni kutadi) muhitdagi PORT dan ustun: `npm run dev` ni
+// PORT=5173 beradigan vosita ishga tushirsa ham o'yin serveri Vite porti bilan to'qnashmaydi
+const portArgIdx = process.argv.indexOf('--port');
+const PORT = Number(portArgIdx >= 0 ? process.argv[portArgIdx + 1] : NaN) || Number(process.env.PORT) || SERVER_PORT;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distDir = path.resolve(__dirname, '../../dist');
 
