@@ -24,8 +24,17 @@ export interface PackOrder {
    * haydovchi nishon oldida chalg'itadi, qanotlar faqat orqa sektordan (yoki nishon orqa o'girsa) tashlanadi.
    */
   commit: boolean;
-  /** Hujum boshlangan vaqt (commit bo'lsa; qanot shundan WOLF_FLANK_LATE_SEC o'tib orqaga yetmasa ham tashlanadi). */
+  /**
+   * Hujum boshlangan vaqt (commit bo'lsa). Qanot shundan WOLF_FLANK_LATE_SEC o'tib, o'zi nishon yaqiniga kelganidan
+   * esa WOLF_FLANK_SWING_MAX_SEC o'tib orqaga yetmasa ham tashlanadi (keyin qo'shilgan qanot ham aylanib oladi).
+   */
   commitAt: number;
+  /**
+   * Bu bo'ri shu nishondan zarba yegan (qasos, WOLF_PACK_RETALIATE_SEC): haydovchi chalg'itmay to'g'ri tashlanadi,
+   * qanot orqa sektorga yetgan bo'lsa to'da hujumini kutmaydi. Faqat o'zi; to'daning qolgani rejani davom
+   * ettiradi (butun to'da hujumga o'tmaydi).
+   */
+  retaliate?: boolean;
   /** Nishon olov (gulxan/mash'al) ichida: bo'rining halqadagi o'z o'rni (burchak, rad) — to'da o'rab oladi. */
   standoffAngle?: number;
   /** Halqa o'rni radiusi (m): standoff nuqtasini bezak (panjara, g'aram) to'sgan bo'lsa kengroq; yo'q — manba standoff. */
@@ -59,6 +68,14 @@ export const WOLF_FLANK_HOLD_MAX_SEC = 4;
 export const WOLF_FLANK_SWING_M = 14;
 /** Hujum boshlangach qanot shuncha soniyada orqa sektorga yetmasa — turgan joyidan tashlanadi. */
 export const WOLF_FLANK_LATE_SEC = 3;
+/**
+ * Qanot nishon yaqiniga (aylanib o'tish doirasi + WOLF_FLANK_NEAR_EXTRA_M) birinchi kelganidan shuncha soniya
+ * aylanib olishga vaqti bor: hujum allaqachon boshlangan bo'lsa ham (keyin qo'shilgan qanot) shundan oldin
+ * "kechikdi" deb to'g'ri tashlanmaydi.
+ */
+export const WOLF_FLANK_SWING_MAX_SEC = 6;
+/** "Nishon yaqinida" chegarasi uchun aylanib o'tish doirasiga qo'shimcha (m). */
+export const WOLF_FLANK_NEAR_EXTRA_M = 3;
 /** Qanot burchaklari (nishon→haydovchi yo'nalishidan, gradus): ±120°, ±150°. */
 export const WOLF_FLANK_MIN_DEG = 120;
 export const WOLF_FLANK_MAX_DEG = 150;
@@ -96,6 +113,11 @@ const SCORE_CURRENT_TARGET = 3;
 const DRIVER_SWAP_MARGIN_M = 2;
 /** Qanot o'z nuqtasiga shuncha (m) yaqin bo'lsa joyida deb hisoblanadi (to'da hujumi sharti). */
 const FLANK_IN_POSITION_M = 2.5;
+/**
+ * Haydovchi nishonga shundan (m) yaqin (tishlayapti, ustiga chiqib turibdi) bo'lsa uning yo'nalishi tebranadi —
+ * nishon→haydovchi burchagi oxirgi ishonchli qiymatda qoladi (qanot nuqtalari narigi tomonga sakramasin).
+ */
+const DRIVER_ANG_MIN_M = 1;
 /** Gulxan halqasi namunalari soni (10° qadam) — bezak to'sgan nuqtalarni aniqlash va o'rinlarni surish uchun. */
 const RING_SAMPLES = 36;
 /** Standoff nuqtasi to'silgan bo'lsa shu qo'shimcha radiuslar (m) sinaladi. */
@@ -158,6 +180,8 @@ export class WolfPack {
   private readonly wolfState = new Map<string, WolfPackState>();
   private readonly retaliate = new Map<string, { targetId: string; until: number }>();
   private readonly driverByPrey = new Map<string, string>();
+  /** Nishon→haydovchi yo'nalishining oxirgi ishonchli qiymati (rad; haydovchi DRIVER_ANG_MIN_M dan uzoq bo'lganda). */
+  private readonly driverAngByPrey = new Map<string, number>();
   /** Olov halqasidagi o'rinlar (nishon → guruh kaliti va bo'ri → o'rin). */
   private readonly slotsByPrey = new Map<string, { key: string; slots: Map<string, RingSlot> }>();
   /** Gulxan halqasining bo'sh nuqtalari (gulxan joyi → nuqtalar; null — halqa butunlay ochiq). Gulxan qimirlamaydi. */
@@ -230,6 +254,7 @@ export class WolfPack {
     if (room.phase !== 'playing') {
       this.sightings.clear();
       this.driverByPrey.clear();
+      this.driverAngByPrey.clear();
       this.slotsByPrey.clear();
       this.huntByPrey.clear();
       this.clearOrders();
@@ -316,6 +341,7 @@ export class WolfPack {
       else groups.set(p.id, [w]);
     }
     for (const id of this.driverByPrey.keys()) if (!groups.has(id)) this.driverByPrey.delete(id);
+    for (const id of this.driverAngByPrey.keys()) if (!groups.has(id)) this.driverAngByPrey.delete(id);
     for (const id of this.slotsByPrey.keys()) if (!groups.has(id)) this.slotsByPrey.delete(id);
     for (const id of this.huntByPrey.keys()) if (!groups.has(id)) this.huntByPrey.delete(id);
 
@@ -353,15 +379,24 @@ export class WolfPack {
         }
       }
       this.driverByPrey.set(preyId, driver.id);
-      const driverAng = Math.atan2(driver.pos.z - p.pos.z, driver.pos.x - p.pos.x);
+      // Haydovchi nishonga yopishib turganda (tishlash) — oxirgi ishonchli yo'nalish; u ham yo'q bo'lsa haydovchi
+      // nishonga qarab turibdi deb, uning orqa tomoni
+      let driverAng = this.driverAngByPrey.get(preyId) ?? Math.atan2(Math.cos(driver.yaw), Math.sin(driver.yaw));
+      if (driverD >= DRIVER_ANG_MIN_M) {
+        driverAng = Math.atan2(driver.pos.z - p.pos.z, driver.pos.x - p.pos.x);
+        this.driverAngByPrey.set(preyId, driverAng);
+      }
 
       // Olov himoyasi — xona gisterezisi (WolfBrain bilan bir xil javob: halqa o'rinlari va "chetida tur" mos keladi)
       const fire = room.preyFearSource(p);
       let slots: Map<string, RingSlot> | null = null;
       if (fire) {
-        // Halqa o'rinlari: guruh tarkibi (va gulxan) o'zgarmaguncha saqlanadi (to'plangan bo'rilar har tick o'rin
-        // almashmasin). Olov ichidagi nishonga hujum holati tashlanadi — chiqsa to'da yana chalg'itib aylanadi.
-        const key = group.map((w) => w.id).join('|') + (fire.kind === 'fire' ? `@${fire.x.toFixed(1)},${fire.z.toFixed(1)}` : '');
+        // Halqa o'rinlari: guruh tarkibi va olov manbai (turi, gulxan/raketa joyi, mash'al egasi) o'zgarmaguncha
+        // saqlanadi (to'plangan bo'rilar har tick o'rin almashmasin). Manba almashsa (raketa doirasidan chiqib o'z
+        // mash'aliga o'tdi) o'rinlar yangi radius bilan qayta quriladi. Olov ichidagi nishonga hujum holati
+        // tashlanadi — chiqsa to'da yana chalg'itib aylanadi.
+        const src = fire.kind === 'torch' ? (fire.playerId ?? '') : `${fire.x.toFixed(1)},${fire.z.toFixed(1)}`;
+        const key = `${group.map((w) => w.id).join('|')}@${fire.kind}:${src}`;
         const prev = this.slotsByPrey.get(preyId);
         if (prev && prev.key === key) {
           slots = prev.slots;
@@ -388,6 +423,7 @@ export class WolfPack {
           commit: true,
           commitAt: 0,
         };
+        if (this.retaliate.get(w.id)?.targetId === preyId) order.retaliate = true;
         const st = this.stateOf(w.id);
         if (slots) {
           const slot = slots.get(w.id);
@@ -442,9 +478,10 @@ export class WolfPack {
   /**
    * Nishonga hujum holati (olovdan tashqarida): haydovchi chalg'itish masofasiga yetgan vaqtni yozadi va hujum
    * shartini tekshiradi — barcha qanotlar orqa sektorga (yoki o'z nuqtasiga) yetdi, chalg'itish WOLF_FEINT_MAX_SEC
-   * davom etdi, guruh WOLF_PACK_COMMIT_MAX_SEC dan beri ovlayapti, nishon haydovchiga o'zi yaqinlashdi
-   * (≤ WOLF_DRIVER_COMMIT_M) yoki to'dadan birini urdi (qasos). Yakka bo'ri darhol hujum qiladi; unga sherik
-   * qo'shilsa (haydovchi nishonga hali yopishmagan bo'lsa) chalg'itish qaytadan boshlanadi.
+   * davom etdi, guruh WOLF_PACK_COMMIT_MAX_SEC dan beri ovlayapti yoki haydovchi nishonga yopishdi
+   * (≤ WOLF_DRIVER_COMMIT_M). Yakka bo'ri darhol hujum qiladi; unga sherik qo'shilsa (haydovchi nishonga hali
+   * yopishmagan bo'lsa) chalg'itish qaytadan boshlanadi, yopishgan bo'lsa yangi qanotlar baribir aylanib keladi
+   * (kechikish har qanot uchun alohida — WOLF_FLANK_SWING_MAX_SEC).
    */
   private huntOf(preyId: string, group: ServerWolf[], driver: ServerWolf, driverD: number, driverAng: number, p: ServerPlayer, t: number): PackHunt {
     const solo = group.length < 2;
@@ -463,10 +500,10 @@ export class WolfPack {
         break;
       }
     }
-    const struck = group.some((w) => this.retaliate.get(w.id)?.targetId === preyId);
+    // Zarba yegan bo'ri o'zi qasos oladi (PackOrder.retaliate) — butun to'da hujumga o'tmaydi: o'q uzayotgan
+    // o'yinchiga qanotlar baribir orqadan aylanib keladi
     if (
       solo ||
-      struck ||
       driverD <= WOLF_DRIVER_COMMIT_M ||
       t - h.startedAt >= WOLF_PACK_COMMIT_MAX_SEC ||
       (h.feintSince > 0 && (ready || t - h.feintSince >= WOLF_FEINT_MAX_SEC))

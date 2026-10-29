@@ -9,18 +9,32 @@ import {
   WOLF_FLANK_ENGAGE_M,
   WOLF_PACK_COMMIT_MAX_SEC,
   angularSeparation,
+  type PackOrder,
 } from '../../server/wolfPack';
 import { MAX_HP } from '../constants';
 import type { Vec3 } from '../math';
 import { collidesAtWorld } from '../physics';
 import type { CreateRoomOpts } from '../protocol';
 import { sampleTerrainHeight } from '../world';
-import { CAMPFIRE_RADIUS_M, CAMPFIRE_STANDOFF_M, WOLF_RADIUS, type WolfBiteEvent, type WolfHowlEvent } from '../wolf';
+import {
+  CAMPFIRE_RADIUS_M,
+  CAMPFIRE_STANDOFF_M,
+  FLARE_FEAR_RADIUS_M,
+  FLARE_STANDOFF_M,
+  TORCH_STANDOFF_M,
+  WOLF_MAX_HP,
+  WOLF_RADIUS,
+  type WolfBiteEvent,
+  type WolfHowlEvent,
+} from '../wolf';
 
 // Bosqich 30 — Tong otguncha: to'da taktikasi jonli dinamikada. Haydovchi nishon oldida chalg'itadi (irillab turadi,
 // aldab otiladi), qanotlar kengroq doira bo'ylab o'z tomonidan aylanib orqa sektorga yetadi va orqadan tashlanadi;
 // to'lqin boshidagi uvlashda vazifa almashmaydi; haqiqiy asosiy gulxan atrofida (kulba, panjara, o'tin g'aramlari
 // orasida) to'da halqa bo'ylab yoyiladi; mash'al ko'targan o'yinchi gulxan yonidagidek himoyalangan deb baholanadi.
+// O'yinchi yaqinlashayotgan bo'rini otsa butun to'da hujumga o'tmaydi (faqat zarba yegani qasos oladi); hujum
+// boshlangandan keyin qo'shilgan bo'rilar ham orqadan aylanib keladi; nishonning olov manbai (raketa ↔ mash'al)
+// almashsa halqa radiusi eskirmaydi.
 // Bo'rilar hech qayerda ushlab turilmaydi (faqat o'yinchi joyida, joni to'ldiriladi); xona haqiqiy Room, io/socket
 // soxta; vaqt room.advanceTimeForTest bilan suriladi.
 
@@ -174,14 +188,28 @@ interface LiveRun {
   feintMinDist: number;
   /** Hujumgacha haydovchi vazifasining almashishlari. */
   driverFlips: number;
+  /** O'yinchi otgan bo'lsa: birinchi zarbadan keyingi tickdagi hujum bosqichi (undefined — otmadi). */
+  shotPhase?: 'feint' | 'commit' | null;
+}
+
+/**
+ * O'yinchi bo'rini otdi: xonaning haqiqiy zarba yo'li (damageWolf → onDamaged → to'daga qasos xabari, turtki) va
+ * o'q ovozi (onNoise); bo'ri o'lmasin deb joni to'ldiriladi.
+ */
+function shootWolf(room: Room, w: ServerWolf, p: ServerPlayer): void {
+  const r = room as unknown as { damageWolf(w: ServerWolf, attacker: ServerPlayer, amount: number, from: Vec3): void };
+  r.damageWolf(w, p, 10, { ...p.pos });
+  w.hp = WOLF_MAX_HP;
+  for (const o of room.wolves.values()) if (o.alive) o.brain.onNoise({ ...p.pos }, room.now(), p);
 }
 
 /**
  * Jonli to'da: 3 bo'ri ochiq maydonda bir tomondan (`dists` m) keladi, o'yinchi joyida (joni to'ldiriladi),
  * `facing` bo'yicha qaraydi ('track' — eng yaqin bo'riga burilib turadi). 12 s davomida hech bir bo'ri ushlab
- * turilmaydi; har bo'rining birinchi tishlashi, qanot maydoniga yetgani va hujum bosqichi yoziladi.
+ * turilmaydi; har bo'rining birinchi tishlashi, qanot maydoniga yetgani va hujum bosqichi yoziladi. `shootRange` > 0
+ * — o'yinchi shu masofadagi eng yaqin bo'rini har 0.6 s da otadi.
  */
-function runLivePack(seed: number, dists: number[], facing: Facing, dir: 1 | -1, skip: number, howl: boolean): LiveRun {
+function runLivePack(seed: number, dists: number[], facing: Facing, dir: 1 | -1, skip: number, howl: boolean, shootRange = 0): LiveRun {
   const { io, emitted } = createFakeIo();
   const room = makeNightRoom(io, { publicLayoutSeed: seed });
   try {
@@ -206,9 +234,25 @@ function runLivePack(seed: number, dists: number[], facing: Facing, dir: 1 | -1,
     let feintStarted = false;
     let driverFlips = 0;
     let lastDriver: string | null = null;
+    let lastShot = -99;
+    let shotPending = false;
+    let shotPhase: LiveRun['shotPhase'];
     const step = 1 / 30;
     for (let i = 0; i < 30 * 12; i++) {
+      if (shootRange > 0) {
+        const near = wolves.reduce((b, w) => (distXZ(w.pos, pos0) < distXZ(b.pos, pos0) ? w : b));
+        const ts = room.now() - t0;
+        if (distXZ(near.pos, pos0) <= shootRange && ts - lastShot >= 0.6) {
+          lastShot = ts;
+          shootWolf(room, near, p!);
+          if (shotPhase === undefined) shotPending = true;
+        }
+      }
       room.advanceTimeForTest(step, step);
+      if (shotPending) {
+        shotPending = false;
+        shotPhase = room.pack.huntPhaseOf('p1');
+      }
       p!.pos = { ...pos0 };
       p!.vel = { x: 0, y: 0, z: 0 };
       p!.hp = MAX_HP;
@@ -268,10 +312,93 @@ function runLivePack(seed: number, dists: number[], facing: Facing, dir: 1 | -1,
       feintHeldSec,
       feintMinDist,
       driverFlips,
+      shotPhase,
     };
   } finally {
     room.destroy();
   }
+}
+
+interface LateJoinRun {
+  label: string;
+  /** Sheriklar qo'shilishidan oldingi hujum bosqichi (yakka bo'ri — 'commit'). */
+  phaseBeforeJoin: 'feint' | 'commit' | null;
+  /** Qo'shilgan bo'rilarning birinchi tishlashlari (burchak — yakka bo'ri kelgan yo'nalishdan). */
+  joiners: FlankerResult[];
+}
+
+/**
+ * Yakka bo'ri o'yinchini birinchi topadi (12 m dan, darhol hujum qiladi), `joinAt` s dan keyin ikki sherigi o'sha
+ * tomondan 26 m dan qo'shiladi. O'yinchi joyida (joni to'ldiriladi), `facing`: 'pack' — kelish tomoniga, 'side' —
+ * yonga qaraydi. 16 s davomida qo'shilganlarning birinchi tishlashi, qanot maydoniga yetgani yoziladi.
+ */
+function runLateJoin(seed: number, joinAt: number, facing: 'pack' | 'side'): LateJoinRun {
+  const { io, emitted } = createFakeIo();
+  const room = makeNightRoom(io, { publicLayoutSeed: seed });
+  try {
+    const [p] = startNight(room, ['p1']);
+    const a = findOpenArena(room, 26, 12, 1, 0);
+    const pos0 = groundAt(room, a.x, a.z);
+    p!.pos = { ...pos0 };
+    const [lone] = freshWolves(room, 1, false);
+    placeWolf(lone!, groundAt(room, a.x + 12, a.z), pos0);
+    room.pack.report(lone!, p!, room.now());
+    const approach = 0;
+    const t0 = room.now();
+    let seen = emitted.length;
+    let phaseBeforeJoin: LateJoinRun['phaseBeforeJoin'] = null;
+    let joiners: ServerWolf[] = [];
+    const first = new Map<string, FlankerResult>();
+    const reached = new Set<string>();
+    const cutFront = new Set<string>();
+    const step = 1 / 30;
+    for (let i = 0; i < 30 * 16; i++) {
+      if (joiners.length === 0 && room.now() - t0 >= joinAt) {
+        phaseBeforeJoin = room.pack.huntPhaseOf('p1');
+        const j1 = room.addWolf();
+        const j2 = room.addWolf();
+        assert.ok(j1 && j2, "sheriklar qo'shildi");
+        joiners = [j1, j2];
+        joiners.forEach((w, k) => {
+          placeWolf(w, groundAt(room, a.x + 26, a.z + (k === 0 ? 2 : -2)), pos0);
+          room.pack.report(w, p!, room.now());
+        });
+      }
+      room.advanceTimeForTest(step, step);
+      p!.pos = { ...pos0 };
+      p!.vel = { x: 0, y: 0, z: 0 };
+      p!.hp = MAX_HP;
+      p!.yaw = facing === 'pack' ? Math.atan2(-Math.cos(approach), -Math.sin(approach)) : Math.atan2(-Math.cos(approach + Math.PI / 2), -Math.sin(approach + Math.PI / 2));
+      for (const w of joiners) {
+        if (first.has(w.id)) continue;
+        const d = distXZ(w.pos, pos0);
+        const rel = angularSeparation(approach, angleFrom(pos0, w.pos));
+        const g = room.pack.flankGoalOf(w.id);
+        if (w.role === 'flanker' && ((g && distXZ(g, w.pos) < 2.5) || (rel >= Math.PI / 2 && d <= WOLF_FLANK_ENGAGE_M))) reached.add(w.id);
+        if (!reached.has(w.id) && rel < Math.PI / 3 && d < 7) cutFront.add(w.id);
+      }
+      for (; seen < emitted.length; seen++) {
+        const e = emitted[seen]!;
+        if (e.event !== 'wolf:bite' || !(e.payload as WolfBiteEvent).hit) continue;
+        const w = joiners.find((j) => j.id === (e.payload as WolfBiteEvent).id);
+        if (!w || first.has(w.id)) continue;
+        first.set(w.id, {
+          id: w.id,
+          biteDeg: toDeg(angularSeparation(approach, angleFrom(pos0, w.pos))),
+          reached: reached.has(w.id),
+          cutFront: cutFront.has(w.id),
+        });
+      }
+    }
+    return { label: `seed=${seed} join@${joinAt}s ${facing}`, phaseBeforeJoin, joiners: [...first.values()] };
+  } finally {
+    room.destroy();
+  }
+}
+
+/** Bo'rining to'da buyrug'i (testlar uchun — WolfBrain ning yopiq maydoni). */
+function orderOf(w: ServerWolf): PackOrder | null {
+  return (w.brain as unknown as { order: PackOrder | null }).order;
 }
 
 /** Asosiy gulxan yonida, o'choq kollayderidan tashqaridagi bo'sh nuqta (gulxan doirasi ichida). */
@@ -493,6 +620,149 @@ describe("Bosqich 30 — to'da taktikasi jonli dinamikada: chalg'itish, orqadan 
         room.pack.report(w!, p2!, room.now());
       }
       assert.equal(w!.targetId, 'p1', `mash'alsiz yaqin o'yinchi yana nishon (${w!.targetId})`);
+    } finally {
+      room.destroy();
+    }
+  });
+
+  it("5. O'yinchi yaqinlashayotgan eng yaqin bo'rini 18–30 m dan otib turadi: faqat zarba yegani qasos oladi, to'da birdaniga hujumga o'tmaydi — qanotlar baribir orqadan tishlaydi", () => {
+    const runs: LiveRun[] = [];
+    const layouts: { dists: number[]; dir: 1 | -1; skip: number }[] = [
+      { dists: [20, 24, 28], dir: 1, skip: 0 },
+      { dists: [26, 30, 34], dir: 1, skip: 0 },
+      { dists: [20, 24, 28], dir: -1, skip: 2 },
+    ];
+    let k = 0;
+    for (const seed of [6501, 1, 42]) {
+      for (const lay of layouts) {
+        for (const range of [18, 30]) {
+          runs.push(runLivePack(seed, lay.dists, 'track', lay.dir, lay.skip, k++ % 2 === 0, range));
+        }
+      }
+    }
+    const describeRun = (r: LiveRun) =>
+      `${r.label}: ${r.flankers.map((f) => `${f.biteDeg.toFixed(0)}°${f.reached ? '*' : ''}${f.cutFront ? '!' : ''}`).join(' ') || 'qanot tishlamadi'}`;
+    for (const r of runs) {
+      assert.ok(r.shotPhase !== undefined, `${r.label}: o'yinchi bo'rini otdi`);
+      // Zarba to'dani hujumga o'tkazmaydi: haydovchi hali uzoqda, qanotlar aylanmagan — to'da chalg'itishda qoladi
+      assert.equal(r.shotPhase, 'feint', `${r.label}: birinchi zarbadan keyin to'da hali chalg'itmoqda (${r.shotPhase})`);
+      assert.ok(r.commitAt !== null && r.commitAt <= WOLF_PACK_COMMIT_MAX_SEC + 0.5, `${r.label}: hujum chegaralangan vaqtda`);
+    }
+    const rearRuns = runs.filter((r) => r.flankers.some((f) => f.biteDeg > 90 && f.reached));
+    assert.ok(
+      rearRuns.length >= Math.ceil(runs.length * 0.8),
+      `o'q ostida orqadan tishlash ${rearRuns.length}/${runs.length} yugurishda (≥ 80%)\n${runs.filter((r) => !rearRuns.includes(r)).map(describeRun).join('\n')}`,
+    );
+    const bites = runs.flatMap((r) => r.flankers);
+    assert.ok(bites.length >= runs.length, `qanotlar tishladi (${bites.length} ta birinchi tishlash)`);
+    const rearBites = bites.filter((f) => f.biteDeg > 90).length;
+    assert.ok(rearBites >= Math.ceil(bites.length * 0.7), `o'q ostida qanotlarning birinchi tishlashlari orqa sektordan: ${rearBites}/${bites.length}\n${runs.map(describeRun).join('\n')}`);
+    const reachedBites = bites.filter((f) => f.reached).length;
+    assert.ok(reachedBites >= Math.ceil(bites.length * 0.85), `o'q ostida qanotlar tishlashdan oldin qanot maydoniga yetdi: ${reachedBites}/${bites.length}`);
+    const cut = bites.filter((f) => f.cutFront).length;
+    assert.ok(cut <= Math.floor(bites.length * 0.1), `o'q ostida old tomondan kesib o'tgan qanotlar: ${cut}/${bites.length}`);
+  });
+
+  it("6. Yakka bo'ri o'yinchini birinchi topib hujum qiladi, sheriklari 3–6 s keyin o'sha tomondan qo'shiladi: ular ham old tomondan emas, orqadan aylanib kelib tishlaydi", () => {
+    const runs: LateJoinRun[] = [];
+    for (const seed of [6501, 1, 42, 777]) {
+      for (const joinAt of [3, 6]) {
+        runs.push(runLateJoin(seed, joinAt, joinAt === 3 ? 'pack' : 'side'));
+      }
+    }
+    const describeRun = (r: LateJoinRun) =>
+      `${r.label}: ${r.joiners.map((f) => `${f.biteDeg.toFixed(0)}°${f.reached ? '*' : ''}${f.cutFront ? '!' : ''}`).join(' ') || 'tishlamadi'}`;
+    for (const r of runs) {
+      // Holat aynan shu: yakka bo'ri hujumga allaqachon o'tgan (chalg'itish yo'q), sheriklar keyin keladi
+      assert.equal(r.phaseBeforeJoin, 'commit', `${r.label}: yakka bo'ri qo'shilishdan oldin hujumda`);
+    }
+    const bites = runs.flatMap((r) => r.joiners);
+    assert.ok(bites.length >= runs.length, `qo'shilganlar tishladi (${bites.length} ta birinchi tishlash)\n${runs.map(describeRun).join('\n')}`);
+    const rear = bites.filter((f) => f.biteDeg > 90 && f.reached).length;
+    assert.ok(rear >= Math.ceil(bites.length * 0.8), `qo'shilganlarning birinchi tishlashlari orqa sektordan: ${rear}/${bites.length}\n${runs.map(describeRun).join('\n')}`);
+    const cut = bites.filter((f) => f.cutFront).length;
+    assert.ok(cut <= Math.floor(bites.length * 0.1), `old tomondan kesib o'tgan qo'shilganlar: ${cut}/${bites.length}\n${runs.map(describeRun).join('\n')}`);
+  });
+
+  it("7. Nishonning olov manbai almashadi (raketa doirasidan mash'al bilan chiqdi / mash'alchi yonida raketa yondi): halqa radiusi joriy manbaniki, bo'rilar mash'alchi yonida turadi", () => {
+    // Har tickda: halqa o'rni berilgan bo'rining radiusi nishonning joriy manbai (raketa/mash'al) bilan bir xil
+    const checkRing = (room: Room, p: ServerPlayer, wolves: ServerWolf[], label: string) => {
+      const src = room.preyFearSource(p);
+      if (!src || src.kind === 'fire') return;
+      for (const w of wolves) {
+        const o = orderOf(w);
+        if (o?.targetId !== p.id || o.standoffR === undefined) continue;
+        assert.equal(o.standoffR, src.standoff, `${label}: ${w.id} halqa radiusi ${o.standoffR} m, manba (${src.kind}) ${src.standoff} m`);
+      }
+    };
+    // a) Raketa yonib turibdi (28 m orqada), mash'alchi undan 2 m/s bilan uzoqlashadi — raketa chetida (≤ 31.6 m)
+    // to'da raketa halqasini quradi, keyin nishon o'z mash'ali himoyasiga o'tadi
+    for (const seed of [6501, 1, 42]) {
+      const { io } = createFakeIo();
+      const room = makeNightRoom(io, { publicLayoutSeed: seed });
+      try {
+        const [p] = startNight(room, ['p1']);
+        const a = findOpenArena(room, 20, 12, 1, 0);
+        const flarePos = groundAt(room, a.x - 28, a.z);
+        room.flares.set('fl1', { id: 'fl1', x: flarePos.x, y: flarePos.y, z: flarePos.z, until: room.now() + 60, byId: 'p1' });
+        let px = a.x;
+        p!.pos = groundAt(room, px, a.z);
+        p!.torchUntil = room.now() + 120;
+        const wolves = freshWolves(room, 3, false);
+        wolves.forEach((w, i) => placeWolf(w, groundAt(room, a.x + 14 + i * 2, a.z + (i - 1) * 4), p!.pos));
+        let flareRing = false;
+        for (let i = 0; i < 30 * 16; i++) {
+          if (px < a.x + 8) px += 2 / 30;
+          room.advanceTimeForTest(1 / 30, 1 / 30);
+          p!.pos = groundAt(room, px, a.z);
+          p!.vel = { x: 0, y: 0, z: 0 };
+          p!.hp = MAX_HP;
+          for (const w of wolves) room.pack.report(w, p!, room.now());
+          if (room.preyFearSource(p!)?.kind === 'flare' && wolves.some((w) => orderOf(w)?.standoffR === FLARE_STANDOFF_M)) flareRing = true;
+          checkRing(room, p!, wolves, `seed ${seed} t=${i}`);
+        }
+        assert.ok(flareRing, `seed ${seed}: raketa chetida to'da raketa halqasini qurdi`);
+        assert.equal(room.preyFearSource(p!)?.kind, 'torch', `seed ${seed}: nishon endi o'z mash'ali himoyasida`);
+        for (const w of wolves) {
+          const d = distXZ(w.pos, p!.pos);
+          assert.ok(d <= TORCH_STANDOFF_M + 1.5, `seed ${seed}: ${w.id} mash'alchi yonida (${d.toFixed(1)} m)`);
+        }
+      } finally {
+        room.destroy();
+      }
+    }
+    // b) Bo'rilar mash'alchi atrofida turibdi, 30.8 m narida raketa yonadi — nishon raketa chetida, halqa raketaniki
+    const { io } = createFakeIo();
+    const room = makeNightRoom(io);
+    try {
+      const [p] = startNight(room, ['p1']);
+      const a = findOpenArena(room, 20, 12, 1, 0);
+      const pos0 = groundAt(room, a.x, a.z);
+      p!.pos = { ...pos0 };
+      p!.torchUntil = room.now() + 120;
+      const wolves = freshWolves(room, 3, false);
+      wolves.forEach((w, i) => placeWolf(w, groundAt(room, a.x + 12 + i, a.z + (i - 1) * 3), pos0));
+      const tick = (n: number, label: string) => {
+        for (let i = 0; i < n; i++) {
+          room.advanceTimeForTest(1 / 30, 1 / 30);
+          p!.pos = { ...pos0 };
+          p!.vel = { x: 0, y: 0, z: 0 };
+          p!.hp = MAX_HP;
+          for (const w of wolves) room.pack.report(w, p!, room.now());
+          checkRing(room, p!, wolves, `${label} t=${i}`);
+        }
+      };
+      tick(30 * 4, "mash'al");
+      assert.equal(room.preyFearSource(p!)?.kind, 'torch');
+      assert.ok(wolves.every((w) => orderOf(w)?.standoffR === TORCH_STANDOFF_M), "mash'al halqasi");
+      const flarePos = groundAt(room, a.x - 30.8, a.z);
+      room.flares.set('fl1', { id: 'fl1', x: flarePos.x, y: flarePos.y, z: flarePos.z, until: room.now() + 60, byId: 'p1' });
+      tick(30 * 8, 'raketa');
+      assert.equal(room.preyFearSource(p!)?.kind, 'flare');
+      assert.ok(wolves.every((w) => orderOf(w)?.standoffR === FLARE_STANDOFF_M), 'raketa halqasi');
+      for (const w of wolves) {
+        assert.ok(distXZ(w.pos, flarePos) >= FLARE_FEAR_RADIUS_M - 0.3, `${w.id} raketa doirasidan tashqarida (${distXZ(w.pos, flarePos).toFixed(1)} m)`);
+      }
     } finally {
       room.destroy();
     }
