@@ -12,6 +12,7 @@ import {
   WOLF_ATTACK_DURATION,
   WOLF_BITE_AT,
   WOLF_BITE_RANGE,
+  WOLF_DAWN_HOWL_SEC,
   WOLF_EYE_HEIGHT,
   WOLF_HEAR_SHOT_RANGE,
   WOLF_HIT_FLINCH,
@@ -138,6 +139,8 @@ export class WolfBrain {
   /** Tong otgach qochish maqsadi (uzoqdagi nav tuguni) va tanlangan vaqti. */
   private fleeGoal: Vec3 | null = null;
   private fleeGoalAt = 0;
+  /** Tong xori: shu vaqtda uvlaydi, uvlab bo'lgach qochadi; null — tong xorida emas. */
+  private dawnHowlAt: number | null = null;
   /** Joriy tick vaqti (speedFor to'da boshlig'i tezlashuvini shu bilan tekshiradi). */
   private tNow = 0;
   /** To'da koordinatorining joriy buyrug'i (null — to'da nishon bermadi, o'z sezgisi bilan ishlaydi). */
@@ -183,6 +186,7 @@ export class WolfBrain {
     this.investigatePos = null;
     this.roamGoal = null;
     this.fleeGoal = null;
+    this.dawnHowlAt = null;
     this.nextAttackAt = t;
     this.nextSenseAt = t;
     this.stuckCount = 0;
@@ -249,6 +253,44 @@ export class WolfBrain {
     this.fleeGoalAt = t;
     me.targetId = null;
     this.setState('flee', t);
+  }
+
+  /**
+   * Tong otdi (tong xori): nishon, izlar va to'da buyrug'i tashlanadi; bo'ri `howlAt` gacha joyida turadi ('idle'),
+   * keyin WOLF_DAWN_HOWL_SEC uvlaydi ('howl', xona 'wolf:howl' yuboradi) va o'rmonga qochadi (startFlee).
+   * Uvlash vaqtlarini xona navbatlab beradi — xor bir zumda emas, ketma-ket. Faza 'ended' bo'lsa ham ishlaydi.
+   */
+  startDawn(t: number, howlAt: number): void {
+    const me = this.me;
+    if (!me.alive) return;
+    this.target = null;
+    this.lastSensedPos = null;
+    this.investigatePos = null;
+    this.roamGoal = null;
+    this.path = [];
+    this.pathIdx = 0;
+    this.order = null;
+    me.role = null;
+    me.targetId = null;
+    this.dawnHowlAt = Math.max(t, howlAt);
+    this.setState('idle', t);
+  }
+
+  /** Tong xori: navbati kelguncha joyida turadi, uvlaydi, uvlash tugagach qochishga o'tadi. */
+  private updateDawnHowl(dt: number, t: number, howlAt: number): void {
+    const me = this.me;
+    me.targetId = null;
+    if (me.state === 'howl' && t >= this.stateUntil) {
+      this.dawnHowlAt = null;
+      this.startFlee(t);
+      this.updateFlee(dt, t);
+      return;
+    }
+    if (me.state !== 'howl' && t >= howlAt) {
+      this.setState('howl', t, WOLF_DAWN_HOWL_SEC);
+      this.room.wolfHowl(me);
+    }
+    applyWorldMovement(me, 0, 0, false, dt, this.room.world, WOLF_MOVE_OPTS);
   }
 
   /**
@@ -648,6 +690,11 @@ export class WolfBrain {
     const me = this.me;
     if (!me.alive) return;
     this.tNow = t;
+    // Tong xori: uvlash navbatini kutadi, uvlaydi, keyin qochadi (faza 'ended' — pastdagi 'idle' tarmog'iga tushmaydi)
+    if (this.dawnHowlAt !== null) {
+      this.updateDawnHowl(dt, t, this.dawnHowlAt);
+      return;
+    }
     // Tong otdi: faza 'ended' bo'lsa ham qochishda davom etadi (pastdagi 'idle' tarmog'i uni bekor qilmasin)
     if (me.state === 'flee') {
       if (me.scaredUntil > 0 && !Number.isFinite(me.fleeUntil) && t >= me.scaredUntil) {

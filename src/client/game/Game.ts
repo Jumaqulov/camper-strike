@@ -48,6 +48,7 @@ import {
   type TorchProp,
 } from './night';
 import { DawnTracker, dawnBlendFactor, dawnExposure } from './night/dawnLighting';
+import { WolfDepartures, isDawnEnding } from './night/dawnEpilogue';
 import {
   DEFAULT_CONTAINER_EXTRA_MARGIN_M,
   GROUND_ITEM_PICKUP_RADIUS_M,
@@ -249,6 +250,11 @@ export class Game {
   /** Tong otishi (tun rejimi): match yangilanishlari orasida silliqlangan daraja; tong xori bir marta chalinadi. */
   private dawn = new DawnTracker();
   private dawnChorusDone = false;
+  /** Tong otgach snapshotdan chiqqan (o'rmonga qochgan) bo'rilar: birdan yo'qolmaydi — yugurib so'nadi. */
+  private wolfDepartures = new WolfDepartures(
+    (x, z) => sampleTerrainHeight(this.worldDef.terrain, x, z),
+    (x, y, z, dx, dz, dist) => raycastWorld(this.worldDef, { x, y: y + 0.6, z }, { x: dx, y: 0, z: dz }, dist) !== null,
+  );
   /** [E] nishoni — eng yaqin gulxan yoki o'tin g'arami (konteynerdan ustun, agar yaqinroq bo'lsa). */
   private campTarget: { kind: 'pile' | 'fire'; id: string } | null = null;
   /** Lager amali so'rovi yuborilgan, ack kutilmoqda (ikki marta bosilmasin). */
@@ -1828,6 +1834,12 @@ export class Game {
           this.recoilPitch = Math.max(0, this.recoilPitch - rec);
         }
       }
+    } else if (frozen && active && this.isNight && isDawnEnding(this.match?.survival)) {
+      // Tong epilogi va natija ekrani: harakat qulf (server ham), lekin atrofga qarash mumkin — bo'rilar uvlab
+      // qochayotganini kuzatish uchun (faqat lokal kamera; kirish yuborilmaydi)
+      const k = 0.0022 * this.settings.sens;
+      me.yaw -= inp.mouseDX * k;
+      me.pitch = clamp(me.pitch - inp.mouseDY * k, -1.55, 1.55);
     } else if (this.isSurvival && active) {
       if (inp.justPressed('KeyA') || inp.justPressed('ArrowLeft') || inp.clicks[2]) {
         this.spectator.cycleTarget(-1, this.getSpectatableTargets());
@@ -1847,6 +1859,7 @@ export class Game {
     this.updateTorchInteraction();
     this.updateReviveInteraction();
     this.updateRemotes(dt, t);
+    this.wolfDepartures.update(dt);
     this.fx.update(dt);
     // Konteyner qopqoq animatsiyalari lootWorld.update() ichida yangilanadi (bir kadrda bir marta).
     this.updateCamera(dt, t);
@@ -2431,12 +2444,28 @@ export class Game {
   }
 
   private removeWolvesExcept(keep: Set<string> | null): void {
+    // Tong otgach o'rmonga qochgan bo'ri (server uzoqlashganini o'chirdi) birdan yo'qolmaydi — yugurib so'nadi
+    const dawnLeave = this.isNight && !this.disposed && isDawnEnding(this.match?.survival);
     for (const [id, w] of this.wolves) {
       if (keep && keep.has(id)) continue;
       this.audio.wolfVoiceRemove(id);
+      this.wolves.delete(id);
+      if (dawnLeave && w.alive && w.state === 'flee') {
+        const model = w.model;
+        this.wolfDepartures.add({
+          root: model.root,
+          yaw: w.yaw,
+          speed: w.speed,
+          animate: (dt) => model.update(dt, { state: 'flee', speed: w.speed }, this.camera.position.distanceTo(model.root.position)),
+          finish: () => {
+            this.scene.remove(model.root);
+            model.dispose();
+          },
+        });
+        continue;
+      }
       this.scene.remove(w.model.root);
       w.model.dispose();
-      this.wolves.delete(id);
     }
   }
 
@@ -3452,6 +3481,7 @@ export class Game {
     this.hud.setCampWarning('');
     this.howlMarks = [];
     this.removeWolvesExcept(null);
+    this.wolfDepartures.clear();
     this.audio.stopWolfVoices();
     this.audio.stopCampfireSounds();
     this.camp?.dispose();

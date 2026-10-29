@@ -114,6 +114,9 @@ export class SurvivalRoundController {
     if (partial.sharedSurvival !== undefined) {
       this.config.sharedSurvival = Boolean(partial.sharedSurvival);
     }
+    if (partial.dawnEpilogueSec !== undefined && Number.isFinite(partial.dawnEpilogueSec)) {
+      this.config.dawnEpilogueSec = Math.max(0, partial.dawnEpilogueSec);
+    }
   }
 
   getRoundId(): number {
@@ -373,7 +376,9 @@ export class SurvivalRoundController {
     this.winnerDeclaredForRound = true;
     this.roundDeclareCount++;
     this.phase = 'ended';
-    this.phaseEndsAt = now + this.config.endedDisplayDurationSec;
+    // Tong otdi: natija ekrani oldidan tong epilogi (bo'rilar uvlab qochadi) — natija ekrani qisqarmaydi
+    const epilogueSec = evalRes.winReason === 'dawn' ? Math.max(0, this.config.dawnEpilogueSec ?? 0) : 0;
+    this.phaseEndsAt = now + this.config.endedDisplayDurationSec + epilogueSec;
     this.winnerId = evalRes.winnerId;
     this.winReason = evalRes.winReason;
     this.winnerIds = evalRes.winnerIds ? [...evalRes.winnerIds] : [];

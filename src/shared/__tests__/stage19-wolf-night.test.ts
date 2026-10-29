@@ -42,6 +42,8 @@ import {
   WOLF_COAT_TAN,
   WOLF_COAT_WHITE,
   WOLF_DAWN_FLEE_SEC,
+  WOLF_DAWN_GONE_MAX_SEC,
+  NIGHT_DAWN_EPILOGUE_SEC,
   WOLF_HEIGHT,
   WOLF_MAX_PER_ROOM,
   WOLF_RADIUS,
@@ -410,13 +412,13 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       assert.ok(m.survival?.winnerIds?.includes('p1'), 'MatchState.survival.winnerIds');
       assert.equal(m.winner, 'Ovchi');
       assert.ok(!emitted.some((e) => e.event === 'kill'), 'hech kim o‘lmagan');
-      // Tong otgach bo'rilar qochib ketadi (WOLF_DAWN_FLEE_SEC ichida) — yakun ekrani davomida yo'qoladi
-      assert.ok([...room.wolves.values()].every((w) => w.state === 'flee' || !w.alive), "qolgan bo'rilar qochmoqda");
-      room.advanceTimeForTest(WOLF_DAWN_FLEE_SEC + 0.5, 0.25);
+      // Tong otgach bo'rilar uvlab (tong xori) o'rmonga qochadi (WOLF_DAWN_GONE_MAX_SEC ichida) — yakun ekrani davomida yo'qoladi
+      assert.ok([...room.wolves.values()].every((w) => !w.alive || Number.isFinite(w.fleeUntil)), "qolgan bo'rilar tong xorida");
+      room.advanceTimeForTest(WOLF_DAWN_GONE_MAX_SEC + 0.5, 0.25);
       assert.equal(room.phase, 'ended');
       assert.equal(room.wolves.size, 0, 'tong otgach bo‘rilar ketadi');
-      // Yakunlash ko'rsatuvi o'tgach yakka odam yana sanoqqa o'tadi
-      room.advanceTimeForTest(MATCH_END_DURATION - WOLF_DAWN_FLEE_SEC, 0.25);
+      // Tong epilogi va yakunlash ko'rsatuvi o'tgach yakka odam yana sanoqqa o'tadi
+      room.advanceTimeForTest(MATCH_END_DURATION + NIGHT_DAWN_EPILOGUE_SEC - WOLF_DAWN_GONE_MAX_SEC, 0.25);
       assert.equal(room.phase, 'countdown');
       assert.deepEqual(room.getSurvivalState()!.winnerIds, []);
     } finally {
@@ -905,7 +907,7 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       p.wood = 2;
       surviveFor(room, p, 30);
       assert.equal(room.phase, 'ended');
-      room.advanceTimeForTest(MATCH_END_DURATION + 0.5, 0.25);
+      room.advanceTimeForTest(MATCH_END_DURATION + NIGHT_DAWN_EPILOGUE_SEC + 0.5, 0.25);
       assert.equal(room.phase, 'countdown');
       const night = room.getNightSnap()!;
       assert.ok(night, 'sanoqda ham tun holati yuboriladi');
@@ -1221,7 +1223,7 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
     }
   });
 
-  it("21. Tong otdi: bo'rilar 'flee' — yakun ekranida snapshotda qoladi, tishlamaydi, uzoqlashadi, WOLF_DAWN_FLEE_SEC dan keyin yo'qoladi", () => {
+  it("21. Tong otdi: bo'rilar uvlab 'flee' — yakun ekranida snapshotda qoladi, tishlamaydi, uzoqlashadi, keyin yo'qoladi", () => {
     const { io, emitted } = createFakeIo();
     const room = makeNightRoom(io, { timeLimit: 3 });
     try {
@@ -1253,25 +1255,30 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       const fleeing = [...room.wolves.values()].filter((w) => w.alive);
       assert.ok(fleeing.length >= 2, `yaqindagi bo'rilar darhol yo'qolmaydi (${fleeing.length})`);
       for (const w of fleeing) {
-        assert.equal(w.state, 'flee');
+        // Tong xori: avval joyida turib uvlaydi ('idle' → 'howl'), keyin qochadi
+        assert.equal(w.state, 'idle');
         assert.equal(w.targetId, null);
-        assert.ok(w.fleeUntil <= tDawn + WOLF_DAWN_FLEE_SEC + 1e-6);
+        assert.ok(w.fleeUntil <= tDawn + WOLF_DAWN_GONE_MAX_SEC + 1e-6);
       }
       const d0 = new Map(fleeing.map((w) => [w.id, Math.hypot(w.pos.x - p.pos.x, w.pos.z - p.pos.z)] as const));
       const bitesBefore = emitted.filter((e) => e.event === 'wolf:bite').length;
-      let snapsWithFlee = 0;
-      for (let i = 0; i < 30; i++) {
+      const dawnStates = new Set(['idle', 'howl', 'flee']);
+      let snapsWithDawn = 0;
+      const steps = Math.round(NIGHT_DAWN_EPILOGUE_SEC * 10);
+      for (let i = 0; i < steps; i++) {
         room.advanceTimeForTest(0.1, 1 / 30);
         p.pos = { ...line.a };
         p.vel = { x: 0, y: 0, z: 0 };
-        if ((lastSnap(emitted).wolves ?? []).some((x) => x.state === 'flee')) snapsWithFlee++;
+        const sw = (lastSnap(emitted).wolves ?? []).filter((x) => x.state !== 'dead');
+        if (sw.length > 0 && sw.every((x) => dawnStates.has(x.state))) snapsWithDawn++;
         for (const w of room.wolves.values()) {
-          if (w.alive) assert.equal(w.state, 'flee', "'ended' fazasi qochishni idle ga qaytarmaydi");
+          if (w.alive) assert.ok(dawnStates.has(w.state), `'ended' fazasi tong xori/qochishni buzmaydi (${w.state})`);
         }
       }
       assert.equal(p.hp, MAX_HP, 'tong otgach bo‘ri tishlamaydi');
       assert.equal(emitted.filter((e) => e.event === 'wolf:bite').length, bitesBefore, "wolf:bite hodisasi yo'q");
-      assert.ok(snapsWithFlee >= 25, `yakun ekranida snapshotlarda qochayotgan bo'rilar (${snapsWithFlee})`);
+      assert.ok(snapsWithDawn >= steps - 5, `yakun ekranida snapshotlarda uvlayotgan/qochayotgan bo'rilar (${snapsWithDawn})`);
+      // Epilog oxirida hammasi uvlab bo'lgan va qochmoqda
       for (const sw of lastSnap(emitted).wolves ?? []) {
         if (sw.state === 'dead') continue;
         assert.equal(sw.state, 'flee');
@@ -1281,13 +1288,13 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       const gains = still.map((w) => Math.hypot(w.pos.x - p.pos.x, w.pos.z - p.pos.z) - d0.get(w.id)!);
       const avgGain = gains.length ? gains.reduce((a, b) => a + b, 0) / gains.length : Infinity;
       assert.ok(avgGain > 5, `bo'rilar o'yinchidan uzoqlashadi (o'rtacha +${avgGain.toFixed(1)} m)`);
-      // WOLF_DAWN_FLEE_SEC dan keyin hammasi yo'q, yakun ekrani hali davom etadi
-      room.advanceTimeForTest(tDawn + WOLF_DAWN_FLEE_SEC + 0.3 - room.now(), 1 / 30);
+      // WOLF_DAWN_GONE_MAX_SEC dan keyin hammasi yo'q, yakun ekrani hali davom etadi
+      room.advanceTimeForTest(tDawn + WOLF_DAWN_GONE_MAX_SEC + 0.3 - room.now(), 1 / 30);
       assert.equal(room.phase, 'ended');
       assert.ok(![...room.wolves.values()].some((w) => w.alive), "qochgan bo'rilar xonadan olib tashlandi");
       assert.ok(!(lastSnap(emitted).wolves ?? []).some((x) => x.state === 'flee'), "snapshotda qochayotgan bo'ri qolmadi");
-      // Keyingi tun sanog'ida bo'ri yo'q (yakun ekrani MATCH_END_DURATION, sanoq 2 s)
-      room.advanceTimeForTest(MATCH_END_DURATION - WOLF_DAWN_FLEE_SEC, 0.25);
+      // Keyingi tun sanog'ida bo'ri yo'q (yakun: tong epilogi + MATCH_END_DURATION, sanoq 2 s)
+      room.advanceTimeForTest(MATCH_END_DURATION + NIGHT_DAWN_EPILOGUE_SEC - WOLF_DAWN_GONE_MAX_SEC, 0.25);
       assert.equal(room.phase, 'countdown');
       assert.equal(room.wolves.size, 0);
     } finally {
@@ -1366,8 +1373,8 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       assert.deepEqual(m.survival?.nightSummary, sum, 'MatchState.survival.nightSummary');
       assert.ok(systemChats(emitted).some((t) => t.includes(`🏆 ${NIGHT_AWARD_TITLES_UZ.mvp}: Ovchi (${score} ball)`)), 'MVP chatda');
 
-      // Keyingi sanoq: natija va statistika tozalanadi
-      room.advanceTimeForTest(MATCH_END_DURATION + 0.5, 0.25);
+      // Keyingi sanoq (tong epilogi + natija ekranidan keyin): natija va statistika tozalanadi
+      room.advanceTimeForTest(MATCH_END_DURATION + NIGHT_DAWN_EPILOGUE_SEC + 0.5, 0.25);
       assert.equal(room.phase, 'countdown');
       assert.equal(room.getSurvivalState()!.nightSummary, null);
       assert.equal(lastMatch(emitted).survival?.nightSummary, null);

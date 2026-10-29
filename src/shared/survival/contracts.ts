@@ -28,6 +28,11 @@ export interface SurvivalConfig {
    * g'olib ('dawn'), hamma o'lsa 'draw_no_survivors'.
    */
   sharedSurvival?: boolean;
+  /**
+   * wolf_night: raund tong bilan tugaganda ('dawn') 'ended' fazasi endedDisplayDurationSec + shuncha soniya
+   * davom etadi (tong epilogi — natija varag'idan oldin). Boshqa yakunlarda qo'shilmaydi. Standart: 0.
+   */
+  dawnEpilogueSec?: number;
 }
 
 export interface SurvivalPlayerStatusSnap {

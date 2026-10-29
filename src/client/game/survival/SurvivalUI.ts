@@ -14,6 +14,7 @@ import { CAMPFIRE_LOW_FUEL_SEC } from '../../../shared/wolf/camp';
 import { buildNightSummaryBoardHtml, escHtml as esc, nightSummaryKey } from './nightResults';
 import { formatFireIndicatorsUz, type FireIndicatorInput, type FireIndicatorView } from './campHud';
 import type { SpectatorCameraPose } from './SpectatorController';
+import { dawnEpilogueActive } from '../night/dawnEpilogue';
 
 /** Gulxanlar qatori DOM'i eng ko'pi bilan shuncha ms da bir yangilanadi (strelkalar har kadr aylanmasin). */
 const FIRE_ROW_UPDATE_MS = 100;
@@ -592,16 +593,23 @@ export class SurvivalUI {
       showWinner &&
       night &&
       (nightSummary !== null || snap.winReason === 'dawn' || snap.winReason === 'draw_no_survivors');
+    // Tong epilogi: natija varag'i hali chiqmaydi — faqat "Tong otdi!" belgisi (bo'rilar uvlab qochayotgani ko'rinsin)
+    const dawnEpilogue = nightSheet && dawnEpilogueActive(snap);
     // Mazmun kaliti taymersiz: tun varag'ida faqat soniya o'zgarsa varaq qayta qurilmaydi (pastki taymer yangilanadi)
     const winContentKey = showWinner
       ? `1|${snap.winnerId}|${snap.winnerName}|${snap.winReason}|${snap.players
           .map((p) => `${p.id}:${p.role}:${p.alive ? 1 : 0}:${p.kills}:${p.deaths}:${p.placement ?? ''}`)
           .join(',')}${night ? `|${(snap.winnerIds ?? []).join(',')}|${nightSummaryKey(nightSummary)}` : ''}`
       : '0';
-    const winKey = showWinner ? `${winContentKey}|${snap.timeLeft}` : '0';
+    const winKey = showWinner ? `${winContentKey}|${dawnEpilogue ? 'epilogue' : snap.timeLeft}` : '0';
     if (this.winnerOverlayEl && winKey !== this.lastWinKey) {
       this.lastWinKey = winKey;
-      if (nightSheet) {
+      if (dawnEpilogue) {
+        // Varaq epilogdan keyin noldan quriladi (pastki taymer bilan)
+        this.lastNightSheetKey = '';
+        this.winnerOverlayEl.className = 'is-dawn-epilogue';
+        this.winnerOverlayEl.innerHTML = this.renderDawnEpilogueHtml(snap);
+      } else if (nightSheet) {
         const cls = nightSummary ? 'is-night-summary' : '';
         if (this.winnerOverlayEl.className !== cls) this.winnerOverlayEl.className = cls;
         if (winContentKey !== this.lastNightSheetKey) {
@@ -759,6 +767,26 @@ export class SurvivalUI {
             <span>Keyingi tun <b>${snap.timeLeft}</b> soniyadan keyin boshlanadi</span>
             <span class="s07-win-bar"><i style="width:${winBarPercent(snap.timeLeft)}%"></i></span>
           </div>
+        `;
+  }
+
+  /**
+   * Tong epilogi (natija varag'idan oldin): taxta fonsiz "Tong otdi!" belgisi va izoh — ekranni yopmaydi,
+   * tirik qolgan atrofga qarab bo'rilarning uvlab qochishini ko'radi.
+   */
+  private renderDawnEpilogueHtml(snap: SurvivalStateSnap): string {
+    const winnerIds = new Set(snap.winnerIds ?? []);
+    const meWon = winnerIds.has(this.myId);
+    const survivorNames = snap.players.filter((p) => winnerIds.has(p.id)).map((p) => p.name);
+    const namesText = survivorNames.length ? survivorNames.join(', ') : snap.winnerName;
+    const sub = meWon ? "Omon qoldingiz — tunni o'tkazdingiz!" : `Tunni o'tkazganlar: ${esc(namesText)}`;
+    return `
+          <div class="s07-win-sign ${meWon ? 'is-victory' : 'is-other'}">
+            <span class="s07-win-icon">🌅</span>
+            <span class="s07-win-title">TONG OTDI!</span>
+          </div>
+          <div class="s07-win-sub">${sub}</div>
+          <div class="s07-win-reason">🐺 Bo'rilar uvlab o'rmonga qochmoqda…</div>
         `;
   }
 

@@ -1464,6 +1464,26 @@ html, body {
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+/* Tong epilogi (natija varag'idan oldin): faqat "Tong otdi!" belgisi — taxta foni yo'q, ekranni yopmaydi,
+   sichqonchani ushlamaydi; varaq chiqqanda asosiy s07-sign-drop animatsiyasi qaytadan o'ynaydi */
+#stage07-winner-overlay.is-dawn-epilogue {
+  top: clamp(56px, 12vh, 130px);
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+  pointer-events: none;
+  animation: s07-dawn-rise 0.9s ease-out;
+}
+#stage07-winner-overlay.is-dawn-epilogue::before,
+#stage07-winner-overlay.is-dawn-epilogue::after { display: none; }
+#stage07-winner-overlay.is-dawn-epilogue .s07-win-sub,
+#stage07-winner-overlay.is-dawn-epilogue .s07-win-reason {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.55);
+}
+@keyframes s07-dawn-rise {
+  0% { transform: translateX(-50%) translateY(14px); opacity: 0; }
+  100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
 .s07-night-board,
 .s07-night-board * { text-shadow: none; }
 .s07-night-diff {

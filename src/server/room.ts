@@ -42,6 +42,10 @@ import {
   WOLF_COAT_TAN,
   WOLF_COAT_WHITE,
   WOLF_DAWN_FLEE_SEC,
+  NIGHT_DAWN_EPILOGUE_SEC,
+  WOLF_DAWN_HOWL_JITTER_SEC,
+  WOLF_DAWN_HOWL_SEC,
+  wolfDawnHowlDelaySec,
   computeNightSummary,
   formatNightStarsChatUz,
   nightWolvesForWave,
@@ -320,6 +324,9 @@ const NIGHT_WOLF_SPAWN_CLEARANCE_M = 45;
 const CAMP_ROAM_RADIUS_M = 10;
 /** Tong otgach qochayotgan bo'ri barcha tirik o'yinchilardan shuncha uzoqlashsa — WOLF_DAWN_FLEE_SEC kutmay yo'qoladi (m). */
 const WOLF_FLEE_GONE_M = 60;
+/** Tong epilogida bot shu masofadagi (m) tirik bo'riga qarab turadi; burilish tezligi (rad/s). */
+const DAWN_BOT_WATCH_M = 80;
+const DAWN_BOT_TURN_RATE = 4;
 /**
  * wolf_night rang turlari (to'lqin bo'yicha): 2-to'lqindan chaqqon (qizil) va tun soyasi (qora) shu ehtimollar
  * bilan; 3-to'lqindan to'da boshlig'i (oq) — har to'lqin boshida birinchi yangi/qayta tug'ilgan bo'ri, keyin
@@ -484,6 +491,8 @@ export class Room {
               countdownDurationSec: opts.countdownSec ?? 10,
               roundDurationSec: clamp(opts.timeLimit || NIGHT_DEFAULT_MINUTES, NIGHT_MIN_MINUTES, NIGHT_MAX_MINUTES) * 60,
               endedDisplayDurationSec: MATCH_END_DURATION,
+              // Tong otganda natija varag'idan oldin tong epilogi (bo'rilar uvlab qochadi)
+              dawnEpilogueSec: NIGHT_DAWN_EPILOGUE_SEC,
               zoneEnabled: false,
               minHumansToStart: Math.max(1, Math.floor(opts.minHumans ?? 1)),
               sharedSurvival: true,
@@ -1939,12 +1948,13 @@ export class Room {
 
   /**
    * Bo'ri uvladi — klientlarga pozitsion ovoz uchun. To'da boshlig'ining uvlashi WOLF_ALPHA_BUFF_RADIUS dagi
-   * boshqa tirik bo'rilarni WOLF_ALPHA_BUFF_SEC davomida tezlashtiradi (WolfBrain.speedFor).
+   * boshqa tirik bo'rilarni WOLF_ALPHA_BUFF_SEC davomida tezlashtiradi (WolfBrain.speedFor). Tong xori
+   * (tong otgan bo'ri — fleeUntil cheklangan) hech kimni tezlashtirmaydi.
    */
   wolfHowl(w: ServerWolf): void {
     const ev: WolfHowlEvent = { id: w.id, x: q3(w.pos.x), y: q3(w.pos.y), z: q3(w.pos.z) };
     this.io.to(this.channel).emit('wolf:howl', ev);
-    if (w.alive && wolfCoatTraits(w.coat).kind === 'alpha') {
+    if (w.alive && !Number.isFinite(w.fleeUntil) && wolfCoatTraits(w.coat).kind === 'alpha') {
       const until = this.now() + WOLF_ALPHA_BUFF_SEC;
       for (const o of this.wolves.values()) {
         if (o === w || !o.alive || o.state === 'flee') continue;
@@ -3481,8 +3491,8 @@ export class Room {
     this.clearGrenades();
     const dawn = winReason === 'dawn';
     if (dawn && this.isNight) {
-      // Tong otdi: bo'rilar darhol yo'qolmaydi — o'rmonga qochadi ('flee'), WOLF_DAWN_FLEE_SEC dan keyin
-      // (yoki hammadan uzoqlashganda) o'chadi; jasadlar WOLF_CORPSE_SEC dan keyin o'chadi
+      // Tong otdi: bo'rilar darhol yo'qolmaydi — navbat bilan uvlaydi, keyin o'rmonga qochadi ('flee'),
+      // WOLF_DAWN_FLEE_SEC dan keyin (yoki hammadan uzoqlashganda) o'chadi; jasadlar WOLF_CORPSE_SEC dan keyin o'chadi
       this.startWolfDawnFlee(this.now());
     } else {
       this.wolves.clear();
@@ -3522,13 +3532,39 @@ export class Room {
     if (this.isNight && this.nightSummary?.stars) this.systemChat(formatNightStarsChatUz(this.nightSummary.stars));
   }
 
-  /** Tong otdi: barcha tirik bo'rilar 'flee' holatiga o'tadi (tishlamaydi, nishon olmaydi, olovdan qo'rqmaydi). */
+  /**
+   * Tong otdi: barcha tirik bo'rilar tong xoriga o'tadi — joyida turib navbat bilan uvlaydi (to'da boshlig'i
+   * birinchi, qolganlari wolfDawnHowlDelaySec bo'yicha, bir zumda emas), keyin o'rmonga qochadi ('flee':
+   * tishlamaydi, nishon olmaydi, olovdan qo'rqmaydi). Tong uvlashi hech kimni tezlashtirmaydi (wolfHowl).
+   */
   private startWolfDawnFlee(t: number): void {
-    for (const w of this.wolves.values()) {
-      if (!w.alive) continue;
+    const living = [...this.wolves.values()].filter((w) => w.alive);
+    const alpha = (w: ServerWolf) => (wolfCoatTraits(w.coat).kind === 'alpha' ? 1 : 0);
+    living.sort((a, b) => alpha(b) - alpha(a));
+    living.forEach((w, i) => {
+      // Xorni boshlovchi (to'da boshlig'i) aniq birinchi; qolganlari sal tasodifiy
+      const jitter = i === 0 ? 0 : Math.random() * WOLF_DAWN_HOWL_JITTER_SEC;
+      const howlAt = t + wolfDawnHowlDelaySec(i, living.length, jitter);
       w.alphaBuffUntil = 0;
-      w.fleeUntil = t + WOLF_DAWN_FLEE_SEC;
-      w.brain.startFlee(t);
+      w.fleeUntil = howlAt + WOLF_DAWN_HOWL_SEC + WOLF_DAWN_FLEE_SEC;
+      w.brain.startDawn(t, howlAt);
+    });
+  }
+
+  /**
+   * Tong epilogi (wolf_night, raund tong bilan tugadi): botlar joyida qotib turmaydi — yaqindagi tirik bo'riga
+   * (uvlayotgan / qochayotganiga) silliq qaraydi. Faqat qarash (yaw/pitch) o'zgaradi, harakat va otish yo'q.
+   */
+  private updateDawnBots(dt: number): void {
+    for (const p of this.players.values()) {
+      if (!p.isBot || !p.alive || !p.ready) continue;
+      const w = this.nearestWolfThreat(p, DAWN_BOT_WATCH_M);
+      if (!w) continue;
+      const goal = Math.atan2(-(w.pos.x - p.pos.x), -(w.pos.z - p.pos.z));
+      const d = Math.atan2(Math.sin(goal - p.yaw), Math.cos(goal - p.yaw));
+      const step = DAWN_BOT_TURN_RATE * dt;
+      p.yaw += Math.abs(d) <= step ? d : Math.sign(d) * step;
+      p.pitch += (0 - p.pitch) * Math.min(1, dt * 3);
     }
   }
 
@@ -3735,6 +3771,9 @@ export class Room {
         for (const p of this.players.values()) if (p.brain && p.alive) p.brain.update(dt, t);
         this.updateGrenades(dt, t);
         this.applyZoneDamage(t);
+      } else if (this.isNight && this.survival.getPhase() === 'ended' && this.survival.getWinReason() === 'dawn') {
+        // Tong epilogi va natija ekrani: botlar qotib turmaydi — uvlab qochayotgan bo'rilarga qaraydi
+        this.updateDawnBots(dt);
       }
       const prevPhase = this.survival.getPhase();
       this.survival.tick(t);

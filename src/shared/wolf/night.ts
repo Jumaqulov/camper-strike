@@ -83,8 +83,36 @@ export function nightWolvesForWave(wave: NightWave, contenders: number, difficul
 
 /** Tun oxiridagi shuncha soniyada osmon asta yorishadi (klient yorug'lik/osmon interpolyatsiyasi). */
 export const NIGHT_DAWN_TRANSITION_SEC = 60;
-/** Tong otgach bo'rilar shuncha soniya ichida o'rmonga qochib, keyin yo'qoladi (yakun ekrani davomida). */
+/** Tong otgach bo'rilar uvlab bo'lgach shuncha soniya o'rmonga qochadi, keyin yo'qoladi (yakun ekrani davomida). */
 export const WOLF_DAWN_FLEE_SEC = 7;
+/**
+ * Tong epilogi (s): raund tong bilan tugaganda 'ended' fazasi shuncha uzayadi — natija varag'i darhol chiqmaydi,
+ * tirik qolganlar atrofga qaraydi, bo'rilar uvlab o'rmonga qochadi; natija ekrani o'z davomiyligicha qoladi.
+ */
+export const NIGHT_DAWN_EPILOGUE_SEC = 6;
+/**
+ * Tong xori: bo'rilar bir zumda emas, navbat bilan uvlaydi — birinchisi WOLF_DAWN_HOWL_FIRST_SEC da, oxirgisi
+ * WOLF_DAWN_HOWL_SPREAD_SEC dan keyin (+ tasodifiy WOLF_DAWN_HOWL_JITTER_SEC gacha). Har bo'ri joyida turib
+ * WOLF_DAWN_HOWL_SEC uvlaydi, keyin o'rmonga qochadi (WOLF_DAWN_FLEE_SEC).
+ */
+export const WOLF_DAWN_HOWL_FIRST_SEC = 0.4;
+export const WOLF_DAWN_HOWL_SPREAD_SEC = 1.2;
+export const WOLF_DAWN_HOWL_JITTER_SEC = 0.2;
+export const WOLF_DAWN_HOWL_SEC = 1.8;
+/** Tong otgandan keyin bo'rilar ko'pi bilan shuncha soniyada xonadan yo'qoladi (xor + uvlash + qochish). */
+export const WOLF_DAWN_GONE_MAX_SEC =
+  WOLF_DAWN_HOWL_FIRST_SEC + WOLF_DAWN_HOWL_SPREAD_SEC + WOLF_DAWN_HOWL_JITTER_SEC + WOLF_DAWN_HOWL_SEC + WOLF_DAWN_FLEE_SEC;
+
+/**
+ * Tong xorida `index`-bo'ri (0 — birinchi, to'da boshlig'i) tong otgandan necha soniyadan keyin uvlaydi:
+ * `count` ta bo'ri WOLF_DAWN_HOWL_SPREAD_SEC ga teng taqsimlanadi, `jitterSec` (0..WOLF_DAWN_HOWL_JITTER_SEC) qo'shiladi.
+ */
+export function wolfDawnHowlDelaySec(index: number, count: number, jitterSec = 0): number {
+  const n = Math.max(1, Math.floor(count));
+  const i = Math.min(n - 1, Math.max(0, Math.floor(index)));
+  const jitter = Math.min(WOLF_DAWN_HOWL_JITTER_SEC, Math.max(0, Number.isFinite(jitterSec) ? jitterSec : 0));
+  return WOLF_DAWN_HOWL_FIRST_SEC + (n > 1 ? (WOLF_DAWN_HOWL_SPREAD_SEC * i) / (n - 1) : 0) + jitter;
+}
 
 /** Tong otish darajasi 0 (tun) .. 1 (tong): oxirgi NIGHT_DAWN_TRANSITION_SEC da chiziqli o'sadi. */
 export function nightDawnProgress(dawnInSec: number): number {

@@ -6,6 +6,7 @@ import { MATCH_END_DURATION, MAX_HP } from '../constants';
 import type { Vec3 } from '../math';
 import type { ChatMsg, CreateRoomOpts, MatchState } from '../protocol';
 import {
+  NIGHT_DAWN_EPILOGUE_SEC,
   NIGHT_STAR_KINDS,
   NIGHT_STAR_TITLES_UZ,
   computeNightStars,
@@ -268,8 +269,8 @@ describe('Stage 24 — xona: asosiy gulxan o‘chishlari va yakundagi yulduzlar'
       );
       assert.ok(systemChats(emitted).some((t) => t.startsWith('⭐ Tun yakuni: 1/3 yulduz (')));
 
-      // Keyingi sanoq: hisob tozalanadi
-      room.advanceTimeForTest(MATCH_END_DURATION + 0.5, 0.25);
+      // Keyingi sanoq (tong epilogi + natija ekranidan keyin): hisob tozalanadi
+      room.advanceTimeForTest(MATCH_END_DURATION + NIGHT_DAWN_EPILOGUE_SEC + 0.5, 0.25);
       assert.equal(room.phase, 'countdown');
       assert.equal(room.getMainFireOutsForTest(), 0);
     } finally {
