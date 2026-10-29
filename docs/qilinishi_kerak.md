@@ -41,3 +41,20 @@
 - Bo'ri modeli 11 700 ta uchburchakdan iborat. 6 ta bo'ri bir vaqtda chiqqanda kuchsizroq kompyuterlar uchun LOD qo'shish kerak bo'ladi.
 
 **Tavsiyam:** avval 1–4-bandlarni qilaylik. Ularning hammasi kichik yoki o'rta ish, lekin birgalikda rejimni sezilarli yangilaydi. Keyin 5- va 6-bandlarga o'tamiz, chunki ular o'yinni eng ko'p o'zgartiradi.
+---
+
+## Holat (2026-10-29)
+
+Barcha 13 band va ikkala yo'l-yo'lakay tuzatish bajarildi.
+
+| Band | Commit |
+|---|---|
+| 1–4 (qiyinlik, bo'ri turlari, tong, statistika/MVP) | e56e632, ba71303, 6c7e4e6 |
+| 5 Qayta tirilish + 9 Yiqilib qolish / turg'izish | 5236a07 |
+| 6 Mash'al + 7 O'tinning og'irligi | 0b62c8d |
+| 8 To'da taktikasi | 085d9f9 |
+| 10 Yordam yuki + 11 Signal raketasi | ba28646 |
+| 12 Natija yulduzlari + 13 HUD (3 gulxan, uvlash yo'nalishi) | 3fca8c2 |
+| Bo'ri tebranishi + bo'ri LOD | ba19209 |
+
+Yangi tugmalar: `E` turg'izish (yiqilgan sherik yonida), `F` mash'al olish/tashlash, `X` signal raketasi.
