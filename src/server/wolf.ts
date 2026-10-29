@@ -110,10 +110,9 @@ const RING_SLIDE_HOLD_SEC = 3;
 const RING_SLIDE_HOLD_MOVE_M = 0.5;
 /**
  * Davriy qayta yo'l topish (keepPath): maqsad oxirgi A* maqsadidan PATH_KEEP_GOAL_M (m) ichida va yo'lda tugun
- * qolgan bo'lsa yangi yo'l faqat eski yo'lning qolganidan PATH_KEEP_GAIN_M (m) qisqa bo'lsa olinadi.
+ * qolgan bo'lsa A* umuman ishlamaydi — eski yo'l davom etadi (qisqaroq yo'lga ham almashilmaydi).
  */
 const PATH_KEEP_GOAL_M = 1;
-const PATH_KEEP_GAIN_M = 0.5;
 /** Maqsad yaqinida yetib keldi deb hisoblanadigan masofa (m): undan yaqin maqsadga qadam bosilmaydi. */
 const ARRIVE_M = 0.35;
 /** Olov sabab majburiy qayta yo'l topish oralig'i (s) — yo'l tuguni olov ichida qolsa har tick A* ishlamasin. */
@@ -581,10 +580,11 @@ export class WolfBrain {
    * A* yonib turgan gulxan / mash'al / raketa doiralarini (radius + FEAR_PATH_MARGIN_M) bloklangan tugun deb
    * chetlab o'tadi; yo'l tuguni keyinroq olov ichida qolsa (gulxan qayta yoqildi) qayta yo'l topiladi. `keepPath` —
    * qo'zg'almas maqsad: davriy qayta topishda maqsad oxirgi A* maqsadidan PATH_KEEP_GOAL_M ichida va yo'lda tugun
-   * qolgan bo'lsa yangi yo'l faqat sezilarli qisqa bo'lsa olinadi (A* boshlang'ich tuguni ikki qo'shni tugun orasida
-   * almashib, har qayta topishda yo'l teskari tomonga burilmasin — bo'ri ikki yo'l orasida borib-kelib qolmasin;
-   * yurgan sari qisqaroq yo'l ochilsa — o'tadi); majburiy qayta topish (repathAt = 0: tiqilish, olov) va tugagan
-   * yo'l — odatdagidek.
+   * qolgan bo'lsa qayta topilmaydi — eski yo'l davom etadi (A* boshlang'ich tuguni ikki qo'shni tugun orasida
+   * almashib, har qayta topishda yo'l teskari tomonga burilmasin — bo'ri ikki yo'l orasida borib-kelib qolmasin).
+   * Qisqaroq yo'lga ham almashilmaydi: tiqilish tufayli tashlangan qisqa yo'l (tor o'tish) keyingi davriy topishda
+   * yana "qisqaroq" bo'lib qaytib keladi va bo'ri yana tiqiladi. Majburiy qayta topish (repathAt = 0: tiqilish,
+   * olov) va tugagan yo'l — odatdagidek.
    */
   private followPath(
     goal: Vec3,
@@ -615,19 +615,11 @@ export class WolfBrain {
     // Yo'l bo'sh (topilmagan) bo'lsa har tick qayta A* ishlamaydi — faqat repathAt kelganda
     const left = this.pathIdx < this.path.length;
     if (t >= this.repathAt || (this.path.length > 0 && !left)) {
-      const path = this.room.nav.findPath(me.pos, goal, avoidFear ? this.fearBlocked() : undefined);
       const pg = this.pathGoal;
-      // keepPath: maqsad joyida, eski yo'l davom etmoqda — yangisi sezilarli qisqa bo'lsagina almashadi
-      const keep =
-        keepPath &&
-        left &&
-        this.repathAt > 0 &&
-        path.length > 0 &&
-        !!pg &&
-        Math.hypot(goal.x - pg.x, goal.z - pg.z) < PATH_KEEP_GOAL_M &&
-        this.pathLength(path, 0, goal) > this.pathLength(this.path, this.pathIdx, goal) - PATH_KEEP_GAIN_M;
+      // keepPath: davriy topish, maqsad joyida, eski yo'l davom etmoqda — A* ishlamaydi, faqat taymer suriladi
+      const keep = keepPath && left && this.repathAt > 0 && !!pg && Math.hypot(goal.x - pg.x, goal.z - pg.z) < PATH_KEEP_GOAL_M;
       if (!keep) {
-        this.path = path;
+        this.path = this.room.nav.findPath(me.pos, goal, avoidFear ? this.fearBlocked() : undefined);
         this.pathIdx = 0;
         this.pathGoal = { x: goal.x, z: goal.z };
       }
@@ -650,20 +642,6 @@ export class WolfBrain {
     }
     const m = this.moveTowards(this.path[this.pathIdx]!, speed, dt, turn);
     return { wishX: m.wishX, wishZ: m.wishZ };
-  }
-
-  /** Yo'l uzunligi (XZ, m): bo'ridan `from`-tugungacha, tugunlar bo'ylab va oxirgi tugundan maqsadgacha. */
-  private pathLength(path: Vec3[], from: number, goal: Vec3): number {
-    let px = this.me.pos.x;
-    let pz = this.me.pos.z;
-    let len = 0;
-    for (let i = from; i < path.length; i++) {
-      const n = path[i]!;
-      len += Math.hypot(n.x - px, n.z - pz);
-      px = n.x;
-      pz = n.z;
-    }
-    return len + Math.hypot(goal.x - px, goal.z - pz);
   }
 
   /**
@@ -1203,7 +1181,7 @@ export class WolfBrain {
         if (slotPt) {
           // Uzoqda yo'nalish bo'ylab qaraydi, o'rniga yaqinlashganda — nishonga
           const far = Math.hypot(slotPt.x - me.pos.x, slotPt.z - me.pos.z) > RING_PATH_DIST_M * 2;
-          // O'rin nuqtasi qo'zg'almas — davriy qayta topishda yo'l faqat sezilarli qisqarsa almashadi (keepPath)
+          // O'rin nuqtasi qo'zg'almas — davriy qayta topishda yo'l almashmaydi, faqat tiqilsa qayta topiladi (keepPath)
           const m = this.followPath(slotPt, stalkSp, t, dt, this.hasDirectLine(slotPt), true, false, true);
           wishX = m.wishX;
           wishZ = m.wishZ;

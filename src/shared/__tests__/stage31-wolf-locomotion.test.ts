@@ -127,7 +127,7 @@ function withSeededRandom<T>(seed: number, fn: () => T): T {
   }
 }
 
-/** Testlar uchun WolfBrain ning yopiq maydonlari (sirpanish, tiqilish, halqa siljishi, to'da buyrug'i). */
+/** Testlar uchun WolfBrain ning yopiq maydonlari (sirpanish, tiqilish, halqa siljishi, nav yo'li, to'da buyrug'i). */
 interface BrainInternals {
   slipDir: { x: number; z: number } | null;
   slipUntil: number;
@@ -136,6 +136,8 @@ interface BrainInternals {
   flinching: boolean;
   lastWishX: number;
   lastWishZ: number;
+  path: Vec3[];
+  pathIdx: number;
   startSlip(t: number): void;
   checkStuck(t: number, wishing: boolean): void;
   setPackOrder(order: PackOrder | null, t: number): void;
@@ -621,14 +623,17 @@ describe("Bosqich 31 — bo'ri harakati: sirpanishda tana yo'nalishi, chalg'itis
     }
   });
 
-  it("6. Qo'zg'almas halqa o'rni kulba ortida (seed 42, ikki A* yo'li almashinadigan joy): bo'ri borib-kelib qolmaydi — o'rniga tez yetadi", () => {
+  it("6. Qo'zg'almas halqa o'rni kulba ortida (seed 42, ikki A* yo'li almashinadigan joy): bo'ri tashlagan yo'liga qaytmaydi (borib-kelib qolmaydi) — o'rniga tez yetadi", () => {
     const report: string[] = [];
-    for (const [sx, sz] of [
-      [42, 90],
-      [44, 92],
-      [46, 94],
+    const bad: string[] = [];
+    // (42,90) — yo'llar almashinadigan joy: ko'p urug' (bitta omadli urug' bilan test o'tib ketmasin); qolgan ikki
+    // joydan yo'l oddiy (nazorat)
+    for (const [sx, sz, seeds] of [
+      [42, 90, 12],
+      [44, 92, 2],
+      [46, 94, 2],
     ] as const) {
-      for (const rs of [1, 2, 3]) {
+      for (let rs = 1; rs <= seeds; rs++) {
         withSeededRandom(3106 + rs * 31 + sx, () => {
           const room = makeNightRoom({ publicLayoutSeed: 42 });
           try {
@@ -643,24 +648,37 @@ describe("Bosqich 31 — bo'ri harakati: sirpanishda tana yo'nalishi, chalg'itis
             const ang = (100 * Math.PI) / 180;
             forceSlot(w!, ang, TORCH_STANDOFF_M);
             const slot = { x: pos0.x + Math.cos(ang) * TORCH_STANDOFF_M, z: pos0.z + Math.sin(ang) * TORCH_STANDOFF_M };
+            const b = brainOf(w!);
             const step = 1 / 30;
             const t0 = room.now();
             let reachedAt = -1;
+            // Yo'l o'rtada (tugunlari qolgan holda) almashsa tashlangan yo'l boshi (A* boshlang'ich tuguni) eslab
+            // qolinadi; yangi yo'l ilgari tashlangan yo'l bilan bir tugundan boshlansa — bo'ri tashlagan yo'liga qaytdi
+            const dropped: Vec3[] = [];
+            let returns = 0;
             for (let i = 0; i < 30 * 25 && reachedAt < 0; i++) {
               room.pack.report(w!, p, room.now());
+              const prevPath = b.path;
+              const prevIdx = b.pathIdx;
               room.advanceTimeForTest(step, step);
               pin(p, pos0);
+              if (b.path !== prevPath && b.path.length > 0 && prevIdx < prevPath.length) {
+                dropped.push(prevPath[0]!);
+                if (dropped.some((d) => distXZ(d, b.path[0]!) < 0.1)) returns++;
+              }
               if (distXZ(w!.pos, slot) < 1.5) reachedAt = room.now() - t0;
             }
-            report.push(`(${sx},${sz}) rs=${rs}: ${reachedAt < 0 ? 'yetmadi' : `${reachedAt.toFixed(1)} s`}`);
+            const line = `(${sx},${sz}) rs=${rs}: ${reachedAt < 0 ? 'yetmadi' : `${reachedAt.toFixed(1)} s`}, qaytish ${returns}`;
+            report.push(line);
+            // Ikki marta tiqilish (har ikki yo'l ham to'silgan) bitta qaytish beradi; borib-kelish — har aylanishda ikkita
+            if (reachedAt < 0 || reachedAt > 10 || returns > 1) bad.push(line);
           } finally {
             room.destroy();
           }
         });
       }
     }
-    const slow = report.filter((r) => r.endsWith('yetmadi') || Number(r.split(': ')[1]!.split(' ')[0]) > 10);
-    assert.deepEqual(slow, [], `hamma boshlang'ich joydan o'ringa ≤ 10 s da yetadi: ${report.join(', ')}`);
+    assert.deepEqual(bad, [], `hamma boshlang'ich joydan o'ringa ≤ 10 s da, tashlagan yo'liga ≤ 1 marta qaytib yetadi: ${report.join(', ')}`);
   });
 
   it("7. Devor yonida joyida kutayotgan bo'ri tomon mash'alchi yurib keladi (WALK_SPEED): bo'ri chekinadi — olov ichida kutmaydi, qayta-qayta seskanmaydi", () => {
