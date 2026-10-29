@@ -373,7 +373,7 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       }
       assert.equal(w.alive, false, "bo'ri o'ldi");
       assert.equal(room.wolves.size, soloWolves(3), 'jasad o‘chmaydi — qayta tug‘ilishni kutadi');
-      assert.equal(w.respawnAt - w.diedAt, NIGHT_DIFFICULTIES.normal.respawnSec, 'qaytish vaqti qiyinlikdan');
+      assert.ok(Math.abs(w.respawnAt - w.diedAt - NIGHT_DIFFICULTIES.normal.respawnSec) < 1e-9, 'qaytish vaqti qiyinlikdan');
       // Tunda qayta tug'ilish WOLF_NIGHT_RESPAWN_SEC (klassikdagi WOLF_RESPAWN_SEC dan tezroq)
       assert.ok(WOLF_NIGHT_RESPAWN_SEC < WOLF_RESPAWN_SEC && WOLF_NIGHT_RESPAWN_SEC > WOLF_CORPSE_SEC);
       surviveFor(room, p, WOLF_NIGHT_RESPAWN_SEC - 1);
@@ -1096,7 +1096,8 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       // Qiyin tunda o'ldirilgan bo'ri tezroq qaytadi
       const w0 = [...room.wolves.values()][0]!;
       shootWolfDead(room, p, w0);
-      assert.equal(w0.respawnAt - w0.diedAt, H.respawnSec);
+      // Vaqtlar soniyada (kasr) — ayirma suzuvchi nuqta xatosigacha teng
+      assert.ok(Math.abs(w0.respawnAt - w0.diedAt - H.respawnSec) < 1e-9, `qaytish vaqti ${w0.respawnAt - w0.diedAt} s (${H.respawnSec})`);
       // 4-to'lqingacha (tun 40 s): hamma tirik tutiladi — ishtirokchilar soni 8 bo'lib qoladi
       room.setSurvivalConfigForTest({ roundDurationSec: 40 });
       for (let i = 0; i < 400 && room.getNightSnap()!.wave < 4; i++) {

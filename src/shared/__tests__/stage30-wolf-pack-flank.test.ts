@@ -38,8 +38,9 @@ import {
 // orasida) to'da halqa bo'ylab yoyiladi; mash'al ko'targan o'yinchi gulxan yonidagidek himoyalangan deb baholanadi.
 // O'yinchi yaqinlashayotgan bo'rini otsa butun to'da hujumga o'tmaydi (faqat zarba yegani qasos oladi); hujum
 // boshlangandan keyin qo'shilgan bo'rilar ham orqadan aylanib keladi; nishonning olov manbai (raketa ↔ mash'al)
-// almashsa halqa radiusi eskirmaydi; mash'alchi devorga suyanib tursa halqa o'rinlari devor ichiga tushmaydi (bo'ri
-// devorga tiqilib, mash'al doirasidagi nav tuguniga ko'chirilib, seskanib qochmaydi).
+// almashsa halqa radiusi eskirmaydi; mash'alchi devorga suyanib tursa (halqa ochiq joyda qurilgach devor yoniga
+// yurib kelsa ham) halqa o'rinlari devor ichiga tushmaydi (bo'ri devorga tiqilib, mash'al doirasidagi nav tuguniga
+// ko'chirilib, seskanib qochmaydi); devorga qisilib tiqilgan bo'ri mash'al doirasiga ko'chirilmaydi.
 // Bo'rilar hech qayerda ushlab turilmaydi (faqat o'yinchi joyida, joni to'ldiriladi); xona haqiqiy Room, io/socket
 // soxta; vaqt room.advanceTimeForTest bilan suriladi.
 
@@ -333,13 +334,47 @@ interface LateJoinRun {
 }
 
 /**
+ * Mulberry32 — kichik urug'langan PRNG. Bo'ri AI (wolf.ts: yo'l qayta rejalashtirish oralig'i, uvlash vaqti) va
+ * xona (room.ts: secretLootSeed, spawn) `Math.random` dan foydalanadi; yugurishni takrorlanuvchan qilish uchun shu
+ * generator vaqtincha `Math.random` o'rniga qo'yiladi.
+ */
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Deterministik RNG bilan ishga tushirilgan yugurish; `Math.random` doim qayta tiklanadi. */
+function withSeededRandom<T>(seed: number, fn: () => T): T {
+  const realRandom = Math.random;
+  Math.random = mulberry32(seed);
+  try {
+    return fn();
+  } finally {
+    Math.random = realRandom;
+  }
+}
+
+/**
  * Yakka bo'ri o'yinchini birinchi topadi (12 m dan, darhol hujum qiladi), `joinAt` s dan keyin ikki sherigi o'sha
  * tomondan 26 m dan qo'shiladi. O'yinchi joyida (joni to'ldiriladi), `facing`: 'pack' — kelish tomoniga, 'side' —
  * yonga qaraydi. 16 s davomida qo'shilganlarning birinchi tishlashi, qanot maydoniga yetgani yoziladi.
+ * Deterministik: `Math.random` urug'langan (seed va joinAt dan), xona soati 1000 s dan boshlanadi (yo'l qayta
+ * rejalashtirish vaqtlari devor soatiga bog'liq bo'lmasin) — natija har ishga tushirishda bir xil.
  */
 function runLateJoin(seed: number, joinAt: number, facing: 'pack' | 'side'): LateJoinRun {
+  return withSeededRandom(seed * 7919 + joinAt, () => lateJoinRun(seed, joinAt, facing));
+}
+
+function lateJoinRun(seed: number, joinAt: number, facing: 'pack' | 'side'): LateJoinRun {
   const { io, emitted } = createFakeIo();
   const room = makeNightRoom(io, { publicLayoutSeed: seed });
+  (room as unknown as { manualTimeSec: number }).manualTimeSec = 1000;
   try {
     const [p] = startNight(room, ['p1']);
     const a = findOpenArena(room, 26, 12, 1, 0);
@@ -473,6 +508,146 @@ function findWallSpots(room: Room): WallSpot[] {
     out.push({ pos: groundAt(room, c.x, c.z), wallDir, inner: edge >= 10 });
   }
   return out;
+}
+
+/** Mash'alchi devor yonida: xarita chetidagi to'siq (inner=false) yoki kulba devori, `idx`-joy, `n` bo'ri. */
+interface WallCase {
+  seed: number;
+  inner: boolean;
+  idx: number;
+  n: number;
+}
+
+/**
+ * Xarita chetidagi to'siq (3 seed, har biri boshqa joy) va kulba devorlari (bezaklar seedga bog'liq — orqasi bilan
+ * devorga suyanadigan toza joy 6501 va 777 da bor), 3 va 4 bo'ri.
+ */
+const WALL_CASES: WallCase[] = [
+  { seed: 6501, inner: false, idx: 0, n: 3 },
+  { seed: 1, inner: false, idx: 1, n: 3 },
+  { seed: 42, inner: false, idx: 2, n: 3 },
+  { seed: 6501, inner: true, idx: 0, n: 3 },
+  { seed: 6501, inner: true, idx: 0, n: 4 },
+  { seed: 6501, inner: true, idx: 1, n: 3 },
+  { seed: 6501, inner: true, idx: 1, n: 4 },
+  { seed: 777, inner: true, idx: 0, n: 3 },
+  { seed: 777, inner: true, idx: 0, n: 4 },
+];
+
+/** Halqa o'rni nuqtasi (manba atrofida, burchak/radius) to'siq ichida — WolfBrain shu tekshiruv bilan o'rinni tashlaydi. */
+function slotInWall(room: Room, c: Vec3, o: PackOrder, rad = WOLF_RADIUS + 0.15): boolean {
+  const sp = groundAt(room, c.x + Math.cos(o.standoffAngle!) * o.standoffR!, c.z + Math.sin(o.standoffAngle!) * o.standoffR!);
+  return collidesAtWorld(room.world, sp.x, sp.y + 0.05, sp.z, rad, 1.0);
+}
+
+interface WallRun {
+  summary: string;
+  /** Yurishdan oldin qurilgan o'rinlardan devor yonidagi joyda to'siq ichiga tushadiganlari (walkInM > 0). */
+  staleSlots: number;
+}
+
+/** Mash'alchi devor yoniga yetgach, eskirgan o'rinlar qaytadan qurilishi uchun vaqt (s; to'da ularni 0.5 s da tekshiradi). */
+const WALL_RECHECK_GRACE_SEC = 1;
+
+/**
+ * Mash'alchi orqasi bilan devorga suyanadi (yangi xonada). `walkInM` = 0 — boshidan devor yonida turadi; > 0 —
+ * avval ochiq tomonda shuncha (m) narida turadi, to'da halqasi qurilgach (8 s) 1.5 m/s bilan devor yoniga orqasi
+ * bilan yurib keladi. Bo'rilar ochiq tomondan, mash'alchining boshlang'ich joyidan 15 m dagi nav tugunlaridan
+ * keladi; mash'alchi devor yoniga yetgach yana 20 s kuzatiladi (xona soati 1000 s dan). Tekshiruvlar: halqa
+ * o'rinlari devor ichida emas (yetib kelgandan WALL_RECHECK_GRACE_SEC o'tib har tickda), bo'rilar mash'alchi yonida
+ * chetida kutadi; devor yoniga yetgandan keyin tiqilib boshqa joyga ko'chirilmaydi (tickda > 1 m sakrash yo'q),
+ * seskanmaydi va mash'al doirasiga kirmaydi; ochiq yoy bo'ylab yoyiladi (eng kichik oraliq ≥ 30°).
+ */
+function runWallTorch({ seed, inner, idx, n }: WallCase, walkInM: number): WallRun {
+  // Seskanish chegarasi: shundan yaqin kelgan bo'ri qattiq seskanadi (olovdan yugurib chiqadi)
+  const flinchM = TORCH_FEAR_RADIUS_M + FEAR_FLINCH_M - FEAR_SOFT_BAND_M;
+  const { io } = createFakeIo();
+  const room = makeNightRoom(io, { publicLayoutSeed: seed });
+  (room as unknown as { manualTimeSec: number }).manualTimeSec = 1000;
+  try {
+    const [p] = startNight(room, ['p1']);
+    const spots = findWallSpots(room).filter((s) => s.inner === inner);
+    assert.ok(spots.length > idx, `seed ${seed}: devor yonidagi joy topildi (${spots.length} ${inner ? 'kulba' : 'chet'})`);
+    const spot = spots[idx]!;
+    const label = `seed ${seed} ${inner ? 'kulba' : 'chet'} (${spot.pos.x.toFixed(0)},${spot.pos.z.toFixed(0)}) n=${n}${walkInM > 0 ? ` ${walkInM} m dan` : ''}`;
+    const pos0 = spot.pos;
+    const away = spot.wallDir + Math.PI;
+    const carrierAt = (d: number) => groundAt(room, pos0.x + Math.cos(away) * d, pos0.z + Math.sin(away) * d);
+    let cur = carrierAt(walkInM);
+    p!.pos = { ...cur };
+    p!.torchUntil = room.now() + 120;
+    const wolves = freshWolves(room, n, false);
+    // Bo'rilar ochiq tomondan, mash'alchidan 15 m dagi nav tugunlarida
+    wolves.forEach((w, k) => {
+      const a = away + (k - (n - 1) / 2) * 0.4;
+      const c = room.nav.center(room.nav.nearest(groundAt(room, cur.x + Math.cos(a) * 15, cur.z + Math.sin(a) * 15)));
+      assert.ok(distXZ(c, cur) >= 11, `${label}: bo'ri uzoqdan keladi`);
+      placeWolf(w, c, cur);
+    });
+    const holdSec = walkInM > 0 ? 8 : 0;
+    const arriveTick = Math.round((holdSec + walkInM / 1.5) * 30);
+    const prev = wolves.map((w) => ({ ...w.pos }));
+    let flinch0 = wolves.map(() => 0);
+    let minD = Infinity;
+    let jumps = 0;
+    let staleSlots = 0;
+    let slotInWallTicks = 0;
+    for (let i = 0; i < arriveTick + 30 * 20; i++) {
+      const ts = i / 30;
+      if (walkInM > 0 && ts >= holdSec) {
+        // Yurish boshlanishida: ochiq joyda qurilgan o'rinlar devor yonidagi joyda to'siq ichiga tushadimi
+        if (i === Math.round(holdSec * 30)) {
+          for (const w of wolves) {
+            const o = orderOf(w);
+            if (o?.standoffAngle !== undefined && o.standoffR !== undefined && slotInWall(room, pos0, o)) staleSlots++;
+          }
+        }
+        cur = carrierAt(Math.max(0, walkInM - (ts - holdSec) * 1.5));
+      }
+      // Orqasi bilan yurib kelayotgan mash'alchi devor tomonidagi bo'riga o'zi yaqinlashib uni seskantirishi (va
+      // devorga qisib qo'yishi) mumkin — tabiiy; seskanish, sakrash va masofa devor yoniga yetgandan keyin
+      if (i === arriveTick) flinch0 = wolves.map((w) => w.brain.fearFlinchCount);
+      for (const w of wolves) room.pack.report(w, p!, room.now());
+      room.advanceTimeForTest(1 / 30, 1 / 30);
+      p!.pos = { ...cur };
+      p!.vel = { x: 0, y: 0, z: 0 };
+      p!.hp = MAX_HP;
+      wolves.forEach((w, k) => {
+        if (i >= arriveTick) {
+          if (distXZ(w.pos, prev[k]!) > 1) jumps++;
+          minD = Math.min(minD, distXZ(w.pos, cur));
+        }
+        prev[k] = { ...w.pos };
+        const o = orderOf(w);
+        if (i >= arriveTick + WALL_RECHECK_GRACE_SEC * 30 && o?.standoffAngle !== undefined && o.standoffR !== undefined && slotInWall(room, cur, o)) {
+          slotInWallTicks++;
+        }
+      });
+    }
+    assert.equal(slotInWallTicks, 0, `${label}: halqa o'rinlari devor ichiga tushmadi (${slotInWallTicks} bo'ri-tick)`);
+    assert.equal(room.preyFearSource(p!)?.kind, 'torch', `${label}: o'yinchi mash'al himoyasida`);
+    // Halqaning kamida 9/36 nuqtasi devor ichida (findWallSpots) — o'rinlar faqat bo'sh nuqtalarda
+    wolves.forEach((w, k) => {
+      const o = orderOf(w);
+      assert.ok(o && o.targetId === 'p1' && o.standoffAngle !== undefined && o.standoffR !== undefined, `${label}: ${w.id} halqa o'rni bor`);
+      assert.ok(!slotInWall(room, pos0, o!, WOLF_RADIUS), `${label}: ${w.id} o'rni devor ichida emas`);
+      const d = distXZ(w.pos, pos0);
+      assert.ok(d <= TORCH_STANDOFF_M + WOLF_RING_WIDEN_MAX_M + 1.5, `${label}: ${w.id} mash'alchi yonida kutadi (${d.toFixed(1)} m)`);
+      assert.ok(w.state === 'alert' || w.state === 'howl', `${label}: ${w.id} chetida kutadi (${w.state})`);
+      assert.equal(w.brain.fearFlinchCount - flinch0[k]!, 0, `${label}: ${w.id} olovdan seskanmadi`);
+    });
+    assert.equal(jumps, 0, `${label}: hech bir bo'ri tiqilib boshqa joyga ko'chirilmadi`);
+    assert.ok(minD >= flinchM, `${label}: bo'rilar mash'al doirasiga kirmadi (eng yaqini ${minD.toFixed(2)} m, chegara ${flinchM} m)`);
+    const angs = wolves.map((w) => angleFrom(pos0, w.pos));
+    let minSep = Infinity;
+    for (let i = 0; i < angs.length; i++) {
+      for (let j = i + 1; j < angs.length; j++) minSep = Math.min(minSep, angularSeparation(angs[i]!, angs[j]!));
+    }
+    assert.ok(toDeg(minSep) >= 30, `${label}: bo'rilar ochiq yoy bo'ylab yoyildi (eng kichik oraliq ${toDeg(minSep).toFixed(0)}°)`);
+    return { summary: `${label}: ${toDeg(minSep).toFixed(0)}°, ${minD.toFixed(1)} m`, staleSlots };
+  } finally {
+    room.destroy();
+  }
 }
 
 describe("Bosqich 30 — to'da taktikasi jonli dinamikada: chalg'itish, orqadan aylanib kelish, haqiqiy gulxan halqasi", () => {
@@ -833,82 +1008,59 @@ describe("Bosqich 30 — to'da taktikasi jonli dinamikada: chalg'itish, orqadan 
   });
 
   it("8. Mash'alchi orqasi bilan devorga (kulba, xarita cheti) suyanib turibdi: halqa o'rinlari devor ichiga tushmaydi — bo'rilar ochiq yoy bo'ylab yoyiladi, tiqilmaydi, mash'al doirasiga ko'chirilmaydi va seskanmaydi", () => {
-    // Seskanish chegarasi: shundan yaqin kelgan bo'ri qattiq seskanadi (olovdan yugurib chiqadi)
+    const results = WALL_CASES.map((c) => runWallTorch(c, 0).summary);
+    assert.equal(results.length, WALL_CASES.length, results.join(', '));
+  });
+
+  it("9. Bo'ri mash'alchi yonida (4.8 m) xarita chetidagi to'siqqa qisilib tiqiladi: mash'al doirasidagi nav tuguniga ko'chirilmaydi — seskanmaydi, doiraga kirmaydi", () => {
     const flinchM = TORCH_FEAR_RADIUS_M + FEAR_FLINCH_M - FEAR_SOFT_BAND_M;
-    const results: string[] = [];
-    // Xarita chetidagi to'siq (3 seed, har biri boshqa joy) va kulba devorlari (bezaklar seedga bog'liq — orqasi
-    // bilan devorga suyanadigan toza joy 6501 va 777 da bor), 3 va 4 bo'ri. Har holat yangi xonada.
-    const cases: { seed: number; inner: boolean; idx: number; n: number }[] = [
-      { seed: 6501, inner: false, idx: 0, n: 3 },
-      { seed: 1, inner: false, idx: 1, n: 3 },
-      { seed: 42, inner: false, idx: 2, n: 3 },
-      { seed: 6501, inner: true, idx: 0, n: 3 },
-      { seed: 6501, inner: true, idx: 0, n: 4 },
-      { seed: 6501, inner: true, idx: 1, n: 3 },
-      { seed: 6501, inner: true, idx: 1, n: 4 },
-      { seed: 777, inner: true, idx: 0, n: 3 },
-      { seed: 777, inner: true, idx: 0, n: 4 },
-    ];
-    for (const { seed, inner, idx, n } of cases) {
-      const { io } = createFakeIo();
-      const room = makeNightRoom(io, { publicLayoutSeed: seed });
-      try {
-        const [p] = startNight(room, ['p1']);
-        const spots = findWallSpots(room).filter((s) => s.inner === inner);
-        assert.ok(spots.length > idx, `seed ${seed}: devor yonidagi joy topildi (${spots.length} ${inner ? 'kulba' : 'chet'})`);
-        const spot = spots[idx]!;
-        const label = `seed ${seed} ${inner ? 'kulba' : 'chet'} (${spot.pos.x.toFixed(0)},${spot.pos.z.toFixed(0)}) n=${n}`;
-        const pos0 = spot.pos;
-        p!.pos = { ...pos0 };
-        p!.torchUntil = room.now() + 120;
-        const wolves = freshWolves(room, n, false);
-        // Bo'rilar ochiq tomondan, 15 m dagi nav tugunlarida
-        wolves.forEach((w, k) => {
-          const a = spot.wallDir + Math.PI + (k - (n - 1) / 2) * 0.4;
-          const c = room.nav.center(room.nav.nearest(groundAt(room, pos0.x + Math.cos(a) * 15, pos0.z + Math.sin(a) * 15)));
-          assert.ok(distXZ(c, pos0) >= 11, `${label}: bo'ri uzoqdan keladi`);
-          placeWolf(w, c, pos0);
-        });
-        const prev = wolves.map((w) => ({ ...w.pos }));
-        let minD = Infinity;
-        let jumps = 0;
-        for (let i = 0; i < 30 * 20; i++) {
-          for (const w of wolves) room.pack.report(w, p!, room.now());
-          room.advanceTimeForTest(1 / 30, 1 / 30);
-          p!.pos = { ...pos0 };
-          p!.vel = { x: 0, y: 0, z: 0 };
-          p!.hp = MAX_HP;
-          wolves.forEach((w, k) => {
-            if (distXZ(w.pos, prev[k]!) > 1) jumps++;
-            prev[k] = { ...w.pos };
-            minD = Math.min(minD, distXZ(w.pos, pos0));
-          });
-        }
-        assert.equal(room.preyFearSource(p!)?.kind, 'torch', `${label}: o'yinchi mash'al himoyasida`);
-        // Halqaning kamida 9/36 nuqtasi devor ichida (findWallSpots) — o'rinlar faqat bo'sh nuqtalarda
-        for (const w of wolves) {
-          const o = orderOf(w);
-          assert.ok(o && o.targetId === 'p1' && o.standoffAngle !== undefined && o.standoffR !== undefined, `${label}: ${w.id} halqa o'rni bor`);
-          const sp = groundAt(room, pos0.x + Math.cos(o!.standoffAngle!) * o!.standoffR!, pos0.z + Math.sin(o!.standoffAngle!) * o!.standoffR!);
-          assert.ok(!collidesAtWorld(room.world, sp.x, sp.y + 0.05, sp.z, WOLF_RADIUS, 1.0), `${label}: ${w.id} o'rni devor ichida emas`);
-          const d = distXZ(w.pos, pos0);
-          assert.ok(d <= TORCH_STANDOFF_M + WOLF_RING_WIDEN_MAX_M + 1.5, `${label}: ${w.id} mash'alchi yonida kutadi (${d.toFixed(1)} m)`);
-          assert.ok(w.state === 'alert' || w.state === 'howl', `${label}: ${w.id} chetida kutadi (${w.state})`);
-          assert.equal(w.brain.fearFlinchCount, 0, `${label}: ${w.id} olovdan seskanmadi`);
-        }
-        assert.equal(jumps, 0, `${label}: hech bir bo'ri tiqilib boshqa joyga ko'chirilmadi`);
-        assert.ok(minD >= flinchM, `${label}: bo'rilar mash'al doirasiga kirmadi (eng yaqini ${minD.toFixed(2)} m, chegara ${flinchM} m)`);
-        const angs = wolves.map((w) => angleFrom(pos0, w.pos));
-        let minSep = Infinity;
-        for (let i = 0; i < angs.length; i++) {
-          for (let j = i + 1; j < angs.length; j++) minSep = Math.min(minSep, angularSeparation(angs[i]!, angs[j]!));
-        }
-        results.push(`${label}: ${toDeg(minSep).toFixed(0)}°, ${minD.toFixed(1)} m`);
-        assert.ok(toDeg(minSep) >= 30, `${label}: bo'rilar ochiq yoy bo'ylab yoyildi (eng kichik oraliq ${toDeg(minSep).toFixed(0)}°)`);
-      } finally {
-        room.destroy();
+    const { io } = createFakeIo();
+    const room = makeNightRoom(io, { publicLayoutSeed: 6501 });
+    try {
+      const [p] = startNight(room, ['p1']);
+      const spot = findWallSpots(room).filter((s) => !s.inner)[0];
+      assert.ok(spot, 'xarita chetida devor yonidagi joy topildi');
+      const pos0 = spot!.pos;
+      p!.pos = { ...pos0 };
+      p!.torchUntil = room.now() + 120;
+      const wolves = freshWolves(room, 3, false);
+      // Bo'ri seskanish chegarasidan sal tashqarida, to'siq yonida; tiqilsa unga eng yaqin nav tuguni mash'al
+      // doirasining qattiq seskanish qavatida (himoyasiz ko'chirish — seskanib qochish)
+      const a0 = (13 / 24) * Math.PI * 2;
+      const start = groundAt(room, pos0.x + Math.cos(a0) * 4.8, pos0.z + Math.sin(a0) * 4.8);
+      assert.ok(!collidesAtWorld(room.world, start.x, start.y + 0.05, start.z, WOLF_RADIUS + 0.05, 1.0), "bo'ri bo'sh joyda");
+      const node = room.nav.center(room.nav.nearest(start));
+      assert.ok(distXZ(node, pos0) < flinchM && distXZ(node, start) < 3, `eng yaqin nav tuguni mash'al doirasida (${distXZ(node, pos0).toFixed(2)} m)`);
+      placeWolf(wolves[0]!, start, pos0);
+      // Qolganlari ochiq tomonda, 12 m dagi nav tugunlarida
+      const open = spot!.wallDir + Math.PI;
+      for (let k = 1; k < 3; k++) {
+        const a = open + (k - 1.5) * 0.6;
+        placeWolf(wolves[k]!, room.nav.center(room.nav.nearest(groundAt(room, pos0.x + Math.cos(a) * 12, pos0.z + Math.sin(a) * 12))), pos0);
       }
+      let minD = Infinity;
+      for (let i = 0; i < 30 * 25; i++) {
+        for (const w of wolves) room.pack.report(w, p!, room.now());
+        room.advanceTimeForTest(1 / 30, 1 / 30);
+        p!.pos = { ...pos0 };
+        p!.vel = { x: 0, y: 0, z: 0 };
+        p!.hp = MAX_HP;
+        for (const w of wolves) minD = Math.min(minD, distXZ(w.pos, pos0));
+      }
+      assert.equal(room.preyFearSource(p!)?.kind, 'torch', "o'yinchi mash'al himoyasida");
+      for (const w of wolves) assert.equal(w.brain.fearFlinchCount, 0, `${w.id} olovdan seskanmadi`);
+      assert.ok(minD >= flinchM, `bo'rilar mash'al doirasiga kirmadi (eng yaqini ${minD.toFixed(2)} m, chegara ${flinchM} m)`);
+    } finally {
+      room.destroy();
     }
-    assert.equal(results.length, cases.length, results.join(', '));
+  });
+
+  it("10. Halqa ochiq joyda qurilgach mash'alchi orqasi bilan devorga (kulba, xarita cheti) yurib keladi: eskirgan o'rinlar qaytadan quriladi — devor ichiga tushmaydi, bo'rilar tiqilmaydi, ko'chirilmaydi va seskanmaydi", () => {
+    // Deterministik (Math.random urug'langan, xona soati qotirilgan): mash'alchi yurib kelganda devor tomonidagi
+    // bo'rining qochishi tasodifiy yo'l rejalariga bog'liq — natija har ishga tushirishda bir xil bo'lsin
+    const runs = WALL_CASES.map((c, k) => withSeededRandom(c.seed * 7919 + k, () => runWallTorch(c, 8)));
+    // Holat haqiqiy: ochiq joyda qurilgan o'rinlarning bir qismi devor yonidagi joyda to'siq ichiga tushardi
+    const stale = runs.filter((r) => r.staleSlots > 0).length;
+    assert.ok(stale >= Math.ceil(runs.length / 2), `eskirgan o'rinli holatlar ${stale}/${runs.length}\n${runs.map((r) => r.summary).join('\n')}`);
   });
 });

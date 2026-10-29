@@ -127,6 +127,12 @@ const RING_SAMPLES = 36;
 export const WOLF_RING_WIDEN_MAX_M = 3;
 /** Standoff nuqtasi to'silgan bo'lsa shu qo'shimcha radiuslar (m) sinaladi. */
 const RING_EXTRA_R_M: readonly number[] = [0, 1.5, WOLF_RING_WIDEN_MAX_M];
+/**
+ * Mash'al/raketa halqasi o'rinlari shu oraliqda (s) tekshiriladi: mash'alchi yurib devor yoniga keldi — o'rin nuqtasi
+ * endi to'siq ichida bo'lsa halqa qaytadan quriladi (bo'sh nuqtalari yetmagan, teng qadamli halqa to'silgan bo'lib
+ * qolsa ham har tick qayta qurilmasin).
+ */
+const RING_RECHECK_SEC = 0.5;
 
 interface Sighting {
   /** Oxirgi sezish vaqti/joyi va kim sezgani (uning joyi va ulashish radiusi). */
@@ -176,9 +182,10 @@ interface PreyInfo {
  * yopishgan — jarima; mash'al ko'targan — gulxan yonidagidek himoyalangan), bo'rilarni taqsimlaydi va vazifa
  * beradi: nishonga eng yaqini haydovchi (old tomondan kelib chalg'itadi), qolganlari qanot (kengroq doira
  * bo'ylab o'z tomonidan aylanib, nishon atrofidagi doirada ±120..150° nuqtaga boradi va orqadan tashlanadi).
- * Qanotlar orqaga yetgach (yoki chalg'itish muddati tugagach) to'da hujumga o'tadi. Nishon olov ichida bo'lsa
- * to'da halqa bo'ylab yoyiladi (bezak to'sgan nuqtalar o'tkazib yuboriladi). Yiqilgan/o'lgan nishon darhol
- * tashlanadi (isWolfPrey). Deterministik: tasodif yo'q, bo'rilar id tartibida ko'riladi.
+ * Qanotlar orqaga yetgach (yoki chalg'itish muddati tugagach) to'da hujumga o'tadi (kunduzgi rejimlarda — darhol,
+ * chalg'itishsiz). Nishon olov ichida bo'lsa to'da halqa bo'ylab yoyiladi (bezak to'sgan nuqtalar o'tkazib
+ * yuboriladi). Yiqilgan/o'lgan nishon darhol tashlanadi (isWolfPrey). Deterministik: tasodif yo'q, bo'rilar id
+ * tartibida ko'riladi.
  */
 export class WolfPack {
   private readonly sightings = new Map<string, Sighting>();
@@ -187,8 +194,11 @@ export class WolfPack {
   private readonly driverByPrey = new Map<string, string>();
   /** Nishon→haydovchi yo'nalishining oxirgi ishonchli qiymati (rad; haydovchi DRIVER_ANG_MIN_M dan uzoq bo'lganda). */
   private readonly driverAngByPrey = new Map<string, number>();
-  /** Olov halqasidagi o'rinlar (nishon → guruh kaliti va bo'ri → o'rin). */
-  private readonly slotsByPrey = new Map<string, { key: string; slots: Map<string, RingSlot> }>();
+  /**
+   * Olov halqasidagi o'rinlar (nishon → guruh kaliti, bo'ri → o'rin va o'rinlar oxirgi tekshirilgan/qurilgan vaqt —
+   * RING_RECHECK_SEC).
+   */
+  private readonly slotsByPrey = new Map<string, { key: string; slots: Map<string, RingSlot>; checkedAt: number }>();
   /** Gulxan halqasining bo'sh nuqtalari (gulxan joyi → nuqtalar; null — halqa butunlay ochiq). Gulxan qimirlamaydi. */
   private readonly ringFreeCache = new Map<string, RingSlot[] | null>();
   /** Nav-grafning asosiy (bo'rilar yuradigan) bog'langan qismi tugunlari — halqa nuqtasi unga ulangan bo'lsin. */
@@ -400,16 +410,24 @@ export class WolfPack {
       if (fire) {
         // Halqa o'rinlari: guruh tarkibi va olov manbai (turi, gulxan/raketa joyi, mash'al egasi) o'zgarmaguncha
         // saqlanadi (to'plangan bo'rilar har tick o'rin almashmasin). Manba almashsa (raketa doirasidan chiqib o'z
-        // mash'aliga o'tdi) o'rinlar yangi radius bilan qayta quriladi. Olov ichidagi nishonga hujum holati
-        // tashlanadi — chiqsa to'da yana chalg'itib aylanadi.
+        // mash'aliga o'tdi) o'rinlar yangi radius bilan qayta quriladi. Mash'alchi yuradi: ochiq joyda qurilgan
+        // o'rin u devor/xarita cheti yoniga kelganda to'siq ichiga tushishi mumkin — mash'al/raketa halqasi har
+        // RING_RECHECK_SEC da tekshiriladi, o'rin nuqtasi to'silgan bo'lsa qaytadan quriladi (ringSlots eng kam
+        // burilish bilan moslaydi — bo'rilar tartibi aralashmaydi). Olov ichidagi nishonga hujum holati tashlanadi —
+        // chiqsa to'da yana chalg'itib aylanadi.
         const src = fire.kind === 'torch' ? (fire.playerId ?? '') : `${fire.x.toFixed(1)},${fire.z.toFixed(1)}`;
         const key = `${group.map((w) => w.id).join('|')}@${fire.kind}:${src}`;
-        const prev = this.slotsByPrey.get(preyId);
-        if (prev && prev.key === key) {
+        let prev = this.slotsByPrey.get(preyId);
+        if (prev && prev.key !== key) prev = undefined;
+        if (prev && fire.kind !== 'fire' && t - prev.checkedAt >= RING_RECHECK_SEC) {
+          prev.checkedAt = t;
+          if (this.ringSlotBlocked(fire, prev.slots)) prev = undefined;
+        }
+        if (prev) {
           slots = prev.slots;
         } else {
           slots = this.ringSlots(fire, group);
-          this.slotsByPrey.set(preyId, { key, slots });
+          this.slotsByPrey.set(preyId, { key, slots, checkedAt: t });
         }
         this.huntByPrey.delete(preyId);
       } else {
@@ -488,10 +506,12 @@ export class WolfPack {
    * davom etdi, guruh WOLF_PACK_COMMIT_MAX_SEC dan beri ovlayapti yoki haydovchi nishonga yopishdi
    * (≤ WOLF_DRIVER_COMMIT_M). Yakka bo'ri darhol hujum qiladi; unga sherik qo'shilsa (haydovchi nishonga hali
    * yopishmagan bo'lsa) chalg'itish qaytadan boshlanadi, yopishgan bo'lsa yangi qanotlar baribir aylanib keladi
-   * (kechikish har qanot uchun alohida — WOLF_FLANK_SWING_MAX_SEC).
+   * (kechikish har qanot uchun alohida — WOLF_FLANK_SWING_MAX_SEC). Chalg'itish faqat Tong otguncha rejimida:
+   * kunduzgi rejimlardagi (ffa/tdm/o'rmon, 'wolves' varianti) to'da avvalgidek darhol hujum qiladi (qanotlar baribir
+   * o'z tomonidan aylanib keladi).
    */
   private huntOf(preyId: string, group: ServerWolf[], driver: ServerWolf, driverD: number, driverAng: number, p: ServerPlayer, t: number): PackHunt {
-    const solo = group.length < 2;
+    const solo = group.length < 2 || !this.room.isNight;
     let h = this.huntByPrey.get(preyId);
     if (!h || (h.size < 2 && !solo && driverD > WOLF_DRIVER_COMMIT_M + 1)) {
       h = { startedAt: t, feintSince: 0, commitAt: 0, size: group.length };
@@ -622,8 +642,8 @@ export class WolfPack {
    * bo'ri sig'adigan, relyefi olov sathida (raketa halqasi keng — relyef tekshirilmaydi) va eng yaqin nav tuguniga
    * to'siqsiz ulangan nuqta; tugun nav-grafning asosiy qismida (kulbalar orasidagi berk burchakdagi alohida tugun
    * emas — bo'ri unga yo'l topa olmaydi). Butun halqa standoff radiusida ochiq bo'lsa null (oddiy teng qadam).
-   * Gulxan qimirlamaydi — natijasi keshlanadi; mash'al/raketa halqasi o'rinlar qurilganda (kamdan-kam) qaytadan
-   * hisoblanadi.
+   * Gulxan qimirlamaydi — natijasi keshlanadi; mash'al/raketa halqasi o'rinlar qurilganda (guruh/manba almashganda
+   * yoki o'rin nuqtasi to'silganda — ringSlotBlocked) qaytadan hisoblanadi.
    */
   private ringFreePoints(fire: FearSource): RingSlot[] | null {
     const key = `${fire.x.toFixed(2)},${fire.z.toFixed(2)}`;
@@ -658,6 +678,20 @@ export class WolfPack {
     const res = open ? null : pts;
     if (fire.kind === 'fire') this.ringFreeCache.set(key, res);
     return res;
+  }
+
+  /**
+   * Halqa o'rinlaridan biri manbaning hozirgi joyida to'siq ichidami (WolfBrain o'rin nuqtasini shu tekshiruv bilan
+   * tashlaydi — bo'ri unga yo'l bilan bormay devorga tiralib sirpanadi).
+   */
+  private ringSlotBlocked(fire: FearSource, slots: Map<string, RingSlot>): boolean {
+    const world = this.room.world;
+    for (const s of slots.values()) {
+      const x = fire.x + Math.cos(s.ang) * s.r;
+      const z = fire.z + Math.sin(s.ang) * s.r;
+      if (collidesAtWorld(world, x, sampleTerrainHeight(world.terrain, x, z) + 0.05, z, WOLF_RADIUS + 0.15, 1.0)) return true;
+    }
+    return false;
   }
 
   /**

@@ -320,7 +320,7 @@ describe("Bosqich 22 — Tong otguncha: to'da taktikasi (haydovchi, qanotlar, to
     }
   });
 
-  it("2. Bir nishonga 3 bo'ri: bitta haydovchi, qanotlar nishon atrofidagi 9 m doirada qarama-qarshi tomonlarda (±100..150°)", () => {
+  it(`2. Bir nishonga 3 bo'ri: bitta haydovchi, qanotlar nishon atrofidagi ${WOLF_FLANK_RADIUS_M} m doirada qarama-qarshi tomonlarda (±${WOLF_FLANK_MIN_DEG}..${WOLF_FLANK_MAX_DEG}°)`, () => {
     const { io, emitted } = createFakeIo();
     const room = makeNightRoom(io);
     try {
@@ -349,7 +349,7 @@ describe("Bosqich 22 — Tong otguncha: to'da taktikasi (haydovchi, qanotlar, to
         assert.ok(Math.abs(r - WOLF_FLANK_RADIUS_M) < 0.05, `qanot nuqtasi ${WOLF_FLANK_RADIUS_M} m doirada (${r.toFixed(2)})`);
         const sep = angularSeparation(a0, angleFrom(p.pos, g!));
         const deg = (sep * 180) / Math.PI;
-        assert.ok(deg >= WOLF_FLANK_MIN_DEG - 1 && deg <= WOLF_FLANK_MAX_DEG + 1, `qanot burchagi ${deg.toFixed(0)}° (100..150)`);
+        assert.ok(deg >= WOLF_FLANK_MIN_DEG - 1 && deg <= WOLF_FLANK_MAX_DEG + 1, `qanot burchagi ${deg.toFixed(0)}° (${WOLF_FLANK_MIN_DEG}..${WOLF_FLANK_MAX_DEG})`);
         // Ishorali farq: tomonlar qarama-qarshi
         const d = Math.atan2(Math.sin(angleFrom(p.pos, g!) - a0), Math.cos(angleFrom(p.pos, g!) - a0));
         rel.push(d);
