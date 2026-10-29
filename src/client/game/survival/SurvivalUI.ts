@@ -37,6 +37,13 @@ export function formatCampPillUz(
   return { text: `🔥 Lager ${mm}:${ss}${pile}`, cls: fuelSec < CAMPFIRE_LOW_FUEL_SEC ? 'low' : '' };
 }
 
+/** Qo'ldagi mash'al pilli: "🔥 Mash'al 32 s" (oxirgi 8 s — 'low'); mash'al yo'q — null. Sof funksiya (testlar uchun). */
+export function formatTorchPillUz(torchSec: number): { text: string; cls: '' | 'low' } | null {
+  if (!Number.isFinite(torchSec) || torchSec <= 0) return null;
+  const s = Math.max(1, Math.ceil(torchSec));
+  return { text: `🔥 Mash'al ${s} s`, cls: s <= 8 ? 'low' : '' };
+}
+
 /**
  * Safdan chiqqan o'yinchiga qaytish qatori (Tong otguncha): keyingi to'lqin boshida asosiy gulxan yonib tursa
  * qaytadi; oxirgi to'lqinda — tong otguncha tomosha qiladi; hamma halok bo'lgan bo'lsa — alohida urg'u.
@@ -112,8 +119,8 @@ export class SurvivalUI {
   private myRole: SurvivalPlayerRole | null = null;
   private spectatorPose: SpectatorCameraPose | null = null;
   private killerHtml = '';
-  /** Asosiy gulxan holati (Game har kadr ekstrapolyatsiya qilib beradi); null — lager yo'q. */
-  private camp: { fuelSec: number; lit: boolean; pileM?: number | null } | null = null;
+  /** Asosiy gulxan holati (Game har kadr ekstrapolyatsiya qilib beradi); null — lager yo'q. `torchSec` — qo'ldagi mash'al. */
+  private camp: { fuelSec: number; lit: boolean; pileM?: number | null; torchSec?: number } | null = null;
 
   private spectatorBannerVisible = false;
   private winnerOverlayVisible = false;
@@ -226,8 +233,8 @@ export class SurvivalUI {
     this.render();
   }
 
-  /** Asosiy lager gulxani holati (tun rejimi) — pill'da "🔥 Lager m:ss" sifatida chiqadi. */
-  setCampStatus(camp: { fuelSec: number; lit: boolean; pileM?: number | null } | null): void {
+  /** Asosiy lager gulxani holati (tun rejimi) — pill'da "🔥 Lager m:ss" sifatida chiqadi; `torchSec` — "🔥 Mash'al N s". */
+  setCampStatus(camp: { fuelSec: number; lit: boolean; pileM?: number | null; torchSec?: number } | null): void {
     this.camp = camp;
   }
 
@@ -326,11 +333,12 @@ export class SurvivalUI {
     // Tunda zona yo'q — pillda to'lqin/tong ma'lumoti ko'rsatiladi
     const nightText = night && snap.phase === 'playing' && snap.night ? formatNightPillUz(snap.night) : '';
     const campPill = night && snap.phase === 'playing' && this.camp ? formatCampPillUz(this.camp.fuelSec, this.camp.lit, this.camp.pileM ?? null) : null;
+    const torchPill = night && snap.phase === 'playing' && this.camp ? formatTorchPillUz(this.camp.torchSec ?? 0) : null;
     const pillKey = `${snap.roundId}|${snap.phase}|${snap.timeLeft}|${countLabel}|${
       !night && snap.phase === 'playing' && snap.zone
         ? `${formatZoneStatusUz(snap.zone)}|${snap.zone.shrinking ? 1 : 0}`
         : ''
-    }${night ? `|${phaseLabel}|${nightText}|${campPill ? `${campPill.text}|${campPill.cls}` : ''}` : ''}`;
+    }${night ? `|${phaseLabel}|${nightText}|${campPill ? `${campPill.text}|${campPill.cls}` : ''}|${torchPill ? `${torchPill.text}|${torchPill.cls}` : ''}` : ''}`;
     if (this.topPillEl && pillKey !== this.lastPillKey) {
       this.lastPillKey = pillKey;
       // Vaqt segmenti: countdown/ended — soniya, playing — mm:ss, waiting — ko'rsatilmaydi
@@ -351,7 +359,7 @@ export class SurvivalUI {
           night
             ? `${nightText ? `<span class="s07-pill-night">${esc(nightText)}</span>` : ''}${
                 campPill ? `<span class="s07-pill-camp ${campPill.cls}">${esc(campPill.text)}</span>` : ''
-              }`
+              }${torchPill ? `<span class="s07-pill-torch ${torchPill.cls}">${esc(torchPill.text)}</span>` : ''}`
             : snap.phase === 'playing' && snap.zone
               ? `<span class="s07-pill-zone${snap.zone.shrinking ? ' shrinking' : ''}">${esc(formatZoneStatusUz(snap.zone))}</span>`
               : ''

@@ -4,7 +4,6 @@ import { applyWorldMovement, raycastWorld, type Body } from '../shared/physics';
 import { hitboxScaleOf } from '../shared/stance';
 import { sampleTerrainHeight } from '../shared/world';
 import {
-  CAMPFIRE_RADIUS_M,
   WOLF_ALPHA_BUFF_SPEED_MUL,
   WOLF_ATTACK_COOLDOWN,
   WOLF_ATTACK_DURATION,
@@ -27,7 +26,7 @@ import {
   wolfSpeedForState,
   type WolfState,
 } from '../shared/wolf';
-import type { Room, ServerPlayer } from './room';
+import type { FearSource, Room, ServerPlayer } from './room';
 
 /** Server tomonidagi bo'ri: fizik tana + holat; AI `WolfBrain` da. */
 export interface ServerWolf extends Body {
@@ -59,10 +58,10 @@ export interface ServerWolf extends Body {
 /** Sezish darajasi: 0 — yo'q, 1 — hid/shubha (joy ma'lum, LOS yo'q), 2 — ko'rdi. */
 type SenseLevel = 0 | 1 | 2;
 
-/** Nishon yetib bo'lmas balandlikda (2-qavat, tom) yoki gulxan yonida bo'lsa shu oraliqda uvlaydi (s). */
+/** Nishon yetib bo'lmas balandlikda (2-qavat, tom) yoki gulxan/mash'al yonida bo'lsa shu oraliqda uvlaydi (s). */
 const UNREACHABLE_HOWL_SEC = 9;
-/** Bo'ri yonib turgan gulxan doirasidan tashqarida, shu masofada (markazdan) to'xtab aylanadi (m). */
-const FIRE_STANDOFF_M = CAMPFIRE_RADIUS_M + 1.5;
+// Olovdan qo'rqish masofalari manbaga bog'liq (`FearSource.radius/standoff`): gulxan — CAMPFIRE_RADIUS_M /
+// CAMPFIRE_STANDOFF_M, mash'al — TORCH_FEAR_RADIUS_M / TORCH_STANDOFF_M (shared/wolf/camp.ts).
 /** Sayrda to'xtab hid olish ehtimoli (sekundiga). */
 const ROAM_SNIFF_CHANCE = 0.06;
 const SENSE_INTERVAL = 0.15;
@@ -321,11 +320,12 @@ export class WolfBrain {
   }
 
   /**
-   * Yonib turgan gulxan doirasidagi (+1 m, olovdan qochish chegarasi) maqsadni doira chetiga — FIRE_STANDOFF_M
-   * da, bo'ri turgan tomonga — suradi. Aks holda bo'ri maqsadga yurish bilan olovdan qochish orasida tebranadi.
+   * Olov manbai (yonib turgan gulxan yoki mash'al ko'targan o'yinchi) doirasidagi (+1 m, olovdan qochish
+   * chegarasi) maqsadni doira chetiga — manbaning `standoff` masofasida, bo'ri turgan tomonga — suradi.
+   * Aks holda bo'ri maqsadga yurish bilan olovdan qochish orasida tebranadi.
    */
-  private outsideLitFire(goal: Vec3): Vec3 {
-    const fire = this.room.litFireContaining(goal.x, goal.z, 1);
+  private outsideFear(goal: Vec3): Vec3 {
+    const fire = this.room.fearSourceContaining(goal.x, goal.z, 1);
     if (!fire) return goal;
     const me = this.me;
     let dx = me.pos.x - fire.x;
@@ -341,8 +341,8 @@ export class WolfBrain {
       dz = 0;
       dl = 1;
     }
-    const x = fire.x + (dx / dl) * FIRE_STANDOFF_M;
-    const z = fire.z + (dz / dl) * FIRE_STANDOFF_M;
+    const x = fire.x + (dx / dl) * fire.standoff;
+    const z = fire.z + (dz / dl) * fire.standoff;
     return { x, y: sampleTerrainHeight(this.room.world.terrain, x, z), z };
   }
 
@@ -424,8 +424,9 @@ export class WolfBrain {
       return;
     }
 
-    // Olovdan qo'rqish: yonib turgan gulxan doirasiga (+1 m) tushib qolsa — tashqariga yugurib chiqadi
-    const burning = this.room.litFireContaining(me.pos.x, me.pos.z, 1);
+    // Olovdan qo'rqish: yonib turgan gulxan yoki mash'al ko'targan o'yinchi doirasiga (+1 m) tushib qolsa —
+    // tashqariga yugurib chiqadi (mash'al egasi bo'riga yaqinlashsa, bo'ri chekinadi)
+    const burning = this.room.fearSourceContaining(me.pos.x, me.pos.z, 1);
     if (burning) {
       let ox = me.pos.x - burning.x;
       let oz = me.pos.z - burning.z;
@@ -482,11 +483,12 @@ export class WolfBrain {
       const dH = Math.hypot(tgt.pos.x - me.pos.x, tgt.pos.z - me.pos.z);
       const dy = tgt.pos.y - me.pos.y;
       const fresh = t - this.lastSensedAt < 1.0;
-      // Eskirgan iz gulxan doirasida qolgan bo'lsa — chetigacha boradi (olovga kirib-chiqib tebranmaydi)
-      const goal = fresh ? tgt.pos : this.outsideLitFire(this.lastSensedPos ?? tgt.pos);
+      // Eskirgan iz gulxan/mash'al doirasida qolgan bo'lsa — chetigacha boradi (olovga kirib-chiqib tebranmaydi)
+      const goal = fresh ? tgt.pos : this.outsideFear(this.lastSensedPos ?? tgt.pos);
       const unreachable = dy > WOLF_UNREACHABLE_DY && dH < 8;
-      // Nishon yonib turgan gulxan doirasida: olovga kirmaydi — chetida (R + 1.5 m) to'xtab qaraydi, uvlaydi
-      const fire = this.room.litFireContaining(tgt.pos.x, tgt.pos.z, 0);
+      // Nishon yonib turgan gulxan doirasida yoki o'zi mash'al ko'targan: olovga kirmaydi — chetida
+      // (manba `standoff` masofasida) to'xtab qaraydi, uvlaydi
+      const fire: FearSource | null = this.room.fearSourceContaining(tgt.pos.x, tgt.pos.z, 0);
       if (fire) {
         this.path = [];
         this.pathIdx = 0;
@@ -501,17 +503,18 @@ export class WolfBrain {
         const fx = me.pos.x - fire.x;
         const fz = me.pos.z - fire.z;
         const fd = Math.hypot(fx, fz);
-        if (fd > FIRE_STANDOFF_M + 0.4) {
+        const standoff = fire.standoff;
+        if (fd > standoff + 0.4) {
           // Olov chetiga yaqinlashadi (markaz tomon, lekin doiraga kirmaydi)
           const m = this.moveTowards(
-            { x: fire.x + (fx / Math.max(fd, 1e-3)) * FIRE_STANDOFF_M, y: me.pos.y, z: fire.z + (fz / Math.max(fd, 1e-3)) * FIRE_STANDOFF_M },
+            { x: fire.x + (fx / Math.max(fd, 1e-3)) * standoff, y: me.pos.y, z: fire.z + (fz / Math.max(fd, 1e-3)) * standoff },
             this.speedFor('stalk'),
             dt,
           );
           wishX = m.wishX;
           wishZ = m.wishZ;
           this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt, 8);
-        } else if (fd < FIRE_STANDOFF_M - 0.6) {
+        } else if (fd < standoff - 0.6) {
           // Juda yaqin — orqaga chekinadi
           const sp = this.speedFor('stalk');
           wishX = (fx / Math.max(fd, 1e-3)) * sp;
@@ -542,6 +545,8 @@ export class WolfBrain {
         dH < WOLF_BITE_RANGE &&
         Math.abs(dy) < 1.3 &&
         t >= this.nextAttackAt &&
+        // Mash'al ko'targanga tashlanmaydi (yuqoridagi olov tarmog'i buni allaqachon ushlaydi — qo'shimcha himoya)
+        !this.room.hasTorch(tgt, t) &&
         Math.abs(angleDiff(me.yaw, Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)))) < 0.7
       ) {
         this.attackStartedAt = t;
@@ -564,7 +569,7 @@ export class WolfBrain {
       }
     } else if (this.investigatePos) {
       // Gulxan doirasidagi joy (o'q ovozi, hid, qayta yoqilgan gulxan) chetidan tekshiriladi
-      this.investigatePos = this.outsideLitFire(this.investigatePos);
+      this.investigatePos = this.outsideFear(this.investigatePos);
       const goal = this.investigatePos;
       if (me.state !== 'stalk') this.setState('stalk', t);
       const m = this.followPath(goal, this.speedFor('stalk'), t, dt, this.hasDirectLine(goal));

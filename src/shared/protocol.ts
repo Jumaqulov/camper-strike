@@ -107,6 +107,8 @@ export interface PlayerSnap {
   bleedSec?: number;
   /** wolf_night: turg'izish jarayoni 0..1, faqat kimdir turg'izayotganda. */
   reviveK?: number;
+  /** wolf_night: qo'ldagi mash'alning qolgan vaqti (s); faqat 0 dan katta bo'lsa yuboriladi. */
+  torchSec?: number;
 }
 
 export interface GearVisualState {
@@ -348,11 +350,13 @@ export type {
   CampActionError,
   CampfireEvent,
   CampfireSnap,
+  DropTorchReq,
   FeedFireReq,
   NightRevivedEvent,
   ReviveAck,
   ReviveError,
   ReviveReq,
+  TakeTorchReq,
   TakeWoodReq,
   WolfBiteEvent,
   WolfDeathEvent,

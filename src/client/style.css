@@ -879,6 +879,16 @@ html, body {
 .s06-util-btn.gear-chip.has-item { border-color: rgba(96, 165, 250, 0.6); background: rgba(30, 64, 120, 0.45); color: #dbeafe; }
 /* Tong otguncha: qo'ldagi o'tin */
 .s06-util-btn.wood-chip.has-item { border-color: rgba(255, 170, 70, 0.65); background: rgba(120, 66, 20, 0.5); color: #ffe4c4; }
+/* To'la qo'l o'tin bilan Shift bosilganda: "og'ir yuk" pulsatsiyasi (InventoryUI.pulseWoodHeavy) */
+.s06-util-btn.wood-chip.heavy { animation: s06-wood-heavy 0.9s ease-out 1; }
+@keyframes s06-wood-heavy {
+  0% { transform: translateY(0); box-shadow: 0 0 0 0 rgba(255, 140, 50, 0); }
+  20% { transform: translateY(2px); box-shadow: 0 0 0 4px rgba(255, 140, 50, 0.45); border-color: #ffb866; }
+  100% { transform: translateY(0); box-shadow: 0 0 0 0 rgba(255, 140, 50, 0); }
+}
+/* Mash'al qo'lda: pichoq/to'pponchadan boshqa qurol slotlari kulrang */
+.s06-inv-slot.blocked, .slot.blocked { opacity: 0.35; filter: grayscale(1); cursor: not-allowed; }
+.s06-inv-slot.blocked:hover { background: rgba(0, 0, 0, 0.3); border-color: rgba(36, 19, 10, 0.9); }
 .s06-util-btn.unarm-btn.active { border-color: #4a2f06; background: linear-gradient(180deg, #ffd94f, #f3b62a 55%, #c98d12); color: #2a1a05; }
 .s06-util-key {
   display: inline-block; min-width: 14px; padding: 0 4px; border-radius: 4px;
@@ -1022,6 +1032,19 @@ html, body {
   background: rgba(120, 20, 20, 0.45);
   border-radius: 6px;
   padding: 0 6px;
+}
+/* Tong otguncha: qo'ldagi mash'al pilli */
+.s07-pill-torch {
+  color: #ffd9a0;
+  background: rgba(140, 70, 20, 0.45);
+  border-radius: 6px;
+  padding: 0 6px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+}
+.s07-pill-torch.low {
+  color: #ffb866;
+  animation: s07-zone-pulse 0.7s ease-in-out infinite;
 }
 
 .s07-pill-count {

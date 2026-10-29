@@ -273,6 +273,9 @@ export class ClientPrediction {
       state.stamina = snap.stamina;
       state.staminaLocked = Boolean(snap.staminaLocked);
     }
+    // wolf_night: qo'ldagi o'tin (og'irlik) — avtoritativ; qayta o'ynashda server bilan bir xil tezlik qoidasi
+    // (o'tinsiz rejimlarda maydon umuman paydo bo'lmaydi)
+    if (snap.wood !== undefined || state.wood !== undefined) state.wood = snap.wood ?? 0;
 
     for (let i = 0; i < this.buffer.length; i++) {
       const rec = this.buffer[i];

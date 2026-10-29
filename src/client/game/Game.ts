@@ -23,8 +23,18 @@ import {
   type WolfState,
 } from '../../shared/wolf';
 import { WolfModel, preloadWolfAssets, wolfAudioRangeMul, wolfWarningFor, type WolfWarning } from './wolf';
-import { CAMP_ERROR_MESSAGES_UZ, CAMP_INTERACT_RANGE_M, CAMPFIRE_LOW_FUEL_SEC, WOOD_CARRY_MAX } from '../../shared/wolf/camp';
-import { CampRenderer, type CampFireView, type CampPileView } from './night';
+import {
+  CAMP_ERROR_MESSAGES_UZ,
+  CAMP_INTERACT_RANGE_M,
+  CAMPFIRE_LOW_FUEL_SEC,
+  TORCH_FUEL_COST_SEC,
+  TORCH_WEAPON_MESSAGE_UZ,
+  WOOD_CARRY_MAX,
+  WOOD_HEAVY_MESSAGE_UZ,
+  isTorchWeapon,
+  woodBlocksSprint,
+} from '../../shared/wolf/camp';
+import { CampRenderer, TorchLightPool, type CampFireView, type CampPileView, type TorchProp } from './night';
 import { DawnTracker, dawnBlendFactor, dawnExposure } from './night/dawnLighting';
 import {
   DEFAULT_CONTAINER_EXTRA_MARGIN_M,
@@ -37,7 +47,7 @@ import type {
   AmmoEvent, CampActionAck, CampfireEvent, ChatMsg, ContainerOpenAck, ContainerOpenReq, EquipWeaponAck, EquipWeaponReq,
   ExplosionEvent, FeedFireReq, HitConfirm, HurtEvent, KillEvent, LootPickupAck, LootPickupReq, MatchState, PlayerInputBatchMsg,
   PlayerInventorySnap, PlayerSnap, PublicContainerState, PublicLootItem, RosterEntry, RoomLootSnapshot, ShootMsg, ShotEvent,
-  Snapshot, SpawnEvent, TakeWoodReq, UseMedkitAck, UseMedkitReq, WelcomeMsg,
+  Snapshot, SpawnEvent, TakeTorchReq, TakeWoodReq, UseMedkitAck, UseMedkitReq, WelcomeMsg,
 } from '../../shared/protocol';
 import { unpackGearState } from '../../shared/protocol';
 import { ALL_WEAPON_IDS, KNIFE, KNIFE_SLOT_KEY, WEAPONS, WEAPON_SLOTS, isMeleeWeapon, type WeaponId } from '../../shared/weapons';
@@ -227,6 +237,16 @@ export class Game {
   /** Lager amali so'rovi yuborilgan, ack kutilmoqda (ikki marta bosilmasin). */
   private campBusy = false;
   /**
+   * wolf_night mash'al: qo'ldagi mash'alning qolgan vaqti (serverdan, snapshot; ack bilan darhol yangilanadi),
+   * [F] nishoni (yonib turgan gulxan — olish; mash'al bo'lsa — tashlash), yoritgich hovuzi va "og'ir yuk" toast vaqti.
+   */
+  private myTorchSec = 0;
+  private myTorchAt = 0;
+  private torchTarget: { kind: 'take'; fireId: string } | { kind: 'drop' } | null = null;
+  private torchLights: TorchLightPool | null = null;
+  private torchCrackleId = '';
+  private heavyHintAt = -99;
+  /**
    * wolf_night yiqilgan holat (serverdan, snapshot): harakat/qurol/[E] yo'q, kamera pastda, banner.
    * `myDownedView` — kamera ko'z balandligi uchun silliqlangan 0..1.
    */
@@ -363,7 +383,10 @@ export class Game {
       this.world.stage04a?.containers ?? null,
     );
     // Lager: PointLight'lar prewarm'dan OLDIN sahnada bo'lsin (yorug'lik soni o'zgarsa shaderlar qayta kompilyatsiya bo'ladi)
-    if (this.isNight) this.camp = new CampRenderer(this.scene);
+    if (this.isNight) {
+      this.camp = new CampRenderer(this.scene);
+      this.torchLights = new TorchLightPool(this.scene);
+    }
     this.lootUi = new LootUI({
       onOpenContainer: (containerId) => {
         void this.requestOpenContainer(containerId);
@@ -970,6 +993,7 @@ export class Game {
       }
       if (this.isNight) {
         this.setMyWood(mine.wood ?? 0);
+        this.setMyTorch(mine.alive && !mine.downed ? mine.torchSec ?? 0 : 0);
         this.setMyDowned(mine.alive && mine.downed === true, mine.bleedSec ?? 0, mine.reviveK ?? null);
       }
       if (mine.spectateTargetId && !this.spectator.getTargetId()) {
@@ -1173,6 +1197,8 @@ export class Game {
     this.lootUi.clearPendingItems();
     this.lootUi.setActiveContainer(null);
     this.inventoryUi.setVisible(Boolean(e.lootPreview ?? this.lootPreview));
+    // Yangi hayot — mash'alsiz (server ham torchUntil = 0 qiladi)
+    this.setMyTorch(0);
     this.vm.setWeapon(this.me.weapon);
     this.myModel.setWeapon(this.me.weapon);
     if (this.me.weapon) {
@@ -1303,6 +1329,7 @@ export class Game {
     // O'lgan/kuzatuvchi o'yinchida eski yuklama ko'rinib turmasin; spawn'da qayta ko'rsatiladi
     this.inventoryUi.setVisible(false);
     this.setMyDowned(false, 0, null);
+    this.setMyTorch(0);
   }
 
   /**
@@ -1669,6 +1696,13 @@ export class Game {
       // bashorat mos qoladi; faqat qarash (yaw/pitch) ishlaydi
       const downed = this.myDowned;
       if (jump && wasGround && !downed) this.audio.jump();
+      // O'tinning og'irligi (wolf_night): to'la qo'l bilan Shift bosilsa — qisqa ishora (4 s da bir marta);
+      // harakat qoidasi o'zi shared stepPlayerMovement da (sprint bloklanadi, stamina kamaymaydi)
+      if (this.isNight && walk && fwd > 0 && !downed && woodBlocksSprint(me.wood) && t - this.heavyHintAt > 4) {
+        this.heavyHintAt = t;
+        this.inventoryUi.pulseWoodHeavy();
+        this.lootUi.showStatus(`🪵 ${WOOD_HEAVY_MESSAGE_UZ}`, 'info', 1600);
+      }
       if (!(import.meta.env.DEV && window.__DEV_PLAYER_POSE_LOCK__)) {
         if (downed) me.move(dt, 0, 0, false, false, false);
         else me.move(dt, fwd, right, jump, walk, crouch);
@@ -1716,6 +1750,7 @@ export class Game {
 
     this.updateLootInteraction();
     this.updateCampInteraction();
+    this.updateTorchInteraction();
     this.updateReviveInteraction();
     this.updateRemotes(dt, t);
     this.fx.update(dt);
@@ -1883,6 +1918,11 @@ export class Game {
       else this.lootUi.triggerPrimaryInteract();
     }
 
+    // wolf_night: [F] mash'al — yonib turgan gulxandan olish yoki qo'ldagini tashlash (E dan alohida tugma)
+    if (inp.justPressed('KeyF') && !notPlaying && this.isNight) {
+      this.triggerTorchAction();
+    }
+
     // Stage 06: [H] Aptechka ishlatish
     if (inp.justPressed('KeyH') && !notPlaying) {
       void this.requestUseMedkit();
@@ -1915,7 +1955,8 @@ export class Game {
     if (slot >= 0) pick = WEAPON_SLOTS[slot];
     if (inp.justPressed('Digit' + KNIFE_SLOT_KEY)) pick = KNIFE;
     if (inp.wheel !== 0) {
-      const owned = ALL_WEAPON_IDS.filter((w) => me.ownsWeapon(w));
+      // G'ildirak mash'al bilan bloklangan qurollarni o'tkazib yuboradi
+      const owned = ALL_WEAPON_IDS.filter((w) => me.ownsWeapon(w) && (this.myTorchSec <= 0 || isTorchWeapon(w)));
       if (owned.length > 0) {
         const curIdx = me.weapon ? owned.indexOf(me.weapon) : -1;
         pick = owned[(curIdx + Math.sign(inp.wheel) + owned.length) % owned.length];
@@ -1928,6 +1969,9 @@ export class Game {
       const w = pick;
       if (!me.ownsWeapon(w)) {
         this.lootUi.showStatus(LOOT_ERROR_MESSAGES_UZ.WEAPON_NOT_OWNED, 'error', 2000);
+      } else if (this.myTorchSec > 0 && !isTorchWeapon(w)) {
+        // Mash'al qo'lda: faqat pichoq/to'pponcha (server ham rad etadi)
+        this.lootUi.showStatus(`🔥 ${TORCH_WEAPON_MESSAGE_UZ}`, 'error', 2000);
       } else {
         const prev = me.weapon;
         if (me.switchTo(w, t)) {
@@ -2128,6 +2172,8 @@ export class Game {
       m.setGear(unpackGearState(src.gear));
       m.setCrouch(rem.crouched && !downed);
       m.setDownedMarker(downed && !isHiddenSpectator);
+      // wolf_night: qo'ldagi mash'al (yangiroq snapshot'dan; yiqilgan/o'lganda yo'q)
+      if (this.isNight) m.setTorch(src.alive && !downed && (p1.torchSec ?? 0) > 0);
       const poseAlive = src.alive && !downed;
       m.update(dt, { speed: downed ? 0 : rem.speed, onGround: src.onGround, pitch: rem.pitch, alive: poseAlive, reloading: src.reloading });
       m.updateNameTagDistance(distToCam, poseAlive);
@@ -2322,6 +2368,128 @@ export class Game {
     this.inventoryUi.setWood(this.isNight ? w : null);
   }
 
+  /**
+   * wolf_night: o'zimizdagi mash'al (serverdan: snapshot `torchSec` yoki ack). 0 — yo'q. Qolgan vaqt klientda
+   * `myTorchAt` dan ekstrapolyatsiya qilinadi (pill har kadr). Yoqilganda/o'chganda 1P/3P ko'rinish, HUD slotlari.
+   */
+  private setMyTorch(torchSec: number): void {
+    const s = Math.max(0, Math.round(torchSec));
+    const had = this.myTorchSec > 0;
+    this.myTorchSec = s;
+    this.myTorchAt = this.nowSec;
+    const has = s > 0;
+    if (has === had) return;
+    this.vm.setTorch(has);
+    this.myModel.setTorch(has);
+    this.inventoryUi.setTorch(has);
+    this.hud.setTorchHeld(has);
+    if (!has) {
+      this.audio.campfireCrackleRemove(this.torchCrackleId);
+      this.torchCrackleId = '';
+      if (this.me.alive && !this.myDowned) this.lootUi.showStatus("🔥 Mash'al o'chdi", 'info', 1800);
+    }
+  }
+
+  /** Qolgan mash'al vaqti (s) — oxirgi serverdan kelgan qiymatdan ekstrapolyatsiya. */
+  private myTorchLeft(): number {
+    if (this.myTorchSec <= 0) return 0;
+    return Math.max(0, this.myTorchSec - (this.nowSec - this.myTorchAt));
+  }
+
+  /**
+   * [F] nishoni (har kadr, updateCampInteraction dan keyin): mash'al bo'lsa — tashlash; yo'q bo'lsa va yaqinda
+   * (CAMP_INTERACT_RANGE_M) yonib turgan gulxan bo'lsa — olish. Prompt matniga "[F] ..." qo'shiladi: gulxan
+   * promptida o'tin bo'lsa "[E] Gulxanga o'tin tashlash · [F] Mash'al olish", o'tin bo'lmasa "[E] Mash'al olish"
+   * (E ham mash'al oladi — triggerCampAction).
+   */
+  private updateTorchInteraction(): void {
+    if (!this.isNight || !this.camp) {
+      this.torchTarget = null;
+      return;
+    }
+    const playing = !this.match || this.match.phase === 'playing';
+    if (!this.me.alive || this.myDowned || !playing) {
+      this.torchTarget = null;
+      return;
+    }
+    if (this.myTorchSec > 0) {
+      this.torchTarget = { kind: 'drop' };
+      return;
+    }
+    const fireTarget = this.campTarget?.kind === 'fire' ? this.campTarget.id : null;
+    if (!fireTarget) {
+      this.torchTarget = null;
+      return;
+    }
+    const fire = this.camp.getFires(this.nowSec).find((f) => f.id === fireTarget);
+    this.torchTarget = fire && fire.lit ? { kind: 'take', fireId: fire.id } : null;
+  }
+
+  /** [F]: mash'al olish (yonib turgan gulxan nishonda) yoki tashlash (qo'lda bo'lsa). */
+  private triggerTorchAction(): void {
+    if (this.campBusy) return;
+    const tgt = this.torchTarget;
+    if (!tgt) {
+      if (this.campTarget?.kind === 'fire') this.lootUi.showStatus(CAMP_ERROR_MESSAGES_UZ.FIRE_OUT, 'error', 2000);
+      return;
+    }
+    if (tgt.kind === 'drop') void this.requestDropTorch();
+    else void this.requestTakeTorch(tgt.fireId);
+  }
+
+  private requestTakeTorch(fireId: string): Promise<CampActionAck | null> {
+    this.campBusy = true;
+    this.sendInput();
+    const req: TakeTorchReq = { fireId };
+    return new Promise((resolve) => {
+      this.socket.timeout(3000).emit('night:takeTorch', req, (err: Error | null, ack?: CampActionAck) => {
+        if (this.disposed) return resolve(null);
+        if (this.handleCampAck(ack, err) && ack) {
+          this.myModel.playInteract();
+          this.setMyTorch(ack.torchSec ?? 0);
+          if (ack.fuelSec !== undefined) this.camp?.applyFireEvent(fireId, ack.fuelSec, true, this.nowSec);
+          // Server qurolni pichoq/to'pponchaga o'tkazgan bo'lsa — lokal ham shunga o'tamiz
+          this.applyServerWeaponSwitch(ack.weapon);
+          const fire = this.camp?.getFires(this.nowSec).find((f) => f.id === fireId);
+          this.audio.torchTake(fire ? { x: fire.x, y: fire.y + 0.8, z: fire.z } : undefined);
+          this.lootUi.showStatus(`🔥 Mash'al olindi (${ack.torchSec ?? 0} s) — gulxan −${TORCH_FUEL_COST_SEC} s`, 'success', 2200);
+        }
+        resolve(ack ?? null);
+      });
+    });
+  }
+
+  private requestDropTorch(): Promise<CampActionAck | null> {
+    this.campBusy = true;
+    return new Promise((resolve) => {
+      this.socket.timeout(3000).emit('night:dropTorch', {}, (err: Error | null, ack?: CampActionAck) => {
+        if (this.disposed) return resolve(null);
+        if (this.handleCampAck(ack, err)) {
+          this.setMyTorch(0);
+          this.lootUi.showStatus("🔥 Mash'al tashlandi", 'info', 1600);
+        }
+        resolve(ack ?? null);
+      });
+    });
+  }
+
+  /** Server ack'da qurolni almashtirgan (mash'al olinganda): lokal holat, 1P/3P model va HUD mos keladi. */
+  private applyServerWeaponSwitch(weapon: string | null | undefined): void {
+    if (weapon === undefined || weapon === this.me.weapon) return;
+    const me = this.me;
+    const w = weapon === null ? null : ALL_WEAPON_IDS.find((id) => id === weapon) ?? null;
+    if (weapon !== null && !w) return;
+    const prev = me.weapon;
+    if (w !== null && !me.ownsWeapon(w)) return;
+    if (!me.switchTo(w, this.nowSec)) return;
+    if (prev) this.prevWeapon = prev;
+    this.lastLocalSwitchAt = this.nowSec;
+    this.vm.setWeapon(w);
+    this.myModel.setWeapon(w);
+    if (w) this.vm.startSwitch(WEAPONS[w].switchTime * 0.5);
+    this.audio.switchWeapon();
+  }
+
   private get nowSec(): number {
     return performance.now() / 1000;
   }
@@ -2440,23 +2608,42 @@ export class Game {
     if (bestKind === 'fire' && bestFire) {
       this.campTarget = { kind: 'fire', id: bestFire.id };
       const status = this.campStatusHtml(bestFire);
+      // Mash'al: yonib turgan gulxandan, qo'lda mash'al bo'lmasa. O'tin bo'lsa E — o'tin tashlash, F — mash'al;
+      // o'tin bo'lmasa E ham mash'al oladi. Qo'lda mash'al bo'lsa F — tashlash.
+      const torchHeld = this.myTorchSec > 0;
+      const torchOffer = bestFire.lit && !torchHeld;
+      const torchHtml = torchOffer
+        ? ` <span class="prompt-sep">·</span> <span class="key-pill">F</span><span>Mash'al olish</span>`
+        : torchHeld
+          ? ` <span class="prompt-sep">·</span> <span class="key-pill">F</span><span>Mash'alni tashlash</span>`
+          : '';
+      const torchText = torchOffer ? ` · [F] Mash'al olish` : torchHeld ? ` · [F] Mash'alni tashlash` : '';
       if (wood > 0) {
         this.lootUi.setCustomPrompt({
-          html: `<span class="key-pill">E</span><span>Gulxanga o'tin tashlash (${wood} ta)</span>${status}`,
-          text: `[E] Gulxanga o'tin tashlash (${wood} ta)`,
+          html: `<span class="key-pill">E</span><span>Gulxanga o'tin tashlash (${wood} ta)</span>${torchHtml}${status}`,
+          text: `[E] Gulxanga o'tin tashlash (${wood} ta)${torchText}`,
+          variantClass: 'camp',
+        });
+      } else if (torchOffer) {
+        this.lootUi.setCustomPrompt({
+          html: `<span class="key-pill">E</span><span>Mash'al olish</span>${status}`,
+          text: `[E] Mash'al olish`,
           variantClass: 'camp',
         });
       } else {
         this.lootUi.setCustomPrompt({
-          html: `<span class="key-pill">E</span><span>Gulxan — o'tin yo'q</span>${status}`,
-          text: `[E] Gulxan — o'tin yo'q`,
+          html: `<span class="key-pill">E</span><span>Gulxan — o'tin yo'q</span>${torchHtml}${status}`,
+          text: `[E] Gulxan — o'tin yo'q${torchText}`,
           variantClass: 'empty',
         });
       }
     }
   }
 
-  /** [E] lager nishonida: g'aramdan o'tin olish yoki gulxanga tashlash (server ack bilan). */
+  /**
+   * [E] lager nishonida: g'aramdan o'tin olish yoki gulxanga tashlash (server ack bilan). O'tin bo'lmasa va gulxan
+   * yonib tursa (mash'al yo'q) — E mash'al oladi.
+   */
   private triggerCampAction(): void {
     const tgt = this.campTarget;
     if (!tgt || this.campBusy) return;
@@ -2468,6 +2655,10 @@ export class Game {
       void this.requestTakeWood(tgt.id);
     } else {
       if (this.me.wood <= 0) {
+        if (this.torchTarget?.kind === 'take' && this.torchTarget.fireId === tgt.id) {
+          void this.requestTakeTorch(tgt.id);
+          return;
+        }
         this.lootUi.showStatus(CAMP_ERROR_MESSAGES_UZ.NO_WOOD, 'error', 2200);
         return;
       }
@@ -2626,6 +2817,37 @@ export class Game {
       const dist = Math.hypot(f.x - cam.x, f.y - cam.y, f.z - cam.z);
       this.audio.campfireCrackle(f.id, { x: f.x, y: f.y + 0.5, z: f.z }, f.flame, dist, f.lit);
     }
+    this.updateTorches(t);
+  }
+
+  /**
+   * Mash'allar (3P modellardagi proplar): alanga lipillashi, eng yaqin 4 tasiga yoritgich (TorchLightPool) va
+   * o'z mash'alimizning past chirsillashi (gulxan crackle ovozining kichik varianti, o'yinchi joyida).
+   */
+  private updateTorches(t: number): void {
+    const torches: TorchProp[] = [];
+    for (const rem of this.remotes.values()) {
+      const tp = rem.model.getTorch();
+      if (tp && rem.model.root.visible) torches.push(tp);
+    }
+    for (const tp of torches) tp.update(t);
+    const mine = this.myModel.getTorch();
+    if (mine) {
+      if (this.myModel.root.visible) {
+        mine.update(t);
+      } else {
+        // 1P: 3P modelimiz ko'rinmaydi (yoritgich uchun dunyo matritsasi baribir kerak) — mash'al yoritgichi
+        // o'z o'rnimizda tursin, atrof yorishsin
+        this.myModel.root.updateMatrixWorld(true);
+      }
+      torches.unshift(mine);
+    }
+    this.torchLights?.update(torches, this.camera.position, t);
+    if (this.myTorchSec > 0 && this.me.alive) {
+      if (!this.torchCrackleId) this.torchCrackleId = `torch:${this.myId}`;
+      const p = this.me.body.pos;
+      this.audio.campfireCrackle(this.torchCrackleId, { x: p.x, y: p.y + 1.3, z: p.z }, 0.3, 0.8, true);
+    }
   }
 
   /** HUD: asosiy gulxan holati (pill) va ogohlantirish banneri. */
@@ -2638,7 +2860,8 @@ export class Game {
       main && this.me.alive && this.me.wood < WOOD_CARRY_MAX
         ? this.camp.nearestAvailablePileDist(this.me.body.pos.x, this.me.body.pos.z)
         : null;
-    this.survivalUi.setCampStatus(main ? { fuelSec: main.fuelSec, lit: main.lit, pileM } : null);
+    const torchSec = this.me.alive && !this.myDowned ? this.myTorchLeft() : 0;
+    this.survivalUi.setCampStatus(main ? { fuelSec: main.fuelSec, lit: main.lit, pileM, torchSec } : null);
     if (!main || !this.me.alive) {
       this.hud.setCampWarning('');
       return;
@@ -3069,6 +3292,8 @@ export class Game {
     this.audio.stopCampfireSounds();
     this.camp?.dispose();
     this.camp = null;
+    this.torchLights?.dispose();
+    this.torchLights = null;
     for (const rem of this.remotes.values()) rem.model.dispose();
     for (const [, mesh] of this.grenadeMeshes) {
       this.scene.remove(mesh);

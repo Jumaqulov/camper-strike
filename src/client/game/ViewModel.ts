@@ -5,6 +5,7 @@ import { buildGrenadeModel, buildGun, type GunModel } from './GunModels';
 import { getFlannelTexture, skinMat } from './ViewModelMaterials';
 import { flashTexture } from './Textures';
 import { onWeaponAssetsReady } from './WeaponAssetRegistry';
+import { TorchProp } from './night/TorchRenderer';
 
 const HOLD: Record<WeaponId, THREE.Vector3> = {
   rifle: new THREE.Vector3(0.20, -0.135, -0.36),
@@ -69,6 +70,10 @@ export class ViewModel {
   /** Tun rejimi va joriy tong omili (-1 — hali qo'llanmagan). */
   private night = false;
   private dawnF = -1;
+  /** wolf_night: 1P mash'al (kameraning pastki chap tomonida) va uning iliq lipillovchi yoritgichi. */
+  private torch: TorchProp | null = null;
+  private torchLight: THREE.PointLight | null = null;
+  private torchT = 0;
   visible = true;
 
   constructor(aspect: number) {
@@ -202,6 +207,34 @@ export class ViewModel {
    * Tun rejimi ("Tong otguncha"): qo'l/qurol yoritgichlari ~45% ga tushadi va oy nuriga mos ko'kimtir
    * tus oladi — aks holda 1P qurol tun dunyosi ustida kunduzdek yorug' ko'rinardi.
    */
+  /**
+   * wolf_night: qo'ldagi mash'al (1P). Chap qo'l qurol guruhining bir qismi bo'lgani uchun mash'al kameraning
+   * pastki chap tomonida qo'zg'almas turadi (biroz chayqaladi) + kamera yonida iliq lipillovchi PointLight.
+   */
+  setTorch(on: boolean): void {
+    if (on === (this.torch !== null)) return;
+    if (!on) {
+      this.torch?.dispose();
+      this.torch = null;
+      if (this.torchLight) {
+        this.camera.remove(this.torchLight);
+        this.torchLight.dispose();
+        this.torchLight = null;
+      }
+      return;
+    }
+    const torch = new TorchProp();
+    torch.root.position.set(-0.21, -0.33, -0.36);
+    torch.root.rotation.set(0.28, 0, 0.32);
+    torch.root.scale.setScalar(0.85);
+    this.camera.add(torch.root);
+    this.torch = torch;
+    const light = new THREE.PointLight('#ff9a3c', 1.3, 2.6, 1.8);
+    light.position.set(-0.16, 0.05, -0.3);
+    this.camera.add(light);
+    this.torchLight = light;
+  }
+
   setNight(on: boolean): void {
     this.night = on;
     this.dawnF = -1;
@@ -323,6 +356,21 @@ export class ViewModel {
     this.swayX = THREE.MathUtils.lerp(this.swayX, THREE.MathUtils.clamp(-mouseDX * 0.0009, -0.04, 0.04), dt * 10);
     this.swayY = THREE.MathUtils.lerp(this.swayY, THREE.MathUtils.clamp(mouseDY * 0.0009, -0.04, 0.04), dt * 10);
 
+    // Mash'al (1P): alanga lipillashi, qadam chayqalishi va iliq yoritgich tebranishi
+    if (this.torch) {
+      this.torchT += dt;
+      this.torch.update(this.torchT);
+      this.torch.root.position.set(
+        -0.21 + Math.sin(this.bob) * 0.008 * amp + this.swayX * 0.5,
+        -0.33 + Math.abs(Math.cos(this.bob)) * 0.01 * amp + this.swayY * 0.5,
+        -0.36,
+      );
+      if (this.torchLight) {
+        const flick = 0.9 + 0.1 * (Math.sin(this.torchT * 13.1) * 0.6 + Math.sin(this.torchT * 20.7) * 0.4);
+        this.torchLight.intensity = 1.3 * flick;
+      }
+    }
+
     let y = hold.y + Math.abs(Math.cos(this.bob)) * 0.012 * amp - 0.006 * amp + this.swayY + this.kick * 0.014;
     const x = hold.x + Math.sin(this.bob) * 0.012 * amp + this.swayX;
     let z = Math.min(hold.z + 0.055, hold.z + this.kick * 0.055);
@@ -422,6 +470,7 @@ export class ViewModel {
   }
 
   dispose(): void {
+    this.setTorch(false);
     this.unsubWeaponReady?.();
     this.unsubWeaponReady = null;
     for (const g of this.ownedGeometries) {

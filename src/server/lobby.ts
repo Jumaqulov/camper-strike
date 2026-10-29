@@ -31,8 +31,10 @@ import {
   NIGHT_MIN_MINUTES,
   WOLF_MAX_PER_ROOM,
   sanitizeNightDifficulty,
+  type DropTorchReq,
   type ReviveAck,
   type ReviveReq,
+  type TakeTorchReq,
 } from '../shared/wolf';
 import { DEFAULT_PUBLIC_LAYOUT_SEED, type MapId } from '../shared/world';
 import { Room } from './room';
@@ -223,6 +225,13 @@ export class Lobby {
     );
     socket.on('night:feedFire', (req: FeedFireReq, ack?: Ack<CampActionAck>) =>
       room?.onFeedFire(socket.id, req, ack),
+    );
+    // Tong otguncha: yonib turgan gulxandan mash'al olish / qo'ldagi mash'alni tashlash ([F], CampActionAck bilan)
+    socket.on('night:takeTorch', (req: TakeTorchReq, ack?: Ack<CampActionAck>) =>
+      room?.onTakeTorch(socket.id, req, ack),
+    );
+    socket.on('night:dropTorch', (req: DropTorchReq, ack?: Ack<CampActionAck>) =>
+      room?.onDropTorch(socket.id, req, ack),
     );
     // Tong otguncha: yiqilgan sherikni turg'izishni boshlash ([E], ReviveAck bilan)
     socket.on('night:revive', (req: ReviveReq, ack?: Ack<ReviveAck>) => room?.onRevive(socket.id, req, ack));

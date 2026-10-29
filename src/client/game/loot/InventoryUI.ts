@@ -4,7 +4,7 @@ import {
   type PlayerInventorySnap,
 } from '../../../shared/loot';
 import { KNIFE, KNIFE_SLOT_KEY, WEAPONS, WEAPON_SLOTS, type WeaponId } from '../../../shared/weapons';
-import { WOOD_CARRY_MAX } from '../../../shared/wolf/camp';
+import { TORCH_WEAPON_MESSAGE_UZ, WOOD_CARRY_MAX, isTorchWeapon } from '../../../shared/wolf/camp';
 import { weaponIconHtml } from '../Hud';
 import { onWeaponAssetsReady } from '../WeaponAssetRegistry';
 
@@ -54,6 +54,8 @@ export class InventoryUI {
   private lastRenderKey = '';
   /** "Tong otguncha": qo'ldagi o'tin soni (null — boshqa rejimlar, chip ko'rsatilmaydi). */
   private wood: number | null = null;
+  /** "Tong otguncha": mash'al qo'lda — faqat pichoq/to'pponcha slotlari ochiq. */
+  private torch = false;
 
   constructor(callbacks: InventoryUICallbacks) {
     this.callbacks = callbacks;
@@ -110,6 +112,26 @@ export class InventoryUI {
     this.render();
   }
 
+  /**
+   * "Og'ir yuk" ishorasi: to'la qo'l o'tin bilan Shift bosilganda o'tin chipi qisqa pulsatsiya qiladi
+   * (CSS 'heavy' klassi; DOM qayta chizilmaydi).
+   */
+  pulseWoodHeavy(): void {
+    const chip = this.stripEl?.querySelector('.wood-chip');
+    if (!chip) return;
+    chip.classList.remove('heavy');
+    // Klassni qayta qo'shish animatsiyani qaytadan boshlaydi
+    void (chip as HTMLElement).offsetWidth;
+    chip.classList.add('heavy');
+  }
+
+  /** wolf_night: mash'al qo'lda — avtomat/drobovik/snayper slotlari kulrang ('blocked'), 1–4 bosilsa toast. */
+  setTorch(on: boolean): void {
+    if (this.torch === on) return;
+    this.torch = on;
+    this.render();
+  }
+
   private isUnarmedBannerVisible(): boolean {
     return Boolean(this.visible && this.snap && this.snap.lootPreview && this.snap.equippedWeapon === null);
   }
@@ -130,6 +152,7 @@ export class InventoryUI {
     this.snap = null;
     this.visible = false;
     this.wood = null;
+    this.torch = false;
     this.lastRenderKey = '';
     if (this.rootEl) {
       this.rootEl.className = 'hidden';
@@ -175,7 +198,7 @@ export class InventoryUI {
       const a = s.ammo[w];
       return `${w}:${a ? a.mag : 0}/${a ? a.reserve : 0}`;
     }).join('|');
-    const renderKey = `${s.inventoryVersion}|${s.equippedWeapon ?? 'none'}|${s.ownedWeapons.join(',')}|${s.medkits}/${s.maxMedkits}|${s.grenades}/${s.maxGrenades}|${s.armor ?? 0}|${s.helmet ?? 0}|${ammoKey}|w${this.wood ?? '-'}`;
+    const renderKey = `${s.inventoryVersion}|${s.equippedWeapon ?? 'none'}|${s.ownedWeapons.join(',')}|${s.medkits}/${s.maxMedkits}|${s.grenades}/${s.maxGrenades}|${s.armor ?? 0}|${s.helmet ?? 0}|${ammoKey}|w${this.wood ?? '-'}|t${this.torch ? 1 : 0}`;
     if (renderKey === this.lastRenderKey) return;
     this.lastRenderKey = renderKey;
 
@@ -194,13 +217,18 @@ export class InventoryUI {
 
     if (!this.stripEl) return;
 
-    // Ixcham yog'och taxtacha: [tugma raqami + ikonka] ustida, [nom + o'q] ostida; matnli holatlar tooltip'da
-    const slotHtml = (w: WeaponId, key: number, owned: boolean, equipped: boolean, ammoText: string, tip: string) => `
-        <button type="button" class="s06-inv-slot ${equipped ? 'owned equipped' : owned ? 'owned' : 'locked'}"
-          data-weapon="${escapeHtml(w)}" ${!owned ? 'disabled' : ''} title="${escapeHtml(tip)}">
+    // Ixcham yog'och taxtacha: [tugma raqami + ikonka] ustida, [nom + o'q] ostida; matnli holatlar tooltip'da.
+    // Mash'al qo'lda bo'lsa pichoq/to'pponchadan boshqa qurollar 'blocked' (kulrang) — tanlash serverda ham rad etiladi.
+    const torch = this.torch;
+    const slotHtml = (w: WeaponId, key: number, owned: boolean, equipped: boolean, ammoText: string, tip: string) => {
+      const blocked = torch && !isTorchWeapon(w);
+      return `
+        <button type="button" class="s06-inv-slot ${equipped ? 'owned equipped' : owned ? 'owned' : 'locked'}${blocked ? ' blocked' : ''}"
+          data-weapon="${escapeHtml(w)}" ${!owned ? 'disabled' : ''} title="${escapeHtml(blocked ? `${WEAPONS[w].name} — ${TORCH_WEAPON_MESSAGE_UZ}` : tip)}">
           <span class="s06-slot-top"><span class="s06-slot-key">${key}</span><span class="s06-slot-icon">${weaponIconHtml(w)}</span></span>
           <span class="s06-slot-bottom"><span class="s06-slot-name">${escapeHtml(WEAPONS[w].name)}</span><span class="s06-slot-ammo">${escapeHtml(ammoText)}</span></span>
         </button>`;
+    };
 
     const weaponsHtml = WEAPON_SLOTS.map((w, idx) => {
       const def = WEAPONS[w];

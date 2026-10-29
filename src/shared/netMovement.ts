@@ -15,6 +15,7 @@ import { clamp } from './math';
 import { applyWorldMovement, collidesAtWorld, type Body, type WorldMovementOptions } from './physics';
 import type { PlayerInputCmd } from './protocol';
 import { isWeaponId, UNARMED_SPEED_MUL, WEAPONS, type WeaponId } from './weapons';
+import { woodBlocksSprint, woodSpeedMul } from './wolf/camp';
 import type { WorldDefinition } from './world';
 
 export const FIXED_MOVE_DT = 1 / 60;
@@ -36,6 +37,11 @@ export interface MovementState extends Body {
   stamina?: number;
   /** Stamina tugagan: STAMINA_RELOCK_THRESHOLD gacha tiklanmaguncha sprint yo'q. */
   staminaLocked?: boolean;
+  /**
+   * wolf_night: qo'ldagi o'tin soni (0..WOOD_CARRY_MAX) — og'irlik: tezlik ko'paytuvchisi `woodSpeedMul`,
+   * to'la qo'lda sprint yo'q. Server `p.wood` ni, klient snapshotdan bilgan o'tinini beradi; yo'q bo'lsa 0.
+   */
+  wood?: number;
 }
 
 export function cloneMovementState(state: MovementState): MovementState {
@@ -50,6 +56,8 @@ export function cloneMovementState(state: MovementState): MovementState {
     stamina: state.stamina ?? 1,
     staminaLocked: Boolean(state.staminaLocked),
     crouched: Boolean(state.crouched),
+    // O'tin maydoni faqat berilgan bo'lsa nusxalanadi (o'tinsiz rejimlardagi holat tuzilishi o'zgarmaydi)
+    ...(state.wood !== undefined ? { wood: state.wood } : {}),
   };
 }
 
@@ -298,12 +306,14 @@ export function extractSanitizedInputBatch(
  * Kirishdan istalgan gorizontal tezlik.
  * `crouched` — o'yinchining (avtoritativ) o'tirgan holati: asosiy tezlik `CROUCH_SPEED`, sprint yo'q
  * (yo'nalish, qurol va snayper pritsel ko'paytuvchilari baribir qo'llanadi).
+ * `wood` — qo'ldagi o'tin (wolf_night): `woodSpeedMul` ko'paytuvchisi, to'la qo'lda (WOOD_CARRY_MAX) sprint yo'q.
  */
 export function computeWishVelocity(
   cmd: Pick<PlayerInputCmd, 'moveForward' | 'moveRight' | 'walk' | 'scoped' | 'weapon' | 'yaw'>,
   crouched = false,
+  wood = 0,
 ): { wx: number; wz: number; maxSpeed: number } {
-  const speedMul = cmd.weapon ? (WEAPONS[cmd.weapon]?.speedMul ?? 1) : UNARMED_SPEED_MUL;
+  const speedMul = (cmd.weapon ? (WEAPONS[cmd.weapon]?.speedMul ?? 1) : UNARMED_SPEED_MUL) * woodSpeedMul(wood);
   const scopedMul = cmd.scoped && cmd.weapon === 'sniper' ? 0.55 : 1;
 
   const fwd = clamp(cmd.moveForward, -1, 1);
@@ -316,8 +326,9 @@ export function computeWishVelocity(
   // Yo'nalishga bog'liq tezlik: oldinga 1.0, yon tomonga STRAFE, orqaga BACKPEDAL (diagonal — oraliq).
   const f = fwd / Math.hypot(fwd, right); // -1 (orqaga) .. +1 (oldinga)
   const dirMul = f >= 0 ? STRAFE_SPEED_MUL + (1 - STRAFE_SPEED_MUL) * f : STRAFE_SPEED_MUL + (BACKPEDAL_SPEED_MUL - STRAFE_SPEED_MUL) * -f;
-  // Sprint (Shift) faqat asosan oldinga harakatda; orqaga/yon sprint yo'q. O'tirganda sprint umuman yo'q.
-  const sprinting = !crouched && cmd.walk && f > SPRINT_MIN_FORWARD;
+  // Sprint (Shift) faqat asosan oldinga harakatda; orqaga/yon sprint yo'q. O'tirganda va to'la qo'l o'tin bilan
+  // sprint umuman yo'q.
+  const sprinting = !crouched && !woodBlocksSprint(wood) && cmd.walk && f > SPRINT_MIN_FORWARD;
   const baseSpeed = crouched ? CROUCH_SPEED : sprinting ? RUN_SPEED : WALK_SPEED;
   const maxSpeed = baseSpeed * dirMul * speedMul * scopedMul;
 
@@ -346,6 +357,8 @@ export function stepPlayerMovement(
     scoped?: boolean;
     stamina?: number;
     staminaLocked?: boolean;
+    /** wolf_night: qo'ldagi o'tin (og'irlik) — server `p.wood`, klient snapshotdan; yo'q bo'lsa 0. */
+    wood?: number;
   },
   cmd: PlayerInputCmd,
   world: WorldDefinition,
@@ -359,12 +372,13 @@ export function stepPlayerMovement(
   // O'tirish/turish — harakatdan oldin (tepada joy bo'lmasa o'tirgan holat saqlanadi)
   resolveStance(state, Boolean(cmd.crouch), world);
   const crouched = Boolean(state.crouched);
+  const wood = state.wood ?? 0;
 
   const totalDt = quantizeInputDt(cmd.dt);
   // Stamina: sprint faqat chidamlilik bo'lsa; tugaganda avtomatik yurishga o'tadi.
-  // O'tirganda sprint so'ralmagan hisoblanadi — stamina tiklanadi.
-  const sprintOk = stepStamina(state, !crouched && wantsSprint(cmd), totalDt);
-  const { wx, wz } = computeWishVelocity(sprintOk === cmd.walk ? cmd : { ...cmd, walk: sprintOk }, crouched);
+  // O'tirganda yoki to'la qo'l o'tin bilan sprint so'ralmagan hisoblanadi — stamina tiklanadi (kamaymaydi).
+  const sprintOk = stepStamina(state, !crouched && !woodBlocksSprint(wood) && wantsSprint(cmd), totalDt);
+  const { wx, wz } = computeWishVelocity(sprintOk === cmd.walk ? cmd : { ...cmd, walk: sprintOk }, crouched, wood);
   const substeps = Math.max(1, Math.ceil(totalDt / FIXED_MOVE_DT));
   const sdt = totalDt / substeps;
 

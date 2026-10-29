@@ -867,6 +867,19 @@ export class AudioSys {
     }
   }
 
+  /** Mash'al olindi/yoqildi: qisqa "vush" (gulxanga o'tin tashlash tovushining pastroq, qisqaroq varianti). */
+  torchTake(pos?: P3): void {
+    const d = this.wolfDest(pos, 1.5, 4, 3, 30);
+    if (!d) return;
+    const t = this.ctx!.currentTime;
+    this.noise(d, t, 0.4, 'bandpass', 320, 1500, 1.3, 0.3, 0.05);
+    this.noise(d, t + 0.08, 0.3, 'lowpass', 800, 320, 0.8, 0.18, 0.04);
+    for (let i = 0; i < 3; i++) {
+      const dt = 0.1 + Math.random() * 0.35;
+      this.noise(d, t + dt, 0.025, 'bandpass', 2600 + Math.random() * 1800, 1500, 1.6, 0.22, 0.002);
+    }
+  }
+
   /** Gulxan o'chdi: uzun "pshsh" bug' vishillashi + past "puf", ~1.6 s. */
   campfireOut(pos?: P3): void {
     const d = this.wolfDest(pos, 3, 6, 5, 50);

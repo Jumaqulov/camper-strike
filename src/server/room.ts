@@ -49,10 +49,20 @@ import {
   type NightPlayerStats,
   type NightRoundSummary,
   isInsideLitCampfire,
+  isTorchWeapon,
+  CAMPFIRE_RADIUS_M,
+  CAMPFIRE_STANDOFF_M,
+  TORCH_BURN_SEC,
+  TORCH_FEAR_RADIUS_M,
+  TORCH_FUEL_COST_SEC,
+  TORCH_STANDOFF_M,
+  TORCH_WEAPON_MESSAGE_UZ,
   type CampActionAck,
   type CampfireEvent,
   type CampfireSnap,
+  type DropTorchReq,
   type FeedFireReq,
+  type TakeTorchReq,
   type TakeWoodReq,
   type WoodPileSnap,
   NIGHT_DEFAULT_MINUTES,
@@ -185,6 +195,11 @@ export interface ServerPlayer extends Body {
   /** wolf_night: oxirgi lager amali (o'tin olish/tashlash/turg'izish so'rovi) vaqti — spamga qarshi (0.3 s). */
   lastCampAction: number;
   /**
+   * wolf_night: mash'al yonib turish muddati (server vaqti, s); 0 — mash'al yo'q. Bo'rilar mash'al ko'targanga
+   * TORCH_FEAR_RADIUS_M dan yaqin kelmaydi; faqat pichoq/to'pponcha ishlatiladi. O'lim/yiqilish/tug'ilishda 0.
+   */
+  torchUntil: number;
+  /**
    * wolf_night: yiqilgan (joni 0, `alive` true): harakat/otish/loot/lager yo'q, bo'ri ovlamaydi.
    * `downedAt` — yiqilgan vaqt (NIGHT_DOWNED_BLEED_SEC dan keyin o'ladi), `downedBy` — yiqitgan (qon ketganda qotil).
    */
@@ -214,6 +229,21 @@ export interface ServerCampfire {
   lit: boolean;
   /** 'low' hodisasi shu yonish davrida yuborilganmi (bir marta). */
   lowWarned: boolean;
+}
+
+/**
+ * Bo'ri qo'rqadigan olov manbai (bo'ri AI uchun umumiy ko'rinish): yonib turgan gulxan yoki mash'al ko'targan
+ * o'yinchi. `radius` — bo'ri kirmaydigan doira, `standoff` — chetida to'xtab aylanadigan masofa (markazdan).
+ */
+export interface FearSource {
+  x: number;
+  y: number;
+  z: number;
+  radius: number;
+  standoff: number;
+  kind: 'fire' | 'torch';
+  /** Mash'al egasi (kind 'torch'). */
+  playerId?: string;
 }
 
 /** O'tin g'arami (server holati). */
@@ -720,6 +750,35 @@ export class Room {
     return null;
   }
 
+  /** wolf_night: o'yinchida yonib turgan mash'al bormi (tirik, yiqilmagan). */
+  hasTorch(p: ServerPlayer, t: number = this.now()): boolean {
+    return p.torchUntil > t && p.alive && !p.downed;
+  }
+
+  /** Mash'alning qolgan vaqti (s, yuqoriga yaxlitlangan), yo'q bo'lsa 0. */
+  torchSecLeft(p: ServerPlayer, t: number = this.now()): number {
+    return this.hasTorch(p, t) ? Math.max(0, Math.ceil(p.torchUntil - t)) : 0;
+  }
+
+  /**
+   * Bo'ri qo'rqadigan olov manbalari: yonib turgan gulxanlar (CAMPFIRE_RADIUS_M) va mash'al ko'targan
+   * o'yinchilar (TORCH_FEAR_RADIUS_M). Nuqtani (radius + margin ichida) o'z ichiga olgan birinchi manba;
+   * `exceptTorchOf` — shu o'yinchining mash'ali hisobga olinmaydi (o'zini "o'z olovida" deb topmasin).
+   */
+  fearSourceContaining(x: number, z: number, margin = 0, exceptTorchOf: ServerPlayer | null = null): FearSource | null {
+    const f = this.litFireContaining(x, z, margin);
+    if (f) return { x: f.x, y: f.y, z: f.z, radius: CAMPFIRE_RADIUS_M, standoff: CAMPFIRE_STANDOFF_M, kind: 'fire' };
+    if (!this.isNight) return null;
+    const t = this.now();
+    for (const p of this.players.values()) {
+      if (p === exceptTorchOf || !this.hasTorch(p, t)) continue;
+      if (Math.hypot(p.pos.x - x, p.pos.z - z) <= TORCH_FEAR_RADIUS_M + margin) {
+        return { x: p.pos.x, y: p.pos.y, z: p.pos.z, radius: TORCH_FEAR_RADIUS_M, standoff: TORCH_STANDOFF_M, kind: 'torch', playerId: p.id };
+      }
+    }
+    return null;
+  }
+
   /** Nuqtaga eng yaqin yonib turgan gulxan (yo'q bo'lsa null). */
   nearestLitFire(x: number, z: number): ServerCampfire | null {
     let best: ServerCampfire | null = null;
@@ -925,6 +984,10 @@ export class Room {
     for (const pl of this.woodPiles.values()) {
       if (!pl.available && t >= pl.respawnAt) pl.available = true;
     }
+    // Mash'allar tugaydi (yiqilgan/o'lgan o'yinchida darhol o'chadi); klient snapshot'dagi torchSec dan biladi
+    for (const p of this.players.values()) {
+      if (p.torchUntil > 0 && (t >= p.torchUntil || !p.alive || p.downed)) p.torchUntil = 0;
+    }
   }
 
   /** Lager amali uchun darvoza: rejim, raund fazasi, tirik ishtirokchi. */
@@ -1033,6 +1096,75 @@ export class Room {
     return this.feedFireCore(p, fireId);
   }
 
+  // ---------------- Mash'al (wolf_night) ----------------
+
+  /** Mash'al bilan shu quroldan otish/uni olish mumkinmi (mash'al bo'lmasa — hamma qurol). */
+  torchAllowsWeapon(p: ServerPlayer, w: WeaponId | null): boolean {
+    return w === null || !this.hasTorch(p) || isTorchWeapon(w);
+  }
+
+  /**
+   * Yonib turgan gulxandan mash'al olish (odam va bot uchun umumiy): gulxan TORCH_FUEL_COST_SEC o'tin yo'qotadi,
+   * mash'al TORCH_BURN_SEC yonadi. Qo'ldagi qurol pichoq/to'pponcha bo'lmasa — to'pponcha (bo'lsa) yoki pichoqqa
+   * o'tkaziladi (klient ack'dagi `weapon` bo'yicha o'zi ham almashtiradi).
+   */
+  private takeTorchCore(p: ServerPlayer, fireId: string): CampActionAck {
+    const gate = this.campActionGate(p);
+    if (gate) return gate;
+    const f = this.campfires.get(fireId);
+    if (!f) return { ok: false, error: 'NOT_FOUND', wood: p.wood };
+    if (!this.campInReach(p, f)) return { ok: false, error: 'TOO_FAR', wood: p.wood, fuelSec: Math.round(f.fuelSec) };
+    if (this.hasTorch(p)) return { ok: false, error: 'HAS_TORCH', wood: p.wood, torchSec: this.torchSecLeft(p) };
+    if (!f.lit || f.fuelSec <= 0) return { ok: false, error: 'FIRE_OUT', wood: p.wood, fuelSec: 0 };
+    if (f.fuelSec <= TORCH_FUEL_COST_SEC) return { ok: false, error: 'FIRE_LOW', wood: p.wood, fuelSec: Math.round(f.fuelSec) };
+    if (this.campRateLimited(p)) return { ok: false, wood: p.wood, fuelSec: Math.round(f.fuelSec) };
+    const t = this.now();
+    f.fuelSec = Math.max(0, f.fuelSec - TORCH_FUEL_COST_SEC);
+    f.lowWarned = f.lowWarned || f.fuelSec <= CAMPFIRE_LOW_FUEL_SEC;
+    p.torchUntil = t + TORCH_BURN_SEC;
+    if (!isTorchWeapon(p.weapon)) {
+      const botHasPistol = p.isBot && (p.ammo.pistol?.mag ?? 0) + (p.ammo.pistol?.reserve ?? 0) > 0;
+      const next: WeaponId = botHasPistol || (!p.isBot && this.loot.canPlayerUseWeapon(p.id, 'pistol')) ? 'pistol' : 'knife';
+      const prevEquipped = p.weapon;
+      if (applyAuthoritativeWeaponSwitch(p, next, t, { fromAutoPickup: true })) {
+        p.authority.guardWeaponRevert(prevEquipped);
+        this.loot.syncPlayerFromServerPlayer(p.id, p);
+      }
+    }
+    this.emitCampfireEvent(f, 'fed', p);
+    return { ok: true, wood: p.wood, fuelSec: Math.round(f.fuelSec), torchSec: TORCH_BURN_SEC, weapon: p.weapon };
+  }
+
+  /** Qo'ldagi mash'alni tashlash (muddatidan oldin). */
+  private dropTorchCore(p: ServerPlayer): CampActionAck {
+    const gate = this.campActionGate(p);
+    if (gate) return gate;
+    if (!this.hasTorch(p)) return { ok: false, error: 'NO_TORCH', wood: p.wood, torchSec: 0 };
+    if (this.campRateLimited(p)) return { ok: false, wood: p.wood, torchSec: this.torchSecLeft(p) };
+    p.torchUntil = 0;
+    return { ok: true, wood: p.wood, torchSec: 0 };
+  }
+
+  onTakeTorch(id: string, rawReq: TakeTorchReq | unknown, ack?: (res: CampActionAck) => void): CampActionAck {
+    const p = this.players.get(id);
+    const fireId = readStringField(rawReq, 'fireId');
+    const res: CampActionAck = !p || p.isBot ? { ok: false, error: 'NOT_FOUND', wood: 0 } : this.takeTorchCore(p, fireId);
+    ack?.(res);
+    return res;
+  }
+
+  onDropTorch(id: string, _rawReq: DropTorchReq | unknown, ack?: (res: CampActionAck) => void): CampActionAck {
+    const p = this.players.get(id);
+    const res: CampActionAck = !p || p.isBot ? { ok: false, error: 'NOT_FOUND', wood: 0 } : this.dropTorchCore(p);
+    ack?.(res);
+    return res;
+  }
+
+  /** Bot gulxandan mash'al oladi (odam bilan bir xil tekshiruvlar). */
+  botTakeTorch(p: ServerPlayer, fireId: string): CampActionAck {
+    return this.takeTorchCore(p, fireId);
+  }
+
   // ---------------- Yiqilish va turg'izish (wolf_night) ----------------
 
   /** Turg'izish masofasi: oyoq nuqtalari orasida XZ ≤ NIGHT_REVIVE_RANGE_M va |dy| ≤ 2. */
@@ -1065,6 +1197,8 @@ export class Room {
     p.reviveBy = null;
     p.reviveProgress = 0;
     p.hp = 0;
+    // Mash'al qo'ldan tushadi (yiqilganda bo'rilarni qo'rqitmaydi)
+    p.torchUntil = 0;
     p.scoped = false;
     p.crouched = false;
     p.vel.x = 0;
@@ -1631,6 +1765,7 @@ export class Room {
       kills: 0, deaths: 0, ping: 0,
       wood: 0,
       lastCampAction: -99,
+      torchUntil: 0,
       downed: false,
       downedAt: 0,
       downedBy: null,
@@ -1915,6 +2050,7 @@ export class Room {
     p.hp = MAX_HP;
     p.alive = true;
     p.wood = 0;
+    p.torchUntil = 0;
     p.downed = false;
     p.downedAt = 0;
     p.downedBy = null;
@@ -2011,6 +2147,11 @@ export class Room {
     const p = this.players.get(id);
     if (!p || !p.alive || p.downed || this.phase !== 'playing' || !m || !isWeaponId(m.weapon) || !Array.isArray(m.dirs)) return;
     if (this.isSurvival && this.survival && !this.survival.canPlayerCombat(id)) return;
+    // wolf_night: mash'al bilan faqat pichoq/to'pponcha (bir qo'l band)
+    if (!this.torchAllowsWeapon(p, m.weapon)) {
+      this.rejectedWeaponShots++;
+      return;
+    }
 
     // 1. Server-authoritative weapon ownership, active equip, and switch-time check (Stage 05/06/07-QA)
     // NEVER mutate p.weapon inside onShoot!
@@ -2062,7 +2203,7 @@ export class Room {
 
   /** Bot o'q uzishi. Muvaffaqiyatli bo'lsa true. */
   botFire(p: ServerPlayer, extraSpread: number): boolean {
-    if (!p.weapon || p.downed) return false;
+    if (!p.weapon || p.downed || !this.torchAllowsWeapon(p, p.weapon)) return false;
     const def = WEAPONS[p.weapon];
     const eye = { x: p.pos.x, y: p.pos.y + eyeHeightOf(p), z: p.pos.z };
     const aim = { x: -Math.sin(p.yaw) * Math.cos(p.pitch), y: Math.sin(p.pitch), z: -Math.cos(p.yaw) * Math.cos(p.pitch) };
@@ -2229,9 +2370,15 @@ export class Room {
   /** Inson o'yinchining navbatdagi kirishlarini avtoritativ tarzda ishlaydi (qurol almashtirish + kechiktirilgan reload bilan). */
   private stepHumanAuthority(p: ServerPlayer, dt: number, rawDt: number, t: number): void {
     const prevW = p.weapon;
-    p.authority.stepAuthoritativeTick(p, dt, this.world, (w) => this.loot.canPlayerUseWeapon(p.id, w), rawDt, {
-      lockMovement: p.downed,
-    });
+    // wolf_night: mash'al bilan kirishdagi qurol almashtirish faqat pichoq/to'pponchaga (aks holda eski qurol qoladi)
+    p.authority.stepAuthoritativeTick(
+      p,
+      dt,
+      this.world,
+      (w) => this.loot.canPlayerUseWeapon(p.id, w) && this.torchAllowsWeapon(p, w),
+      rawDt,
+      { lockMovement: p.downed },
+    );
     if (p.weapon !== prevW) {
       const nextW = p.weapon;
       p.weapon = prevW;
@@ -2434,6 +2581,19 @@ export class Room {
       return res;
     }
     const p = gate.p;
+    // wolf_night: mash'al bilan faqat pichoq/to'pponcha — boshqa qurol so'rovi rad etiladi (joriy qurol qoladi)
+    const wantedWeapon = readStringField(rawReq, 'weapon');
+    if (wantedWeapon && isWeaponId(wantedWeapon) && !this.torchAllowsWeapon(p, wantedWeapon)) {
+      const res: EquipWeaponAck = {
+        ok: false,
+        requestId: readStringField(rawReq, 'requestId'),
+        equippedWeapon: p.weapon,
+        code: 'INVALID_REQUEST',
+        message: TORCH_WEAPON_MESSAGE_UZ,
+      };
+      ack?.(res);
+      return res;
+    }
     this.loot.syncPlayerFromServerPlayer(p.id, p);
     const res = this.loot.equipWeapon(id, p.alive, rawReq);
     if (res.ok && !res.idempotentReplay) {
@@ -2641,8 +2801,9 @@ export class Room {
     victim.crouched = false;
     victim.authority.clear();
     victim.deaths++;
-    // Qo'ldagi o'tin o'lim bilan yo'qoladi (wolf_night); yiqilgan holat ham tugaydi
+    // Qo'ldagi o'tin va mash'al o'lim bilan yo'qoladi (wolf_night); yiqilgan holat ham tugaydi
     victim.wood = 0;
+    victim.torchUntil = 0;
     victim.downed = false;
     victim.downedBy = null;
     victim.reviveBy = null;
@@ -3284,8 +3445,12 @@ export class Room {
       };
       // O'tirish faqat true bo'lganda yuboriladi (tik turish — maydon yo'q, trafik tejaladi)
       if (p.crouched) snapP.crouched = true;
-      // wolf_night: qo'ldagi o'tin faqat 0 dan katta bo'lsa
+      // wolf_night: qo'ldagi o'tin faqat 0 dan katta bo'lsa; mash'al — qolgan vaqti (s), faqat yonib tursa
       if (p.wood > 0) snapP.wood = p.wood;
+      if (p.torchUntil > 0) {
+        const torchSec = this.torchSecLeft(p, t);
+        if (torchSec > 0) snapP.torchSec = torchSec;
+      }
       // wolf_night: yiqilgan — qon ketishgacha qolgan vaqt va (kimdir turg'izayotgan bo'lsa) jarayon
       if (p.downed && p.alive) {
         snapP.downed = true;

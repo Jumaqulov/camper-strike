@@ -43,8 +43,10 @@ export class LocalPlayer {
   staminaLocked = false;
   armor = 0;
   helmet = 0;
-  /** "Tong otguncha": qo'ldagi o'tin (PlayerSnap.wood dan; yo'q bo'lsa 0). */
+  /** "Tong otguncha": qo'ldagi o'tin (PlayerSnap.wood dan; yo'q bo'lsa 0) — harakat bashoratida og'irlik. */
   wood = 0;
+  /** "Tong otguncha": qo'ldagi mash'alning qolgan vaqti (s, PlayerSnap.torchSec dan; 0 — yo'q). */
+  torchSec = 0;
 
   constructor(world: WorldDefinition | null = null) {
     this.world = world;
@@ -205,6 +207,8 @@ export class LocalPlayer {
       scoped: this.scoped,
       stamina: this.stamina,
       staminaLocked: this.staminaLocked,
+      // O'tinning og'irligi: server `p.wood` bilan bir xil qoida (to'la qo'lda sprint yo'q, tezlik ko'paytuvchisi)
+      wood: this.wood,
     };
   }
 

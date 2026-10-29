@@ -1,6 +1,7 @@
 import { isSurvivalMode, type GameMode, type Team } from '../../shared/constants';
 import type { ChatMsg, KillEvent, MatchState, RosterEntry } from '../../shared/protocol';
 import { KNIFE, KNIFE_SLOT_KEY, WEAPONS, WEAPON_SLOTS, isMeleeWeapon, type WeaponId } from '../../shared/weapons';
+import { isTorchWeapon } from '../../shared/wolf/camp';
 import { getWeaponIcons3D } from './GunModels';
 import { onWeaponAssetsReady } from './WeaponAssetRegistry';
 
@@ -167,6 +168,8 @@ export class Hud {
    */
   private lastSlotsKey = '';
   private lastWeaponNameKey = '';
+  /** wolf_night: mash'al qo'lda (slotlar panelida avtomat/drobovik/snayper kulrang). */
+  private torchHeld = false;
   private lastGrenadesKey = '';
 
   constructor() {
@@ -302,7 +305,7 @@ export class Hud {
     grenades: number,
     ownedWeapons?: ReadonlySet<WeaponId>,
   ): void {
-    const ownedKey = ownedWeapons ? [...ownedWeapons].sort().join(',') : 'all';
+    const ownedKey = (ownedWeapons ? [...ownedWeapons].sort().join(',') : 'all') + (this.torchHeld ? '|torch' : '');
     const key = `${weapon ?? 'none'}|${mag}|${reserve}|${reloading}|${grenades}|${ownedKey}`;
     if (key === this.lastAmmoKey) return;
     this.lastAmmoKey = key;
@@ -341,14 +344,24 @@ export class Hud {
     $('reload-hint').classList.toggle('hidden', melee || !(mag === 0 && reserve > 0 && !reloading));
   }
 
-  /** Qurol slotlari: 1-4 o'qotar (egalik bo'yicha), 5 pichoq (har doim mavjud). */
+  /** Qurol slotlari: 1-4 o'qotar (egalik bo'yicha), 5 pichoq (har doim mavjud). Mash'al bilan faqat pichoq/to'pponcha. */
   private slotsHtml(active: WeaponId | null, ownedWeapons?: ReadonlySet<WeaponId>): string {
     const slots = WEAPON_SLOTS.map((w, i) => {
       const owned = !ownedWeapons || ownedWeapons.has(w);
-      return `<span class="slot ${w === active ? 'active' : ''} ${owned ? '' : 'locked'}" style="${owned ? '' : 'opacity:0.32;filter:grayscale(1);'}"><b>${i + 1}</b>${weaponIconHtml(w)}</span>`;
+      const blocked = this.torchHeld && !isTorchWeapon(w);
+      const dim = !owned || blocked;
+      return `<span class="slot ${w === active ? 'active' : ''} ${owned ? '' : 'locked'}${blocked ? ' blocked' : ''}" style="${dim ? 'opacity:0.32;filter:grayscale(1);' : ''}"><b>${i + 1}</b>${weaponIconHtml(w)}</span>`;
     });
     slots.push(`<span class="slot ${active === KNIFE ? 'active' : ''}"><b>${KNIFE_SLOT_KEY}</b>${weaponIconHtml(KNIFE)}</span>`);
     return slots.join('');
+  }
+
+  /** wolf_night: mash'al qo'lda — slotlar paneli bloklangan qurollarni kulrang chizadi. */
+  setTorchHeld(on: boolean): void {
+    if (this.torchHeld === on) return;
+    this.torchHeld = on;
+    this.lastAmmoKey = '';
+    this.lastSlotsKey = '';
   }
 
   setCrosshair(gapPx: number, visible: boolean): void {

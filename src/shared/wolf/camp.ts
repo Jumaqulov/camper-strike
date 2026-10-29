@@ -17,6 +17,40 @@ export const CAMPFIRE_WOOD_FUEL_SEC = 45;
 export const CAMPFIRE_LOW_FUEL_SEC = 30;
 /** O'yinchi ko'tarib yura oladigan o'tin soni. */
 export const WOOD_CARRY_MAX = 3;
+/**
+ * O'tinning og'irligi: qo'ldagi o'tin soniga (0..WOOD_CARRY_MAX) ko'ra yurish tezligi ko'paytuvchisi.
+ * WOOD_CARRY_MAX ta o'tin bilan sprint umuman yo'q (`computeWishVelocity` / `stepPlayerMovement` — server va
+ * klient bashorati bir xil hisoblaydi).
+ */
+export const WOOD_SPEED_MUL: readonly number[] = [1, 0.97, 0.93, 0.88];
+export function woodSpeedMul(wood: number | undefined): number {
+  const n = Number.isFinite(wood as number) ? Math.floor(wood as number) : 0;
+  const w = Math.max(0, Math.min(WOOD_CARRY_MAX, n));
+  return WOOD_SPEED_MUL[w] ?? WOOD_SPEED_MUL[WOOD_SPEED_MUL.length - 1]!;
+}
+/** To'la qo'l (WOOD_CARRY_MAX o'tin) — sprint bloklanadi. */
+export function woodBlocksSprint(wood: number | undefined): boolean {
+  return (wood ?? 0) >= WOOD_CARRY_MAX;
+}
+
+// ---------- Mash'al ----------
+/** Mash'al yonish vaqti (s). */
+export const TORCH_BURN_SEC = 40;
+/** Mash'al olish gulxandan shuncha o'tin (s) oladi; gulxan o'tini shundan kam/teng bo'lsa olib bo'lmaydi. */
+export const TORCH_FUEL_COST_SEC = 10;
+/** Bo'rilar mash'al ko'targan o'yinchiga shu radiusdan (m) yaqin kelmaydi (kichik "ko'chma gulxan"). */
+export const TORCH_FEAR_RADIUS_M = 4;
+/** Bo'ri mash'al ko'targanning atrofida shu masofada (m, markazdan) to'xtab aylanadi. */
+export const TORCH_STANDOFF_M = TORCH_FEAR_RADIUS_M + 1.0;
+/** Bo'ri yonib turgan gulxan doirasidan tashqarida, shu masofada (markazdan) to'xtab aylanadi (m). */
+export const CAMPFIRE_STANDOFF_M = CAMPFIRE_RADIUS_M + 1.5;
+/** Mash'al bilan ishlatish mumkin bo'lgan qurollar (bir qo'l band): pichoq va to'pponcha. */
+export const TORCH_ALLOWED_WEAPONS: readonly string[] = ['knife', 'pistol'];
+export function isTorchWeapon(w: string | null | undefined): boolean {
+  return w === 'knife' || w === 'pistol';
+}
+export const TORCH_WEAPON_MESSAGE_UZ = "Mash'al bilan faqat pichoq yoki to'pponcha";
+export const WOOD_HEAVY_MESSAGE_UZ = "Og'ir yuk — yugura olmaysiz";
 /** Bo'shagan o'tin g'arami qayta to'lish vaqti (s) va har olishda beriladigan o'tin. */
 export const WOOD_PILE_RESPAWN_SEC = 45;
 export const WOOD_PILE_GIVE = 1;
@@ -67,6 +101,12 @@ export interface TakeWoodReq {
 export interface FeedFireReq {
   fireId: string;
 }
+/** Yonib turgan gulxandan mash'al olish ('night:takeTorch'). */
+export interface TakeTorchReq {
+  fireId: string;
+}
+/** Qo'ldagi mash'alni muddatidan oldin tashlash ('night:dropTorch', so'rov tanasi bo'sh). */
+export type DropTorchReq = Record<string, never>;
 export type CampActionError =
   | 'NOT_NIGHT'
   | 'ROUND_NOT_ACTIVE'
@@ -76,14 +116,22 @@ export type CampActionError =
   | 'HANDS_FULL'
   | 'NO_WOOD'
   | 'FIRE_FULL'
-  | 'DOWNED';
+  | 'DOWNED'
+  | 'FIRE_OUT'
+  | 'FIRE_LOW'
+  | 'HAS_TORCH'
+  | 'NO_TORCH';
 export interface CampActionAck {
   ok: boolean;
   error?: CampActionError;
   /** Amaldan keyin o'yinchidagi o'tin soni. */
   wood: number;
-  /** Gulxanga tashlanganda — yangi o'tin zaxirasi (s). */
+  /** Gulxanga tashlanganda / mash'al olinganda — gulxanning yangi o'tin zaxirasi (s). */
   fuelSec?: number;
+  /** Mash'al amallari: qo'ldagi mash'alning qolgan vaqti (s); 0 — mash'al yo'q. */
+  torchSec?: number;
+  /** Mash'al olinganda server qurolni almashtirgan bo'lsa — yangi joriy qurol (klient ham shunga o'tadi). */
+  weapon?: string | null;
 }
 
 export const CAMP_ERROR_MESSAGES_UZ: Record<CampActionError, string> = {
@@ -96,6 +144,10 @@ export const CAMP_ERROR_MESSAGES_UZ: Record<CampActionError, string> = {
   NO_WOOD: "Sizda o'tin yo'q — g'aramdan oling",
   FIRE_FULL: "Gulxan to'la",
   DOWNED: "Yiqilgan holatda bo'lmaydi — sherigingizni kuting",
+  FIRE_OUT: "Gulxan o'chgan — mash'al yoqib bo'lmaydi",
+  FIRE_LOW: 'Gulxan juda kuchsiz',
+  HAS_TORCH: "Sizda allaqachon mash'al bor",
+  NO_TORCH: "Sizda mash'al yo'q",
 };
 
 // ---------- Server → klient hodisasi ----------

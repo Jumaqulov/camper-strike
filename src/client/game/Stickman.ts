@@ -16,6 +16,7 @@ import {
 import { CharacterGearRig, type CharacterGearState } from './character/CharacterGear';
 import { applyTeamColor } from './character/CharacterMaterials';
 import { CharacterWeaponMount, GUN_SCALE_3P } from './character/CharacterWeaponMount';
+import { TorchProp } from './night/TorchRenderer';
 
 let flashTex: THREE.Texture | null = null;
 
@@ -105,6 +106,8 @@ export class Stickman {
   private buddy: BuddyRig | null = null;
   /** Kaska / nimcha / granata / aptechka osmalari (bosh, ko'krak, kamar). */
   private readonly gear = new CharacterGearRig();
+  /** wolf_night: qo'ldagi mash'al (Hand_L_Support socket'ida; GLB kelmagan bo'lsa root'da ko'krak balandligida). */
+  private torch: TorchProp | null = null;
   private unsubCharacterReady: (() => void) | null = null;
   private disposed = false;
   private buddyReloadTilt = 0;
@@ -168,6 +171,45 @@ export class Stickman {
     );
     // Kutib turgan qurol so'rovi qo'l socket'iga o'rnatiladi.
     this.mountWeapon(this.buddy);
+    // Mash'al ham (bo'lsa) chap qo'l socket'iga ko'chadi
+    if (this.torch) this.placeTorch(this.torch);
+  }
+
+  /**
+   * Mash'alni chap qo'l socket'iga (Hand_L_Support) joylaydi; GLB hali yo'q bo'lsa — root'da ko'krak balandligida,
+   * chap tomonda. Socket'da dasta qo'ldan yuqoriga qarab chiqadi (socket +Y ≈ qo'l o'qi), biroz oldinga egilgan.
+   */
+  private placeTorch(torch: TorchProp): void {
+    const socket = this.buddy?.inst.sockets.get('Hand_L_Support') ?? null;
+    torch.root.removeFromParent();
+    if (socket) {
+      socket.add(torch.root);
+      torch.root.position.set(0, -0.06, 0);
+      torch.root.rotation.set(0.35, 0, -0.25);
+      torch.root.scale.setScalar(1);
+    } else {
+      this.root.add(torch.root);
+      torch.root.position.set(-0.28, 1.05, -0.12);
+      torch.root.rotation.set(0.25, 0, -0.2);
+      torch.root.scale.setScalar(1);
+    }
+  }
+
+  /** wolf_night: qo'ldagi mash'al ko'rinishi (on — yaratadi/ulaydi, off — olib tashlaydi). */
+  setTorch(on: boolean): void {
+    if (on === (this.torch !== null) || this.disposed) return;
+    if (!on) {
+      this.torch?.dispose();
+      this.torch = null;
+      return;
+    }
+    this.torch = new TorchProp();
+    this.placeTorch(this.torch);
+  }
+
+  /** Joriy mash'al propi (alanga/yoritgich yangilash uchun), yo'q bo'lsa null. */
+  getTorch(): TorchProp | null {
+    return this.torch;
   }
 
   /** Where the 3P gun, muzzle, eject port and flash live: the hand socket mount (null while pending). */
@@ -596,6 +638,8 @@ export class Stickman {
   }
 
   dispose(): void {
+    this.torch?.dispose();
+    this.torch = null;
     this.disposed = true;
     this.gear.dispose();
     this.setDownedMarker(false);

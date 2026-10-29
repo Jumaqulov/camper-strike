@@ -335,6 +335,34 @@ function getShared(): SharedCampAssets {
   return shared;
 }
 
+/**
+ * Mash'al (TorchRenderer) uchun umumiy alanga geometriyasi va shu shader bilan yangi alanga materiali —
+ * gulxan alangasi bilan bir xil ko'rinish (lipillash vertex shaderda, uniformlar: uTime/uHeight/uSway/uIntensity).
+ */
+export function getSharedFlameGeo(): THREE.BufferGeometry {
+  return getShared().flameGeo;
+}
+export function getSharedGlowTexture(): THREE.Texture {
+  return getShared().glowTex;
+}
+export function createFlameMaterial(sway = 0.16): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    vertexShader: FLAME_VERT,
+    fragmentShader: FLAME_FRAG,
+    uniforms: {
+      uTime: { value: 0 },
+      uHeight: { value: 1 },
+      uSway: { value: sway },
+      uIntensity: { value: 1 },
+    },
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    fog: false,
+  });
+}
+
 // ---------------- Gulxan / g'aram instansiyalari ----------------
 
 interface FireInst {

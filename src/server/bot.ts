@@ -61,9 +61,12 @@ interface ZoneTargetCircle {
   r: number;
 }
 
-/** wolf_night: botning lager vazifasi — g'aramdan o'tin olish, gulxanga tashlash yoki yiqilgan sherikni turg'izish. */
+/**
+ * wolf_night: botning lager vazifasi — g'aramdan o'tin olish, gulxanga tashlash, yiqilgan sherikni turg'izish
+ * yoki (uzoq g'aramga chiqishdan oldin) gulxandan mash'al olish.
+ */
 interface BotCampTask {
-  kind: 'take' | 'feed' | 'revive';
+  kind: 'take' | 'feed' | 'revive' | 'torch';
   /** G'aram / gulxan / yiqilgan sherik (o'yinchi) identifikatori. */
   id: string;
   /** G'aram / gulxan / sherik joyi. */
@@ -75,6 +78,10 @@ interface BotCampTask {
 
 /** Bot o'tin g'aramini shu masofadan izlaydi (m). */
 const BOT_WOOD_SEARCH_M = 45;
+/** G'aram eng yaqin yonib turgan gulxandan shundan uzoq bo'lsa (m), bot avval mash'al oladi. */
+const BOT_TORCH_PILE_DIST_M = 25;
+/** Bot mash'alni faqat o'tini shundan ko'p (s) gulxandan oladi (lagerni kuchsizlantirmaslik uchun). */
+const BOT_TORCH_MIN_FUEL_SEC = 30;
 /** Bot yiqilgan sherigini shu masofadan (m) turg'izishga boradi — faqat yaqinda (BOT_REVIVE_WOLF_CLEAR_M) bo'ri tahdidi bo'lmasa. */
 const BOT_REVIVE_SEARCH_M = 40;
 const BOT_REVIVE_WOLF_CLEAR_M = 14;
@@ -723,6 +730,28 @@ export class BotBrain {
         best = pl;
       }
       if (best) {
+        // Uzoq g'aram (eng yaqin yonib turgan gulxandan 25 m dan nari) — mash'alsiz chiqmaydi: avval yaqin
+        // (yetib boriladigan) kuchli gulxandan mash'al oladi, keyin g'aramga yo'l oladi
+        if (!room.hasTorch(me)) {
+          const nearFire = room.nearestLitFire(best.x, best.z);
+          const pileFar = !nearFire || Math.hypot(nearFire.x - best.x, nearFire.z - best.z) > BOT_TORCH_PILE_DIST_M;
+          if (pileFar) {
+            let torchFire: { id: string; x: number; y: number; z: number } | null = null;
+            let torchD = Infinity;
+            for (const f of room.campfires.values()) {
+              if (!f.lit || f.fuelSec <= BOT_TORCH_MIN_FUEL_SEC || this.campBlacklisted(`torch:${f.id}`, t)) continue;
+              const d = dist(f);
+              if (d < torchD && d < BOT_WOOD_SEARCH_M) {
+                torchD = d;
+                torchFire = f;
+              }
+            }
+            if (torchFire) {
+              this.setCampTask('torch', torchFire.id, torchFire, t);
+              return;
+            }
+          }
+        }
         this.setCampTask('take', best.id, best, t);
         return;
       }
@@ -779,9 +808,17 @@ export class BotBrain {
       }
       return true;
     }
+    // Qora ro'yxat kaliti: mash'al vazifasi gulxanning o'tin tashlash kalitiga aralashmasin
+    const blKey = tgt.kind === 'torch' ? `torch:${tgt.id}` : tgt.id;
     if (tgt.kind === 'take') {
       const pl = room.woodPiles.get(tgt.id);
       if (!pl || !pl.available || me.wood >= WOOD_CARRY_MAX) {
+        this.campTask = null;
+        return false;
+      }
+    } else if (tgt.kind === 'torch') {
+      const f = room.campfires.get(tgt.id);
+      if (!f || !f.lit || f.fuelSec <= BOT_TORCH_MIN_FUEL_SEC || room.hasTorch(me)) {
         this.campTask = null;
         return false;
       }
@@ -797,7 +834,7 @@ export class BotBrain {
     const d = Math.hypot(dx, dz);
     if (d > CAMP_INTERACT_RANGE_M - 0.4 || Math.abs(tgt.pos.y - me.pos.y) > 1.8) {
       if (t > tgt.deadline) {
-        this.campBlacklist.set(tgt.id, t + 20);
+        this.campBlacklist.set(blKey, t + 20);
         this.campTask = null;
       }
       return false;
@@ -805,9 +842,19 @@ export class BotBrain {
     this.turnTowards(Math.atan2(-dx, -dz), -0.3, 5, dt);
     if (t < this.nextCampActAt) return true;
     this.nextCampActAt = t + 0.4 + Math.random() * 0.2;
-    const res = tgt.kind === 'take' ? room.botTakeWood(me, tgt.id) : room.botFeedFire(me, tgt.id);
+    const res =
+      tgt.kind === 'take'
+        ? room.botTakeWood(me, tgt.id)
+        : tgt.kind === 'torch'
+          ? room.botTakeTorch(me, tgt.id)
+          : room.botFeedFire(me, tgt.id);
     if (!res.ok && res.error === undefined) return true; // tezlik cheklovi — keyingi urinish
-    this.campBlacklist.set(tgt.id, t + (res.ok ? 3 : 20));
+    // Mash'al olingach shu gulxan qora ro'yxatga tushmaydi (keyingi think g'aramni tanlaydi); xato — 20 s
+    if (tgt.kind === 'torch') {
+      if (!res.ok) this.campBlacklist.set(blKey, t + 20);
+    } else {
+      this.campBlacklist.set(blKey, t + (res.ok ? 3 : 20));
+    }
     this.campTask = null;
     return true;
   }
