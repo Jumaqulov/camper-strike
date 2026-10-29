@@ -98,6 +98,8 @@ const FLEE_REGOAL_SEC = 4;
 const RING_DEADBAND_M = 0.4;
 /** Halqadan shuncha (m) uzoqda bo'lsa chetiga nav yo'li bilan (olovni aylanib) boradi, yaqinroq — to'g'ri radial. */
 const RING_PATH_DIST_M = 3;
+/** Halqa o'rniga yo'l bilan borishda tiqilsa (o'rin yetib bo'lmas) shuncha soniya halqa bo'ylab oddiy siljishga qaytadi. */
+const RING_SLOT_GIVE_UP_SEC = 5;
 /** Maqsad yaqinida yetib keldi deb hisoblanadigan masofa (m): undan yaqin maqsadga qadam bosilmaydi. */
 const ARRIVE_M = 0.35;
 /** Olov sabab majburiy qayta yo'l topish oralig'i (s) — yo'l tuguni olov ichida qolsa har tick A* ishlamasin. */
@@ -201,6 +203,9 @@ export class WolfBrain {
   private slideAngPrev = 0;
   private slideCheckAt = 0;
   private slideWideUntil = 0;
+  /** Halqa o'rniga nav yo'li bilan borish shu vaqtgacha to'xtatilgan (o'rin tomon yo'lda tiqildi) va oxirgi borilgan vaqt. */
+  private slotGiveUpUntil = 0;
+  private slotPathAt = -99;
   /** Olov sabab oxirgi majburiy qayta yo'l topish vaqti. */
   private fearRepathAt = -99;
   /** Hozir qattiq seskanish (olovdan yugurib chiqish) holatidami (hisob uchun chekka aniqlash). */
@@ -799,12 +804,17 @@ export class WolfBrain {
       this.stuckCount++;
       this.startSlip(t);
       if (this.stuckCount >= 3) {
-        // Geometriyaga tiqildi: eng yaqin nav katagiga (≤3 m) qaytaramiz, nishonni/maqsadni tashlaymiz
+        // Geometriyaga tiqildi: eng yaqin nav katagiga (≤3 m) qaytaramiz, nishonni/maqsadni tashlaymiz. Olovdan
+        // tashqarida tiqilgan bo'ri olov doirasining qattiq seskanish qavatidagi katakka ko'chirilmaydi (mash'alchi
+        // yonida tiqilib, olovga ko'chib, seskanib qochib, yana qaytib kelmasin); seskanib qochayotganda devorga
+        // qisilib qolgan bo'ri esa ko'chiriladi; qochayotgan (tong) bo'ri olovdan qo'rqmaydi
         const nav = this.room.nav;
         const ni = nav.nearest(me.pos);
         if (ni >= 0) {
           const c = nav.center(ni);
-          if (Math.hypot(c.x - me.pos.x, c.z - me.pos.z) < 3) {
+          const burns =
+            me.state !== 'flee' && !this.flinching && !!this.room.fearSourceContaining(c.x, c.z, FEAR_FLINCH_M - FEAR_SOFT_BAND_M);
+          if (Math.hypot(c.x - me.pos.x, c.z - me.pos.z) < 3 && !burns) {
             me.pos = { x: c.x, y: Math.max(me.pos.y, c.y), z: c.z };
             me.vel = { x: 0, y: 0, z: 0 };
           }
@@ -1033,15 +1043,21 @@ export class WolfBrain {
         const myAng = Math.atan2(fz, fx);
         const slotDA = order?.standoffAngle !== undefined ? angleDiff(myAng, order.standoffAngle) : 0;
         // O'rin nuqtasi uzoqda (halqaning narigi tomoni, kulba/panjara ortida): halqa bo'ylab sirpanmaydi (bezakka
-        // tiqiladi) — olov va bezaklarni hisobga olgan nav yo'li bilan boradi; yaqinida — oddiy siljish/turish
+        // tiqiladi) — olov va bezaklarni hisobga olgan nav yo'li bilan boradi; yaqinida — oddiy siljish/turish.
+        // O'rin nuqtasining o'zi to'silgan (mash'alchi devor yoniga yurib keldi) yoki unga yo'lda tiqilgan bo'lsa
+        // (RING_SLOT_GIVE_UP_SEC) yo'l bilan bormaydi — halqa bo'ylab siljiydi, to'silsa kengroq radiusda turadi
+        // (devorga tiralib qolib, mash'al doirasi ichidagi nav tuguniga ko'chirilmasin)
         let slotPt: Vec3 | null = null;
         if (order?.standoffAngle !== undefined) {
+          if (this.stuckCount >= 2 && t - this.slotPathAt < 0.25) this.slotGiveUpUntil = t + RING_SLOT_GIVE_UP_SEC;
           const sx = fire.x + Math.cos(order.standoffAngle) * standoff;
           const sz = fire.z + Math.sin(order.standoffAngle) * standoff;
-          if (Math.hypot(sx - me.pos.x, sz - me.pos.z) > RING_PATH_DIST_M) {
-            slotPt = { x: sx, y: sampleTerrainHeight(this.room.world.terrain, sx, sz), z: sz };
+          if (t >= this.slotGiveUpUntil && Math.hypot(sx - me.pos.x, sz - me.pos.z) > RING_PATH_DIST_M) {
+            const sy = sampleTerrainHeight(this.room.world.terrain, sx, sz);
+            if (!collidesAtWorld(this.room.world, sx, sy + 0.05, sz, WOLF_RADIUS + 0.15, 1.0)) slotPt = { x: sx, y: sy, z: sz };
           }
         }
+        if (slotPt) this.slotPathAt = t;
         const sliding = !slotPt && order?.standoffAngle !== undefined && Math.abs(slotDA) > 0.12 && fd < standoff + 6;
         if (!sliding) {
           this.slideAngPrev = myAng;

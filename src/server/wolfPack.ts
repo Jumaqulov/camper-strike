@@ -37,7 +37,10 @@ export interface PackOrder {
   retaliate?: boolean;
   /** Nishon olov (gulxan/mash'al) ichida: bo'rining halqadagi o'z o'rni (burchak, rad) — to'da o'rab oladi. */
   standoffAngle?: number;
-  /** Halqa o'rni radiusi (m): standoff nuqtasini bezak (panjara, g'aram) to'sgan bo'lsa kengroq; yo'q — manba standoff. */
+  /**
+   * Halqa o'rni radiusi (m): standoff nuqtasini to'siq (panjara, g'aram, kulba devori) to'sgan bo'lsa kengroq (≤ +
+   * WOLF_RING_WIDEN_MAX_M); yo'q — manba standoff.
+   */
   standoffR?: number;
   /** Haydovchi uvlasin (to'lqinda birinchi nishon uzoqdan olinganda, bir marta). */
   howl?: boolean;
@@ -120,8 +123,10 @@ const FLANK_IN_POSITION_M = 2.5;
 const DRIVER_ANG_MIN_M = 1;
 /** Gulxan halqasi namunalari soni (10° qadam) — bezak to'sgan nuqtalarni aniqlash va o'rinlarni surish uchun. */
 const RING_SAMPLES = 36;
+/** Halqa o'rni to'silgan bo'lsa radius shuncha (m) gacha kengayadi (PackOrder.standoffR ≤ standoff + shu). */
+export const WOLF_RING_WIDEN_MAX_M = 3;
 /** Standoff nuqtasi to'silgan bo'lsa shu qo'shimcha radiuslar (m) sinaladi. */
-const RING_EXTRA_R_M: readonly number[] = [0, 1.5, 3];
+const RING_EXTRA_R_M: readonly number[] = [0, 1.5, WOLF_RING_WIDEN_MAX_M];
 
 interface Sighting {
   /** Oxirgi sezish vaqti/joyi va kim sezgani (uning joyi va ulashish radiusi). */
@@ -186,6 +191,8 @@ export class WolfPack {
   private readonly slotsByPrey = new Map<string, { key: string; slots: Map<string, RingSlot> }>();
   /** Gulxan halqasining bo'sh nuqtalari (gulxan joyi → nuqtalar; null — halqa butunlay ochiq). Gulxan qimirlamaydi. */
   private readonly ringFreeCache = new Map<string, RingSlot[] | null>();
+  /** Nav-grafning asosiy (bo'rilar yuradigan) bog'langan qismi tugunlari — halqa nuqtasi unga ulangan bo'lsin. */
+  private roamNodes: Set<number> | null = null;
   /** Olovdan tashqaridagi nishonlarga hujum holati (nishon → chalg'itish/hujum vaqtlari). */
   private readonly huntByPrey = new Map<string, PackHunt>();
   /** Yetib bo'lmas (devor ortidagi) nishonlar: o'yinchi → xabar amal qilish muddati. */
@@ -546,9 +553,10 @@ export class WolfPack {
 
   /**
    * Halqa o'rinlari (nishon olov ichida): bo'rilar joriy burchagi bo'yicha saralanib 360/n qadam bilan teng
-   * yoyiladi (birinchisi joyida qoladi). Gulxan atrofida bezaklar (kulba, panjara, o'tin g'arami) bo'lsa halqaning
-   * to'silgan nuqtalari o'tkazib yuboriladi: har o'rin eng yaqin bo'sh nuqtaga suriladi, burilish esa eng kichik
-   * oraliq eng katta (teng bo'lsa — bo'rilar eng kam yuradigan) qilib tanlanadi. Mash'al/raketa — teng qadam.
+   * yoyiladi (birinchisi joyida qoladi). Atrofda to'siqlar (gulxan yonida kulba, panjara, o'tin g'arami; devorga
+   * suyanib turgan mash'alchi orqasidagi kulba) bo'lsa halqaning to'silgan nuqtalari o'tkazib yuboriladi: har o'rin
+   * eng yaqin bo'sh nuqtaga suriladi, burilish esa eng kichik oraliq eng katta (teng bo'lsa — bo'rilar eng kam
+   * yuradigan) qilib tanlanadi (bo'ri devor ichidagi o'ringa tiqilib, mash'al doirasiga surilib qolmasin).
    */
   private ringSlots(fire: FearSource, group: ServerWolf[]): Map<string, RingSlot> {
     const n = group.length;
@@ -557,7 +565,7 @@ export class WolfPack {
       .map((w) => ({ w, a: Math.atan2(w.pos.z - fire.z, w.pos.x - fire.x) }))
       .sort((a, b) => a.a - b.a || (a.w.id < b.w.id ? -1 : 1));
     const out = new Map<string, RingSlot>();
-    const free = fire.kind === 'fire' ? this.ringFreePoints(fire) : null;
+    const free = this.ringFreePoints(fire);
     if (!free || free.length < n) {
       const base = withAng[0]!.a;
       for (let i = 0; i < n; i++) out.set(withAng[i]!.w.id, { ang: base + (i * TWO_PI) / n, r: fire.standoff });
@@ -610,16 +618,20 @@ export class WolfPack {
   }
 
   /**
-   * Gulxan halqasining bo'sh nuqtalari (RING_SAMPLES burchak): standoff radiusida (to'silgan bo'lsa +1.5 / +3 m)
-   * bo'ri sig'adigan, relyefi gulxan sathida va eng yaqin nav tuguniga to'siqsiz ulangan nuqta. Butun halqa
-   * standoff radiusida ochiq bo'lsa null (oddiy teng qadam). Gulxan qimirlamaydi — natija keshlanadi.
+   * Olov halqasining bo'sh nuqtalari (RING_SAMPLES burchak): standoff radiusida (to'silgan bo'lsa +1.5 / +3 m)
+   * bo'ri sig'adigan, relyefi olov sathida (raketa halqasi keng — relyef tekshirilmaydi) va eng yaqin nav tuguniga
+   * to'siqsiz ulangan nuqta; tugun nav-grafning asosiy qismida (kulbalar orasidagi berk burchakdagi alohida tugun
+   * emas — bo'ri unga yo'l topa olmaydi). Butun halqa standoff radiusida ochiq bo'lsa null (oddiy teng qadam).
+   * Gulxan qimirlamaydi — natijasi keshlanadi; mash'al/raketa halqasi o'rinlar qurilganda (kamdan-kam) qaytadan
+   * hisoblanadi.
    */
   private ringFreePoints(fire: FearSource): RingSlot[] | null {
     const key = `${fire.x.toFixed(2)},${fire.z.toFixed(2)}`;
-    const cached = this.ringFreeCache.get(key);
+    const cached = fire.kind === 'fire' ? this.ringFreeCache.get(key) : undefined;
     if (cached !== undefined) return cached;
     const world = this.room.world;
     const nav = this.room.nav;
+    const roam = (this.roamNodes ??= new Set(nav.roamList));
     const pts: RingSlot[] = [];
     let open = true;
     for (let k = 0; k < RING_SAMPLES; k++) {
@@ -630,10 +642,10 @@ export class WolfPack {
         const x = fire.x + Math.cos(ang) * r;
         const z = fire.z + Math.sin(ang) * r;
         const pt = { x, y: sampleTerrainHeight(world.terrain, x, z), z };
-        if (Math.abs(pt.y - fire.y) > 1.5) continue;
+        if (fire.kind !== 'flare' && Math.abs(pt.y - fire.y) > 1.5) continue;
         if (collidesAtWorld(world, x, pt.y + 0.05, z, WOLF_RADIUS + 0.15, 1.0)) continue;
         const ni = nav.nearest(pt);
-        if (ni < 0) continue;
+        if (ni < 0 || !roam.has(ni)) continue;
         const c = nav.center(ni);
         if (Math.hypot(c.x - x, c.z - z) > 3.5 || !nav.segmentClear(pt, c, WOLF_RADIUS)) continue;
         pts.push({ ang, r });
@@ -644,7 +656,7 @@ export class WolfPack {
       if (!found) open = false;
     }
     const res = open ? null : pts;
-    this.ringFreeCache.set(key, res);
+    if (fire.kind === 'fire') this.ringFreeCache.set(key, res);
     return res;
   }
 
