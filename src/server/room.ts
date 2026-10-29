@@ -56,10 +56,18 @@ import {
   type TakeWoodReq,
   type WoodPileSnap,
   NIGHT_DEFAULT_MINUTES,
+  NIGHT_DOWNED_BLEED_SEC,
   NIGHT_MAX_MINUTES,
   NIGHT_MIN_MINUTES,
+  NIGHT_REVIVE_GRACE_SEC,
+  NIGHT_REVIVE_HP,
+  NIGHT_REVIVE_RANGE_M,
+  NIGHT_REVIVE_SEC,
   NIGHT_WAVES,
   NIGHT_WAVE_COUNT,
+  type NightRevivedEvent,
+  type ReviveAck,
+  type ReviveReq,
   WOLF_BITE_CONNECT_RANGE,
   WOLF_BITE_DAMAGE,
   WOLF_CORPSE_SEC,
@@ -174,8 +182,18 @@ export interface ServerPlayer extends Body {
   ping: number;
   /** wolf_night: qo'ldagi o'tin (0..WOOD_CARRY_MAX); tug'ilganda 0, o'lganda yo'qoladi. */
   wood: number;
-  /** wolf_night: oxirgi lager amali (o'tin olish/tashlash) vaqti — spamga qarshi (0.3 s). */
+  /** wolf_night: oxirgi lager amali (o'tin olish/tashlash/turg'izish so'rovi) vaqti — spamga qarshi (0.3 s). */
   lastCampAction: number;
+  /**
+   * wolf_night: yiqilgan (joni 0, `alive` true): harakat/otish/loot/lager yo'q, bo'ri ovlamaydi.
+   * `downedAt` — yiqilgan vaqt (NIGHT_DOWNED_BLEED_SEC dan keyin o'ladi), `downedBy` — yiqitgan (qon ketganda qotil).
+   */
+  downed: boolean;
+  downedAt: number;
+  downedBy: { killer: ServerPlayer | ServerWolf; weapon: WeaponId | 'grenade' | 'wolf' } | null;
+  /** wolf_night: turg'izayotgan sherik va jarayon (s, NIGHT_REVIVE_SEC gacha); sherik uzoqlashsa 0 ga tushadi. */
+  reviveBy: string | null;
+  reviveProgress: number;
   /** Loot so'rovlari tezligi (faqat odamlar, token bucket): qolgan so'rovlar va oxirgi to'ldirish vaqti. */
   lootTokens: number;
   lootTokensAt: number;
@@ -244,7 +262,7 @@ const NIGHT_ALPHA_CHANCE = 0.25;
 
 let roomSeq = 0;
 
-type LootGateRejectCode = 'PLAYER_NOT_FOUND' | 'ROUND_NOT_ACTIVE' | 'RATE_LIMITED';
+type LootGateRejectCode = 'PLAYER_NOT_FOUND' | 'ROUND_NOT_ACTIVE' | 'RATE_LIMITED' | 'PLAYER_DEAD';
 
 /**
  * Odamning loot so'rovlari (ochish/olish/qurollanish/aptechka) chegarasi: zaxira LOOT_REQ_BURST, sekundiga
@@ -366,6 +384,7 @@ export class Room {
             this.handleSurvivalRoundEnd(roundId, winnerId, winnerName, winReason),
           onPreRoundReset: (nextRoundId, nextPhase) =>
             this.handleSurvivalPreRoundReset(nextRoundId, nextPhase),
+          hasPendingRespawn: () => this.hasPendingNightRespawn(),
           onPhaseChanged: (phase, roundId) => {
             this.phase = phase;
             this.roundId = roundId;
@@ -511,9 +530,9 @@ export class Room {
 
   // ---------------- Bo'rilar ----------------
 
-  /** Bo'ri shu o'yinchini ovlashi mumkinmi (tirik; survivalda faqat ishtirokchi). */
+  /** Bo'ri shu o'yinchini ovlashi mumkinmi (tirik, yiqilmagan; survivalda faqat ishtirokchi). */
   isWolfPrey(p: ServerPlayer): boolean {
-    if (!p.alive || !p.ready) return false;
+    if (!p.alive || !p.ready || p.downed) return false;
     if (this.isSurvival && this.survival) return this.survival.isAliveContender(p.id);
     return true;
   }
@@ -914,6 +933,7 @@ export class Room {
     if (this.phase !== 'playing' || !p.alive || !p.ready || !this.survival?.canPlayerCombat(p.id)) {
       return { ok: false, error: 'ROUND_NOT_ACTIVE', wood: p.wood };
     }
+    if (p.downed) return { ok: false, error: 'DOWNED', wood: p.wood };
     return null;
   }
 
@@ -1011,6 +1031,211 @@ export class Room {
   /** Bot gulxanga o'tin tashlaydi (odam bilan bir xil tekshiruvlar). */
   botFeedFire(p: ServerPlayer, fireId: string): CampActionAck {
     return this.feedFireCore(p, fireId);
+  }
+
+  // ---------------- Yiqilish va turg'izish (wolf_night) ----------------
+
+  /** Turg'izish masofasi: oyoq nuqtalari orasida XZ ≤ NIGHT_REVIVE_RANGE_M va |dy| ≤ 2. */
+  private reviveInReach(a: ServerPlayer, b: ServerPlayer): boolean {
+    return Math.hypot(a.pos.x - b.pos.x, a.pos.z - b.pos.z) <= NIGHT_REVIVE_RANGE_M && Math.abs(a.pos.y - b.pos.y) <= 2;
+  }
+
+  /** Tik turgan (tirik, yiqilmagan, tayyor) ishtirokchi — turg'iza oladi. */
+  private isStandingContender(p: ServerPlayer): boolean {
+    return p.alive && !p.downed && p.ready && this.phase === 'playing' && !!this.survival?.isAliveContender(p.id);
+  }
+
+  /** `except` dan boshqa tik turgan ishtirokchi bormi (yiqilganni kim turg'izadi?). */
+  private hasStandingContender(except: ServerPlayer | null): boolean {
+    for (const p of this.players.values()) {
+      if (p !== except && this.isStandingContender(p)) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Joni tugagan o'yinchi yiqiladi (o'lmaydi): joni 0, tik turmaydi, harakat/otish/loot/lager yo'q, bo'ri ovlamaydi.
+   * Qurol/inventar/o'tin saqlanadi — turg'izilganda qaytadi. Shu o'yinchi turg'izayotgan sheriklar jarayoni to'xtaydi.
+   */
+  private downPlayer(p: ServerPlayer, attacker: ServerPlayer | ServerWolf, weapon: WeaponId | 'grenade' | 'wolf'): void {
+    const t = this.now();
+    p.downed = true;
+    p.downedAt = t;
+    p.downedBy = { killer: attacker, weapon };
+    p.reviveBy = null;
+    p.reviveProgress = 0;
+    p.hp = 0;
+    p.scoped = false;
+    p.crouched = false;
+    p.vel.x = 0;
+    p.vel.z = 0;
+    // Yiqilganda reload/qurol almashtirish tugaydi (turg'izilganda qurol o'sha-o'sha, qayta o'qlashni o'zi boshlaydi)
+    p.reloadWeapon = null;
+    p.reloadUntil = 0;
+    p.pendingReloadWeapon = null;
+    resetServerWeaponSwitchState(p);
+    for (const o of this.players.values()) {
+      if (o.reviveBy === p.id) {
+        o.reviveBy = null;
+        o.reviveProgress = 0;
+      }
+    }
+    const st = this.nightStats.get(p.id);
+    if (st) st.downs++;
+    p.brain?.onDowned();
+    this.systemChat(`🩸 ${p.name} yiqildi — ${NIGHT_DOWNED_BLEED_SEC} s ichida [E] bilan turg'izing!`);
+  }
+
+  /** Qon ketib o'ldi (yoki turg'izadigan hech kim qolmadi): qotil — yiqitgan bo'ri/o'yinchi. */
+  private bleedOut(p: ServerPlayer): void {
+    if (!p.downed || !p.alive) return;
+    const by = p.downedBy;
+    p.downed = false;
+    p.reviveBy = null;
+    p.reviveProgress = 0;
+    p.downedBy = null;
+    const killer: ServerPlayer | ServerWolf = by?.killer ?? p;
+    this.kill(p, killer, by?.weapon ?? 'wolf', false);
+  }
+
+  /** Hech kim tik turmagan bo'lsa (hamma o'lgan/yiqilgan) — yiqilganlar darhol o'ladi: ularni turg'izadigan yo'q. */
+  private bleedOutAllIfNoStanding(): void {
+    if (this.hasStandingContender(null)) return;
+    const prevDefer = this.deferWinCheck;
+    this.deferWinCheck = true;
+    try {
+      for (const p of [...this.players.values()]) if (p.downed && p.alive) this.bleedOut(p);
+    } finally {
+      this.deferWinCheck = prevDefer;
+    }
+    if (!this.deferWinCheck) this.checkWin();
+  }
+
+  /** Turg'izish tugadi: o'yinchi tik turadi, joni NIGHT_REVIVE_HP, qisqa himoya; sherikka statistika va hodisa. */
+  private completeRevive(p: ServerPlayer, r: ServerPlayer): void {
+    const t = this.now();
+    p.downed = false;
+    p.downedAt = 0;
+    p.downedBy = null;
+    p.reviveBy = null;
+    p.reviveProgress = 0;
+    p.hp = NIGHT_REVIVE_HP;
+    // damage() himoyasi SPAWN_PROTECTION dan hisoblanadi — NIGHT_REVIVE_GRACE_SEC davomida zarar yo'q
+    p.spawnTime = t - SPAWN_PROTECTION + NIGHT_REVIVE_GRACE_SEC;
+    const st = this.nightStats.get(r.id);
+    if (st) st.revives++;
+    const ev: NightRevivedEvent = {
+      id: p.id,
+      name: p.name,
+      byId: r.id,
+      byName: r.name,
+      x: q3(p.pos.x),
+      y: q3(p.pos.y),
+      z: q3(p.pos.z),
+    };
+    this.io.to(this.channel).emit('night:revived', ev);
+    this.systemChat(`💚 ${r.name} ${p.name}ni turg'izdi`);
+  }
+
+  /** Har tick: turg'izish jarayonlari (sherik yonida tursa o'sadi, ketsa 0 ga tushadi) va qon ketish muddati. */
+  private updateDowned(dt: number, t: number): void {
+    let anyDowned = false;
+    for (const p of [...this.players.values()]) {
+      if (!p.downed || !p.alive) continue;
+      anyDowned = true;
+      if (p.reviveBy) {
+        const r = this.players.get(p.reviveBy);
+        if (r && this.isStandingContender(r) && this.reviveInReach(r, p)) {
+          p.reviveProgress += dt;
+          if (p.reviveProgress >= NIGHT_REVIVE_SEC) {
+            this.completeRevive(p, r);
+            continue;
+          }
+        } else {
+          p.reviveBy = null;
+          p.reviveProgress = 0;
+        }
+      }
+      if (t - p.downedAt >= NIGHT_DOWNED_BLEED_SEC) this.bleedOut(p);
+    }
+    if (anyDowned) this.bleedOutAllIfNoStanding();
+  }
+
+  /** Turg'izish so'rovi (odam va bot uchun umumiy): kanal boshlanadi, jarayon updateDowned da o'sadi. */
+  private reviveCore(p: ServerPlayer, targetId: string): ReviveAck {
+    if (!this.isNight) return { ok: false, error: 'NOT_NIGHT' };
+    if (!this.isStandingContender(p) || !this.survival?.canPlayerCombat(p.id)) return { ok: false, error: 'ROUND_NOT_ACTIVE' };
+    const target = this.players.get(targetId);
+    if (!target || !target.alive || !target.ready) return { ok: false, error: 'NOT_FOUND' };
+    if (target === p) return { ok: false, error: 'SELF' };
+    if (!target.downed) return { ok: false, error: 'NOT_DOWNED' };
+    if (!this.reviveInReach(p, target)) return { ok: false, error: 'TOO_FAR' };
+    if (target.reviveBy === p.id) return { ok: true }; // davom etmoqda — qayta bosish jarayonni buzmaydi
+    if (target.reviveBy) {
+      const other = this.players.get(target.reviveBy);
+      if (other && this.isStandingContender(other) && this.reviveInReach(other, target)) return { ok: false, error: 'BUSY' };
+    }
+    if (this.campRateLimited(p)) return { ok: false };
+    target.reviveBy = p.id;
+    target.reviveProgress = 0;
+    return { ok: true };
+  }
+
+  onRevive(id: string, rawReq: ReviveReq | unknown, ack?: (res: ReviveAck) => void): ReviveAck {
+    const p = this.players.get(id);
+    const targetId = readStringField(rawReq, 'targetId');
+    const res: ReviveAck = !p || p.isBot ? { ok: false, error: 'NOT_FOUND' } : this.reviveCore(p, targetId);
+    ack?.(res);
+    return res;
+  }
+
+  /** Bot sherigini turg'izadi (odam bilan bir xil tekshiruvlar; yonida turib takror chaqiradi — kanal saqlanadi). */
+  botRevive(p: ServerPlayer, targetId: string): ReviveAck {
+    return this.reviveCore(p, targetId);
+  }
+
+  /**
+   * wolf_night: hamma o'lsa ham raund tugamasin — asosiy gulxan yonib turibdi va oldinda yana to'lqin bor
+   * (halok bo'lganlar keyingi to'lqin boshida qaytadi). Gulxan o'chsa yoki oxirgi to'lqin bo'lsa — bo'rilar yutadi.
+   */
+  private hasPendingNightRespawn(): boolean {
+    if (!this.isNight || this.phase !== 'playing' || this.nightWaveIdx < 0) return false;
+    if (this.nightWaveIdx >= NIGHT_WAVE_COUNT - 1) return false;
+    return this.mainCampfire()?.lit === true;
+  }
+
+  /**
+   * wolf_night, to'lqin boshi: asosiy gulxan yonib tursa halok bo'lgan ishtirokchilar (odam va bot) gulxan yonida
+   * to'liq jon, tun boshidagi yuklama (qurolsiz, o'tin 0) bilan qaytadi; o'chgan bo'lsa — hech kim qaytmaydi.
+   */
+  private respawnEliminatedAtWave(wave: number): void {
+    if (!this.survival) return;
+    const dead: ServerPlayer[] = [];
+    for (const p of this.players.values()) {
+      if (p.ready && !p.alive && this.survival.isContender(p.id) && !this.survival.isAliveContender(p.id)) dead.push(p);
+    }
+    if (dead.length === 0) return;
+    if (this.mainCampfire()?.lit !== true) {
+      this.systemChat(`🌑 ${wave}-to'lqin: asosiy gulxan o'chgan — halok bo'lganlar qaytmadi`);
+      return;
+    }
+    const names: string[] = [];
+    for (const p of dead) {
+      if (!this.survival.reviveEliminated(p.id)) continue;
+      this.spawn(p);
+      names.push(p.name);
+    }
+    if (names.length === 0) return;
+    this.rosterDirty = true;
+    this.sendRoster();
+    this.sendMatch();
+    this.systemChat(`🔥 ${wave}-to'lqin: halok bo'lganlar gulxan yonida qaytdi (${names.join(', ')})`);
+  }
+
+  /** Testlar uchun: o'yinchiga to'g'ridan-to'g'ri zarar (spawn himoyasi hisobga olinadi). */
+  damageForTest(target: ServerPlayer, attacker: ServerPlayer | ServerWolf, amount: number, weapon: WeaponId | 'grenade' | 'wolf' = 'wolf'): void {
+    const from = { x: attacker.pos.x, y: attacker.pos.y + 0.9, z: attacker.pos.z };
+    this.damage(target, attacker, amount, weapon, false, from);
   }
 
   /**
@@ -1253,12 +1478,14 @@ export class Room {
     if (idx === this.nightWaveIdx) return;
     const firstWave = this.nightWaveIdx < 0;
     this.nightWaveIdx = idx;
+    if (idx > 0) this.systemChat(`🌙 ${ev.wave.wave}-to'lqin: bo'rilar ko'paydi va kuchaydi!`);
+    // 2-to'lqindan: asosiy gulxan yonib tursa halok bo'lganlar gulxan yonida qaytadi (bo'rilar soni ulardan keyin hisoblanadi)
+    if (idx > 0) this.respawnEliminatedAtWave(ev.wave.wave);
     // 3-to'lqindan har to'lqin boshida to'da boshlig'i chiqadi (tirigi bo'lmasa)
     this.nightAlphaDue = ev.wave.wave >= 3 && !this.hasLivingAlpha(null);
     const n = nightWolvesForWave(ev.wave, this.aliveNightContenders(), this.nightDifficulty);
     this.wolfCount = clamp(firstWave ? n : Math.max(n, this.wolfCount), 0, NIGHT_WOLF_CAP);
     this.syncWolvesToCount();
-    if (idx > 0) this.systemChat(`🌙 ${ev.wave.wave}-to'lqin: bo'rilar ko'paydi va kuchaydi!`);
   }
 
   /**
@@ -1404,6 +1631,11 @@ export class Room {
       kills: 0, deaths: 0, ping: 0,
       wood: 0,
       lastCampAction: -99,
+      downed: false,
+      downedAt: 0,
+      downedBy: null,
+      reviveBy: null,
+      reviveProgress: 0,
       lootTokens: LOOT_REQ_BURST,
       lootTokensAt: 0,
       brain: null,
@@ -1683,6 +1915,11 @@ export class Room {
     p.hp = MAX_HP;
     p.alive = true;
     p.wood = 0;
+    p.downed = false;
+    p.downedAt = 0;
+    p.downedBy = null;
+    p.reviveBy = null;
+    p.reviveProgress = 0;
     p.respawnAt = Infinity;
     p.spawnId++;
     p.authority.resetForSpawn(p.spawnId);
@@ -1772,7 +2009,7 @@ export class Room {
 
   onShoot(id: string, m: ShootMsg): void {
     const p = this.players.get(id);
-    if (!p || !p.alive || this.phase !== 'playing' || !m || !isWeaponId(m.weapon) || !Array.isArray(m.dirs)) return;
+    if (!p || !p.alive || p.downed || this.phase !== 'playing' || !m || !isWeaponId(m.weapon) || !Array.isArray(m.dirs)) return;
     if (this.isSurvival && this.survival && !this.survival.canPlayerCombat(id)) return;
 
     // 1. Server-authoritative weapon ownership, active equip, and switch-time check (Stage 05/06/07-QA)
@@ -1825,7 +2062,7 @@ export class Room {
 
   /** Bot o'q uzishi. Muvaffaqiyatli bo'lsa true. */
   botFire(p: ServerPlayer, extraSpread: number): boolean {
-    if (!p.weapon) return false;
+    if (!p.weapon || p.downed) return false;
     const def = WEAPONS[p.weapon];
     const eye = { x: p.pos.x, y: p.pos.y + eyeHeightOf(p), z: p.pos.z };
     const aim = { x: -Math.sin(p.yaw) * Math.cos(p.pitch), y: Math.sin(p.pitch), z: -Math.cos(p.yaw) * Math.cos(p.pitch) };
@@ -1992,7 +2229,9 @@ export class Room {
   /** Inson o'yinchining navbatdagi kirishlarini avtoritativ tarzda ishlaydi (qurol almashtirish + kechiktirilgan reload bilan). */
   private stepHumanAuthority(p: ServerPlayer, dt: number, rawDt: number, t: number): void {
     const prevW = p.weapon;
-    p.authority.stepAuthoritativeTick(p, dt, this.world, (w) => this.loot.canPlayerUseWeapon(p.id, w), rawDt);
+    p.authority.stepAuthoritativeTick(p, dt, this.world, (w) => this.loot.canPlayerUseWeapon(p.id, w), rawDt, {
+      lockMovement: p.downed,
+    });
     if (p.weapon !== prevW) {
       const nextW = p.weapon;
       p.weapon = prevW;
@@ -2010,7 +2249,7 @@ export class Room {
   }
 
   startReload(p: ServerPlayer): void {
-    if (!p.alive || this.phase !== 'playing' || p.reloadWeapon || !p.weapon) return;
+    if (!p.alive || p.downed || this.phase !== 'playing' || p.reloadWeapon || !p.weapon) return;
     if (this.isSurvival && this.survival && !this.survival.canPlayerCombat(p.id)) return;
     if (!p.isBot && !this.loot.canPlayerUseWeapon(p.id, p.weapon)) return;
     const def = WEAPONS[p.weapon];
@@ -2046,7 +2285,7 @@ export class Room {
 
   throwGrenade(p: ServerPlayer, dir: Vec3): void {
     const t = this.now();
-    if (!p.alive || p.grenades <= 0 || t - p.lastGrenade < 0.8 || this.phase !== 'playing') return;
+    if (!p.alive || p.downed || p.grenades <= 0 || t - p.lastGrenade < 0.8 || this.phase !== 'playing') return;
     if (this.isSurvival && this.survival && !this.survival.canPlayerCombat(p.id)) return;
     p.grenades--;
     p.lastGrenade = t;
@@ -2096,6 +2335,10 @@ export class Room {
     p.lootTokens -= 1;
     if (this.isSurvival && this.phase !== 'playing' && p.alive) {
       return { p, code: 'ROUND_NOT_ACTIVE', requestId: readStringField(rawReq, 'requestId') };
+    }
+    // wolf_night: yiqilgan o'yinchi loot/inventar/aptechka ishlatmaydi (sherigi turg'izguncha)
+    if (p.downed) {
+      return { p, code: 'PLAYER_DEAD', requestId: readStringField(rawReq, 'requestId') };
     }
     return { p };
   }
@@ -2327,6 +2570,8 @@ export class Room {
     from: Vec3,
   ) {
     if (!target.alive || amount <= 0 || this.phase !== 'playing') return;
+    // wolf_night: yiqilgan o'yinchiga zarar yo'q (bo'ri tishlamaydi; qon ketish muddati o'ldiradi)
+    if (target.downed) return;
     if (this.now() - target.spawnTime < SPAWN_PROTECTION) return;
     // Zirh/kaska: zararning bir qismini yutadi, mustahkamlik shuncha kamayadi (faqat loot rejimida bo'ladi)
     let absorbed = 0;
@@ -2371,7 +2616,16 @@ export class Room {
       attackerPlayer.socket?.emit('hitConfirm', hc);
     }
     if (attackerPlayer) target.brain?.onDamaged(attackerPlayer);
-    if (target.hp <= 0) this.kill(target, attacker, weapon, headshot);
+    if (target.hp <= 0) {
+      // Tong otguncha: turg'iza oladigan tik turgan sherik bo'lsa — yiqiladi (o'lmaydi); bo'lmasa (yakka
+      // o'yin yoki hamma o'lgan/yiqilgan) — o'ladi, va yiqilgan boshqalar ham qon ketib o'ladi (turg'izadigan yo'q)
+      if (this.isNight && this.survival && this.hasStandingContender(target)) {
+        this.downPlayer(target, attacker, weapon);
+      } else {
+        this.kill(target, attacker, weapon, headshot);
+        if (this.isNight) this.bleedOutAllIfNoStanding();
+      }
+    }
   }
 
   private kill(
@@ -2387,8 +2641,12 @@ export class Room {
     victim.crouched = false;
     victim.authority.clear();
     victim.deaths++;
-    // Qo'ldagi o'tin o'lim bilan yo'qoladi (wolf_night)
+    // Qo'ldagi o'tin o'lim bilan yo'qoladi (wolf_night); yiqilgan holat ham tugaydi
     victim.wood = 0;
+    victim.downed = false;
+    victim.downedBy = null;
+    victim.reviveBy = null;
+    victim.reviveProgress = 0;
     resetServerWeaponSwitchState(victim);
     if (!victim.isBot || this.lootEnabled) {
       // Loot rejimida qo'ldagi qurol (joriy o'qlari bilan) yerga tushadi — g'olib uni olishi mumkin.
@@ -2662,6 +2920,10 @@ export class Room {
         p.alive = false;
         p.hp = 0;
         p.weapon = null;
+        p.downed = false;
+        p.downedBy = null;
+        p.reviveBy = null;
+        p.reviveProgress = 0;
         p.respawnAt = Infinity;
         p.authority.clear();
         if (p.ready) {
@@ -2733,6 +2995,14 @@ export class Room {
     for (const p of this.players.values()) {
       resetServerWeaponSwitchState(p);
       p.scoped = false;
+      // Tong otganda yiqilgan sherik ham tirik qolgan hisoblanadi — tik turadi (qon ketish tugaydi)
+      if (p.downed) {
+        p.downed = false;
+        p.downedBy = null;
+        p.reviveBy = null;
+        p.reviveProgress = 0;
+        if (p.alive) p.hp = Math.max(p.hp, NIGHT_REVIVE_HP);
+      }
       p.authority.clear();
     }
     this.rosterDirty = true;
@@ -2778,6 +3048,8 @@ export class Room {
         logsFed: 0,
         relights: 0,
         survived: false,
+        revives: 0,
+        downs: 0,
       });
     }
   }
@@ -2941,6 +3213,7 @@ export class Room {
         if (this.isNight) {
           this.updateNightWaves(t);
           this.updateCamp(dt, t);
+          this.updateDowned(dt, t);
         }
         for (const p of this.players.values()) if (p.brain && p.alive) p.brain.update(dt, t);
         this.updateGrenades(dt, t);
@@ -3013,6 +3286,12 @@ export class Room {
       if (p.crouched) snapP.crouched = true;
       // wolf_night: qo'ldagi o'tin faqat 0 dan katta bo'lsa
       if (p.wood > 0) snapP.wood = p.wood;
+      // wolf_night: yiqilgan — qon ketishgacha qolgan vaqt va (kimdir turg'izayotgan bo'lsa) jarayon
+      if (p.downed && p.alive) {
+        snapP.downed = true;
+        snapP.bleedSec = Math.max(0, Math.ceil(NIGHT_DOWNED_BLEED_SEC - (t - p.downedAt)));
+        if (p.reviveBy) snapP.reviveK = q3(clamp(p.reviveProgress / NIGHT_REVIVE_SEC, 0, 1));
+      }
       if (this.isSurvival && this.survival) {
         snapP.survivalRole = this.survival.getPlayerRole(p.id);
         snapP.spectateTargetId = this.survival.getSpectateTarget(p.id);

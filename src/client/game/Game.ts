@@ -5,12 +5,18 @@ import { angleDiff, clamp, lerp, type Vec3 } from '../../shared/math';
 import { MAX_INPUT_BATCH_SIZE } from '../../shared/netMovement';
 import { computeCameraClearDistance, rayBox, raycastWorld, rayVsPlayer } from '../../shared/physics';
 import {
+  NIGHT_REVIVE_RANGE_M,
+  NIGHT_REVIVE_SEC,
+  REVIVE_ERROR_MESSAGES_UZ,
   WOLF_HEIGHT,
   WOLF_NAME_UZ,
   WOLF_RADIUS,
   isWolfId,
   isWolfThreatState,
   wolfCoatTraits,
+  type NightRevivedEvent,
+  type ReviveAck,
+  type ReviveReq,
   type WolfBiteEvent,
   type WolfHowlEvent,
   type WolfSnap,
@@ -98,6 +104,8 @@ const CROUCH_STEP_VOLUME_LOCAL = 0.35;
 const CROUCH_STEP_VOLUME_REMOTE = 0.3;
 /** O'tirib yurganda qadamlar orasidagi vaqt, s (oddiy yurish — 0.44). */
 const CROUCH_STEP_INTERVAL = 0.55;
+/** wolf_night: yiqilgan o'yinchining kamera ko'z balandligi (oyoqdan, m) — yerda yotgan nigoh. */
+const DOWNED_EYE_HEIGHT = 0.6;
 
 interface Remote {
   id: string;
@@ -112,6 +120,9 @@ interface Remote {
   alive: boolean;
   /** O'tirgan holat — yangiroq (bracketing) snapshot'dan; xitboks va model pozasi uchun. */
   crouched: boolean;
+  /** wolf_night: yiqilgan (yotadi, ⛑ belgisi; [E] bilan turg'iziladi) va turg'izish jarayoni (0..1, bo'lmasa null). */
+  downed: boolean;
+  reviveK: number | null;
   speed: number;
   stepTimer: number;
   tagKey: string;
@@ -215,6 +226,17 @@ export class Game {
   private campTarget: { kind: 'pile' | 'fire'; id: string } | null = null;
   /** Lager amali so'rovi yuborilgan, ack kutilmoqda (ikki marta bosilmasin). */
   private campBusy = false;
+  /**
+   * wolf_night yiqilgan holat (serverdan, snapshot): harakat/qurol/[E] yo'q, kamera pastda, banner.
+   * `myDownedView` — kamera ko'z balandligi uchun silliqlangan 0..1.
+   */
+  private myDowned = false;
+  private myBleedSec = 0;
+  private myReviveK: number | null = null;
+  private myDownedView = 0;
+  /** [E] nishoni — turg'izish uchun yaqin yiqilgan sherik (gulxan/g'aram/konteynerdan ustun). */
+  private reviveTarget: { id: string; name: string; reviveK: number | null } | null = null;
+  private reviveBusy = false;
   /** Shader/tekstura isitish guruhi (bir necha kadr chiziladi, keyin olib tashlanadi) va kadr hisoblagichi. */
   private prewarmGroup: THREE.Group | null = null;
   private prewarmFrames = 0;
@@ -660,6 +682,7 @@ export class Game {
       if (e.target === this.myId) this.shake = Math.max(this.shake, 0.6);
     });
     this.on<CampfireEvent>('campfire', (e) => this.onCampfireEvent(e));
+    this.on<NightRevivedEvent>('night:revived', (e) => this.onRevived(e));
     this.on<KillEvent>('kill', (e) => this.onKill(e));
     this.on<ExplosionEvent>('explosion', (e) => this.onExplosion(e));
     this.on<AmmoEvent>('ammo', (e) => {
@@ -945,7 +968,10 @@ export class Game {
       if (s.serverTick !== undefined) {
         this.lastServerTick = s.serverTick;
       }
-      if (this.isNight) this.setMyWood(mine.wood ?? 0);
+      if (this.isNight) {
+        this.setMyWood(mine.wood ?? 0);
+        this.setMyDowned(mine.alive && mine.downed === true, mine.bleedSec ?? 0, mine.reviveK ?? null);
+      }
       if (mine.spectateTargetId && !this.spectator.getTargetId()) {
         this.spectator.setTarget(mine.spectateTargetId);
       }
@@ -1002,6 +1028,8 @@ export class Game {
           weapon: this.lootPreview ? null : 'rifle',
           alive: false,
           crouched: false,
+          downed: false,
+          reviveK: null,
           speed: 0,
           stepTimer: 0,
           tagKey: '',
@@ -1117,6 +1145,7 @@ export class Game {
     const t = performance.now() / 1000;
     this.me.spawn(e, t);
     this.deathKiller = '';
+    this.setMyDowned(false, 0, null);
     this.spectator.setActive(false);
     this.lastSpectatorPose = null;
     this.lastSentSeq = 0;
@@ -1273,6 +1302,41 @@ export class Game {
     this.vm.cancelReload();
     // O'lgan/kuzatuvchi o'yinchida eski yuklama ko'rinib turmasin; spawn'da qayta ko'rsatiladi
     this.inventoryUi.setVisible(false);
+    this.setMyDowned(false, 0, null);
+  }
+
+  /**
+   * wolf_night: o'zimizning yiqilgan holatimiz (serverdan). Yiqilganda modelimiz yotadi, bashorat tozalanadi
+   * (server harakatni rad etadi), qurol/lager prompti yopiladi; turg'izilganda tik turish qaytadi.
+   */
+  private setMyDowned(downed: boolean, bleedSec: number, reviveK: number | null): void {
+    this.myBleedSec = bleedSec;
+    this.myReviveK = reviveK;
+    if (downed === this.myDowned) return;
+    this.myDowned = downed;
+    if (downed) {
+      this.myModel.triggerDeath(false, 'wolf');
+      this.me.scoped = false;
+      this.vm.cancelReload();
+      this.lootUi.setActiveContainer(null);
+      this.campTarget = null;
+      this.reviveTarget = null;
+      this.lootUi.setCustomPrompt(null);
+      this.audio.hurt();
+    }
+  }
+
+  /** Sherik turg'izildi (server hodisasi): killfeed qatori va ovoz; o'zimiz bo'lsak — "turdingiz" xabari. */
+  private onRevived(e: NightRevivedEvent): void {
+    const mine = e.id === this.myId || e.byId === this.myId;
+    this.hud.reviveFeed(e.byName, e.name, mine);
+    this.audio.campfireFeed({ x: e.x, y: e.y + 1, z: e.z });
+    if (e.id === this.myId) {
+      this.lootUi.showStatus(`⛑ ${e.byName} sizni turg'izdi`, 'success', 2600);
+    } else if (e.byId === this.myId) {
+      this.lootUi.showStatus(`⛑ ${e.name}ni turg'izdingiz`, 'success', 2200);
+      this.reviveBusy = false;
+    }
   }
 
   private sendInput() {
@@ -1601,13 +1665,17 @@ export class Game {
         : active && (inp.down('AltLeft') || inp.down('AltRight') || inp.down('KeyC'));
       const wasGround = me.body.onGround;
       const vyBefore = me.body.vel.y;
-      if (jump && wasGround) this.audio.jump();
+      // Yiqilgan (wolf_night): WASD/sakrash/sprint/o'tirish yo'q — server ham shu kirishlarni nolga tenglashtiradi,
+      // bashorat mos qoladi; faqat qarash (yaw/pitch) ishlaydi
+      const downed = this.myDowned;
+      if (jump && wasGround && !downed) this.audio.jump();
       if (!(import.meta.env.DEV && window.__DEV_PLAYER_POSE_LOCK__)) {
-        me.move(dt, fwd, right, jump, walk, crouch);
+        if (downed) me.move(dt, 0, 0, false, false, false);
+        else me.move(dt, fwd, right, jump, walk, crouch);
       }
       // Qurol mantiqi harakat kirishi yozilgandan KEYIN: otish paytida server joriy kadr yaw/pitch ini ko'rsin
-      // (aks holda tez "flick" otishlar aim-cone tekshiruvidan o'tmay rad etiladi).
-      if (active) this.handleWeapons(t);
+      // (aks holda tez "flick" otishlar aim-cone tekshiruvidan o'tmay rad etiladi). Yiqilganda qurol/[E]/[H] yo'q.
+      if (active && !downed) this.handleWeapons(t);
       if (!wasGround && me.body.onGround && vyBefore < -6) this.audio.land(Math.min(0.6, -vyBefore / 30));
       if (me.body.onGround && me.speedH() > 1.0) {
         this.stepTimer -= dt;
@@ -1648,6 +1716,7 @@ export class Game {
 
     this.updateLootInteraction();
     this.updateCampInteraction();
+    this.updateReviveInteraction();
     this.updateRemotes(dt, t);
     this.fx.update(dt);
     // Konteyner qopqoq animatsiyalari lootWorld.update() ichida yangilanadi (bir kadrda bir marta).
@@ -1676,6 +1745,7 @@ export class Game {
   private updateLootInteraction() {
     if (
       !this.me.alive ||
+      this.myDowned ||
       !this.lootSnapshot ||
       this.lootSnapshot.containers.length === 0 ||
       (this.isSurvival && this.match && this.match.phase !== 'playing')
@@ -1808,7 +1878,8 @@ export class Game {
 
     // Stage 06: [E] Konteynerni ochish / buyum olish; tunda yaqinroq gulxan/g'aram bo'lsa — lager amali
     if (inp.justPressed('KeyE') && !notPlaying) {
-      if (this.campTarget) this.triggerCampAction();
+      if (this.reviveTarget) this.triggerRevive();
+      else if (this.campTarget) this.triggerCampAction();
       else this.lootUi.triggerPrimaryInteract();
     }
 
@@ -2041,8 +2112,13 @@ export class Game {
       rem.alive = src.alive;
       // O'tirish holati har doim yangiroq snapshot'dan (interpolyatsiya oralig'ida xitboks kechikmasin)
       rem.crouched = Boolean(p1.crouched);
-      rem.speed = Math.hypot(src.vx, src.vz);
+      // Yiqilgan (wolf_night): yotgan poza (GLB'da yiqilish klipi yo'q — o'lim pozasi), ⛑ belgisi; tik turganda tiklanadi
+      const downed = src.alive && p1.downed === true;
       const m = rem.model;
+      if (downed && !rem.downed) m.triggerDeath(false, 'wolf');
+      rem.downed = downed;
+      rem.reviveK = downed ? p1.reviveK ?? null : null;
+      rem.speed = Math.hypot(src.vx, src.vz);
       const distToCam = this.camera.position.distanceTo(rem.pos);
       const isHiddenSpectator = src.survivalRole === 'spectator' && !src.alive;
       m.root.visible = !isHiddenSpectator;
@@ -2050,10 +2126,12 @@ export class Game {
       m.root.rotation.y = rem.yaw;
       m.setWeapon(src.weapon);
       m.setGear(unpackGearState(src.gear));
-      m.setCrouch(rem.crouched);
-      m.update(dt, { speed: rem.speed, onGround: src.onGround, pitch: rem.pitch, alive: src.alive, reloading: src.reloading });
-      m.updateNameTagDistance(distToCam, src.alive);
-      if (src.alive && src.onGround && rem.speed > 1.0) {
+      m.setCrouch(rem.crouched && !downed);
+      m.setDownedMarker(downed && !isHiddenSpectator);
+      const poseAlive = src.alive && !downed;
+      m.update(dt, { speed: downed ? 0 : rem.speed, onGround: src.onGround, pitch: rem.pitch, alive: poseAlive, reloading: src.reloading });
+      m.updateNameTagDistance(distToCam, poseAlive);
+      if (poseAlive && src.onGround && rem.speed > 1.0) {
         rem.stepTimer -= dt;
         if (rem.stepTimer <= 0) {
           const sprinting = !rem.crouched && rem.speed > WALK_SPEED + 0.6;
@@ -2285,7 +2363,7 @@ export class Game {
   private updateCampInteraction(): void {
     if (!this.camp || !this.camp.hasCamp()) return;
     const playing = !this.match || this.match.phase === 'playing';
-    if (!this.me.alive || !playing) {
+    if (!this.me.alive || this.myDowned || !playing) {
       this.campTarget = null;
       this.lootUi.setCustomPrompt(null);
       return;
@@ -2455,6 +2533,89 @@ export class Game {
     });
   }
 
+  /**
+   * Yiqilgan sherikni turg'izish nishoni (wolf_night): NIGHT_REVIVE_RANGE_M ichidagi (|dy| ≤ 2) eng yaqin yiqilgan
+   * ittifoqchi [E] nishoni bo'ladi — gulxan/g'aram/konteynerdan ustun. Prompt: "[E] Turg'izish (3 s)", jarayonda — foiz.
+   */
+  private updateReviveInteraction(): void {
+    if (!this.isNight) return;
+    const playing = !this.match || this.match.phase === 'playing';
+    if (!this.me.alive || this.myDowned || !playing) {
+      if (this.reviveTarget) {
+        this.reviveTarget = null;
+        this.lootUi.setCustomPrompt(null);
+      }
+      return;
+    }
+    const pos = this.me.body.pos;
+    let best: Remote | null = null;
+    let bestD = Infinity;
+    for (const rem of this.remotes.values()) {
+      if (!rem.downed || !rem.alive || !rem.model.root.visible) continue;
+      const d = Math.hypot(rem.pos.x - pos.x, rem.pos.z - pos.z);
+      if (d > NIGHT_REVIVE_RANGE_M || Math.abs(rem.pos.y - pos.y) > 2 || d >= bestD) continue;
+      bestD = d;
+      best = rem;
+    }
+    if (!best) {
+      if (this.reviveTarget) {
+        this.reviveTarget = null;
+        // Shu kadrda updateCampInteraction gulxan/g'aram promptini qo'ygan bo'lsa — u qoladi
+        if (!this.campTarget) this.lootUi.setCustomPrompt(null);
+      }
+      return;
+    }
+    // Turg'izish gulxan/g'aram va konteynerdan ustun
+    this.campTarget = null;
+    this.reviveTarget = { id: best.id, name: best.name, reviveK: best.reviveK };
+    const k = best.reviveK;
+    if (k !== null) {
+      const pct = Math.round(k * 100);
+      this.lootUi.setCustomPrompt({
+        html: `<span class="key-pill">E</span><span>⛑ ${esc(best.name)} turg'izilmoqda… ${pct}%</span><span class="revive-bar"><i style="width:${pct}%"></i></span>`,
+        text: `[E] ${best.name} turg'izilmoqda… ${pct}%`,
+        variantClass: 'revive',
+      });
+    } else {
+      this.lootUi.setCustomPrompt({
+        html: `<span class="key-pill">E</span><span>⛑ Turg'izish (${NIGHT_REVIVE_SEC} s) — ${esc(best.name)}</span>`,
+        text: `[E] Turg'izish (${NIGHT_REVIVE_SEC} s) — ${best.name}`,
+        variantClass: 'revive',
+      });
+    }
+  }
+
+  /** [E] yiqilgan sherik yonida: turg'izish kanalini boshlash (server ack bilan; jarayon snapshotda keladi). */
+  private triggerRevive(): void {
+    const tgt = this.reviveTarget;
+    if (!tgt || this.reviveBusy) return;
+    void this.requestRevive(tgt.id);
+  }
+
+  private requestRevive(targetId: string): Promise<ReviveAck | null> {
+    this.reviveBusy = true;
+    this.sendInput();
+    const req: ReviveReq = { targetId };
+    return new Promise((resolve) => {
+      this.socket.timeout(3000).emit('night:revive', req, (err: Error | null, ack?: ReviveAck) => {
+        this.reviveBusy = false;
+        if (this.disposed) return resolve(null);
+        if (err || !ack) {
+          this.lootUi.showStatus("Server javob bermadi — qayta urinib ko'ring", 'error', 2200);
+          return resolve(null);
+        }
+        if (!ack.ok) {
+          // Xato kodisiz rad etish — server spam-limiti (0.3 s): jim
+          if (ack.error) this.lootUi.showStatus(REVIVE_ERROR_MESSAGES_UZ[ack.error] ?? 'Xato', 'error', 2200);
+          return resolve(ack);
+        }
+        this.myModel.playInteract();
+        this.lootUi.showStatus(`⛑ Turg'izilmoqda… yonida turing (${NIGHT_REVIVE_SEC} s)`, 'info', 1600);
+        resolve(ack);
+      });
+    });
+  }
+
   /** Har kadr: gulxan animatsiyasi (kamera pozitsiyasi bilan) va yaqin gulxanlarning chirsillashi. */
   private updateCamp(dt: number, t: number): void {
     const camp = this.camp;
@@ -2574,21 +2735,28 @@ export class Game {
     const renderPos = me.smoothedPos();
     const myRole = this.lastAuthoritativeSnap?.survivalRole ?? null;
     const isMidJoinSpectator = this.isSurvival && myRole === 'spectator' && !me.alive;
-    // Kamera ko'z balandligi: tik turish va o'tirish orasida ~0.12 s silliq o'tish (o'q chiqish nuqtasi darhol)
-    const eyeH = me.updateViewCrouch(dt);
+    // Kamera ko'z balandligi: tik turish va o'tirish orasida ~0.12 s silliq o'tish (o'q chiqish nuqtasi darhol).
+    // Yiqilganda (wolf_night) kamera ~0.6 m ga (yerda yotgan ko'z) ~0.35 s da tushadi.
+    const downedTarget = this.myDowned && me.alive ? 1 : 0;
+    const downedStep = Math.max(0, dt) / 0.35;
+    this.myDownedView =
+      this.myDownedView < downedTarget
+        ? Math.min(downedTarget, this.myDownedView + downedStep)
+        : Math.max(downedTarget, this.myDownedView - downedStep);
+    const eyeH = lerp(me.updateViewCrouch(dt), DOWNED_EYE_HEIGHT, this.myDownedView);
 
-    // O'zimizning 3D kemper modelimizni yangilash
+    // O'zimizning 3D kemper modelimizni yangilash (yiqilganda — yotgan poza)
     this.myModel.root.visible = useThird && !isMidJoinSpectator;
     this.myModel.root.position.set(renderPos.x, renderPos.y, renderPos.z);
     this.myModel.root.rotation.y = me.yaw;
     this.myModel.setWeapon(me.weapon);
     this.myModel.setGear({ helmet: me.helmet > 0, armor: me.armor > 0, grenades: me.grenades, medkits: me.medkits });
-    this.myModel.setCrouch(Boolean(me.body.crouched));
+    this.myModel.setCrouch(Boolean(me.body.crouched) && !this.myDowned);
     this.myModel.update(dt, {
-      speed: me.speedH(),
+      speed: this.myDowned ? 0 : me.speedH(),
       onGround: me.body.onGround,
       pitch: me.pitch,
-      alive: me.alive,
+      alive: me.alive && !this.myDowned,
       reloading: !!me.reloadWeapon,
     });
 
@@ -2742,7 +2910,13 @@ export class Game {
         for (const rem of this.remotes.values()) {
           if (!this.isNight && rem.team !== me.team) continue;
           if (this.isNight && !rem.alive) continue;
-          allies.push({ x: rem.pos.x, z: rem.pos.z, team: this.isNight ? 'none' : rem.team, alive: rem.alive });
+          allies.push({
+            x: rem.pos.x,
+            z: rem.pos.z,
+            team: this.isNight ? 'none' : rem.team,
+            alive: rem.alive,
+            ...(this.isNight && rem.downed ? { downed: true } : {}),
+          });
         }
       }
       const camp = this.camp?.hasCamp() ? { fires: this.camp.getFires(t), piles: this.camp.getPiles() } : null;
@@ -2750,7 +2924,9 @@ export class Game {
     }
     this.updateZone(t);
     const wolfWarn = this.wolfThreatLevel();
-    this.hud.setWolfWarning(wolfWarn.level, wolfWarn.nameUz);
+    // Yiqilganda bo'ri ogohlantirishi o'rniga yiqilish banneri (bo'ri yiqilganni ovlamaydi)
+    this.hud.setWolfWarning(this.myDowned ? '' : wolfWarn.level, wolfWarn.nameUz);
+    this.hud.setDowned(this.myDowned && me.alive ? { bleedSec: this.myBleedSec, reviveK: this.myReviveK } : null);
     this.updateCampHud(t);
     if (me.weapon) {
       const a = me.ammo[me.weapon];

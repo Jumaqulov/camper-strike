@@ -37,6 +37,29 @@ export function formatCampPillUz(
   return { text: `🔥 Lager ${mm}:${ss}${pile}`, cls: fuelSec < CAMPFIRE_LOW_FUEL_SEC ? 'low' : '' };
 }
 
+/**
+ * Safdan chiqqan o'yinchiga qaytish qatori (Tong otguncha): keyingi to'lqin boshida asosiy gulxan yonib tursa
+ * qaytadi; oxirgi to'lqinda — tong otguncha tomosha qiladi; hamma halok bo'lgan bo'lsa — alohida urg'u.
+ * Sof funksiya (testlar uchun); `aliveCount` — hozir tirik ishtirokchilar.
+ */
+export function formatNightRespawnLineUz(
+  n: NightSnap,
+  aliveCount: number,
+): { text: string; cls: '' | 'is-out' | 'is-all-dead' } {
+  if (n.wave >= n.waveCount) return { text: '🌅 Tong otguncha tomosha qilasiz', cls: 'is-out' };
+  const total = Math.max(0, Math.floor(n.nextWaveInSec));
+  const mm = Math.floor(total / 60);
+  const ss = String(total % 60).padStart(2, '0');
+  const mainLit = n.fires.some((f) => f.main && f.lit);
+  if (!mainLit) {
+    return { text: `🌑 Asosiy gulxan o'chgan — keyingi to'lqinda qaytish yo'q (yoqilsa qaytasiz) — ${mm}:${ss}`, cls: 'is-out' };
+  }
+  if (aliveCount <= 0) {
+    return { text: `💀 Hamma halok bo'ldi — keyingi to'lqinda qaytasiz (gulxan yonib tursa) — ${mm}:${ss}`, cls: 'is-all-dead' };
+  }
+  return { text: `🔥 Keyingi to'lqinda qaytasiz (asosiy gulxan yonib tursa) — ${mm}:${ss}`, cls: '' };
+}
+
 /** Tun natijasi pastidagi chiziq: keyingi tungacha qolgan vaqt ulushi, % (natija ekrani 10 s turadi). */
 function winBarPercent(timeLeft: number): string {
   return (Math.max(0, Math.min(1, timeLeft / 10)) * 100).toFixed(0);
@@ -76,6 +99,9 @@ export class SurvivalUI {
   private specRoleEl: HTMLElement | null = null;
   private specKillerEl: HTMLElement | null = null;
   private specTargetEl: HTMLElement | null = null;
+  /** wolf_night: safdan chiqqan o'yinchiga "keyingi to'lqinda qaytasiz" qatori. */
+  private specRespawnEl: HTMLElement | null = null;
+  private lastRespawnKey = '';
   private winnerOverlayEl: HTMLElement | null = null;
 
   private visible = false;
@@ -131,6 +157,7 @@ export class SurvivalUI {
     spectatorPanel.innerHTML = `
       <div id="stage07-spec-role"></div>
       <div id="stage07-spec-killer" class="hidden"></div>
+      <div id="stage07-spec-respawn" class="hidden"></div>
       <div id="stage07-spec-target"></div>
       <div class="s07-spec-controls">
         <button type="button" id="stage07-spec-prev" class="s07-spec-btn">◀ Oldingi [A]</button>
@@ -156,6 +183,7 @@ export class SurvivalUI {
     this.specRoleEl = spectatorPanel.querySelector('#stage07-spec-role');
     this.specKillerEl = spectatorPanel.querySelector('#stage07-spec-killer');
     this.specTargetEl = spectatorPanel.querySelector('#stage07-spec-target');
+    this.specRespawnEl = spectatorPanel.querySelector('#stage07-spec-respawn');
     this.winnerOverlayEl = winnerOverlay;
 
     const prevBtn = spectatorPanel.querySelector<HTMLButtonElement>('#stage07-spec-prev');
@@ -422,6 +450,24 @@ export class SurvivalUI {
         }
       } else {
         this.spectatorPanelEl.className = 'hidden';
+      }
+    }
+
+    // 3b. Tong otguncha: safdan chiqqan o'yinchiga qaytish qatori (har soniya yangilanadi — alohida kalit)
+    if (this.specRespawnEl) {
+      const line = showSpectator && night && this.myRole === 'eliminated' && snap.phase === 'playing' && snap.night
+        ? formatNightRespawnLineUz(snap.night, snap.aliveCount)
+        : null;
+      const key = line ? `${line.cls}|${line.text}` : '';
+      if (key !== this.lastRespawnKey) {
+        this.lastRespawnKey = key;
+        if (line) {
+          this.specRespawnEl.className = line.cls;
+          this.specRespawnEl.textContent = line.text;
+        } else {
+          this.specRespawnEl.className = 'hidden';
+          this.specRespawnEl.textContent = '';
+        }
       }
     }
 
@@ -709,6 +755,7 @@ export class SurvivalUI {
     this.lastSpecKey = '';
     this.lastWinKey = '';
     this.lastNightSheetKey = '';
+    this.lastRespawnKey = '';
 
     if (this.rootEl) this.rootEl.className = 'hidden';
     if (this.topPillEl) this.topPillEl.innerHTML = '';
@@ -718,6 +765,10 @@ export class SurvivalUI {
     }
     if (this.spectatorPanelEl) {
       this.spectatorPanelEl.className = 'hidden';
+    }
+    if (this.specRespawnEl) {
+      this.specRespawnEl.className = 'hidden';
+      this.specRespawnEl.textContent = '';
     }
     if (this.winnerOverlayEl) {
       this.winnerOverlayEl.className = 'hidden';
@@ -737,6 +788,7 @@ export class SurvivalUI {
     this.specRoleEl = null;
     this.specKillerEl = null;
     this.specTargetEl = null;
+    this.specRespawnEl = null;
     this.winnerOverlayEl = null;
   }
 }

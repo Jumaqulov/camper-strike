@@ -101,6 +101,12 @@ export interface PlayerSnap {
   gear?: number;
   /** wolf_night: qo'ldagi o'tin soni (0..WOOD_CARRY_MAX); faqat 0 dan katta bo'lsa yuboriladi. */
   wood?: number;
+  /** wolf_night: yiqilgan (joni 0, lekin tirik — sherigi turg'izishi mumkin); faqat true bo'lsa yuboriladi. */
+  downed?: true;
+  /** wolf_night: qon ketib o'lishgacha qolgan vaqt (s), faqat yiqilganda. */
+  bleedSec?: number;
+  /** wolf_night: turg'izish jarayoni 0..1, faqat kimdir turg'izayotganda. */
+  reviveK?: number;
 }
 
 export interface GearVisualState {
@@ -343,6 +349,10 @@ export type {
   CampfireEvent,
   CampfireSnap,
   FeedFireReq,
+  NightRevivedEvent,
+  ReviveAck,
+  ReviveError,
+  ReviveReq,
   TakeWoodReq,
   WolfBiteEvent,
   WolfDeathEvent,

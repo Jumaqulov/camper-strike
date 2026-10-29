@@ -18,6 +18,7 @@ import {
   CAMPFIRE_MAX_FUEL_SEC,
   CAMPFIRE_RADIUS_M,
   CAMP_INTERACT_RANGE_M,
+  NIGHT_REVIVE_RANGE_M,
   WOOD_CARRY_MAX,
   isWolfThreatState,
 } from '../shared/wolf';
@@ -60,11 +61,12 @@ interface ZoneTargetCircle {
   r: number;
 }
 
-/** wolf_night: botning lager vazifasi — g'aramdan o'tin olish yoki gulxanga tashlash. */
+/** wolf_night: botning lager vazifasi — g'aramdan o'tin olish, gulxanga tashlash yoki yiqilgan sherikni turg'izish. */
 interface BotCampTask {
-  kind: 'take' | 'feed';
+  kind: 'take' | 'feed' | 'revive';
+  /** G'aram / gulxan / yiqilgan sherik (o'yinchi) identifikatori. */
   id: string;
-  /** G'aram / gulxan joyi. */
+  /** G'aram / gulxan / sherik joyi. */
   pos: Vec3;
   /** Yo'l maqsadi: ob'ektdan biroz nari (ustiga chiqmaslik uchun). */
   approach: Vec3;
@@ -73,6 +75,9 @@ interface BotCampTask {
 
 /** Bot o'tin g'aramini shu masofadan izlaydi (m). */
 const BOT_WOOD_SEARCH_M = 45;
+/** Bot yiqilgan sherigini shu masofadan (m) turg'izishga boradi — faqat yaqinda (BOT_REVIVE_WOLF_CLEAR_M) bo'ri tahdidi bo'lmasa. */
+const BOT_REVIVE_SEARCH_M = 40;
+const BOT_REVIVE_WOLF_CLEAR_M = 14;
 /** Bot o'tin olib kelishga faqat gulxan o'tini shu qiymatdan (s) kamayganda chiqadi. */
 const BOT_FETCH_FUEL_SEC = 60;
 /** Bo'ridan qochgan bot shu masofadagi (m) yonib turgan gulxanga yuguradi (wolf_night). */
@@ -190,6 +195,18 @@ export class BotBrain {
     this.lastGoalKey = '';
     this.campTask = null;
     this.campBlacklist.clear();
+    this.nextCampThinkAt = 0;
+  }
+
+  /** wolf_night: bot yiqildi — vazifalar bekor, turg'izilgach yangidan o'ylaydi. */
+  onDowned(): void {
+    this.campTask = null;
+    this.lootTarget = null;
+    this.wolfFleeGoal = null;
+    this.path = [];
+    this.pathIdx = 0;
+    this.repathAt = 0;
+    this.lastGoalKey = '';
     this.nextCampThinkAt = 0;
   }
 
@@ -643,6 +660,7 @@ export class BotBrain {
    * 2) qurolsiz bot avval qurol izlaydi (loot AI);
    * 3) qo'l to'la emas va 45 m ichida to'la g'aram bor → olish;
    * 4) o'tin bor → sig'adigan (eng kam o'tinli) gulxanga tashlash.
+   * 0) Hammasidan oldin: 40 m ichida yiqilgan sherik bor va 14 m ichida bo'ri tahdidi yo'q → turg'izishga boradi.
    */
   private thinkCamp(t: number, lootNeed: 0 | 1 | 2): void {
     if (this.campTask) return;
@@ -650,6 +668,22 @@ export class BotBrain {
     const me = this.me;
     if (room.campfires.size === 0) return;
     const dist = (o: { x: number; z: number }) => Math.hypot(o.x - me.pos.x, o.z - me.pos.z);
+
+    {
+      let best: ServerPlayer | null = null;
+      let bestD = Infinity;
+      for (const o of room.players.values()) {
+        if (o === me || !o.alive || !o.downed || !o.ready || this.campBlacklisted(`revive:${o.id}`, t)) continue;
+        const d = dist(o.pos);
+        if (d > BOT_REVIVE_SEARCH_M || d >= bestD) continue;
+        bestD = d;
+        best = o;
+      }
+      if (best && room.nearestWolfThreat(me, BOT_REVIVE_WOLF_CLEAR_M) === null) {
+        this.setCampTask('revive', best.id, best.pos, t);
+        return;
+      }
+    }
 
     if (me.wood > 0) {
       let best: { id: string; x: number; y: number; z: number } | null = null;
@@ -714,7 +748,37 @@ export class BotBrain {
     if (!tgt) return false;
     const me = this.me;
     const room = this.room;
-    // Vazifa eskirdi: g'aramni boshqa birov oldi / gulxan to'ldi
+    // Vazifa eskirdi: g'aramni boshqa birov oldi / gulxan to'ldi / sherik turg'izildi yoki o'ldi
+    if (tgt.kind === 'revive') {
+      const o = room.players.get(tgt.id);
+      if (!o || !o.alive || !o.downed) {
+        this.campBlacklist.set(`revive:${tgt.id}`, t + 3);
+        this.campTask = null;
+        return false;
+      }
+      tgt.pos = { x: o.pos.x, y: o.pos.y, z: o.pos.z };
+      const dx = o.pos.x - me.pos.x;
+      const dz = o.pos.z - me.pos.z;
+      const d = Math.hypot(dx, dz);
+      if (d > NIGHT_REVIVE_RANGE_M - 0.6 || Math.abs(o.pos.y - me.pos.y) > 1.8) {
+        if (t > tgt.deadline) {
+          this.campBlacklist.set(`revive:${tgt.id}`, t + 15);
+          this.campTask = null;
+        }
+        return false;
+      }
+      // Yonida turib kanalni ushlab turadi (so'rov idempotent; jarayon serverda o'sadi)
+      this.turnTowards(Math.atan2(-dx, -dz), -0.5, 5, dt);
+      if (t >= this.nextCampActAt) {
+        this.nextCampActAt = t + 0.4 + Math.random() * 0.2;
+        const res = room.botRevive(me, tgt.id);
+        if (!res.ok && res.error !== undefined && res.error !== 'TOO_FAR') {
+          this.campBlacklist.set(`revive:${tgt.id}`, t + 6);
+          this.campTask = null;
+        }
+      }
+      return true;
+    }
     if (tgt.kind === 'take') {
       const pl = room.woodPiles.get(tgt.id);
       if (!pl || !pl.available || me.wood >= WOOD_CARRY_MAX) {
@@ -981,7 +1045,8 @@ export class BotBrain {
   update(dt: number, t: number): void {
     const me = this.me;
     if (!me.alive) return;
-    if (this.room.phase !== 'playing') {
+    // Yiqilgan bot (wolf_night) o'ylamaydi va yurmaydi — faqat gravitatsiya; sherigi turg'izguncha yotadi
+    if (this.room.phase !== 'playing' || me.downed) {
       applyWorldMovement(me, 0, 0, false, dt, this.room.world);
       return;
     }

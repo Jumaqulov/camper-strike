@@ -422,11 +422,16 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
     }
   });
 
-  it("5. Hamma o'lsa — 'draw_no_survivors', o'lim hodisasida weapon='wolf'", () => {
+  it("5. Hamma o'lsa (asosiy gulxan o'chgan) — 'draw_no_survivors', o'lim hodisasida weapon='wolf'", () => {
     const { io, emitted } = createFakeIo();
     const room = makeNightRoom(io, { timeLimit: 3 });
     try {
       const { p } = startSoloNight(room);
+      // Asosiy gulxan o'chgan — halok bo'lganlar keyingi to'lqinda qaytmaydi, raund darhol tugaydi
+      // (gulxan yonib tursa qaytish kutiladi — stage20 testlari)
+      const main = [...room.campfires.values()].find((f) => f.main)!;
+      main.lit = false;
+      main.fuelSec = 0;
       const w = [...room.wolves.values()][0]!;
       const line = findOpenLine(room, 6);
       p.pos = { ...line.a };
@@ -1295,7 +1300,7 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       const { p } = startSoloNight(room);
       p.spawnTime = -99;
       assert.deepEqual(room.getNightStatsForTest(), [
-        { id: 'p1', name: 'Ovchi', isBot: false, wolfKills: 0, alphaKills: 0, wolfDamage: 0, logsFed: 0, relights: 0, survived: false },
+        { id: 'p1', name: 'Ovchi', isBot: false, wolfKills: 0, alphaKills: 0, wolfDamage: 0, logsFed: 0, relights: 0, survived: false, revives: 0, downs: 0 },
       ]);
       assert.equal(room.getSurvivalState()!.nightSummary, null, "o'yin davomida natija yo'q");
       assert.equal(lastMatch(emitted).survival?.nightSummary, null);
@@ -1381,6 +1386,8 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       logsFed: 0,
       relights: 0,
       survived: false,
+      revives: 0,
+      downs: 0,
       ...o,
     });
     const brief = (sum: ReturnType<typeof computeNightSummary>) => sum.awards.map((a) => [a.kind, a.playerId, a.value]);

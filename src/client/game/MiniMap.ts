@@ -26,6 +26,8 @@ export interface MiniMapMarker {
   z: number;
   team: Team;
   alive: boolean;
+  /** wolf_night: yiqilgan ittifoqchi — qizil pulsatsiyali belgi (turg'izish kerak). */
+  downed?: boolean;
 }
 
 /** "Tong otguncha" lageri: gulxanlar (to'q sariq, o'chgani kulrang) va o'tin g'aramlari (jigarrang). */
@@ -353,6 +355,27 @@ export class MiniMap {
           sx = half + (ddx / dist) * lim;
           sz = half + (ddz / dist) * lim;
         }
+      }
+      if (a.downed) {
+        // Yiqilgan ittifoqchi: qizil pulsatsiyali doira + oq xoch (turg'izish kerak)
+        const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 150);
+        const r = (whole ? 6 : 5) + pulse * 2;
+        ctx.fillStyle = 'rgba(190, 24, 24, 0.95)';
+        ctx.beginPath();
+        ctx.arc(sx, sz, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(255, 214, 214, 0.95)';
+        ctx.stroke();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(sx - r * 0.45, sz);
+        ctx.lineTo(sx + r * 0.45, sz);
+        ctx.moveTo(sx, sz - r * 0.45);
+        ctx.lineTo(sx, sz + r * 0.45);
+        ctx.stroke();
+        continue;
       }
       ctx.fillStyle = a.team === 'red' ? '#ff6b5a' : a.team === 'blue' ? '#6bb2ff' : '#ffd36b';
       ctx.globalAlpha = a.alive ? 1 : 0.4;

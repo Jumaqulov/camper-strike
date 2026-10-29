@@ -242,7 +242,13 @@ export class PlayerMovementAuthority {
     canEquipWeapon?: (w: WeaponId | null) => boolean,
     /** Haqiqiy o'tgan server vaqti (clamp qilinmagan). Server stall'dan keyin yetib olish budjeti uchun. */
     rawElapsedSec: number = serverDt,
+    /**
+     * wolf_night yiqilgan holat: kirishlar qabul qilinadi (seq tasdiqlanadi, yaw/pitch qo'llanadi), lekin
+     * harakat/sakrash/o'tirish nolga tenglashtiriladi — faqat gravitatsiya ishlaydi.
+     */
+    opts?: { lockMovement?: boolean },
   ): number {
+    const lockMovement = opts?.lockMovement === true;
     const safeServerDt = clamp(serverDt, 0.001, 0.1);
     // Server o'zi kechikkan bo'lsa (GC pauza, Windows taymer stall), halol klientning to'planib qolgan
     // kirishlari "speedhack" deb tashlanmasligi uchun kechikish miqdoricha qo'shimcha budjet beramiz.
@@ -301,6 +307,14 @@ export class PlayerMovementAuthority {
       player.yaw = cmd.yaw;
       player.pitch = cmd.pitch;
 
+      if (lockMovement) {
+        cmd.moveForward = 0;
+        cmd.moveRight = 0;
+        cmd.jump = false;
+        cmd.walk = false;
+        cmd.crouch = false;
+        player.scoped = false;
+      }
       stepPlayerMovement(player, cmd, world);
 
       this.lastProcessedSeq = cmd.seq;

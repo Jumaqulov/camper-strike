@@ -111,15 +111,19 @@ export interface NightPlayerStats {
   relights: number;
   /** Tong otganda tirikmi. */
   survived: boolean;
+  /** Yiqilgan sherigini turg'izgan marta. */
+  revives: number;
+  /** O'zi yiqilgan marta (qon ketib o'lgani ham kiradi). */
+  downs: number;
 }
 
-export type NightAwardKind = 'mvp' | 'hunter' | 'woodsman' | 'firekeeper';
+export type NightAwardKind = 'mvp' | 'hunter' | 'woodsman' | 'firekeeper' | 'medic';
 
 export interface NightAward {
   kind: NightAwardKind;
   playerId: string;
   playerName: string;
-  /** Mukofot asosidagi qiymat (mvp — ball, hunter — bo'rilar, woodsman — o'tinlar, firekeeper — qayta yoqishlar). */
+  /** Mukofot asosidagi qiymat (mvp — ball, hunter — bo'rilar, woodsman — o'tinlar, firekeeper — qayta yoqishlar, medic — turg'izishlar). */
   value: number;
   titleUz: string;
 }
@@ -139,11 +143,20 @@ export const NIGHT_AWARD_TITLES_UZ: Readonly<Record<NightAwardKind, string>> = {
   hunter: "Bo'ri ovchisi",
   woodsman: "Eng yaxshi o'tinchi",
   firekeeper: "Olov qo'riqchisi",
+  medic: 'Tabib',
 };
 
-/** MVP balli: bo'ri ×3 (boshliq yana +3), o'tin ×2, qayta yoqish ×3, tongga yetish +4, zarar /100. */
+/** MVP balli: bo'ri ×3 (boshliq yana +3), o'tin ×2, qayta yoqish ×3, sherigini turg'izish ×3, tongga yetish +4, zarar /100. */
 export function nightPlayerScore(s: NightPlayerStats): number {
-  return s.wolfKills * 3 + s.alphaKills * 3 + s.logsFed * 2 + s.relights * 3 + (s.survived ? 4 : 0) + Math.floor(s.wolfDamage / 100);
+  return (
+    s.wolfKills * 3 +
+    s.alphaKills * 3 +
+    s.logsFed * 2 +
+    s.relights * 3 +
+    (s.revives ?? 0) * 3 +
+    (s.survived ? 4 : 0) +
+    Math.floor(s.wolfDamage / 100)
+  );
 }
 
 /**
@@ -167,8 +180,57 @@ export function computeNightSummary(stats: readonly NightPlayerStats[], difficul
     pick('hunter', (s) => s.wolfKills),
     pick('woodsman', (s) => s.logsFed),
     pick('firekeeper', (s) => s.relights),
+    pick('medic', (s) => s.revives ?? 0),
   ].filter((a): a is NightAward => a !== null);
   return { difficulty, dawn, stats: sorted.map((e) => e.s), awards };
+}
+
+// ---------- Yiqilish va turg'izish ----------
+
+/**
+ * wolf_night: joni tugagan o'yinchi darhol o'lmaydi — yiqiladi (downed): harakatlana olmaydi, otolmaydi,
+ * lager/loot amallari yo'q, bo'ri uni ovlamaydi va tishlamaydi; sherigi NIGHT_REVIVE_RANGE_M ichida [E] bilan
+ * NIGHT_REVIVE_SEC davomida turg'izadi. NIGHT_DOWNED_BLEED_SEC ichida turg'izilmasa — qon ketib o'ladi
+ * (qotil — yiqitgan bo'ri/o'yinchi). Turg'iza oladigan tik turgan sherik bo'lmasa (yakka o'yin yoki hamma
+ * o'lgan/yiqilgan) — darhol o'ladi.
+ */
+export const NIGHT_DOWNED_BLEED_SEC = 30;
+export const NIGHT_REVIVE_RANGE_M = 2.6;
+export const NIGHT_REVIVE_SEC = 3;
+/** Turg'izilgan o'yinchining joni va zarardan qisqa himoya (s). */
+export const NIGHT_REVIVE_HP = 40;
+export const NIGHT_REVIVE_GRACE_SEC = 1.5;
+
+/** Klient → server: yiqilgan sherikni turg'izishni boshlash ([E]). */
+export interface ReviveReq {
+  targetId: string;
+}
+export type ReviveError = 'NOT_NIGHT' | 'ROUND_NOT_ACTIVE' | 'NOT_FOUND' | 'NOT_DOWNED' | 'TOO_FAR' | 'SELF' | 'BUSY';
+export interface ReviveAck {
+  ok: boolean;
+  error?: ReviveError;
+}
+export const REVIVE_ERROR_MESSAGES_UZ: Record<ReviveError, string> = {
+  NOT_NIGHT: "Bu rejimda turg'izish yo'q",
+  ROUND_NOT_ACTIVE: "Hozir turg'iza olmaysiz",
+  NOT_FOUND: 'Topilmadi',
+  NOT_DOWNED: 'U yiqilmagan',
+  TOO_FAR: 'Yaqinroq keling',
+  SELF: "O'zingizni turg'iza olmaysiz",
+  BUSY: "Uni boshqa sherik turg'izmoqda",
+};
+
+/** Server → klient: sherik turg'izildi (killfeed qatori va ovoz uchun). */
+export interface NightRevivedEvent {
+  /** Turg'izilgan o'yinchi. */
+  id: string;
+  name: string;
+  /** Turg'izgan sherik. */
+  byId: string;
+  byName: string;
+  x: number;
+  y: number;
+  z: number;
 }
 
 /** Har to'lqinning boshlanishi — tun davomiyligi ulushida. */

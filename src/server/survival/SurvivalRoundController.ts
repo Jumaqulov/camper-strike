@@ -37,6 +37,11 @@ export interface SurvivalControllerHooks {
   onPreRoundReset: (nextRoundId: number, nextPhase: 'waiting' | 'countdown') => void;
   onPhaseChanged?: (phase: SurvivalPhase, roundId: number) => void;
   onSystemChat?: (textUz: string) => void;
+  /**
+   * wolf_night: hamma o'lsa ham raund tugamasin — halok bo'lganlar keyingi to'lqinda qaytadi
+   * (asosiy gulxan yonib turibdi va oldinda yana to'lqin bor). Berilmasa — false.
+   */
+  hasPendingRespawn?: () => boolean;
 }
 
 export class SurvivalRoundController {
@@ -318,6 +323,19 @@ export class SurvivalRoundController {
     }
   }
 
+  /**
+   * wolf_night: halok bo'lgan ishtirokchini raundga qaytaradi (keyingi to'lqin boshida gulxan yonida) —
+   * yana tirik ishtirokchi, kuzatuvchilar ro'yxatidan va o'rin yozuvidan chiqadi. Qaytaradi — qaytarildimi.
+   */
+  reviveEliminated(playerId: string): boolean {
+    if (this.phase !== 'playing' || this.winnerDeclaredForRound) return false;
+    if (!this.contenderIds.has(playerId) || this.aliveContenderIds.has(playerId)) return false;
+    this.aliveContenderIds.add(playerId);
+    this.spectatorIds.delete(playerId);
+    this.eliminatedMeta.delete(playerId);
+    return true;
+  }
+
   checkOutcome(now: number, endedByDisconnect = false): boolean {
     if (this.phase !== 'playing' || this.winnerDeclaredForRound) {
       return false;
@@ -341,7 +359,11 @@ export class SurvivalRoundController {
       this.contenderOrder,
       [...this.aliveContenderIds],
       this.phaseEndsAt - now,
-      { endedByDisconnect, sharedSurvival: this.config.sharedSurvival === true },
+      {
+        endedByDisconnect,
+        sharedSurvival: this.config.sharedSurvival === true,
+        pendingRespawn: this.config.sharedSurvival === true && this.hooks.hasPendingRespawn?.() === true,
+      },
     );
 
     if (!evalRes.shouldEnd) {

@@ -98,6 +98,9 @@ export class Stickman {
   private wasAlive = true;
   private weapon: WeaponId | null = null;
   private nameTag: THREE.Sprite | null = null;
+  /** wolf_night: yiqilgan ittifoqchi belgisi (⛑, qizil, pulsatsiya) — ism yorlig'i o'rniga, yotgan tana ustida. */
+  private downedMarker: THREE.Sprite | null = null;
+  private downedPulse = 0;
   private teamHex: string;
   private buddy: BuddyRig | null = null;
   /** Kaska / nimcha / granata / aptechka osmalari (bosh, ko'krak, kamar). */
@@ -342,6 +345,48 @@ export class Stickman {
     this.nameTag.scale.set(1.12 * sc, 0.28 * sc, 1);
   }
 
+  /**
+   * Yiqilgan ittifoqchi belgisi (wolf_night): ⛑ qizil doirada, yotgan tana ustida pulsatsiya qiladi; har qadamda
+   * ko'rinadi (masofa chegarasi yo'q — sherik uni uzoqdan topishi kerak). `null`/false — olib tashlanadi.
+   */
+  setDownedMarker(show: boolean): void {
+    if (!show) {
+      if (this.downedMarker) {
+        this.root.remove(this.downedMarker);
+        (this.downedMarker.material as THREE.SpriteMaterial).map?.dispose();
+        this.downedMarker.material.dispose();
+        this.downedMarker = null;
+      }
+      return;
+    }
+    if (this.downedMarker) return;
+    const c = document.createElement('canvas');
+    c.width = 128;
+    c.height = 128;
+    const g = c.getContext('2d')!;
+    g.beginPath();
+    g.arc(64, 64, 56, 0, Math.PI * 2);
+    g.fillStyle = 'rgba(150, 18, 18, 0.92)';
+    g.fill();
+    g.lineWidth = 7;
+    g.strokeStyle = '#ffd6d6';
+    g.stroke();
+    g.font = 'bold 72px Segoe UI Emoji, Segoe UI Symbol, sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillStyle = '#ffffff';
+    g.fillText('⛑', 64, 70);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+    s.scale.set(0.55, 0.55, 1);
+    s.position.y = 1.35;
+    s.renderOrder = 11;
+    this.root.add(s);
+    this.downedMarker = s;
+    this.downedPulse = 0;
+  }
+
   /** Pichoq zarbasi: olovsiz, qo'l siltash. */
   meleeSwing(): void {
     this.recoilKick = 1.0;
@@ -381,6 +426,15 @@ export class Stickman {
     if (this.nameTag) {
       this.nameTag.visible = s.alive;
       this.nameTag.position.y = NAME_TAG_Y - CROUCH_NAME_TAG_DROP * crouchEase(this.crouchAmount);
+    }
+    if (this.downedMarker) {
+      // Yiqilgan belgisi: 0.9 s davrli pulsatsiya (o'lcham va shaffoflik)
+      this.downedPulse += dt;
+      const k = 0.5 + 0.5 * Math.sin(this.downedPulse * 7);
+      const sc = 0.5 + 0.14 * k;
+      this.downedMarker.scale.set(sc, sc, 1);
+      (this.downedMarker.material as THREE.SpriteMaterial).opacity = 0.7 + 0.3 * k;
+      this.downedMarker.position.y = 1.3 + 0.08 * k;
     }
 
     // ==================== O'LIM HOLATI: Qurol qo'ldan tushadi va 6 xil kreativ yiqilish! ====================
@@ -544,6 +598,7 @@ export class Stickman {
   dispose(): void {
     this.disposed = true;
     this.gear.dispose();
+    this.setDownedMarker(false);
     this.unsubCharacterReady?.();
     this.unsubCharacterReady = null;
     if (this.buddy) {

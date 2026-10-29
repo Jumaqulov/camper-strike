@@ -75,7 +75,8 @@ export type CampActionError =
   | 'PILE_EMPTY'
   | 'HANDS_FULL'
   | 'NO_WOOD'
-  | 'FIRE_FULL';
+  | 'FIRE_FULL'
+  | 'DOWNED';
 export interface CampActionAck {
   ok: boolean;
   error?: CampActionError;
@@ -94,6 +95,7 @@ export const CAMP_ERROR_MESSAGES_UZ: Record<CampActionError, string> = {
   HANDS_FULL: "Qo'lingiz to'la (3 ta o'tin)",
   NO_WOOD: "Sizda o'tin yo'q — g'aramdan oling",
   FIRE_FULL: "Gulxan to'la",
+  DOWNED: "Yiqilgan holatda bo'lmaydi — sherigingizni kuting",
 };
 
 // ---------- Server → klient hodisasi ----------

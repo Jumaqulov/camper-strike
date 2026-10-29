@@ -1461,3 +1461,65 @@ html, body {
 @media (max-height: 520px) {
   .s07-night-scroll { max-height: none; overflow: visible; }
 }
+
+/* ===== Tong otguncha: yiqilish (downed) va turg'izish (revive) ===== */
+/* Yiqilgan o'yinchi banneri: qon-qizil yog'och taxtacha (killfeed .kf.wolf uslubida), ostida kutish matni va sanoq */
+#downed-screen {
+  position: absolute; left: 50%; top: 56%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  padding: 14px 30px 12px; border-radius: 12px; text-align: center; pointer-events: none;
+  background: rgba(28, 8, 8, 0.72); border: 1.5px solid rgba(255, 120, 100, 0.55);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6);
+}
+#downed-screen .downed-sign {
+  display: inline-flex; align-items: center; gap: 10px; padding: 8px 22px;
+  border: 2px solid #3a0a0a; border-radius: 7px 10px 6px 11px / 10px 6px 11px 7px;
+  font-family: 'Bahnschrift', 'Segoe UI Black', 'Arial Black', Impact, sans-serif;
+  font-weight: 900; font-size: 26px; letter-spacing: 3px; text-transform: uppercase; color: #fff1f0;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.7);
+  background:
+    repeating-linear-gradient(179deg, rgba(0, 0, 0, 0.14) 0 1px, rgba(0, 0, 0, 0) 1px 6px),
+    linear-gradient(180deg, #c0262a 0%, #8f1414 55%, #5a0c0c 100%);
+  box-shadow: 0 3px 0 #3a0a0a, 0 8px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  animation: zone-warn-pulse 1.4s ease-in-out infinite;
+}
+#downed-screen .downed-icon { font-size: 24px; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5)); }
+#downed-sub { font-size: 15px; font-weight: 800; color: #ffe9b8; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.7); }
+#downed-screen.reviving #downed-sub { color: #9be7a5; }
+#downed-bleed { font-size: 13px; font-weight: 700; color: #ffb4a8; letter-spacing: 0.5px; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6); }
+#downed-bar {
+  display: block; width: 240px; height: 8px; border-radius: 999px; overflow: hidden;
+  background: rgba(0, 0, 0, 0.5); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.7); border: 1px solid rgba(255, 255, 255, 0.12);
+}
+#downed-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #4caf50, #9be7a5); transition: width 0.12s linear; }
+/* Qon-qizil vinyetka: ekran chetlari qorayib pulsatsiya qiladi */
+#hud.downed::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  box-shadow: inset 0 0 160px 70px rgba(140, 10, 10, 0.55);
+  animation: zone-warn-pulse 1.4s ease-in-out infinite;
+}
+/* Killfeed: "A ⛑ B ni turg'izdi" — yashil taxtacha */
+.kf.revive {
+  border: 1.5px solid #7ad38a;
+  border-left: 5px solid #276a33;
+  background:
+    repeating-linear-gradient(179deg, rgba(0, 0, 0, 0.14) 0 1px, rgba(0, 0, 0, 0) 1px 6px),
+    linear-gradient(90deg, rgba(30, 90, 40, 0.95) 0%, rgba(18, 50, 26, 0.92) 55%, rgba(12, 28, 16, 0.92) 100%);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), 0 0 14px rgba(80, 200, 100, 0.35);
+}
+.kf-revive { font-size: 16px; filter: drop-shadow(0 0 4px rgba(120, 230, 140, 0.7)); }
+.kf.revive .kf-verb { color: #d9f5dc; }
+/* [E] Turg'izish prompti: yashil hoshiya va jarayon chizig'i */
+#stage06-loot-prompt.revive { border-color: rgba(122, 211, 138, 0.85); background: rgba(14, 30, 18, 0.9); }
+#stage06-loot-prompt .revive-bar {
+  display: inline-block; width: 90px; height: 6px; margin-left: 8px; border-radius: 999px; overflow: hidden;
+  background: rgba(0, 0, 0, 0.5); vertical-align: middle;
+}
+#stage06-loot-prompt .revive-bar i { display: block; height: 100%; background: linear-gradient(90deg, #4caf50, #9be7a5); transition: width 0.12s linear; }
+/* Kuzatuvchi paneli: "Keyingi to'lqinda qaytasiz (asosiy gulxan yonib tursa) — 1:23" */
+#stage07-spec-respawn {
+  font-size: 12.5px; font-weight: 800; color: #ffd36b; text-align: center;
+  padding: 3px 12px; border-radius: 999px; background: rgba(255, 176, 32, 0.12); border: 1px solid rgba(255, 176, 32, 0.35);
+}
+#stage07-spec-respawn.is-out { color: #cbd5e1; background: rgba(148, 163, 184, 0.1); border-color: rgba(148, 163, 184, 0.3); }
+#stage07-spec-respawn.is-all-dead { color: #fca5a5; background: rgba(220, 38, 38, 0.14); border-color: rgba(252, 165, 165, 0.4); }

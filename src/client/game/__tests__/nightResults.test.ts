@@ -23,6 +23,8 @@ const stat = (over: Partial<NightPlayerStats> & { id: string; name: string }): N
   logsFed: 0,
   relights: 0,
   survived: false,
+  revives: 0,
+  downs: 0,
   ...over,
 });
 
@@ -272,5 +274,28 @@ describe('SurvivalUI — tun natijasi varag‘i', () => {
     assert.match(overlay.innerHTML, /G'ALABA!/);
     assert.match(overlay.innerHTML, /Keyingi raund/);
     assert.doesNotMatch(overlay.innerHTML, /s07-night|Tun qahramoni/);
+  });
+
+  it('9. "Tabib" (medic) mukofoti: ⛑ nishoni oxirida, "N marta"; turg‘izish bo‘lmasa chiqmaydi', () => {
+    const summary = computeNightSummary(
+      [
+        stat({ id: 'me', name: 'Sardor', wolfKills: 2, survived: true }),
+        stat({ id: 'd', name: 'Dilshod', revives: 3, downs: 1, survived: true }),
+        stat({ id: 'b1', name: 'Bot Ali', isBot: true, logsFed: 4, relights: 1 }),
+      ],
+      'normal',
+      true,
+    );
+    const html = buildNightAwardsHtml(summary, 'd');
+    const medicAt = html.indexOf('is-medic');
+    assert.ok(medicAt >= 0, html);
+    assert.ok(html.indexOf('is-hunter') < html.indexOf('is-woodsman'));
+    assert.ok(html.indexOf('is-firekeeper') < medicAt, 'tabib — oxirgi nishon');
+    assert.ok(html.includes('Tabib'));
+    assert.ok(html.includes('3 marta'));
+    assert.match(html, /Dilshod<span class="s07-tag">Siz<\/span>/);
+    assert.equal(formatNightAwardValueUz({ kind: 'medic', playerId: 'd', playerName: 'D', titleUz: '', value: 3 }), '3 marta');
+    // Turg'izish yo'q — tabib yo'q (sampleSummary'da revives 0)
+    assert.doesNotMatch(buildNightAwardsHtml(sampleSummary(), 'me'), /is-medic|Tabib/);
   });
 });

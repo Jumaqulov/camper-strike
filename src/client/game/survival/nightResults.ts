@@ -42,15 +42,17 @@ const AWARD_ICONS: Readonly<Record<NightAwardKind, string>> = {
   hunter: '🐺',
   woodsman: '🪵',
   firekeeper: '🔥',
+  medic: '⛑️',
 };
 const AWARD_UNITS_UZ: Readonly<Record<NightAwardKind, string>> = {
   mvp: 'ball',
   hunter: "bo'ri",
   woodsman: "o'tin",
   firekeeper: 'marta',
+  medic: 'marta',
 };
 /** MVP alohida taxtachada; qolganlari doim shu tartibda. */
-const SECONDARY_AWARDS: readonly NightAwardKind[] = ['hunter', 'woodsman', 'firekeeper'];
+const SECONDARY_AWARDS: readonly NightAwardKind[] = ['hunter', 'woodsman', 'firekeeper', 'medic'];
 
 const ME_TAG = '<span class="s07-tag">Siz</span>';
 const BOT_TAG = '<span class="s07-bot" title="Bot">🤖</span>';

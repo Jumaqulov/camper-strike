@@ -106,12 +106,17 @@ export function evaluateSurvivalRoundOutcome(
   contenderIds: readonly string[],
   aliveContenderIds: readonly string[],
   timeRemainingSec: number,
-  opts?: { endedByDisconnect?: boolean; sharedSurvival?: boolean },
+  opts?: { endedByDisconnect?: boolean; sharedSurvival?: boolean; pendingRespawn?: boolean },
 ): SurvivalRoundOutcome {
   if (opts?.sharedSurvival) {
     // Tong otguncha: oxirgi tirik qolgan raundni tugatmaydi; hamma o'lsa — bo'rilar yutdi,
     // taymer tugasa — barcha tirik ishtirokchilar birgalikda g'olib ('dawn').
+    // `pendingRespawn` (asosiy gulxan yonib turibdi va oldinda yana to'lqin bor): hamma o'lsa ham raund
+    // tugamaydi — halok bo'lganlar keyingi to'lqin boshida gulxan yonida qaytadi.
     if (aliveContenderIds.length === 0) {
+      if (opts.pendingRespawn && timeRemainingSec > 0) {
+        return { shouldEnd: false, winnerId: null, winReason: 'none' };
+      }
       return { shouldEnd: true, winnerId: null, winReason: 'draw_no_survivors', winnerIds: [] };
     }
     if (timeRemainingSec <= 0) {

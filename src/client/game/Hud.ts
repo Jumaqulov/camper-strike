@@ -236,6 +236,40 @@ export class Hud {
     else if (level === 'out') el.textContent = "GULXAN O'CHDI — BO'RILAR KELMOQDA!";
   }
 
+  private lastDownedKey = '';
+  /**
+   * "Tong otguncha" yiqilgan holat: banner "YIQILDINGIZ", qon ketish sanog'i va (kimdir turg'izayotganda)
+   * jarayon chizig'i; `null` — yashirin. Qizil vinyetka #hud.downed orqali.
+   */
+  setDowned(state: { bleedSec: number; reviveK: number | null } | null): void {
+    const key = state ? `1|${Math.ceil(state.bleedSec)}|${state.reviveK === null ? '' : Math.round(state.reviveK * 100)}` : '0';
+    if (key === this.lastDownedKey) return;
+    this.lastDownedKey = key;
+    const el = $('downed-screen');
+    el.classList.toggle('hidden', !state);
+    $('hud').classList.toggle('downed', !!state);
+    if (!state) return;
+    const reviving = state.reviveK !== null;
+    el.classList.toggle('reviving', reviving);
+    $('downed-sub').textContent = reviving ? "Turg'izilmoqda…" : "Sherigingiz turg'izishini kuting";
+    $('downed-bleed').textContent = `qon ketmoqda: ${Math.max(0, Math.ceil(state.bleedSec))} s`;
+    const bar = $('downed-bar');
+    bar.classList.toggle('hidden', !reviving);
+    if (reviving) (bar.firstElementChild as HTMLElement | null)?.style.setProperty('width', `${Math.round((state.reviveK ?? 0) * 100)}%`);
+  }
+
+  /** Killfeed qatori: "A B ni turg'izdi" (wolf_night). */
+  reviveFeed(byName: string, name: string, mine: boolean): void {
+    const kf = $('killfeed');
+    const el = document.createElement('div');
+    el.className = 'kf revive' + (mine ? ' mine' : '');
+    el.innerHTML = `<span class="kf-name t-none">${esc(byName)}</span><span class="kf-revive">⛑</span><span class="kf-name t-none">${esc(name)}</span><span class="kf-verb">ni turg'izdi</span>`;
+    kf.appendChild(el);
+    while (kf.children.length > 6) kf.firstElementChild?.remove();
+    setTimeout(() => (el.style.opacity = '0'), 6500);
+    setTimeout(() => el.remove(), 7100);
+  }
+
   private lastGearKey = '';
   /** Zirh va kaska mustahkamligi (0 = yo'q); ikkalasi 0 bo'lsa qator yashirinadi. */
   setGear(armor: number, helmet: number): void {
@@ -512,6 +546,7 @@ export class Hud {
     $('damage-indicators').innerHTML = '';
     this.center(null);
     this.death(false);
+    this.setDowned(null);
     this.scope(false);
     this.setDevStats(null);
     this.lastHp = -1;
