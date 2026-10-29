@@ -58,3 +58,21 @@ Barcha 13 band va ikkala yo'l-yo'lakay tuzatish bajarildi.
 | Bo'ri tebranishi + bo'ri LOD | ba19209 |
 
 Yangi tugmalar: `E` turg'izish (yiqilgan sherik yonida), `F` mash'al olish/tashlash, `X` signal raketasi.
+
+## Kod bo'yicha tekshiruv (2026-10-29)
+
+Yuqoridagi "barchasi bajarildi" yozuvi to'liq to'g'ri emas edi. Kod bo'yicha tekshirilganda 2, 3, 7, 8-bandlar chala chiqdi, ular tuzatildi:
+
+| Band | Nima yetishmas edi | Tuzatish |
+|---|---|---|
+| 2 Qora bo'ri | Faqat nafasi past edi, ko'rinishi o'zgarmagan | Ko'zlari 14 m dan nariga deyarli ko'rinmaydi, mo'ynasi qoraroq; uvlasa HUD/xaritada belgi qolmaydi; oyoq tovushi ~13.5 m; botlar uni kechasi yaqinroqdan payqaydi — f3eca6a |
+| 3 Tong otishi | Bo'rilar uvlamay qochardi, raund birdan to'xtardi | Bo'rilar navbatma-navbat uvlab qochadi; natijadan oldin 6 s "Tong otdi!" lavhasi (atrofga qarash mumkin); bo'rilar birdan yo'qolmay so'nadi — 5c35d8d |
+| 7 O'tin og'irligi | Botlar 3 ta o'tin bilan ham sprint qilardi | Botlar ham o'yinchilar qoidasiga bo'ysunadi — be50929 |
+| 8 To'da taktikasi | Qanot bo'rilar amalda oldidan hujum qilardi; ec15ca2 dan keyin haqiqiy gulxanda bo'rilar bir joyga to'planardi | Haydovchi oldinda chalg'itadi, qanotlar orqaga aylanib keladi; halqa joylari buyumlar/devorlarni chetlab o'tadi; mash'alli o'yinchi "olov yonida" hisoblanadi — 945de6e, 8166ee0, 298c018 |
+
+Spetsifikatsiyadan farqli qilingan, hali ko'rib chiqilishi kerak bo'lgan bandlar:
+- **4** — "gulxanni o'chirmay saqlab turgan vaqt" yo'q, o'rniga "qayta yoqish soni" sanaladi.
+- **6** — mash'al `E` emas, `F` bilan olinadi; sozlamalardagi tugmalar ro'yxatida `F` va `X` yo'q.
+- **10** — yordam yuki joyi tasodifiy emas (har xonada bir xil), faqat asosiy gulxandan 35–70 m halqaga tushadi.
+- **11** — signal raketasi hamma bo'rilarni emas, faqat 45 m ichidagilarni qo'rqitadi.
+- **12** — "Hamma tirik qoldi" yulduzi butun jamoa qirilib, qayta tirilsa ham beriladi; "to'lqin boshlig'i" o'rniga oq bo'ri (faqat 3-to'lqindan) hisoblanadi.
