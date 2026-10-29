@@ -423,7 +423,7 @@ export class LootUI {
       return 'Kaska · bosh zarari −50%';
     }
     if (item.kind === 'flare') {
-      return `Signal raketasi · bo'rilarni 20 s qo'rqitadi [X] (×${item.quantity})`;
+      return `Signal raketasi · hamma bo'rilarni 20 s qo'rqitadi [X] (×${item.quantity})`;
     }
     return `×${item.quantity}`;
   }

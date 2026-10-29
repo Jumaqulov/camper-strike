@@ -15,7 +15,10 @@ import { sampleTerrainHeight } from '../shared/world';
 import { WEAPONS, WEAPON_SLOTS, isMeleeWeapon, type WeaponId } from '../shared/weapons';
 import {
   BOT_FLARE_COOLDOWN_SEC,
+  BOT_FLARE_LOW_HP,
   BOT_FLARE_NO_FIRE_M,
+  BOT_FLARE_SWARM_COUNT,
+  BOT_FLARE_SWARM_M,
   BOT_FLARE_WOLF_DIST_M,
   CAMPFIRE_LOW_FUEL_SEC,
   CAMPFIRE_MAX_FUEL_SEC,
@@ -899,8 +902,32 @@ export class BotBrain {
   // ---------------- Bo'rilar ----------------
 
   /**
-   * Yaqin bo'ri tahdidi: o'qotar qurol va o'q bo'lsa, bo'rini ko'rsa — unga qarab otadi (6 m dan yaqin kelsa
-   * orqaga tisariladi); aks holda bo'ridan teskari tomonga (~14 m, nav tuguniga) yugurib qochadi.
+   * wolf_night: signal raketasini otish vaqti keldimi. Cheklovlar: BOT_FLARE_COOLDOWN_SEC, raketa bor, qo'lda mash'al
+   * yo'q, BOT_FLARE_NO_FIRE_M ichida yonib turgan gulxan yo'q (olov o'zi himoya qiladi), boshqa raketa yonib
+   * turmaydi (bo'rilar allaqachon qochmoqda). Xavf: BOT_FLARE_SWARM_M ichida ≥ BOT_FLARE_SWARM_COUNT bo'ri aynan shu
+   * botni ovlamoqda (qurolli bo'lsa ham hammasini otib ulgurmaydi); yoki ovlayotgan bo'ri ≤ BOT_FLARE_WOLF_DIST_M da
+   * va bot uni otolmaydi (qurolsiz/o'qsiz/ko'rmaydi) yoki joni ≤ BOT_FLARE_LOW_HP.
+   */
+  private shouldFireFlare(t: number, dH: number, canShoot: boolean): boolean {
+    const me = this.me;
+    const room = this.room;
+    if (!room.isNight || t < this.nextFlareAt || room.hasTorch(me) || room.hasActiveFlare(t)) return false;
+    if (room.loot.getFlareCount(me.id) <= 0) return false;
+    const fire = room.nearestLitFire(me.pos.x, me.pos.z);
+    if (fire && Math.hypot(fire.x - me.pos.x, fire.z - me.pos.z) <= BOT_FLARE_NO_FIRE_M) return false;
+    if (dH <= BOT_FLARE_WOLF_DIST_M && (!canShoot || me.hp <= BOT_FLARE_LOW_HP)) return true;
+    let swarm = 0;
+    for (const w of room.wolves.values()) {
+      if (!w.alive || w.targetId !== me.id || w.state === 'flee') continue;
+      if (Math.hypot(w.pos.x - me.pos.x, w.pos.z - me.pos.z) <= BOT_FLARE_SWARM_M) swarm++;
+    }
+    return swarm >= BOT_FLARE_SWARM_COUNT;
+  }
+
+  /**
+   * Yaqin bo'ri tahdidi: haqiqiy xavfda (shouldFireFlare) avval signal raketasi; o'qotar qurol va o'q bo'lsa, bo'rini
+   * ko'rsa — unga qarab otadi (6 m dan yaqin kelsa orqaga tisariladi); aks holda bo'ridan teskari tomonga (~14 m,
+   * nav tuguniga) yugurib qochadi.
    * Qaytaradi: 'fight' / 'flee' (harakat qo'llandi, shu tick uchun boshqa mantiq kerak emas) yoki null (tahdid yo'q).
    */
   private handleWolfThreat(dt: number, t: number): 'fight' | 'flee' | null {
@@ -933,6 +960,17 @@ export class BotBrain {
     const dist = vdist(eye, center);
     const canSee = ranged && dist > 1e-3 && !raycastWorld(this.room.world, eye, vnorm(toW), dist);
 
+    // wolf_night: haqiqiy xavfda (bo'rilar to'dasi aynan botni ovlamoqda, joni oz yoki qurolsiz/ko'rmaydi) signal
+    // raketasi otiladi — qurolli bo'lsa ham (otishma tarmog'idan oldin); raketa hamma bo'rilarni qochiradi, keyingi
+    // tick odatdagidek davom etadi
+    if (hunting && this.shouldFireFlare(t, dH, canSee)) {
+      this.nextFlareAt = t + BOT_FLARE_COOLDOWN_SEC;
+      if (this.room.botUseFlare(me).ok) {
+        applyWorldMovement(me, 0, 0, false, dt, this.room.world);
+        return 'flee';
+      }
+    }
+
     let wishX = 0;
     let wishZ = 0;
     if (canSee && weapon) {
@@ -961,19 +999,6 @@ export class BotBrain {
 
     // Qo'li to'la o'tinli bot qochganda ham sprint qilolmaydi (botMoveSpeed)
     const speed = botMoveSpeed(weapon ? WEAPONS[weapon].speedMul : 1, me.wood);
-    // wolf_night: bo'ri ovlab yaqinlashdi (≤ 6 m), yaqinda yonib turgan gulxan yo'q, mash'al yo'q — signal
-    // raketasi bo'lsa otamiz (30 s da bir marta); raketa otilgach bo'rilar qochadi, keyingi tick odatdagidek
-    if (this.room.isNight && hunting && dH <= BOT_FLARE_WOLF_DIST_M && t >= this.nextFlareAt && !this.room.hasTorch(me)) {
-      const fire = this.room.nearestLitFire(me.pos.x, me.pos.z);
-      const fireNear = !!fire && Math.hypot(fire.x - me.pos.x, fire.z - me.pos.z) <= BOT_FLARE_NO_FIRE_M;
-      if (!fireNear && this.room.loot.getFlareCount(me.id) > 0) {
-        this.nextFlareAt = t + BOT_FLARE_COOLDOWN_SEC;
-        if (this.room.botUseFlare(me).ok) {
-          applyWorldMovement(me, 0, 0, false, dt, this.room.world);
-          return 'flee';
-        }
-      }
-    }
     // Yonib turgan gulxan doirasidamiz (wolf_night): bo'ri olovga kirmaydi va tishlamaydi — doiradan chiqib
     // qochmaymiz, gulxanning bo'riga teskari tomonida kutamiz
     const shelter = this.room.litFireContaining(me.pos.x, me.pos.z, 0);

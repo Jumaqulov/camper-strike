@@ -88,12 +88,14 @@ import {
   type ReviveReq,
   FLARE_DURATION_SEC,
   FLARE_FEAR_RADIUS_M,
-  FLARE_SCARE_RADIUS_M,
   FLARE_SCARE_SEC,
   FLARE_STANDOFF_M,
   FLARE_USE_COOLDOWN_SEC,
   SUPPLY_CONTAINER_PREFIX,
   SUPPLY_DROP_CLEAR_M,
+  SUPPLY_DROP_EDGE_M,
+  SUPPLY_DROP_FALL_SEC,
+  SUPPLY_DROP_FIRE_CLEAR_M,
   SUPPLY_DROP_MAX_DIST_M,
   SUPPLY_DROP_MIN_DIST_M,
   SUPPLY_DROP_WAVE,
@@ -278,6 +280,25 @@ export interface FearSource {
   playerId?: string;
 }
 
+/**
+ * Yarim tungi yordam yukining rejasi (server ichida, klientga chiqmaydi): joy (nav tuguni), burilish va qurol —
+ * xonaning maxfiy loot seedi ⊕ raund bo'yicha.
+ */
+export interface SupplyDropPlan {
+  x: number;
+  y: number;
+  z: number;
+  yaw: number;
+  weapon: WeaponId;
+}
+
+/** Shu raundda tushgan yordam yuki: reja + tushish boshlangan vaqt; `landed` — konteyner qo'shilgan (ochsa bo'ladi). */
+interface ServerSupplyDrop extends SupplyDropPlan {
+  id: string;
+  droppedAt: number;
+  landed: boolean;
+}
+
 /** Faol signal raketasi (server holati): joy, so'nish vaqti, otgan o'yinchi. */
 export interface ServerFlare {
   id: string;
@@ -448,8 +469,8 @@ export class Room {
   /** wolf_night: faol signal raketalari (muddati tugaganlari updateFlares da o'chadi). */
   readonly flares = new Map<string, ServerFlare>();
   private flareSeq = 0;
-  /** wolf_night: shu raundda tushgan yordam yuki (runtime konteyner id va joyi); tushmagan — null. */
-  private supplyDrop: { id: string; x: number; y: number; z: number } | null = null;
+  /** wolf_night: shu raundda tushgan (yoki hali havoda) yordam yuki; tushmagan — null. */
+  private supplyDrop: ServerSupplyDrop | null = null;
   destroyed = false;
 
   constructor(readonly opts: CreateRoomOpts, private io: Server, private onEmpty: (room: Room) => void) {
@@ -704,9 +725,19 @@ export class Room {
       const dl = Math.hypot(dx, dz);
       if (dl < 15) continue;
       let minP = Infinity;
-      for (const p of alive) minP = Math.min(minP, Math.hypot(p.pos.x - c.x, p.pos.z - c.z));
+      // Qochish chizig'i biror o'yinchiga bo'rining hozirgidan qanchalik yaqin o'tadi (m) — signal raketasidan
+      // qo'rqqan bo'ri o'yinchi yonidan o'tib qochmasin (xarita cheti / burchakda ham)
+      let approach = 0;
+      for (const p of alive) {
+        minP = Math.min(minP, Math.hypot(p.pos.x - c.x, p.pos.z - c.z));
+        const px = p.pos.x - w.pos.x;
+        const pz = p.pos.z - w.pos.z;
+        const k = clamp((px * dx + pz * dz) / (dl * dl), 0, 1);
+        const seg = Math.hypot(px - dx * k, pz - dz * k);
+        approach = Math.max(approach, Math.hypot(px, pz) - seg);
+      }
       // O'yinchilardan uzoqlik + o'yinchidan teskari yo'nalish (orqaga, o'yinchi yonidan o'tib qochmasin)
-      const score = Math.min(minP, 120) + ((dx * ax + dz * az) / dl) * 40;
+      const score = Math.min(minP, 120) + ((dx * ax + dz * az) / dl) * 40 - approach * 4;
       if (score > bestScore) {
         bestScore = score;
         best = c;
@@ -1403,35 +1434,51 @@ export class Room {
 
   // ---------------- Yarim tungi yordam yuki (wolf_night) ----------------
 
-  /** Shu raundda tushgan yordam yuki (id, joy) — testlar va botlar uchun; tushmagan bo'lsa null. */
-  getSupplyDrop(): { id: string; x: number; y: number; z: number } | null {
-    return this.supplyDrop;
+  /**
+   * Shu raundda tushgan yordam yuki (id, joy; `landed` — yerga tegdi, konteyner bor) — testlar va botlar uchun;
+   * tushmagan bo'lsa null.
+   */
+  getSupplyDrop(): { id: string; x: number; y: number; z: number; landed: boolean } | null {
+    const s = this.supplyDrop;
+    return s ? { id: s.id, x: s.x, y: s.y, z: s.z, landed: s.landed } : null;
   }
 
   /**
-   * Yordam yuki uchun joy: sayr komponentidagi nav tuguni, asosiy gulxandan SUPPLY_DROP_MIN..MAX m, barcha
-   * gulxan va g'aramlardan ≥ SUPPLY_DROP_CLEAR_M, atrofi bo'sh (1.2 m), ustida tom yo'q (ochiq osmon).
-   * Deterministik: publicLayoutSeed ⊕ raund. Qat'iy nomzod topilmasa shartlar yumshatiladi (osmon → masofa).
+   * Yordam yuki tasodifi: xonaning maxfiy loot seedi (Math.random, klientga chiqmaydi) ⊕ raund ⊕ `salt`. Joy va
+   * tarkib har xonada va har raundda boshqa; publicLayoutSeed (lobbida hammaga bir xil) ishlatilmaydi —
+   * o'yinchilar yuk tushadigan joyni yoki qurolni oldindan bila olmaydi.
    */
-  private pickSupplyDropNode(roundId: number): Vec3 | null {
+  private supplyDropRng(roundId: number, salt: number): () => number {
+    return createSeededRng((((this.secretLootSeed ^ salt) >>> 0) + roundId * 7877) >>> 0 || 1);
+  }
+
+  /**
+   * Yordam yuki uchun joy — xaritaning tasodifiy nuqtasi: sayr komponentidagi (asosiy gulxandan yetib boriladigan)
+   * nav tuguni, xarita chetidan ≥ SUPPLY_DROP_EDGE_M, asosiy gulxandan SUPPLY_DROP_MIN..MAX m, har gulxandan
+   * ≥ SUPPLY_DROP_FIRE_CLEAR_M (lager ichiga emas), g'aramlardan ≥ SUPPLY_DROP_CLEAR_M, atrofi bo'sh (1.2 m — bezak
+   * va to'siqlar ichida emas), ustida tom yo'q (ochiq osmon — uy ichiga emas). Qat'iy nomzod topilmasa shartlar
+   * yumshatiladi (osmon → masofa), lekin yuk hech qachon gulxan doirasiga tushmaydi.
+   */
+  private pickSupplyDropNode(rng: () => number): Vec3 | null {
     const main = this.mainCampfire();
     if (!main) return null;
-    const seed = this.world.publicLayoutSeed || DEFAULT_PUBLIC_LAYOUT_SEED;
-    const rng = createSeededRng(((seed ^ 0x5f1a7e) + roundId * 7877) >>> 0 || 1);
     const nav = this.nav;
     const list = nav.roamList.length ? nav.roamList : nav.validList;
     if (!list.length) return null;
     const b = this.world.bounds;
-    const obstacles: { x: number; z: number }[] = [...this.campfires.values(), ...this.woodPiles.values()];
+    const edge = SUPPLY_DROP_EDGE_M;
+    const fires = [...this.campfires.values()];
+    const piles = [...this.woodPiles.values()];
     const up = { x: 0, y: 1, z: 0 };
     const candidate = (strict: boolean, sky: boolean): Vec3 | null => {
-      for (let i = 0; i < 400; i++) {
+      const fireClear = strict ? SUPPLY_DROP_FIRE_CLEAR_M : CAMPFIRE_RADIUS_M + 4;
+      for (let i = 0; i < 600; i++) {
         const c = nav.center(list[Math.floor(rng() * list.length)]!);
-        if (c.x < b.minX + 3 || c.x > b.maxX - 3 || c.z < b.minZ + 3 || c.z > b.maxZ - 3) continue;
+        if (c.x < b.minX + edge || c.x > b.maxX - edge || c.z < b.minZ + edge || c.z > b.maxZ - edge) continue;
         const dMain = Math.hypot(c.x - main.x, c.z - main.z);
         if (strict && (dMain < SUPPLY_DROP_MIN_DIST_M || dMain > SUPPLY_DROP_MAX_DIST_M)) continue;
-        if (!strict && dMain < CAMPFIRE_RADIUS_M + 4) continue;
-        if (obstacles.some((o) => Math.hypot(o.x - c.x, o.z - c.z) < SUPPLY_DROP_CLEAR_M)) continue;
+        if (fires.some((f) => Math.hypot(f.x - c.x, f.z - c.z) < fireClear)) continue;
+        if (piles.some((o) => Math.hypot(o.x - c.x, o.z - c.z) < SUPPLY_DROP_CLEAR_M)) continue;
         if (collidesAtWorld(this.world, c.x, c.y + 0.05, c.z, 1.2, 1.0)) continue;
         if (sky && raycastWorld(this.world, { x: c.x, y: c.y + 0.6, z: c.z }, up, 14)) continue;
         return c;
@@ -1442,51 +1489,80 @@ export class Room {
   }
 
   /**
-   * 3-to'lqin boshi (tunning yarmi): bitta yordam yuki (`supply_crate`, runtime konteyner — xarita ta'rifiga
-   * kirmaydi) tushadi: qurol (avtomat/drobovik, seed bo'yicha) + 2 quti o'q, aptechka, granata, 2 signal raketasi.
-   * Chat (yo'nalish va masofa asosiy gulxandan), 'night:supplyDrop' hodisasi va yangi loot:snapshot.
+   * Shu raund uchun yordam yuki rejasi: joy (pickSupplyDropNode), burilish va qurol (avtomat yoki drobovik) —
+   * maxfiy seed ⊕ raund (supplyDropRng). Bir xona va raund uchun barqaror (qayta chaqirilsa bir xil); testlar
+   * uchun ham ochiq. Joy topilmasa null.
+   */
+  planSupplyDrop(roundId: number = this.roundId): SupplyDropPlan | null {
+    const c = this.pickSupplyDropNode(this.supplyDropRng(roundId, 0x5f1a7e));
+    if (!c) return null;
+    const rng = this.supplyDropRng(roundId, 0x2d9c1b);
+    const weapon: WeaponId = rng() < 0.5 ? 'rifle' : 'shotgun';
+    const yaw = Math.floor(rng() * 4) * (Math.PI / 2);
+    return { x: q3(c.x), y: q3(c.y), z: q3(c.z), yaw: q3(yaw), weapon };
+  }
+
+  /**
+   * 3-to'lqin boshi (tunning yarmi): bitta yordam yuki parashyutda tusha boshlaydi — chat (yo'nalish va masofa
+   * asosiy gulxandan) va 'night:supplyDrop' hodisasi (klient SUPPLY_DROP_FALL_SEC tushish animatsiyasini
+   * ko'rsatadi). Konteyner esa yerga tekkanda (updateSupplyDrop) qo'shiladi — havodagi qutini ochib bo'lmaydi.
    */
   private spawnSupplyDrop(): void {
     if (!this.isNight || this.supplyDrop || this.phase !== 'playing') return;
-    const c = this.pickSupplyDropNode(this.roundId);
+    const plan = this.planSupplyDrop(this.roundId);
     const main = this.mainCampfire();
-    if (!c || !main) return;
-    const seed = this.world.publicLayoutSeed || DEFAULT_PUBLIC_LAYOUT_SEED;
-    const rng = createSeededRng(((seed ^ 0x2d9c1b) + this.roundId * 104729) >>> 0 || 1);
-    const weapon: WeaponId = rng() < 0.5 ? 'rifle' : 'shotgun';
+    if (!plan || !main) return;
+    const id = `${SUPPLY_CONTAINER_PREFIX}r${this.roundId}`;
+    this.supplyDrop = { id, ...plan, droppedAt: this.now(), landed: false };
+    const ev: NightSupplyDropEvent = { id, x: plan.x, y: plan.y, z: plan.z, yaw: plan.yaw };
+    this.io.to(this.channel).emit('night:supplyDrop', ev);
+    const dist = Math.round(Math.hypot(plan.x - main.x, plan.z - main.z));
+    this.systemChat(`📦 Yordam yuki tushdi — asosiy gulxandan ${compassDirUz(plan.x - main.x, plan.z - main.z)}, ${dist} m. Qizil tutunga qarang!`);
+  }
+
+  /**
+   * Har tick: havodagi yordam yuki SUPPLY_DROP_FALL_SEC dan keyin yerga tegadi — `supply_crate` runtime konteyneri
+   * (xarita ta'rifiga kirmaydi) qo'shiladi: qurol + 2 quti mos o'q, aptechka, granata, 2 signal raketasi; yangi
+   * loot:snapshot (klient ochish so'rovini shundan keyin ko'rsatadi).
+   */
+  private updateSupplyDrop(t: number): void {
+    const s = this.supplyDrop;
+    if (!s || s.landed || t - s.droppedAt < SUPPLY_DROP_FALL_SEC) return;
+    s.landed = true;
     const items: LootCatalogId[] = [
-      getWeaponCatalogId(weapon),
-      getAmmoCatalogId(weapon),
-      getAmmoCatalogId(weapon),
+      getWeaponCatalogId(s.weapon),
+      getAmmoCatalogId(s.weapon),
+      getAmmoCatalogId(s.weapon),
       'heal:medkit',
       'throwable:grenade',
       'item:flare',
       'item:flare',
     ];
-    const id = `${SUPPLY_CONTAINER_PREFIX}r${this.roundId}`;
-    const yaw = Math.floor(rng() * 4) * (Math.PI / 2);
     this.loot.addRuntimeContainer({
-      id,
+      id: s.id,
       kind: 'supply_crate',
       labelUz: 'Yordam yuki',
-      position: { x: q3(c.x), y: q3(c.y), z: q3(c.z) },
-      yaw,
+      position: { x: s.x, y: s.y, z: s.z },
+      yaw: s.yaw,
       items,
     });
-    this.supplyDrop = { id, x: q3(c.x), y: q3(c.y), z: q3(c.z) };
     this.io.to(this.channel).emit('loot:snapshot', this.loot.getPublicLootSnapshot());
-    const ev: NightSupplyDropEvent = { id, x: q3(c.x), y: q3(c.y), z: q3(c.z) };
-    this.io.to(this.channel).emit('night:supplyDrop', ev);
-    const dist = Math.round(Math.hypot(c.x - main.x, c.z - main.z));
-    this.systemChat(`📦 Yordam yuki tushdi — asosiy gulxandan ${compassDirUz(c.x - main.x, c.z - main.z)}, ${dist} m. Qizil tutunga qarang!`);
   }
 
-  /** NightSnap uchun yordam yuki holati (ochilganmi — loot authority'dan). */
-  private supplySnap(): NightSupplySnap | undefined {
+  /** NightSnap uchun yordam yuki holati (ochilganmi — loot authority'dan; tushishdan beri o'tgan vaqt). */
+  private supplySnap(t: number): NightSupplySnap | undefined {
     const s = this.supplyDrop;
     if (!s) return undefined;
-    const pub = this.loot.getPublicContainerState(s.id);
-    return { id: s.id, x: s.x, y: s.y, z: s.z, opened: pub?.opened ?? false };
+    const pub = s.landed ? this.loot.getPublicContainerState(s.id) : null;
+    return {
+      id: s.id,
+      x: s.x,
+      y: s.y,
+      z: s.z,
+      yaw: s.yaw,
+      opened: pub?.opened ?? false,
+      ageSec: Math.max(0, Math.round((t - s.droppedAt) * 10) / 10),
+    };
   }
 
   // ---------------- Signal raketasi (wolf_night) ----------------
@@ -1507,10 +1583,34 @@ export class Room {
     for (const [id, fl] of this.flares) if (t >= fl.until) this.flares.delete(id);
   }
 
+  /** Faol raketalarning eng kech so'nish vaqti (server vaqti, s); faol raketa yo'q — 0. */
+  private flareScareUntil(t: number): number {
+    let until = 0;
+    for (const fl of this.flares.values()) if (fl.until > t && fl.until > until) until = fl.until;
+    return until;
+  }
+
+  /** Hozir yonib turgan signal raketasi bormi (wolf_night) — botlar ikkinchisini behuda otmasin. */
+  hasActiveFlare(t: number = this.now()): boolean {
+    return this.flareScareUntil(t) > t;
+  }
+
   /**
-   * Signal raketasini otish (odam va bot uchun umumiy): 1 raketa sarflanadi, o'yinchi joyida FLARE_DURATION_SEC
-   * davomida FLARE_FEAR_RADIUS_M olov manbai paydo bo'ladi, FLARE_SCARE_RADIUS_M dagi bo'rilar FLARE_SCARE_SEC
-   * qochadi, to'da doiradagi o'yinchini nishon qilmaydi. 'night:flare' hodisasi va chat.
+   * Raketa yonib turganda paydo bo'lgan yoki qayta tug'ilgan bo'ri ham qolgan vaqt davomida qo'rqib qochadi
+   * (raketa "hamma bo'rilarni" qo'rqitadi — keyin kelganlarini ham). WolfBrain.onSpawn chaqiradi.
+   */
+  scareIfFlareActive(w: ServerWolf): void {
+    if (!this.isNight || this.flares.size === 0) return;
+    const t = this.now();
+    const until = this.flareScareUntil(t);
+    if (until > t) w.brain.startScared(t, until - t);
+  }
+
+  /**
+   * Signal raketasini otish (odam va bot uchun umumiy): 1 raketa sarflanadi; xaritadagi HAMMA tirik bo'rilar
+   * (masofadan qat'i nazar) FLARE_SCARE_SEC qo'rqib qochadi — tishlamaydi, nishon olmaydi; shu vaqt ichida paydo
+   * bo'lganlari ham (scareIfFlareActive). Qo'shimcha: o'yinchi joyida FLARE_DURATION_SEC davomida FLARE_FEAR_RADIUS_M
+   * olov manbai, to'da doiradagi o'yinchini nishon qilmaydi. 'night:flare' hodisasi va chat.
    */
   private useFlareCore(p: ServerPlayer): UseFlareAck {
     const flares = this.loot.getFlareCount(p.id);
@@ -1528,17 +1628,16 @@ export class Room {
     const until = t + FLARE_DURATION_SEC;
     const fl: ServerFlare = { id, x: q3(p.pos.x), y: q3(p.pos.y), z: q3(p.pos.z), until, byId: p.id };
     this.flares.set(id, fl);
-    // Yaqindagi bo'rilar qochadi (tong qochishi bilan adashtirilmaydi — scaredUntil)
+    // Hamma tirik bo'rilar qochadi, qayerda bo'lmasin (tong qochishi bilan adashtirilmaydi — scaredUntil)
     for (const w of this.wolves.values()) {
-      if (!w.alive) continue;
-      if (Math.hypot(w.pos.x - fl.x, w.pos.z - fl.z) <= FLARE_SCARE_RADIUS_M) w.brain.startScared(t, FLARE_SCARE_SEC);
+      if (w.alive) w.brain.startScared(t, FLARE_SCARE_SEC);
     }
     const left = this.loot.getFlareCount(p.id);
     const ev: NightFlareEvent = { id, x: fl.x, y: fl.y, z: fl.z, byId: p.id, byName: p.name, until, leftSec: FLARE_DURATION_SEC };
     this.io.to(this.channel).emit('night:flare', ev);
     const invSnap = this.loot.getPlayerInventorySnap(p.id);
     if (invSnap) p.socket?.emit('inventory:state', invSnap);
-    this.systemChat(`🎇 ${p.name} signal raketasini otdi — bo'rilar qochmoqda (${FLARE_DURATION_SEC} s)`);
+    this.systemChat(`🎇 ${p.name} signal raketasini otdi — hamma bo'rilar ${FLARE_SCARE_SEC} s qochadi, hech kimni tishlamaydi`);
     return { ok: true, flares: left, until };
   }
 
@@ -1995,7 +2094,7 @@ export class Room {
       fires: this.campfireSnaps(),
       piles: this.woodPileSnaps(t),
     };
-    const supply = this.supplySnap();
+    const supply = this.supplySnap(t);
     if (supply) snap.supply = supply;
     const flares = this.flareSnaps(t);
     if (flares) snap.flares = flares;
@@ -3868,6 +3967,7 @@ export class Room {
           this.updateNightWaves(t);
           this.updateCamp(dt, t);
           this.updateFlares(t);
+          this.updateSupplyDrop(t);
           this.updateDowned(dt, t);
         }
         for (const p of this.players.values()) if (p.brain && p.alive) p.brain.update(dt, t);

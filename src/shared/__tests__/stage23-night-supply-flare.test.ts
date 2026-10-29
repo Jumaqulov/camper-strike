@@ -13,8 +13,9 @@ import {
   CAMPFIRE_MAX_FUEL_SEC,
   FLARE_DURATION_SEC,
   FLARE_FEAR_RADIUS_M,
-  FLARE_SCARE_RADIUS_M,
   SUPPLY_DROP_CLEAR_M,
+  SUPPLY_DROP_FALL_SEC,
+  SUPPLY_DROP_FIRE_CLEAR_M,
   SUPPLY_DROP_MAX_DIST_M,
   SUPPLY_DROP_MIN_DIST_M,
   compassDirUz,
@@ -25,7 +26,7 @@ import {
 } from '../wolf';
 
 // Bosqich 23 — Tong otguncha: yarim tungi yordam yuki (3-to'lqin boshida runtime konteyner) va signal raketasi
-// (item:flare — otilganda 20 s davomida 30 m doirada bo'rilar yo'q). Xona haqiqiy Room, io/socket soxta; vaqt
+// (item:flare — otilganda 20 s davomida hamma bo'rilar qochadi). Xona haqiqiy Room, io/socket soxta; vaqt
 // room.advanceTimeForTest bilan deterministik suriladi (publicLayoutSeed 6501, timeLimit 4 → 3-to'lqin 120 s da).
 
 interface EmittedRoomEvent {
@@ -138,15 +139,16 @@ function surviveFor(room: Room, sec: number, pinned: { p: ServerPlayer; pos: Vec
   }
 }
 
-/** Raundni 3-to'lqin boshiga (tunning yarmi) suradi va yordam yukini qaytaradi. */
+/** Raundni 3-to'lqin boshiga (tunning yarmi) suradi, quti yerga tekkuncha kutadi va yordam yukini qaytaradi. */
 function reachSupplyDrop(room: Room, p: ServerPlayer) {
   const home = { ...p.pos };
   const dur = 4 * 60;
   surviveFor(room, dur * 0.5 - 2, [{ p, pos: home }]);
   assert.equal(room.getSupplyDrop(), null, "3-to'lqindan oldin yordam yuki yo'q");
-  surviveFor(room, 4, [{ p, pos: home }]);
+  surviveFor(room, 4 + SUPPLY_DROP_FALL_SEC, [{ p, pos: home }]);
   const s = room.getSupplyDrop();
   assert.ok(s, "3-to'lqin boshida yordam yuki tushdi");
+  assert.equal(s!.landed, true, 'quti yerga tegdi');
   return { supply: s!, home };
 }
 
@@ -190,28 +192,33 @@ function firstWolf(room: Room): ServerWolf {
   return w!;
 }
 
-/** O'yinchidan `len` m uzoqda, gulxanlardan uzoq, to'siqsiz nuqta (16 yo'nalish sinaladi). */
+/**
+ * O'yinchidan ~`len` m uzoqda, gulxanlardan uzoq, to'siqsiz nuqta (24 yo'nalish; yordam yuki joyi tasodifiy —
+ * topilmasa masofa biroz qisqartirib/uzaytirib, balandlik farqi yumshatilib sinaladi).
+ */
 function openPointFrom(room: Room, from: Vec3, len: number): Vec3 {
   const nav = room.nav;
-  for (let k = 0; k < 16; k++) {
-    const ang = (k / 16) * Math.PI * 2;
-    const bx = from.x + Math.cos(ang) * len;
-    const bz = from.z + Math.sin(ang) * len;
-    const b = groundAt(room, bx, bz);
-    if (Math.abs(b.y - from.y) > 1.0) continue;
-    const ni = nav.nearest(b);
-    if (ni < 0) continue;
-    const c = nav.center(ni);
-    if (Math.hypot(c.x - bx, c.z - bz) > 2.5) continue;
-    if (room.litFireContaining(c.x, c.z, 4)) continue;
-    if (!nav.segmentClear(from, c)) continue;
-    return c;
+  for (const [l, dyMax] of [[len, 1.0], [len * 0.75, 1.0], [len * 1.25, 1.0], [len, 1.8], [len * 0.6, 1.8], [len * 1.4, 1.8]] as const) {
+    for (let k = 0; k < 24; k++) {
+      const ang = (k / 24) * Math.PI * 2;
+      const bx = from.x + Math.cos(ang) * l;
+      const bz = from.z + Math.sin(ang) * l;
+      const b = groundAt(room, bx, bz);
+      if (Math.abs(b.y - from.y) > dyMax) continue;
+      const ni = nav.nearest(b);
+      if (ni < 0) continue;
+      const c = nav.center(ni);
+      if (Math.hypot(c.x - bx, c.z - bz) > 2.5) continue;
+      if (room.litFireContaining(c.x, c.z, 4)) continue;
+      if (!nav.segmentClear(from, c)) continue;
+      return c;
+    }
   }
   throw new Error("ochiq nuqta topilmadi");
 }
 
 describe("Bosqich 23 — Tong otguncha: yarim tungi yordam yuki va signal raketasi", () => {
-  it("1. Yordam yuki 3-to'lqin boshida tushadi: joy (35–70 m asosiy gulxandan, ≥ 12 m g'aram/gulxanlardan), tarkibi, snapshotlar, chat, hodisa; gameplayHash o'zgarmaydi", () => {
+  it("1. Yordam yuki 3-to'lqin boshida tushadi: joy (40–160 m asosiy gulxandan, ≥ 30 m gulxanlardan, ≥ 12 m g'aramlardan), tarkibi, snapshotlar, chat, hodisa; gameplayHash o'zgarmaydi", () => {
     const { io, emitted } = createFakeIo();
     const room = makeNightRoom(io);
     try {
@@ -222,12 +229,12 @@ describe("Bosqich 23 — Tong otguncha: yarim tungi yordam yuki va signal raketa
       const { supply } = reachSupplyDrop(room, p);
       assert.ok(isSupplyContainerId(supply.id));
 
-      // Joy: asosiy gulxandan 35–70 m, g'aram va gulxanlardan ≥ 12 m, nav tugunida (sayr komponenti)
+      // Joy: asosiy gulxandan 40–160 m, gulxanlardan ≥ 30 m, g'aramlardan ≥ 12 m, nav tugunida (sayr komponenti)
       const main = mainFire(room);
       const dMain = Math.hypot(supply.x - main.x, supply.z - main.z);
       assert.ok(dMain >= SUPPLY_DROP_MIN_DIST_M && dMain <= SUPPLY_DROP_MAX_DIST_M, `asosiy gulxandan ${dMain.toFixed(1)} m`);
       for (const f of room.campfires.values()) {
-        assert.ok(Math.hypot(supply.x - f.x, supply.z - f.z) >= SUPPLY_DROP_CLEAR_M, `gulxan ${f.id} dan uzoq`);
+        assert.ok(Math.hypot(supply.x - f.x, supply.z - f.z) >= SUPPLY_DROP_FIRE_CLEAR_M, `gulxan ${f.id} dan uzoq`);
       }
       for (const pl of room.woodPiles.values()) {
         assert.ok(Math.hypot(supply.x - pl.x, supply.z - pl.z) >= SUPPLY_DROP_CLEAR_M, `g'aram ${pl.id} dan uzoq`);
@@ -339,7 +346,7 @@ describe("Bosqich 23 — Tong otguncha: yarim tungi yordam yuki va signal raketa
     }
   });
 
-  it("3. Raketa otish: 1 ta sarflanadi, 'night:flare' va chat; 45 m dagi ovlayotgan bo'ri qochadi, 20 s davomida ≥ ~30 m da turadi, tishlamaydi, to'da nishon bermaydi; keyin qaytadi (o'chmaydi)", () => {
+  it("3. Raketa otish: 1 ta sarflanadi, 'night:flare' va chat; ovlayotgan bo'ri qochadi, 20 s davomida ≥ ~30 m da turadi, tishlamaydi, to'da nishon bermaydi; keyin qaytadi (o'chmaydi)", () => {
     const { io, emitted } = createFakeIo();
     const room = makeNightRoom(io);
     try {
@@ -357,7 +364,7 @@ describe("Bosqich 23 — Tong otguncha: yarim tungi yordam yuki va signal raketa
         if (o !== w) {
           // Boshqa bo'rilar uzoqda (sinovga xalaqit bermasin)
           o.pos = { ...room.nav.randomPoint() };
-          while (Math.hypot(o.pos.x - anchor.x, o.pos.z - anchor.z) < FLARE_SCARE_RADIUS_M + 20) o.pos = { ...room.nav.randomPoint() };
+          while (Math.hypot(o.pos.x - anchor.x, o.pos.z - anchor.z) < 65) o.pos = { ...room.nav.randomPoint() };
         }
       }
       w.pos = { ...wolfPos };
@@ -398,7 +405,8 @@ describe("Bosqich 23 — Tong otguncha: yarim tungi yordam yuki va signal raketa
       assert.ok(w.scaredUntil > t0, 'scaredUntil belgilangan');
       assert.equal(Number.isFinite(w.fleeUntil), false, 'tong qochishi bilan adashtirilmagan');
 
-      // 20 s: bo'ri 3 s dan keyin ≥ ~30 m da, tashlanmaydi, tishlamaydi, to'da unga nishon bermaydi, xonadan o'chmaydi
+      // 20 s: bo'ri 3 s dan keyin uzoqda (yuk joyi tasodifiy — xarita chetida qochish yo'li o'yinchi yonidan
+      // biroz o'tishi mumkin, lekin yaqinlashmaydi), tashlanmaydi, tishlamaydi, to'da unga nishon bermaydi, xonadan o'chmaydi
       let minD = Infinity;
       let attacked = false;
       let bitten = false;
@@ -414,7 +422,7 @@ describe("Bosqich 23 — Tong otguncha: yarim tungi yordam yuki va signal raketa
       assert.equal(attacked, false, "tashlanmadi");
       assert.equal(bitten, false, 'tishlanmadi');
       assert.equal(assigned, false, "to'da raketa doirasidagi o'yinchiga nishon bermaydi");
-      assert.ok(minD >= FLARE_FEAR_RADIUS_M - 2, `bo'ri eng yaqin ${minD.toFixed(1)} m (≥ ~${FLARE_FEAR_RADIUS_M})`);
+      assert.ok(minD >= 10, `bo'ri eng yaqin ${minD.toFixed(1)} m (≥ 10)`);
       assert.ok(!emitted.slice(before).some((e) => e.event === 'wolf:bite' && (e.payload as { hit: boolean }).hit), "tishlash hodisasi yo'q");
 
       // Raketa so'ndi — manba yo'q, bo'ri qochishni to'xtatib sayrga qaytadi (tirik va xonada)

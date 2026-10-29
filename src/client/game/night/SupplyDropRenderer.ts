@@ -1,5 +1,11 @@
 import * as THREE from 'three';
-import { SUPPLY_BEACON_SEC, type NightSupplyDropEvent, type NightSupplySnap } from '../../../shared/wolf';
+import {
+  SUPPLY_BEACON_SEC,
+  SUPPLY_DROP_FALL_SEC,
+  supplyDropClock,
+  type NightSupplyDropEvent,
+  type NightSupplySnap,
+} from '../../../shared/wolf';
 import { instantiateContainerAsset, onContainerAssetsReady, type InstantiatedContainerHierarchy } from '../containers';
 import { getSharedGlowTexture } from './CampRenderer';
 
@@ -8,12 +14,14 @@ import { getSharedGlowTexture } from './CampRenderer';
  *
  * Konteyner — `wooden_loot_crate_01` GLB nusxasi (runtime konteyner xarita vizuallarida yo'q, shuning uchun bu
  * yerda chiziladi); qopqoq `opened` bo'lganda ochiladi. 'night:supplyDrop' kelganda quti parashyut bilan
- * DROP_FALL_SEC davomida tushadi (kech qo'shilganlar — NightSnap.supply — animatsiyasiz). Quti yonida
- * SUPPLY_BEACON_SEC davomida uzoqdan ko'rinadigan qizil tutun/mayoq ustuni (additiv spraytlar) va lipillovchi
- * qizil PointLight (konstruktorda yaratiladi — yorug'lik soni o'zgarmasin); quti ochilsa mayoq so'nadi.
+ * SUPPLY_DROP_FALL_SEC davomida tushadi (server konteynerni ham shundan keyin qo'shadi — havodagi qutini ochib
+ * bo'lmaydi). Kech qo'shilganlar — NightSnap.supply.ageSec bo'yicha: tushish hali tugamagan bo'lsa qolgan qismi
+ * ko'rinadi, mayoq esa tushgan paytdan SUPPLY_BEACON_SEC (qaytadan to'liq emas). Quti yonida uzoqdan ko'rinadigan
+ * qizil tutun/mayoq ustuni (additiv spraytlar) va lipillovchi qizil PointLight (konstruktorda yaratiladi —
+ * yorug'lik soni o'zgarmasin); quti ochilsa mayoq so'nadi.
  */
 
-const DROP_FALL_SEC = 3.2;
+const DROP_FALL_SEC = SUPPLY_DROP_FALL_SEC;
 const DROP_START_HEIGHT_M = 40;
 const BEACON_SEGMENTS = 7;
 const BEACON_HEIGHT_M = 22;
@@ -78,14 +86,15 @@ export class SupplyDropRenderer {
   onDrop(e: NightSupplyDropEvent, nowSec: number): void {
     if (this.disposed) return;
     if (this.id === e.id) return;
-    this.place(e.id, e.x, e.y, e.z, nowSec, false);
+    this.place(e.id, e.x, e.y, e.z, e.yaw, false);
     this.droppedAt = nowSec;
     this.beaconUntil = nowSec + SUPPLY_BEACON_SEC;
   }
 
   /**
-   * NightSnap.supply: yo'q bo'lsa (yangi raund) quti olib tashlanadi; yangi id — animatsiyasiz paydo bo'ladi
-   * (mayoq ham yoqiladi — kech qo'shilgan o'yinchi ham ko'rsin); `opened` har safar moslanadi.
+   * NightSnap.supply: yo'q bo'lsa (yangi raund) quti olib tashlanadi; yangi id (hodisa kelmagan — kech qo'shilgan /
+   * qayta ulangan) — server `ageSec` i bo'yicha: tushish tugagan bo'lsa animatsiyasiz, aks holda qolgan qismi;
+   * mayoq tushgan paytdan SUPPLY_BEACON_SEC gacha (vaqti o'tgan bo'lsa yonmaydi); `opened` har safar moslanadi.
    */
   sync(snap: NightSupplySnap | undefined, nowSec: number): void {
     if (this.disposed) return;
@@ -94,9 +103,10 @@ export class SupplyDropRenderer {
       return;
     }
     if (this.id !== snap.id) {
-      this.place(snap.id, snap.x, snap.y, snap.z, nowSec, true);
-      this.droppedAt = nowSec - DROP_FALL_SEC;
-      this.beaconUntil = nowSec + SUPPLY_BEACON_SEC;
+      const clock = supplyDropClock(snap.ageSec, nowSec);
+      this.place(snap.id, snap.x, snap.y, snap.z, snap.yaw, !clock.falling);
+      this.droppedAt = clock.droppedAt;
+      this.beaconUntil = clock.beaconUntil;
     }
     this.setOpened(snap.opened);
   }
@@ -108,20 +118,17 @@ export class SupplyDropRenderer {
     if (opened) this.beaconUntil = -Infinity;
   }
 
-  private place(id: string, x: number, y: number, z: number, nowSec: number, instant: boolean): void {
+  private place(id: string, x: number, y: number, z: number, yaw: number, instant: boolean): void {
     this.clear();
     this.id = id;
     this.pos.set(x, y, z);
-    // Burilish deterministik (id bo'yicha) — hamma klientda bir xil
-    let h = 0;
-    for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
-    this.yaw = ((h >>> 0) % 4) * (Math.PI / 2);
+    // Burilish serverdan (konteyner bilan bir xil) — hamma klientda bir xil
+    this.yaw = Number.isFinite(yaw) ? yaw : 0;
     this.opened = false;
     this.lidK = 0;
     this.buildCrate(x, y, z, this.yaw);
     if (!instant) this.buildChute();
     this.buildBeacon(x, y, z);
-    void nowSec;
   }
 
   private buildCrate(x: number, y: number, z: number, yaw: number): void {

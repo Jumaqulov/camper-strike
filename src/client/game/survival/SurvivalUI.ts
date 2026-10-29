@@ -78,11 +78,14 @@ export function formatTorchPillUz(torchSec: number): { text: string; cls: '' | '
   return { text: `🔥 Mash'al ${s} s · [F] tashlash`, cls: s <= 8 ? 'low' : '' };
 }
 
-/** Faol signal raketasi pilli (hammaga): "🎇 Raketa 14 s" (oxirgi 5 s — 'low'); raketa yo'q — null. */
+/**
+ * Faol signal raketasi pilli (hammaga — raketa xaritadagi hamma bo'rilarni qo'rqitadi, qayerda turishdan qat'i
+ * nazar): "🎇 Bo'rilar qochmoqda 14 s" (oxirgi 5 s — 'low'); raketa yo'q — null. Sof funksiya (testlar uchun).
+ */
 export function formatFlarePillUz(flareSec: number): { text: string; cls: '' | 'low' } | null {
   if (!Number.isFinite(flareSec) || flareSec <= 0) return null;
   const s = Math.max(1, Math.ceil(flareSec));
-  return { text: `🎇 Raketa ${s} s`, cls: s <= 5 ? 'low' : '' };
+  return { text: `🎇 Bo'rilar qochmoqda ${s} s`, cls: s <= 5 ? 'low' : '' };
 }
 
 /**

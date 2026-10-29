@@ -190,7 +190,7 @@ export const LOOT_CATALOG: Record<LootCatalogId, LootCatalogEntry> = {
     kind: 'flare',
     nameUz: 'Signal raketasi',
     shortNameUz: 'Raketa',
-    descriptionUz: "Osmonga otilganda 20 soniya davomida 30 m radiusda bo'rilarni qo'rqitib turadi ([X]).",
+    descriptionUz: "Osmonga otilganda 20 soniya davomida hamma bo'rilarni qo'rqitib turadi: qochadi, hech kimni tishlamaydi ([X]).",
     defaultQuantity: 1,
     maxStack: MAX_FLARES_PER_PLAYER,
     spawnWeight: 3,

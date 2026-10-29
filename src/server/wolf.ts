@@ -289,6 +289,8 @@ export class WolfBrain {
     this.wallGoal = null;
     this.walled = false;
     this.setState('idle', t);
+    // Signal raketasi yonib turgan bo'lsa — yangi/qayta tug'ilgan bo'ri ham darhol qochadi (raketaning qolgan vaqti)
+    this.room.scareIfFlareActive(this.me);
   }
 
   /**

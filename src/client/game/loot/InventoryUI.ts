@@ -6,6 +6,7 @@ import {
 } from '../../../shared/loot';
 import { KNIFE, KNIFE_SLOT_KEY, WEAPONS, WEAPON_SLOTS, type WeaponId } from '../../../shared/weapons';
 import { TORCH_WEAPON_MESSAGE_UZ, WOOD_CARRY_MAX, isTorchWeapon } from '../../../shared/wolf/camp';
+import { FLARE_DURATION_SEC } from '../../../shared/wolf/flare';
 import { weaponIconHtml } from '../Hud';
 import { onWeaponAssetsReady } from '../WeaponAssetRegistry';
 
@@ -265,7 +266,7 @@ export class InventoryUI {
       wood === null && flares <= 0
         ? ''
         : `<button type="button" class="s06-util-btn flare-btn ${flares > 0 ? 'has-item' : 'empty'}" data-action="flare"
-          title="Signal raketasi [X]: 20 s davomida 30 m radiusda bo'rilarni qo'rqitadi (${flares}/${maxFlares})">
+          title="Signal raketasi [X]: ${FLARE_DURATION_SEC} s davomida hamma bo'rilarni qo'rqitadi — qochadi, tishlamaydi (${flares}/${maxFlares})">
           <span class="s06-util-icon">🎇</span><span class="s06-util-count">${flares}</span><span class="s06-util-key">X</span>
         </button>`;
 

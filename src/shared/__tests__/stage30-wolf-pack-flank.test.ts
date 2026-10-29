@@ -942,12 +942,14 @@ describe("Bosqich 30 — to'da taktikasi jonli dinamikada: chalg'itish, orqadan 
       try {
         const [p] = startNight(room, ['p1']);
         const a = findOpenArena(room, 20, 12, 1, 0);
-        const flarePos = groundAt(room, a.x - 28, a.z);
-        room.flares.set('fl1', { id: 'fl1', x: flarePos.x, y: flarePos.y, z: flarePos.z, until: room.now() + 60, byId: 'p1' });
         let px = a.x;
         p!.pos = groundAt(room, px, a.z);
         p!.torchUntil = room.now() + 120;
         const wolves = freshWolves(room, 3, false);
+        // Raketa to'g'ridan-to'g'ri qo'yiladi (useFlare emas — bo'rilarni qo'rqitmaydi, faqat doira halqasi
+        // geometriyasi sinovi) va bo'rilardan keyin: raketa yonib turganda paydo bo'lgan bo'ri darhol qochadi
+        const flarePos = groundAt(room, a.x - 28, a.z);
+        room.flares.set('fl1', { id: 'fl1', x: flarePos.x, y: flarePos.y, z: flarePos.z, until: room.now() + 60, byId: 'p1' });
         wolves.forEach((w, i) => placeWolf(w, groundAt(room, a.x + 14 + i * 2, a.z + (i - 1) * 4), p!.pos));
         let flareRing = false;
         for (let i = 0; i < 30 * 16; i++) {

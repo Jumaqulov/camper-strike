@@ -5,6 +5,7 @@ import { angleDiff, clamp, lerp, type Vec3 } from '../../shared/math';
 import { MAX_INPUT_BATCH_SIZE } from '../../shared/netMovement';
 import { computeCameraClearDistance, rayBox, raycastWorld, rayVsPlayer } from '../../shared/physics';
 import {
+  FLARE_DURATION_SEC,
   FLARE_ERROR_MESSAGES_UZ,
   NIGHT_REVIVE_RANGE_M,
   NIGHT_REVIVE_SEC,
@@ -836,7 +837,9 @@ export class Game {
   private onFlareEvent(e: NightFlareEvent): void {
     this.flareFx?.onEvent(e, this.nowSec);
     this.audio.flareLaunch({ x: e.x, y: e.y + 1.5, z: e.z });
-    if (e.byId !== this.myId) this.lootUi.showStatus(`🎇 ${e.byName} signal raketasini otdi`, 'info', 2200);
+    if (e.byId !== this.myId) {
+      this.lootUi.showStatus(`🎇 ${e.byName} signal raketasini otdi — hamma bo'rilar ${FLARE_DURATION_SEC} s qochadi`, 'info', 2200);
+    }
   }
 
   /** [X] — signal raketasini otish (wolf_night). Server 1 raketa sarflaydi, hamma uchun 'night:flare' yuboradi. */
@@ -869,7 +872,7 @@ export class Game {
           this.inventorySnap.flares = ack.flares;
           this.inventoryUi.updateInventory(this.inventorySnap);
         }
-        this.lootUi.showStatus(`🎇 Signal raketasi otildi — bo'rilar 20 s qochadi (qoldi: ${ack.flares})`, 'success', 2400);
+        this.lootUi.showStatus(`🎇 Signal raketasi otildi — hamma bo'rilar ${FLARE_DURATION_SEC} s qochadi (qoldi: ${ack.flares})`, 'success', 2400);
         resolve(ack);
       });
     });

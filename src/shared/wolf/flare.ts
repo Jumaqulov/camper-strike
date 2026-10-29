@@ -1,25 +1,39 @@
 /**
  * "Tong otguncha": yarim tungi yordam yuki va signal raketasi (klient–server umumiy kontraktlar).
  *
- * Yordam yuki — 3-to'lqin boshida (tunning 50 %) server asosiy gulxandan 35–70 m narida, g'aramlar va
- * gulxanlardan ≥ 12 m uzoqda, ochiq osmon ostidagi nav tuguniga `supply_crate` konteynerini tushiradi
- * (runtime konteyner — xarita ta'rifiga kirmaydi, gameplayHash o'zgarmaydi). Ichida: qurol (avtomat yoki
- * drobovik), 2 quti o'q, aptechka, granata va 2 signal raketasi.
+ * Yordam yuki — 3-to'lqin boshida (tunning 50 %) xaritaning tasodifiy joyiga `supply_crate` konteyneri tushadi:
+ * sayr komponentidagi nav tuguni, asosiy gulxandan SUPPLY_DROP_MIN..MAX_DIST_M narida (lagerdan tashqarida —
+ * xavfli, lekin yetib borsa bo'ladi), har gulxandan ≥ SUPPLY_DROP_FIRE_CLEAR_M, g'aramlardan ≥ SUPPLY_DROP_CLEAR_M,
+ * atrofi bo'sh, ochiq osmon ostida. Joy, burilish va qurol xonaning maxfiy loot seedi ⊕ raund bilan tanlanadi —
+ * har xonada va har raundda boshqa, klient oldindan bila olmaydi. Quti SUPPLY_DROP_FALL_SEC parashyutda tushadi;
+ * konteyner (runtime — xarita ta'rifiga kirmaydi, gameplayHash o'zgarmaydi) faqat yerga tekkanda paydo bo'ladi,
+ * shungacha uni ochib bo'lmaydi. Ichida: qurol (avtomat yoki drobovik), 2 quti o'q, aptechka, granata va
+ * 2 signal raketasi.
  *
- * Signal raketasi — kam uchraydigan loot buyumi (`item:flare`). Otilganda ([X]) o'yinchi turgan joyda
- * FLARE_DURATION_SEC davomida bo'rilar kirmaydigan FLARE_FEAR_RADIUS_M doira paydo bo'ladi, FLARE_SCARE_RADIUS_M
- * ichidagi bo'rilar FLARE_SCARE_SEC qochadi; to'da raketa doirasidagi o'yinchini nishon qilmaydi.
+ * Signal raketasi — kam uchraydigan loot buyumi (`item:flare`). Otilganda ([X]) xaritadagi HAMMA tirik bo'rilar
+ * FLARE_SCARE_SEC qo'rqib qochadi (hech kimni tishlamaydi, nishon olmaydi); raketa yonib turganda paydo bo'lgan yoki
+ * qayta tug'ilgan bo'ri ham qolgan vaqt davomida qochadi. Qo'shimcha: otilgan joyda FLARE_DURATION_SEC davomida
+ * bo'rilar kirmaydigan FLARE_FEAR_RADIUS_M doira; to'da shu doiradagi o'yinchini nishon qilmaydi.
  */
 
 // ---------- Yordam yuki ----------
 /** Yordam yuki tushadigan to'lqin (1-asos). */
 export const SUPPLY_DROP_WAVE = 3;
-/** Asosiy gulxandan masofa oralig'i (m). */
-export const SUPPLY_DROP_MIN_DIST_M = 35;
-export const SUPPLY_DROP_MAX_DIST_M = 70;
-/** O'tin g'aramlari va gulxanlardan eng kam masofa (m). */
+/**
+ * Asosiy gulxandan masofa oralig'i (m): lager doirasidan ancha nari (yo'l xavfli), lekin tun yarmida borib
+ * kelsa bo'ladigan — 256 m li xaritaning katta qismi.
+ */
+export const SUPPLY_DROP_MIN_DIST_M = 40;
+export const SUPPLY_DROP_MAX_DIST_M = 160;
+/** O'tin g'aramlaridan eng kam masofa (m). */
 export const SUPPLY_DROP_CLEAR_M = 12;
-/** Qizil tutun/mayoq ustuni ko'rinib turish vaqti (s) — quti ochilsa so'nadi. */
+/** Har bir gulxandan eng kam masofa (m) — yuk hech qaysi lager (olov himoyasi) ichiga tushmaydi. */
+export const SUPPLY_DROP_FIRE_CLEAR_M = 30;
+/** Xarita chetidan eng kam masofa (m). */
+export const SUPPLY_DROP_EDGE_M = 8;
+/** Parashyutda tushish vaqti (s): server konteynerni shundan keyin qo'shadi, klient shu vaqt animatsiya qiladi. */
+export const SUPPLY_DROP_FALL_SEC = 3.2;
+/** Qizil tutun/mayoq ustuni ko'rinib turish vaqti (s, tushgan paytdan) — quti ochilsa so'nadi. */
 export const SUPPLY_BEACON_SEC = 90;
 /** Yordam yuki konteyneri identifikatori prefiksi (`supply:r<round>`). */
 export const SUPPLY_CONTAINER_PREFIX = 'supply:';
@@ -27,12 +41,14 @@ export function isSupplyContainerId(id: string): boolean {
   return id.startsWith(SUPPLY_CONTAINER_PREFIX);
 }
 
-/** Server → klient: yordam yuki tushdi (ovoz, banner, mini-xarita belgisi, mayoq). */
+/** Server → klient: yordam yuki tushmoqda (parashyut animatsiyasi, ovoz, banner, mini-xarita belgisi, mayoq). */
 export interface NightSupplyDropEvent {
   id: string;
   x: number;
   y: number;
   z: number;
+  /** Quti burilishi (rad) — konteyner bilan bir xil. */
+  yaw: number;
 }
 
 /** NightSnap.supply: yordam yuki holati (kech qo'shilganlar/kuzatuvchilar uchun ham). */
@@ -41,7 +57,24 @@ export interface NightSupplySnap {
   x: number;
   y: number;
   z: number;
+  yaw: number;
   opened: boolean;
+  /**
+   * Tushish boshlanganidan beri o'tgan vaqt (s, 0.1 aniqlikda) — klient o'z soati bilan tushish va mayoq vaqtini
+   * hisoblaydi (kech qo'shilgan o'yinchiga mayoq qaytadan SUPPLY_BEACON_SEC yonmasin).
+   */
+  ageSec: number;
+}
+
+/**
+ * Klient soati bo'yicha yordam yuki vaqtlari (NightSupplySnap.ageSec dan — kech qo'shilgan/qayta ulangan o'yinchi
+ * uchun): tushish boshlangan vaqt, mayoq so'nadigan vaqt (tushgan paytdan SUPPLY_BEACON_SEC — ulangan paytdan
+ * qaytadan to'liq emas) va quti hali havodami. Sof funksiya (testlar uchun).
+ */
+export function supplyDropClock(ageSec: number, nowSec: number): { droppedAt: number; beaconUntil: number; falling: boolean } {
+  const age = Number.isFinite(ageSec) ? Math.max(0, ageSec) : SUPPLY_DROP_FALL_SEC;
+  const droppedAt = nowSec - age;
+  return { droppedAt, beaconUntil: droppedAt + SUPPLY_BEACON_SEC, falling: age < SUPPLY_DROP_FALL_SEC };
 }
 
 // ---------- Signal raketasi ----------
@@ -51,17 +84,22 @@ export const FLARE_FEAR_RADIUS_M = 30;
 export const FLARE_STANDOFF_M = FLARE_FEAR_RADIUS_M + 2;
 /** Raketa yonib turish vaqti (s). */
 export const FLARE_DURATION_SEC = 20;
-/** Otilgan paytda shu radiusdagi (m) bo'rilar qochadi. */
-export const FLARE_SCARE_RADIUS_M = 45;
-/** Qo'rqib qochish vaqti (s). */
-export const FLARE_SCARE_SEC = 20;
+/** Qo'rqib qochish vaqti (s): xaritadagi hamma bo'rilar raketa yonib turguncha qochadi. */
+export const FLARE_SCARE_SEC = FLARE_DURATION_SEC;
 /** Bir o'yinchi ikki raketa orasidagi eng kam oraliq (s) — spamga qarshi. */
 export const FLARE_USE_COOLDOWN_SEC = 3;
 /** Bot raketani shu oraliqda (s) qayta ishlatmaydi. */
 export const BOT_FLARE_COOLDOWN_SEC = 30;
-/** Bot raketa otadi: ovlayotgan bo'ri shu masofadan (m) yaqin, yaqinda (m) yonib turgan gulxan yo'q. */
+/**
+ * Bot raketa otadi (yaqinda yonib turgan gulxan, mash'al va faol raketa yo'q bo'lsa): ovlayotgan bo'ri shu
+ * masofadan (m) yaqin va bot qurolsiz/o'qsiz/bo'rini ko'rmaydi yoki joni BOT_FLARE_LOW_HP dan kam; yoki
+ * BOT_FLARE_SWARM_M ichida kamida BOT_FLARE_SWARM_COUNT bo'ri aynan uni ovlamoqda (qurolli bo'lsa ham).
+ */
 export const BOT_FLARE_WOLF_DIST_M = 6;
 export const BOT_FLARE_NO_FIRE_M = 10;
+export const BOT_FLARE_LOW_HP = 40;
+export const BOT_FLARE_SWARM_M = 14;
+export const BOT_FLARE_SWARM_COUNT = 3;
 
 /** Klient → server: signal raketasini otish ('night:useFlare', so'rov tanasi bo'sh). */
 export type UseFlareReq = Record<string, never>;
