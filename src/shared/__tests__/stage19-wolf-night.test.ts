@@ -1392,7 +1392,18 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
     });
     const brief = (sum: ReturnType<typeof computeNightSummary>) => sum.awards.map((a) => [a.kind, a.playerId, a.value]);
     // Bo'sh ro'yxat
-    assert.deepEqual(computeNightSummary([], 'easy', true), { difficulty: 'easy', dawn: true, stats: [], awards: [] });
+    assert.deepEqual(computeNightSummary([], 'easy', true), {
+      difficulty: 'easy',
+      dawn: true,
+      stats: [],
+      awards: [],
+      // Faktlarsiz — yulduzlar berilmaydi (stage24: yulduz mantig'i)
+      stars: [
+        { kind: 'all_alive', earned: false },
+        { kind: 'fire_kept', earned: false },
+        { kind: 'alpha_slain', earned: false },
+      ],
+    });
     // Hamma nol — mukofot yo'q, tartib saqlanadi
     const zeros = computeNightSummary([mk('a'), mk('b'), mk('c')], 'normal', false);
     assert.deepEqual(zeros.awards, []);

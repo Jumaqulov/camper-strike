@@ -3,9 +3,16 @@ import type { ChatMsg, KillEvent, MatchState, RosterEntry } from '../../shared/p
 import { KNIFE, KNIFE_SLOT_KEY, WEAPONS, WEAPON_SLOTS, isMeleeWeapon, type WeaponId } from '../../shared/weapons';
 import { isTorchWeapon } from '../../shared/wolf/camp';
 import { getWeaponIcons3D } from './GunModels';
+import { campWarningTextUz } from './survival/campHud';
 import { onWeaponAssetsReady } from './WeaponAssetRegistry';
 
 const $ = (id: string) => document.getElementById(id)!;
+
+/** Uvlash indikatori: markazdan radius (px), element o'lchami va umri (ms; CSS animatsiyasi bilan mos). */
+const HOWL_IND_RADIUS_PX = 210;
+const HOWL_IND_W = 96;
+const HOWL_IND_H = 44;
+export const HOWL_IND_MS = 3000;
 
 export function esc(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
@@ -230,15 +237,42 @@ export class Hud {
   }
 
   private lastCampWarn = '';
-  /** Lager gulxani ("Tong otguncha"): 'low' — o'chmoqda, 'out' — o'chdi, '' — yo'q. */
-  setCampWarning(level: '' | 'low' | 'out'): void {
-    if (level === this.lastCampWarn) return;
-    this.lastCampWarn = level;
+  /**
+   * Lager gulxani ("Tong otguncha"): 'low' — o'chmoqda, 'out' — o'chdi, '' — yo'q. `fire` — qaysi gulxan
+   * (nomi bannerda: "ASOSIY GULXAN ..." / "2-LAGER GULXANI ..."); berilmasa umumiy "GULXAN ...".
+   */
+  setCampWarning(level: '' | 'low' | 'out', fire: { name: string; main: boolean } | null = null): void {
+    const key = level === '' ? '' : `${level}|${fire ? `${fire.main ? 1 : 0}|${fire.name}` : ''}`;
+    if (key === this.lastCampWarn) return;
+    this.lastCampWarn = key;
     const el = $('camp-warn');
     el.classList.toggle('hidden', level === '');
     el.classList.toggle('out', level === 'out');
-    if (level === 'low') el.textContent = "GULXAN O'CHMOQDA — O'TIN KELTIRING!";
-    else if (level === 'out') el.textContent = "GULXAN O'CHDI — BO'RILAR KELMOQDA!";
+    if (level === '') return;
+    el.textContent = fire
+      ? campWarningTextUz(level, fire.name, fire.main)
+      : level === 'low'
+        ? "GULXAN O'CHMOQDA — O'TIN KELTIRING!"
+        : "GULXAN O'CHDI — BO'RILAR KELMOQDA!";
+  }
+
+  /**
+   * Bo'ri uvlashi yo'nalishi ("Tong otguncha"): ekran markazidan HOWL_IND_RADIUS_PX uzoqlikda, uvlash tomonda
+   * qizil 🐺 belgisi va strelka; 3 s ichida so'nib yo'qoladi. `angle` — qarashga nisbatan (rad, musbat — chapda),
+   * zarar indikatori bilan bir xil konvensiya. Matn aylantirilmaydi (aniq qolsin) — faqat SVG strelka buriladi.
+   */
+  howlIndicator(angle: number): void {
+    const host = $('damage-indicators');
+    const el = document.createElement('div');
+    el.className = 'howl-ind';
+    const x = Math.round(-Math.sin(angle) * HOWL_IND_RADIUS_PX);
+    const y = Math.round(-Math.cos(angle) * HOWL_IND_RADIUS_PX);
+    el.style.left = `${x - HOWL_IND_W / 2}px`;
+    el.style.top = `${y - HOWL_IND_H / 2}px`;
+    const deg = Math.round((-angle * 180) / Math.PI);
+    el.innerHTML = `<svg class="howl-arrow" viewBox="0 0 16 16" aria-hidden="true"><g transform="rotate(${deg} 8 8)"><path d="M8 0.8 13 13.4 8 10.4 3 13.4Z"/></g></svg><span class="howl-label">🐺 uvlash</span>`;
+    host.appendChild(el);
+    window.setTimeout(() => el.remove(), HOWL_IND_MS + 100);
   }
 
   private nightBannerTimer = 0;

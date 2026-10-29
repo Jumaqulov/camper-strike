@@ -5,10 +5,15 @@
 import {
   NIGHT_AWARD_TITLES_UZ,
   NIGHT_DIFFICULTIES,
+  NIGHT_STAR_KINDS,
+  NIGHT_STAR_TITLES_UZ,
+  countNightStars,
   sanitizeNightDifficulty,
   type NightAward,
   type NightAwardKind,
   type NightRoundSummary,
+  type NightStar,
+  type NightStarKind,
 } from '../../../shared/wolf/night';
 
 /** HTML maxsus belgilarini qochirish (o'yinchi ismlarini foydalanuvchi kiritadi). */
@@ -144,11 +149,49 @@ export function buildNightAwardsHtml(summary: NightRoundSummary, myId: string): 
   return mvpHtml + restHtml;
 }
 
-/** Butun pergament: qiyinlik → mukofotlar → statistika jadvali (uzun bo'lsa ichida aylantiriladi). */
+/**
+ * Yulduzlar: serverdan kelganlarni NIGHT_STAR_KINDS tartibiga keltiradi (yetishmagani — olinmagan,
+ * noma'lum turi tashlab yuboriladi). `stars` bo'lmasa (eski server) — null.
+ */
+export function normalizeNightStars(stars: readonly NightStar[] | null | undefined): NightStar[] | null {
+  if (!Array.isArray(stars)) return null;
+  return NIGHT_STAR_KINDS.map((kind) => ({ kind, earned: stars.some((s) => s && s.kind === kind && s.earned === true) }));
+}
+
+/** "2/3 yulduz". */
+export function formatNightStarsTotalUz(stars: readonly NightStar[]): string {
+  return `${countNightStars(stars)}/${stars.length} yulduz`;
+}
+
+/** Yulduzlar qatori: uchta katta yulduz (★ oltin — olingan, ☆ xira — olinmagan) va ostida sarlavhasi; jami. */
+export function buildNightStarsHtml(summary: NightRoundSummary): string {
+  const stars = normalizeNightStars(summary.stars);
+  if (!stars) return '';
+  const total = formatNightStarsTotalUz(stars);
+  const items = stars
+    .map((s) => {
+      const kind: NightStarKind = s.kind;
+      return `
+            <div class="s07-star is-${kind}${s.earned ? ' is-earned' : ''}" title="${escHtml(NIGHT_STAR_TITLES_UZ[kind])}">
+              <span class="s07-star-glyph" aria-hidden="true">${s.earned ? '★' : '☆'}</span>
+              <span class="s07-star-label">${escHtml(NIGHT_STAR_TITLES_UZ[kind])}</span>
+            </div>`;
+    })
+    .join('');
+  return `
+          <div class="s07-stars" role="group" aria-label="${escHtml(total)}">
+            <div class="s07-stars-row">${items}
+            </div>
+            <div class="s07-stars-total">${escHtml(total)}</div>
+          </div>`;
+}
+
+/** Butun pergament: yulduzlar → qiyinlik → mukofotlar → statistika jadvali (uzun bo'lsa ichida aylantiriladi). */
 export function buildNightSummaryBoardHtml(summary: NightRoundSummary, myId: string): string {
   const diff = sanitizeNightDifficulty(summary.difficulty);
   return `
           <div class="s07-win-board s07-night-board">
+            ${buildNightStarsHtml(summary)}
             <div class="s07-night-diff is-${diff}">🌙 Qiyinlik: <b>${escHtml(NIGHT_DIFFICULTIES[diff].nameUz)}</b></div>
             ${buildNightAwardsHtml(summary, myId)}
             <div class="s07-night-scroll">

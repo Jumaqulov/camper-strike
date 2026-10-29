@@ -4,6 +4,7 @@ import {
   CAMPFIRE_LOW_FUEL_SEC,
   NIGHT_CAMPFIRE_COUNT,
   WOOD_PILE_BEACON_RANGE_M,
+  campFireNameUz,
   type CampfireSnap,
   type WoodPileSnap,
 } from '../../../shared/wolf/camp';
@@ -32,6 +33,8 @@ export function flameScaleForFuel(fuelSec: number, maxFuelSec: number): number {
 
 export interface CampFireView {
   id: string;
+  /** Nomi ("Asosiy lager", "2-lager"); server bermasa asosiy/id bo'yicha. */
+  name: string;
   x: number;
   y: number;
   z: number;
@@ -521,6 +524,8 @@ export class CampRenderer {
       const fuel = this.fuelAt(f, nowSec);
       out.push({
         id: f.snap.id,
+        // Eski server nom bermasa: asosiy — 0-indeks, "fire:N" — (N-1)-indeks
+        name: f.snap.name ?? campFireNameUz(f.snap.main ? 0 : Math.max(1, (Number.parseInt(f.snap.id.split(':')[1] ?? '', 10) || 2) - 1)),
         x: f.snap.x,
         y: f.snap.y,
         z: f.snap.z,

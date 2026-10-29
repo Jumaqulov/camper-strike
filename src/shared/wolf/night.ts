@@ -128,6 +128,33 @@ export interface NightAward {
   titleUz: string;
 }
 
+/** Jamoa yulduzlari (raund oxirida 3 tagacha): hamma tirik, asosiy gulxan o'chmadi, to'da boshlig'i o'ldirildi. */
+export type NightStarKind = 'all_alive' | 'fire_kept' | 'alpha_slain';
+export const NIGHT_STAR_KINDS: readonly NightStarKind[] = ['all_alive', 'fire_kept', 'alpha_slain'];
+
+export interface NightStar {
+  kind: NightStarKind;
+  earned: boolean;
+}
+
+export const NIGHT_STAR_TITLES_UZ: Readonly<Record<NightStarKind, string>> = {
+  all_alive: 'Hamma tirik qoldi',
+  fire_kept: "Asosiy gulxan bir marta ham o'chmadi",
+  alpha_slain: "To'da boshlig'i o'ldirildi",
+};
+
+/** Raund darajasidagi faktlar — yulduzlar uchun (server yig'adi, computeNightSummary ga beriladi). */
+export interface NightRoundFacts {
+  /** Asosiy gulxan raund davomida nechta marta o'chdi. */
+  mainFireOuts: number;
+  /** Raund boshida ishtirokchi bo'lganlar (odam + bot). */
+  startedContenderIds: readonly string[];
+  /** Raund o'rtasida chiqib ketganlar — "hamma tirik" yulduzida hisobga olinmaydi. */
+  leftIds?: readonly string[];
+  /** Raund haqiqatan davom etgan vaqt (s); 0 bo'lsa yulduz berilmaydi. Berilmasa — davom etgan deb olinadi. */
+  elapsedSec?: number;
+}
+
 /** Tun oxirida yuboriladigan natija (SurvivalStateSnap.nightSummary, faqat 'ended' fazasida). */
 export interface NightRoundSummary {
   difficulty: NightDifficulty;
@@ -136,6 +163,8 @@ export interface NightRoundSummary {
   /** Ball bo'yicha kamayish tartibida. */
   stats: NightPlayerStats[];
   awards: NightAward[];
+  /** Jamoa yulduzlari — doim 3 ta, NIGHT_STAR_KINDS tartibida (eski server yubormasa bo'lmaydi). */
+  stars?: NightStar[];
 }
 
 export const NIGHT_AWARD_TITLES_UZ: Readonly<Record<NightAwardKind, string>> = {
@@ -163,7 +192,12 @@ export function nightPlayerScore(s: NightPlayerStats): number {
  * Statistikani ball bo'yicha saralaydi va mukofotlarni tanlaydi. Mukofot qiymati 0 bo'lsa berilmaydi;
  * teng qiymatda ball, keyin `stats` dagi tartib (barqaror) hal qiladi. Sof funksiya — server va testlar uchun.
  */
-export function computeNightSummary(stats: readonly NightPlayerStats[], difficulty: NightDifficulty, dawn: boolean): NightRoundSummary {
+export function computeNightSummary(
+  stats: readonly NightPlayerStats[],
+  difficulty: NightDifficulty,
+  dawn: boolean,
+  facts: NightRoundFacts | null = null,
+): NightRoundSummary {
   const sorted = stats
     .map((s, i) => ({ s, i, score: nightPlayerScore(s) }))
     .sort((a, b) => b.score - a.score || a.i - b.i);
@@ -182,7 +216,46 @@ export function computeNightSummary(stats: readonly NightPlayerStats[], difficul
     pick('firekeeper', (s) => s.relights),
     pick('medic', (s) => s.revives ?? 0),
   ].filter((a): a is NightAward => a !== null);
-  return { difficulty, dawn, stats: sorted.map((e) => e.s), awards };
+  return { difficulty, dawn, stats: sorted.map((e) => e.s), awards, stars: computeNightStars(stats, dawn, facts) };
+}
+
+/**
+ * Jamoa yulduzlari (doim 3 ta, NIGHT_STAR_KINDS tartibida):
+ * - all_alive — tong otdi va raundni boshlagan har bir ishtirokchi (chiqib ketganlar hisobga olinmaydi) tongda
+ *   tirik (`survived`; yiqilgan ham tirik — tongda tik turadi; qaytib tirilgan ham tirik);
+ * - fire_kept — asosiy gulxan raund davomida bir marta ham o'chmagan (bo'rilar yutganda ham berilishi mumkin);
+ * - alpha_slain — kamida bitta to'da boshlig'i o'ldirilgan (alphaKills yig'indisi ≥ 1).
+ * Faktlar bo'lmasa yoki raund o'tmagan bo'lsa (elapsedSec ≤ 0) — hech qaysi yulduz berilmaydi. Sof funksiya.
+ */
+export function computeNightStars(
+  stats: readonly NightPlayerStats[],
+  dawn: boolean,
+  facts: NightRoundFacts | null = null,
+): NightStar[] {
+  const ran = !!facts && (facts.elapsedSec === undefined || facts.elapsedSec > 0);
+  const byId = new Map(stats.map((s) => [s.id, s] as const));
+  const left = new Set(facts?.leftIds ?? []);
+  const stayed = ran ? (facts!.startedContenderIds ?? []).filter((id) => !left.has(id)) : [];
+  const allAlive = ran && dawn && stayed.length > 0 && stayed.every((id) => byId.get(id)?.survived === true);
+  const fireKept = ran && facts!.mainFireOuts === 0;
+  const alphaSlain = ran && stats.reduce((n, s) => n + (s.alphaKills ?? 0), 0) >= 1;
+  return [
+    { kind: 'all_alive', earned: allAlive },
+    { kind: 'fire_kept', earned: fireKept },
+    { kind: 'alpha_slain', earned: alphaSlain },
+  ];
+}
+
+/** Olingan yulduzlar soni. */
+export function countNightStars(stars: readonly NightStar[] | null | undefined): number {
+  return stars ? stars.filter((s) => s.earned).length : 0;
+}
+
+/** Tizim chati uchun: "⭐ Tun yakuni: 2/3 yulduz (Hamma tirik qoldi, To'da boshlig'i o'ldirildi)". */
+export function formatNightStarsChatUz(stars: readonly NightStar[]): string {
+  const earned = stars.filter((s) => s.earned).map((s) => NIGHT_STAR_TITLES_UZ[s.kind]);
+  const head = `⭐ Tun yakuni: ${earned.length}/${stars.length} yulduz`;
+  return earned.length ? `${head} (${earned.join(', ')})` : head;
 }
 
 // ---------- Yiqilish va turg'izish ----------

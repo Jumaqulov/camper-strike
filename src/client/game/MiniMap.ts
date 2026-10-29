@@ -28,6 +28,10 @@ export interface MiniMapMarker {
   alive: boolean;
   /** wolf_night: yiqilgan ittifoqchi — qizil pulsatsiyali belgi (turg'izish kerak). */
   downed?: boolean;
+  /** 'howl' — bo'ri uvlagan joy (wolf_night): qizil halqa, `fade` (1 → 0) bo'yicha so'nadi; berilmasa — ittifoqchi. */
+  kind?: 'ally' | 'howl';
+  /** 'howl' uchun qolgan ulush 1..0. */
+  fade?: number;
 }
 
 /** "Tong otguncha" lageri: gulxanlar (to'q sariq, o'chgani kulrang) va o'tin g'aramlari (jigarrang). */
@@ -393,6 +397,23 @@ export class MiniMap {
           sx = half + (ddx / dist) * lim;
           sz = half + (ddz / dist) * lim;
         }
+      }
+      if (a.kind === 'howl') {
+        // Bo'ri uvlashi: kengayib so'nayotgan qizil halqa va markazda nuqta (fade 1 → 0)
+        const k = Math.max(0, Math.min(1, a.fade ?? 1));
+        const r = (whole ? 5 : 4.5) + (1 - k) * 9;
+        ctx.globalAlpha = 0.25 + 0.75 * k;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ff5a3c';
+        ctx.beginPath();
+        ctx.arc(sx, sz, r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = '#ff5a3c';
+        ctx.beginPath();
+        ctx.arc(sx, sz, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        continue;
       }
       if (a.downed) {
         // Yiqilgan ittifoqchi: qizil pulsatsiyali doira + oq xoch (turg'izish kerak)

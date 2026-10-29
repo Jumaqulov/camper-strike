@@ -12,7 +12,37 @@ import {
 import type { NightSnap } from '../../../shared/wolf/night';
 import { CAMPFIRE_LOW_FUEL_SEC } from '../../../shared/wolf/camp';
 import { buildNightSummaryBoardHtml, escHtml as esc, nightSummaryKey } from './nightResults';
+import { formatFireIndicatorsUz, type FireIndicatorInput, type FireIndicatorView } from './campHud';
 import type { SpectatorCameraPose } from './SpectatorController';
+
+/** Gulxanlar qatori DOM'i eng ko'pi bilan shuncha ms da bir yangilanadi (strelkalar har kadr aylanmasin). */
+const FIRE_ROW_UPDATE_MS = 100;
+
+/** Lager holati (Game har kadr beradi): asosiy gulxan o'tini, eng yaqin g'aram, qo'ldagi mash'al, faol raketa, uchala gulxan. */
+export interface CampHudStatus {
+  fuelSec: number;
+  lit: boolean;
+  pileM?: number | null;
+  torchSec?: number;
+  flareSec?: number;
+  /** Uchala gulxan (yo'nalish/masofa o'yinchiga nisbatan) — gulxanlar qatori uchun. */
+  fires?: readonly FireIndicatorInput[];
+}
+
+const FIRE_ARROW_SVG = (id: string, deg: number) =>
+  `<svg class="s07-fire-arrow" viewBox="0 0 16 16" aria-hidden="true"><g data-fire="${esc(id)}" transform="rotate(${deg} 8 8)"><path d="M8 1.2 12.6 13.2 8 10.5 3.4 13.2Z"/></g></svg>`;
+const FIRE_FLAME_SVG =
+  '<svg class="s07-fire-flame" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1c.9 2.6 4.2 4.1 4.2 7.6A4.2 4.2 0 0 1 3.8 8.6c0-1.4.5-2.5 1.3-3.5.2 1 .8 1.9 1.7 2.3C6.5 4.9 7.4 2.9 8 1z"/><path class="s07-fire-flame-core" d="M8 7.2c.5 1.2 1.6 1.8 1.6 3.1a1.6 1.6 0 1 1-3.2 0c0-.6.2-1.1.6-1.5.1.4.3.7.6.9C7.5 8.9 7.8 8 8 7.2z"/></svg>';
+
+/** Bitta gulxan indikatori HTML'i (sof; testlar uchun eksport). */
+export function fireIndicatorHtml(v: FireIndicatorView): string {
+  return `<div class="s07-fire is-${v.state}${v.main ? ' is-main' : ''}" data-fire="${esc(v.id)}" title="${esc(v.name)}">${FIRE_ARROW_SVG(
+    v.id,
+    v.arrowDeg,
+  )}<span class="s07-fire-icon">${FIRE_FLAME_SVG}<span class="s07-fire-x" aria-hidden="true">✕</span></span><span class="s07-fire-tag">${
+    v.main ? '<i class="s07-fire-crown" title="Asosiy lager">★</i>' : ''
+  }${esc(v.tag)}</span><span class="s07-fire-fuel">${esc(v.fuelText)}</span><span class="s07-fire-dist">${esc(v.distText)}</span></div>`;
+}
 
 /** "Tong otguncha" yuqori pill matni: 🌙 Tonggacha mm:ss · 2/4-to'lqin · 🐺 2 */
 function formatNightPillUz(n: NightSnap): string {
@@ -126,8 +156,15 @@ export class SurvivalUI {
   private myRole: SurvivalPlayerRole | null = null;
   private spectatorPose: SpectatorCameraPose | null = null;
   private killerHtml = '';
-  /** Asosiy gulxan holati (Game har kadr ekstrapolyatsiya qilib beradi); null — lager yo'q. `torchSec` — qo'ldagi mash'al, `flareSec` — faol raketa. */
-  private camp: { fuelSec: number; lit: boolean; pileM?: number | null; torchSec?: number; flareSec?: number } | null = null;
+  /** Lager holati (Game har kadr ekstrapolyatsiya qilib beradi); null — lager yo'q. */
+  private camp: CampHudStatus | null = null;
+  /** Uchala gulxan indikatorlari qatori (yuqori pill ostida). */
+  private fireRowEl: HTMLElement | null = null;
+  private lastFireRowKey = '';
+  private lastFireRowAt = 0;
+  /** Strelka <g> elementlari (gulxan id → element) — faqat burilish o'zgarganda setAttribute. */
+  private fireArrowEls = new Map<string, Element>();
+  private lastFireArrowDeg = new Map<string, number>();
 
   private spectatorBannerVisible = false;
   private winnerOverlayVisible = false;
@@ -161,6 +198,10 @@ export class SurvivalUI {
     const topPill = document.createElement('div');
     topPill.id = 'stage07-top-pill';
 
+    const fireRow = document.createElement('div');
+    fireRow.id = 'stage07-fire-row';
+    fireRow.className = 'hidden';
+
     const preRoundBanner = document.createElement('div');
     preRoundBanner.id = 'stage07-preround-banner';
     preRoundBanner.className = 'hidden';
@@ -185,6 +226,7 @@ export class SurvivalUI {
     winnerOverlay.className = 'hidden';
 
     root.appendChild(topPill);
+    root.appendChild(fireRow);
     root.appendChild(preRoundBanner);
     root.appendChild(spectatorPanel);
     root.appendChild(winnerOverlay);
@@ -192,6 +234,7 @@ export class SurvivalUI {
 
     this.rootEl = root;
     this.topPillEl = topPill;
+    this.fireRowEl = fireRow;
     this.preRoundBannerEl = preRoundBanner;
     this.spectatorPanelEl = spectatorPanel;
     this.specRoleEl = spectatorPanel.querySelector('#stage07-spec-role');
@@ -240,9 +283,56 @@ export class SurvivalUI {
     this.render();
   }
 
-  /** Asosiy lager gulxani holati (tun rejimi) — pill'da "🔥 Lager m:ss" sifatida chiqadi; `torchSec` — "🔥 Mash'al N s". */
-  setCampStatus(camp: { fuelSec: number; lit: boolean; pileM?: number | null; torchSec?: number; flareSec?: number } | null): void {
+  /**
+   * Lager holati (tun rejimi): asosiy gulxan pill'da "🔥 Lager m:ss", `torchSec` — "🔥 Mash'al N s", `flareSec` —
+   * raketa; `fires` — uchala gulxan indikatorlari qatori (pill ostida).
+   */
+  setCampStatus(camp: CampHudStatus | null): void {
     this.camp = camp;
+  }
+
+  /**
+   * Gulxanlar qatori: tuzilma (nom/holat/o'tin/masofa) o'zgarganda innerHTML, strelkalar esa faqat burilish
+   * o'zgarganda setAttribute; hammasi eng ko'pi FIRE_ROW_UPDATE_MS da bir. Bo'sh ro'yxat — yashirinadi.
+   */
+  private renderFireRow(fires: readonly FireIndicatorInput[]): void {
+    const el = this.fireRowEl;
+    if (!el) return;
+    if (!fires.length) {
+      if (this.lastFireRowKey !== '') {
+        this.lastFireRowKey = '';
+        this.lastFireRowAt = 0;
+        this.fireArrowEls.clear();
+        this.lastFireArrowDeg.clear();
+        el.className = 'hidden';
+        el.innerHTML = '';
+      }
+      return;
+    }
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (this.lastFireRowKey !== '' && now - this.lastFireRowAt < FIRE_ROW_UPDATE_MS) return;
+    this.lastFireRowAt = now;
+    const views = formatFireIndicatorsUz(fires);
+    const key = views.map((v) => `${v.id}|${v.main ? 1 : 0}|${v.state}|${v.tag}|${v.fuelText}|${v.distText}`).join(';');
+    if (key !== this.lastFireRowKey) {
+      this.lastFireRowKey = key;
+      el.innerHTML = views.map(fireIndicatorHtml).join('');
+      el.className = '';
+      this.fireArrowEls.clear();
+      this.lastFireArrowDeg.clear();
+      const gs = typeof el.querySelectorAll === 'function' ? el.querySelectorAll('.s07-fire-arrow g[data-fire]') : null;
+      gs?.forEach((g) => {
+        const id = g.getAttribute('data-fire');
+        if (id) this.fireArrowEls.set(id, g);
+      });
+      for (const v of views) this.lastFireArrowDeg.set(v.id, v.arrowDeg);
+      return;
+    }
+    for (const v of views) {
+      if (this.lastFireArrowDeg.get(v.id) === v.arrowDeg) continue;
+      this.lastFireArrowDeg.set(v.id, v.arrowDeg);
+      this.fireArrowEls.get(v.id)?.setAttribute('transform', `rotate(${v.arrowDeg} 8 8)`);
+    }
   }
 
   update(
@@ -312,6 +402,7 @@ export class SurvivalUI {
         this.rootEl.className = 'hidden';
         this.lastRootHidden = true;
       }
+      this.renderFireRow([]);
       return;
     }
 
@@ -376,6 +467,8 @@ export class SurvivalUI {
         }
       `;
     }
+    // 1b. Uchala gulxan indikatorlari (faqat tunda, raund davomida)
+    this.renderFireRow(night && snap.phase === 'playing' && this.camp?.fires ? this.camp.fires : []);
 
     // 2. Pre-Round Banner
     if (snap.phase === 'waiting' || snap.phase === 'countdown') {
@@ -777,6 +870,7 @@ export class SurvivalUI {
 
     if (this.rootEl) this.rootEl.className = 'hidden';
     if (this.topPillEl) this.topPillEl.innerHTML = '';
+    this.renderFireRow([]);
     if (this.preRoundBannerEl) {
       this.preRoundBannerEl.className = 'hidden';
       this.preRoundBannerEl.innerHTML = '';
@@ -801,6 +895,7 @@ export class SurvivalUI {
       this.rootEl = null;
     }
     this.topPillEl = null;
+    this.fireRowEl = null;
     this.preRoundBannerEl = null;
     this.spectatorPanelEl = null;
     this.specRoleEl = null;

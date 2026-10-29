@@ -86,10 +86,13 @@ import { Input } from './Input';
 import { LocalPlayer } from './LocalPlayer';
 import { InventoryUI, LootUI, LootWorldRenderer } from './loot';
 import {
+  type FireIndicatorInput,
   type SpectatableTarget,
   type SpectatorCameraPose,
   SpectatorController,
   SurvivalUI,
+  bearingToward,
+  pickCampWarningFire,
 } from './survival';
 import { colorFor, Stickman } from './Stickman';
 import { ViewModel } from './ViewModel';
@@ -121,6 +124,8 @@ type WorldHandlesWithGroundCover = WorldHandles & {
 
 const INTERP_DELAY = 0.1;
 const SEND_INTERVAL = 1 / 30;
+/** Tong otguncha: uvlash belgisi mini-xaritada shuncha soniya so'nib boradi (HUD indikatori bilan bir xil). */
+const HOWL_MARK_SEC = 3;
 /** O'tirib yurganda qadam tovushi balandligi ko'paytuvchisi: lokal o'yinchi / masofaviy o'yinchilar. */
 const CROUCH_STEP_VOLUME_LOCAL = 0.35;
 const CROUCH_STEP_VOLUME_REMOTE = 0.3;
@@ -297,6 +302,8 @@ export class Game {
   private survivalUi: SurvivalUI;
   private spectator = new SpectatorController();
   private lastSpectatorPose: SpectatorCameraPose | null = null;
+  /** wolf_night: so'nggi uvlashlar (mini-xarita belgilari, HOWL_MARK_SEC ichida o'chadi). */
+  private howlMarks: { x: number; z: number; at: number }[] = [];
   private lootSnapshot: RoomLootSnapshot | null = null;
   private inventorySnap: PlayerInventorySnap | null = null;
   private lootReqSeq = 0;
@@ -720,7 +727,7 @@ export class Game {
         if (w) this.fx.bloodHit(w.pos.clone().add(new THREE.Vector3(0, 0.7, 0)), e.kill);
       }
     });
-    this.on<WolfHowlEvent>('wolf:howl', (e) => this.audio.wolfHowl({ x: e.x, y: e.y + 1, z: e.z }));
+    this.on<WolfHowlEvent>('wolf:howl', (e) => this.onWolfHowl(e));
     this.on<WolfBiteEvent>('wolf:bite', (e) => {
       this.audio.wolfBite({ x: e.x, y: e.y + 0.9, z: e.z }, e.hit);
       if (!e.hit) return;
@@ -2945,11 +2952,45 @@ export class Game {
     }
   }
 
-  /** HUD: asosiy gulxan holati (pill) va ogohlantirish banneri. */
+  /** Yo'nalish indikatorlari uchun kuzatuvchi: tirik — o'yinchi, kuzatuvchi rejimida — kamera pozasi. */
+  private viewPose(): { x: number; z: number; yaw: number } {
+    const sp = !this.me.alive && this.isSurvival ? this.lastSpectatorPose : null;
+    return sp ? { x: sp.x, z: sp.z, yaw: sp.yaw } : { x: this.me.body.pos.x, z: this.me.body.pos.z, yaw: this.me.yaw };
+  }
+
+  /**
+   * Bo'ri uvladi (server broadcast): ovoz; tunda — ekran chetida uvlash tomoniga qizil 🐺 indikatori (3 s) va
+   * mini-xaritada so'nib boradigan belgi.
+   */
+  private onWolfHowl(e: WolfHowlEvent): void {
+    this.audio.wolfHowl({ x: e.x, y: e.y + 1, z: e.z });
+    if (!this.isNight || this.match?.phase !== 'playing') return;
+    const v = this.viewPose();
+    this.hud.howlIndicator(bearingToward(v, e, v.yaw));
+    this.howlMarks.push({ x: e.x, z: e.z, at: this.nowSec });
+    if (this.howlMarks.length > 8) this.howlMarks.splice(0, this.howlMarks.length - 8);
+  }
+
+  /** Mini-xarita uchun faol uvlash belgilari (HOWL_MARK_SEC ichida so'nadi); eskilar o'chiriladi. */
+  private howlMarkers(t: number): MiniMapMarker[] {
+    if (!this.howlMarks.length) return [];
+    this.howlMarks = this.howlMarks.filter((h) => t - h.at < HOWL_MARK_SEC);
+    return this.howlMarks.map((h) => ({
+      x: h.x,
+      z: h.z,
+      team: 'none' as const,
+      alive: true,
+      kind: 'howl' as const,
+      fade: clamp(1 - (t - h.at) / HOWL_MARK_SEC, 0, 1),
+    }));
+  }
+
+  /** HUD: lager holati (pill + uchala gulxan indikatorlari qatori) va ogohlantirish banneri (eng yomon gulxan). */
   private updateCampHud(t: number): void {
     if (!this.camp) return;
     const playing = this.match?.phase === 'playing';
-    const main = playing && this.camp.hasCamp() ? this.camp.getMainFire(t) : null;
+    const fires = playing && this.camp.hasCamp() ? this.camp.getFires(t) : [];
+    const main = fires.find((f) => f.main) ?? null;
     // Qo'l to'la bo'lmasa — eng yaqin g'aramgacha masofa (o'tin topishga yo'l-yo'riq)
     const pileM =
       main && this.me.alive && this.me.wood < WOOD_CARRY_MAX
@@ -2957,12 +2998,26 @@ export class Game {
         : null;
     const torchSec = this.me.alive && !this.myDowned ? this.myTorchLeft() : 0;
     const flareSec = this.flareFx?.maxLeftSec(t) ?? 0;
-    this.survivalUi.setCampStatus(main ? { fuelSec: main.fuelSec, lit: main.lit, pileM, torchSec, flareSec } : null);
+    const v = this.viewPose();
+    const indicators: FireIndicatorInput[] = fires.map((f) => ({
+      id: f.id,
+      name: f.name,
+      main: f.main,
+      lit: f.lit,
+      fuelSec: f.fuelSec,
+      bearingRad: bearingToward(v, f, v.yaw),
+      distM: Math.hypot(f.x - v.x, f.z - v.z),
+    }));
+    this.survivalUi.setCampStatus(
+      main ? { fuelSec: main.fuelSec, lit: main.lit, pileM, torchSec, flareSec, fires: indicators } : null,
+    );
     if (!main || !this.me.alive) {
       this.hud.setCampWarning('');
       return;
     }
-    this.hud.setCampWarning(!main.lit ? 'out' : main.fuelSec < CAMPFIRE_LOW_FUEL_SEC ? 'low' : '');
+    // O'chgan o'chayotgandan, asosiy boshqalardan ustun — banner shu gulxanni nomlaydi
+    const worst = pickCampWarningFire(fires);
+    this.hud.setCampWarning(worst ? worst.level : '', worst ? { name: worst.fire.name, main: worst.fire.main } : null);
   }
 
   /**
@@ -3238,6 +3293,8 @@ export class Game {
           });
         }
       }
+      // Tunda: so'nggi uvlashlar (so'nib boradigan qizil belgi)
+      if (this.isNight) allies.push(...this.howlMarkers(t));
       const supplySnap = this.match?.survival?.night?.supply;
       const camp = this.camp?.hasCamp()
         ? {
@@ -3390,6 +3447,7 @@ export class Game {
     $('pause-menu').classList.add('hidden');
     this.hud.setWolfWarning('');
     this.hud.setCampWarning('');
+    this.howlMarks = [];
     this.removeWolvesExcept(null);
     this.audio.stopWolfVoices();
     this.audio.stopCampfireSounds();

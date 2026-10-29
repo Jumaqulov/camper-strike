@@ -194,6 +194,20 @@ html, body {
 #damage-indicators { position: absolute; left: 50%; top: 50%; }
 .dmg-ind { position: absolute; left: -60px; top: -170px; width: 120px; height: 40px; transform-origin: 60px 170px; transition: opacity 0.9s; }
 .dmg-ind::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 100%, rgba(255, 30, 30, 0.85), transparent 70%); clip-path: polygon(0 100%, 50% 0, 100% 100%); }
+/* Tong otguncha: bo'ri uvlashi yo'nalishi — markazdan uvlash tomonda qizil 🐺 yorlig'i va SVG strelka (matn
+   aylantirilmaydi — aniq; faqat strelka <g> buriladi), 3 s ichida so'nadi. Joyi Hud.howlIndicator da (left/top, butun px). */
+.howl-ind {
+  position: absolute; width: 96px; height: 44px; display: flex; flex-direction: column; align-items: center; gap: 1px;
+  pointer-events: none; animation: howl-ind-fade 3s ease-in forwards;
+}
+.howl-arrow { width: 16px; height: 16px; display: block; fill: #ff5a3c; filter: drop-shadow(0 0 3px rgba(255, 60, 30, 0.7)); }
+.howl-label {
+  padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+  font: 800 11px/1 Bahnschrift, "Segoe UI", sans-serif; letter-spacing: 0.8px; text-transform: uppercase;
+  color: #fff1ea; background: rgba(150, 18, 18, 0.9); border: 1.5px solid rgba(255, 154, 154, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45); -webkit-font-smoothing: antialiased;
+}
+@keyframes howl-ind-fade { 0%, 55% { opacity: 1; } 100% { opacity: 0; } }
 #damage-flash { position: absolute; inset: 0; box-shadow: inset 0 0 160px rgba(255, 0, 0, 0.7); opacity: 0; transition: opacity 0.5s; }
 #damage-flash.show { opacity: 1; transition: none; }
 
@@ -1070,6 +1084,72 @@ html, body {
   animation: s07-zone-pulse 0.7s ease-in-out infinite;
 }
 
+/* Tong otguncha: uchala gulxan indikatorlari qatori (yuqori pill ostida) — yog'och-pergament uslubi.
+   Har biri: yo'nalish strelkasi (SVG, kompas kabi buriladi) · olov (holat rangi) · nom · o'tin m:ss · masofa.
+   Transform yo'q — matn aniq; faqat SVG <g> rotate atributi o'zgaradi. */
+#stage07-fire-row {
+  /* Markazlash transform'siz (translateX(-50%) yarim pikselga tushib matnni xiralashtirishi mumkin) */
+  position: absolute;
+  top: 52px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 0;
+  white-space: nowrap;
+  pointer-events: none;
+  font-family: 'Bahnschrift', 'Segoe UI', 'Roboto', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+#stage07-fire-row.hidden { display: none; }
+.s07-fire {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 3px 7px;
+  border-radius: 8px;
+  background: rgba(36, 26, 16, 0.82);
+  border: 1.5px solid rgba(217, 155, 82, 0.45);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  color: #fff8e7;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  font-variant-numeric: tabular-nums;
+  --fire-color: #ff9a3c;
+}
+.s07-fire.is-main { border-color: rgba(255, 217, 79, 0.7); }
+.s07-fire.is-low { --fire-color: #ffd23c; }
+.s07-fire.is-low .s07-fire-flame,
+.s07-fire.is-low .s07-fire-fuel { animation: s07-zone-pulse 0.7s ease-in-out infinite; }
+.s07-fire.is-low .s07-fire-fuel { color: #ffd23c; }
+.s07-fire.is-out { --fire-color: #8a8378; border-color: rgba(200, 60, 50, 0.6); background: rgba(70, 18, 14, 0.82); }
+.s07-fire.is-out .s07-fire-fuel { color: #ff8a80; }
+.s07-fire-arrow { width: 14px; height: 14px; flex: none; display: block; fill: #ffe6b8; }
+.s07-fire.is-main .s07-fire-arrow { fill: #ffd94f; }
+.s07-fire-icon { position: relative; width: 16px; height: 16px; flex: none; display: block; }
+.s07-fire-flame { width: 16px; height: 16px; display: block; fill: var(--fire-color); }
+.s07-fire-flame-core { fill: #fff2c2; opacity: 0.85; }
+.s07-fire.is-out .s07-fire-flame-core { opacity: 0; }
+.s07-fire-x {
+  display: none;
+  position: absolute;
+  left: 0; top: 0;
+  width: 16px; height: 16px;
+  font-size: 15px; line-height: 16px; text-align: center;
+  color: #ff5a3c; font-weight: 900;
+}
+.s07-fire.is-out .s07-fire-x { display: block; }
+.s07-fire-tag { color: #ffd9a0; text-transform: uppercase; letter-spacing: 0.8px; font-size: 10.5px; }
+.s07-fire-crown { font-style: normal; color: #ffd94f; margin-right: 2px; }
+.s07-fire-fuel { color: #ffb866; font-weight: 900; min-width: 32px; text-align: right; }
+.s07-fire-dist { color: #c7d2fe; font-size: 11px; font-weight: 700; min-width: 34px; text-align: right; }
+@media (max-width: 640px) {
+  .s07-fire { gap: 4px; padding: 2px 6px 2px 5px; font-size: 11px; }
+  .s07-fire-dist { display: none; }
+}
+
 .s07-pill-count {
   color: #f8fafc;
   font-variant-numeric: tabular-nums;
@@ -1406,6 +1486,63 @@ html, body {
 .s07-night-diff.is-easy b { color: #1f5a2a; }
 .s07-night-diff.is-hard { background: rgba(190, 50, 30, 0.13); border-color: rgba(122, 29, 18, 0.4); }
 .s07-night-diff.is-hard b { color: #7a1d12; }
+
+/* Jamoa yulduzlari: uchta katta yulduz (★ oltin — olingan, nozik shu'la; ☆ xira — olinmagan), ostida sarlavha;
+   transform yo'q, matnda text-shadow yo'q (aniq) — shu'la faqat belgida. */
+.s07-stars {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 2px 0 8px;
+  padding: 6px 8px 7px;
+  border-radius: 6px;
+  border: 1px dashed rgba(120, 80, 30, 0.35);
+  background: rgba(255, 255, 255, 0.18);
+}
+.s07-stars-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+}
+.s07-star {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  color: #8a7a60;
+}
+.s07-star-glyph {
+  font-size: 34px;
+  line-height: 1;
+  color: #b7ab93;
+  -webkit-font-smoothing: antialiased;
+}
+.s07-night-board .s07-star.is-earned .s07-star-glyph {
+  color: #e8a81c;
+  text-shadow: 0 0 10px rgba(255, 190, 40, 0.55), 0 1px 0 #8a5a12;
+}
+.s07-star.is-earned { color: #4a2f06; }
+.s07-star-label {
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.s07-stars-total {
+  padding: 1px 10px;
+  border-radius: 999px;
+  background: #4a2f06;
+  color: #ffd94f;
+  font-size: 11.5px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+}
 
 /* MVP — "Tun qahramoni": bo'yalgan oltin taxtacha */
 .s07-mvp {

@@ -4,11 +4,14 @@ import type { SurvivalStateSnap } from '../../../shared/survival';
 import { computeNightSummary, type NightPlayerStats, type NightRoundSummary } from '../../../shared/wolf/night';
 import {
   buildNightAwardsHtml,
+  buildNightStarsHtml,
   buildNightStatsRowsHtml,
   buildNightSummaryBoardHtml,
   escHtml,
   formatNightAwardValueUz,
+  formatNightStarsTotalUz,
   nightDifficultyNameUz,
+  normalizeNightStars,
 } from '../survival/nightResults';
 import { SurvivalUI } from '../survival/SurvivalUI';
 
@@ -126,6 +129,54 @@ describe('nightResults — mukofotlar va qiyinlik', () => {
     assert.match(buildNightSummaryBoardHtml(sampleSummary(), 'me'), /is-hard">🌙 Qiyinlik: <b>Qiyin<\/b>/);
     assert.equal(nightDifficultyNameUz('easy'), 'Oson');
     assert.equal(nightDifficultyNameUz('???'), "O'rta");
+  });
+});
+
+describe('nightResults — yulduzlar qatori', () => {
+  it('10. Uchta yulduz NIGHT_STAR_KINDS tartibida, olinganlari is-earned va ★, qolgani ☆; jami "2/3 yulduz"; sarlavha ustida', () => {
+    const summary = sampleSummary();
+    summary.stars = [
+      { kind: 'all_alive', earned: true },
+      { kind: 'fire_kept', earned: false },
+      { kind: 'alpha_slain', earned: true },
+    ];
+    const html = buildNightStarsHtml(summary);
+    const stars = html.split('<div class="s07-star ').slice(1);
+    assert.equal(stars.length, 3);
+    assert.match(stars[0]!, /^is-all_alive is-earned"/);
+    assert.match(stars[0]!, /s07-star-glyph" aria-hidden="true">★</);
+    assert.match(stars[0]!, /Hamma tirik qoldi/);
+    assert.match(stars[1]!, /^is-fire_kept"/);
+    assert.match(stars[1]!, /s07-star-glyph" aria-hidden="true">☆</);
+    assert.ok(stars[1]!.includes(escHtml("Asosiy gulxan bir marta ham o'chmadi")));
+    assert.match(stars[2]!, /^is-alpha_slain is-earned"/);
+    assert.ok(stars[2]!.includes(escHtml("To'da boshlig'i o'ldirildi")));
+    assert.ok(html.includes('<div class="s07-stars-total">2/3 yulduz</div>'));
+    assert.equal(formatNightStarsTotalUz(summary.stars), '2/3 yulduz');
+
+    // Butun pergamentda: yulduzlar qiyinlik va mukofotlardan oldin
+    const board = buildNightSummaryBoardHtml(summary, 'me');
+    const starsAt = board.indexOf('s07-stars');
+    assert.ok(starsAt >= 0 && starsAt < board.indexOf('s07-night-diff') && starsAt < board.indexOf('s07-mvp'), board);
+    assert.equal(board.split('class="s07-star ').length - 1, 3);
+  });
+
+  it('11. Yulduzlar tartibi/to‘liqligi tiklanadi; stars bo‘lmasa (eski server) — qator yo‘q', () => {
+    assert.deepEqual(normalizeNightStars([{ kind: 'alpha_slain', earned: true }]), [
+      { kind: 'all_alive', earned: false },
+      { kind: 'fire_kept', earned: false },
+      { kind: 'alpha_slain', earned: true },
+    ]);
+    assert.equal(normalizeNightStars(undefined), null);
+    assert.equal(normalizeNightStars(null), null);
+    const old = sampleSummary();
+    delete old.stars;
+    assert.equal(buildNightStarsHtml(old), '');
+    assert.doesNotMatch(buildNightSummaryBoardHtml(old, 'me'), /s07-stars/);
+    // computeNightSummary faktlarsiz — 3 ta olinmagan yulduz, "0/3 yulduz"
+    const none = buildNightStarsHtml(sampleSummary());
+    assert.equal(none.split('is-earned').length - 1, 0);
+    assert.ok(none.includes('0/3 yulduz'));
   });
 });
 

@@ -68,9 +68,19 @@ export const WOOD_PILE_BEACON_RANGE_M = 45;
 /** Asosiy lager gulxani atrofida o'yinchilar paydo bo'ladigan halqa radiusi (m). */
 export const CAMP_SPAWN_RING_M = 3.2;
 
+/** Gulxan nomlari (tartib: asosiy, keyin raqamli lagerlar); HUD indikatorlari va ogohlantirishlarda ishlatiladi. */
+export const CAMP_FIRE_NAMES_UZ: readonly string[] = ['Asosiy lager', '2-lager', '3-lager', '4-lager', '5-lager'];
+
+/** Gulxan nomi (0-indeks — asosiy). */
+export function campFireNameUz(index: number): string {
+  return CAMP_FIRE_NAMES_UZ[index] ?? `${index + 1}-lager`;
+}
+
 /** Gulxan holati (snapshot). */
 export interface CampfireSnap {
   id: string;
+  /** Nomi ("Asosiy lager", "2-lager", ...). Eski server yubormasa klient asosiy/id bo'yicha tuzadi. */
+  name?: string;
   x: number;
   y: number;
   z: number;

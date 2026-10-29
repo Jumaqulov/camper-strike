@@ -18,6 +18,7 @@ import {
 import { getForestSquarePoiSites, type ForestSquarePoiId } from '../shared/structures/contracts';
 import {
   CAMPFIRE_LOW_FUEL_SEC,
+  CAMP_FIRE_NAMES_UZ,
   CAMPFIRE_MAX_FUEL_SEC,
   CAMPFIRE_START_FUEL_SEC,
   CAMPFIRE_WOOD_FUEL_SEC,
@@ -42,6 +43,7 @@ import {
   WOLF_COAT_WHITE,
   WOLF_DAWN_FLEE_SEC,
   computeNightSummary,
+  formatNightStarsChatUz,
   nightWolvesForWave,
   sanitizeNightDifficulty,
   wolfCoatTraits,
@@ -298,7 +300,6 @@ const CAMP_FIRE_POI_ORDER: readonly ForestSquarePoiId[] = [
   'poi_ranger_house',
   'poi_service_station',
 ];
-const CAMP_FIRE_NAMES_UZ = ['Asosiy lager', '2-lager', '3-lager', '4-lager', '5-lager'];
 /** Gulxanlar orasidagi eng kam masofa, g'aram–gulxan oralig'i va g'aramlar orasidagi eng kam masofa (m). */
 const CAMP_FIRE_MIN_GAP_M = 60;
 const CAMP_PILE_MIN_DIST_M = WOOD_PILE_MIN_DIST_M;
@@ -412,6 +413,8 @@ export class Room {
   private nightStats = new Map<string, NightPlayerStats>();
   /** wolf_night: oxirgi tun natijasi (faqat 'ended' fazasida snapshotga chiqadi). */
   private nightSummary: NightRoundSummary | null = null;
+  /** wolf_night: asosiy gulxan shu raundda nechta marta o'chdi ("gulxan o'chmadi" yulduzi uchun). */
+  private mainFireOuts = 0;
   /** wolf_night: lager gulxanlari va o'tin g'aramlari (joylar xona uchun deterministik; boshqa rejimlarda bo'sh). */
   readonly campfires = new Map<string, ServerCampfire>();
   readonly woodPiles = new Map<string, ServerWoodPile>();
@@ -1027,6 +1030,7 @@ export class Room {
       if (f.fuelSec <= 0) {
         f.lit = false;
         f.lowWarned = false;
+        if (f.main) this.mainFireOuts++;
         this.campRoamCache.clear();
         this.emitCampfireEvent(f, 'out');
         this.systemChat(`🌑 ${f.name} gulxani o'chdi! Bo'rilar qorong'ida yaqinlashadi — tezroq o'tin tashlang.`);
@@ -1615,6 +1619,7 @@ export class Room {
     for (const f of this.campfires.values()) {
       out.push({
         id: f.id,
+        name: f.name,
         x: f.x,
         y: f.y,
         z: f.z,
@@ -3415,6 +3420,7 @@ export class Room {
     }
     const mvp = this.nightSummary?.awards.find((a) => a.kind === 'mvp');
     if (this.isNight && mvp) this.systemChat(`🏆 ${mvp.titleUz}: ${mvp.playerName} (${mvp.value} ball)`);
+    if (this.isNight && this.nightSummary?.stars) this.systemChat(formatNightStarsChatUz(this.nightSummary.stars));
   }
 
   /** Tong otdi: barcha tirik bo'rilar 'flee' holatiga o'tadi (tishlamaydi, nishon olmaydi, olovdan qo'rqmaydi). */
@@ -3431,6 +3437,7 @@ export class Room {
   private resetNightStats(contenderIds: readonly string[]): void {
     this.nightStats.clear();
     this.nightSummary = null;
+    this.mainFireOuts = 0;
     for (const id of contenderIds) {
       const p = this.players.get(id);
       if (!p) continue;
@@ -3457,18 +3464,31 @@ export class Room {
   private finishNightStats(dawn: boolean): void {
     const survivors = new Set(dawn && this.survival ? this.survival.getWinnerIds() : []);
     const list: NightPlayerStats[] = [];
+    const leftIds: string[] = [];
     for (const st of this.nightStats.values()) {
       const p = this.players.get(st.id);
       if (p) st.name = p.name;
+      else leftIds.push(st.id);
       st.survived = survivors.has(st.id) && !!p?.alive;
       list.push({ ...st });
     }
-    this.nightSummary = computeNightSummary(list, this.nightDifficulty, dawn);
+    // Yulduzlar: raund boshidagi ishtirokchilar (nightStats kalitlari), chiqib ketganlar, asosiy gulxan o'chishlari
+    this.nightSummary = computeNightSummary(list, this.nightDifficulty, dawn, {
+      mainFireOuts: this.mainFireOuts,
+      startedContenderIds: [...this.nightStats.keys()],
+      leftIds,
+      elapsedSec: Math.max(0, this.now() - this.roundStartedAt),
+    });
   }
 
   /** Testlar uchun: joriy raund statistikasi (nusxa). */
   getNightStatsForTest(): NightPlayerStats[] {
     return [...this.nightStats.values()].map((s) => ({ ...s }));
+  }
+
+  /** Testlar uchun: asosiy gulxan shu raundda nechta marta o'chdi. */
+  getMainFireOutsForTest(): number {
+    return this.mainFireOuts;
   }
 
   private handleSurvivalPreRoundReset(
@@ -3486,6 +3506,7 @@ export class Room {
     this.nightAlphaDue = false;
     this.nightStats.clear();
     this.nightSummary = null;
+    this.mainFireOuts = 0;
     // Tong otguncha: sanoq paytida ham gulxan/g'aramlar snapshotga chiqadi — o'tgan tunning o'chgan gulxanlari
     // va bo'sh g'aramlari ko'rinib qolmasin (raund boshida yana bir bor tiklanadi)
     if (this.isNight) this.resetCampForRound();
