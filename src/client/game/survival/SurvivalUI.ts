@@ -68,11 +68,14 @@ export function formatCampPillUz(
   return { text: `🔥 Lager ${mm}:${ss}${pile}`, cls: fuelSec < CAMPFIRE_LOW_FUEL_SEC ? 'low' : '' };
 }
 
-/** Qo'ldagi mash'al pilli: "🔥 Mash'al 32 s" (oxirgi 8 s — 'low'); mash'al yo'q — null. Sof funksiya (testlar uchun). */
+/**
+ * Qo'ldagi mash'al pilli: "🔥 Mash'al 32 s · [F] tashlash" (oxirgi 8 s — 'low'); mash'al yo'q — null. F mash'alni
+ * istalgan joyda tashlaydi — mash'al qo'lda ekan, ishora doim ko'rinib turadi. Sof funksiya (testlar uchun).
+ */
 export function formatTorchPillUz(torchSec: number): { text: string; cls: '' | 'low' } | null {
   if (!Number.isFinite(torchSec) || torchSec <= 0) return null;
   const s = Math.max(1, Math.ceil(torchSec));
-  return { text: `🔥 Mash'al ${s} s`, cls: s <= 8 ? 'low' : '' };
+  return { text: `🔥 Mash'al ${s} s · [F] tashlash`, cls: s <= 8 ? 'low' : '' };
 }
 
 /** Faol signal raketasi pilli (hammaga): "🎇 Raketa 14 s" (oxirgi 5 s — 'low'); raketa yo'q — null. */

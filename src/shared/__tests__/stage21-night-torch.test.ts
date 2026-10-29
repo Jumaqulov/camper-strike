@@ -495,4 +495,34 @@ describe("Bosqich 21 — Tong otguncha: o'tinning og'irligi va mash'al", () => {
       room.destroy();
     }
   });
+
+  it("8. Mash'al ikkala yo'l bilan olinadi: qo'l bo'sh ([E]) va o'tin ko'tarib ([F]) — o'tin qo'lda qoladi, gulxanga tashlanmaydi", () => {
+    const { io } = createFakeIo();
+    const room = makeNightRoom(io);
+    try {
+      const { p } = startSoloNight(room);
+      const fire = mainFire(room);
+      standAtFire(room, p, fire);
+      // Qo'l bo'sh: klient [E] (yoki [F]) bilan shu so'rovni yuboradi
+      p.wood = 0;
+      const bare = takeTorch(room, 'p1', fire.id);
+      assert.equal(bare.ok, true, `qo'l bo'sh — mash'al olindi (${bare.error ?? ''})`);
+      assert.equal(bare.wood, 0);
+      p.lastCampAction = -99;
+      room.onDropTorch('p1', {}, () => {});
+      assert.equal(room.hasTorch(p), false);
+      // O'tin ko'tarib: [E] o'tin tashlaydi, mash'alni [F] oladi — server o'tin borligini to'siq qilmaydi
+      p.wood = 2;
+      p.lastCampAction = -99;
+      const fuel0 = fire.fuelSec;
+      const loaded = takeTorch(room, 'p1', fire.id);
+      assert.equal(loaded.ok, true, `o'tin bilan — mash'al olindi (${loaded.error ?? ''})`);
+      assert.equal(loaded.torchSec, TORCH_BURN_SEC);
+      assert.equal(loaded.wood, 2, "ack'da o'tin soni o'zgarmagan");
+      assert.equal(p.wood, 2, "o'tin qo'lda qoldi");
+      assert.ok(Math.abs(fire.fuelSec - (fuel0 - TORCH_FUEL_COST_SEC)) < 0.01, "gulxanga o'tin qo'shilmadi, faqat mash'al narxi ketdi");
+    } finally {
+      room.destroy();
+    }
+  });
 });

@@ -57,6 +57,7 @@ import {
 } from './night';
 import { DawnTracker, dawnBlendFactor, dawnExposure } from './night/dawnLighting';
 import { WolfDepartures, isDawnEnding } from './night/dawnEpilogue';
+import { firePromptHtml, firePromptText, firePromptUz, torchKeyAction } from './night/torchPrompt';
 import {
   DEFAULT_CONTAINER_EXTRA_MARGIN_M,
   GROUND_ITEM_PICKUP_RADIUS_M,
@@ -2038,7 +2039,8 @@ export class Game {
       else this.lootUi.triggerPrimaryInteract();
     }
 
-    // wolf_night: [F] mash'al — yonib turgan gulxandan olish yoki qo'ldagini tashlash (E dan alohida tugma)
+    // wolf_night: [F] mash'al — yonib turgan gulxandan olish yoki qo'ldagini istalgan joyda tashlash (qo'shimcha
+    // tugma: qo'l bo'sh bo'lsa mash'alni E ham oladi; o'tin bo'lsa E o'tin tashlaydi, mash'alni F oladi)
     if (inp.justPressed('KeyF') && !notPlaying && this.isNight) {
       this.triggerTorchAction();
     }
@@ -2548,10 +2550,9 @@ export class Game {
   }
 
   /**
-   * [F] nishoni (har kadr, updateCampInteraction dan keyin): mash'al bo'lsa — tashlash; yo'q bo'lsa va yaqinda
-   * (CAMP_INTERACT_RANGE_M) yonib turgan gulxan bo'lsa — olish. Prompt matniga "[F] ..." qo'shiladi: gulxan
-   * promptida o'tin bo'lsa "[E] Gulxanga o'tin tashlash · [F] Mash'al olish", o'tin bo'lmasa "[E] Mash'al olish"
-   * (E ham mash'al oladi — triggerCampAction).
+   * [F] nishoni (har kadr, updateCampInteraction dan keyin): mash'al bo'lsa — istalgan joyda tashlash; yo'q bo'lsa
+   * va yaqinda (CAMP_INTERACT_RANGE_M) yonib turgan gulxan bo'lsa — olish (torchKeyAction). Asosiy olish tugmasi —
+   * [E] (qo'l bo'sh bo'lsa, firePromptUz); F — qo'shimcha. Mash'al qo'lda ekan, yuqori pill'da "[F] tashlash" turadi.
    */
   private updateTorchInteraction(): void {
     if (!this.isNight || !this.camp) {
@@ -2563,17 +2564,11 @@ export class Game {
       this.torchTarget = null;
       return;
     }
-    if (this.myTorchSec > 0) {
-      this.torchTarget = { kind: 'drop' };
-      return;
-    }
-    const fireTarget = this.campTarget?.kind === 'fire' ? this.campTarget.id : null;
-    if (!fireTarget) {
-      this.torchTarget = null;
-      return;
-    }
-    const fire = this.camp.getFires(this.nowSec).find((f) => f.id === fireTarget);
-    this.torchTarget = fire && fire.lit ? { kind: 'take', fireId: fire.id } : null;
+    const torchHeld = this.myTorchSec > 0;
+    const fireTarget = !torchHeld && this.campTarget?.kind === 'fire' ? this.campTarget.id : null;
+    const fire = fireTarget ? this.camp.getFires(this.nowSec).find((f) => f.id === fireTarget) : undefined;
+    const act = torchKeyAction(torchHeld, !!fire?.lit);
+    this.torchTarget = act === 'drop' ? { kind: 'drop' } : act === 'take' && fire ? { kind: 'take', fireId: fire.id } : null;
   }
 
   /** [F]: mash'al olish (yonib turgan gulxan nishonda) yoki tashlash (qo'lda bo'lsa). */
@@ -2758,42 +2753,20 @@ export class Game {
     }
     if (bestKind === 'fire' && bestFire) {
       this.campTarget = { kind: 'fire', id: bestFire.id };
-      const status = this.campStatusHtml(bestFire);
-      // Mash'al: yonib turgan gulxandan, qo'lda mash'al bo'lmasa. O'tin bo'lsa E — o'tin tashlash, F — mash'al;
-      // o'tin bo'lmasa E ham mash'al oladi. Qo'lda mash'al bo'lsa F — tashlash.
-      const torchHeld = this.myTorchSec > 0;
-      const torchOffer = bestFire.lit && !torchHeld;
-      const torchHtml = torchOffer
-        ? ` <span class="prompt-sep">·</span> <span class="key-pill">F</span><span>Mash'al olish</span>`
-        : torchHeld
-          ? ` <span class="prompt-sep">·</span> <span class="key-pill">F</span><span>Mash'alni tashlash</span>`
-          : '';
-      const torchText = torchOffer ? ` · [F] Mash'al olish` : torchHeld ? ` · [F] Mash'alni tashlash` : '';
-      if (wood > 0) {
-        this.lootUi.setCustomPrompt({
-          html: `<span class="key-pill">E</span><span>Gulxanga o'tin tashlash (${wood} ta)</span>${torchHtml}${status}`,
-          text: `[E] Gulxanga o'tin tashlash (${wood} ta)${torchText}`,
-          variantClass: 'camp',
-        });
-      } else if (torchOffer) {
-        this.lootUi.setCustomPrompt({
-          html: `<span class="key-pill">E</span><span>Mash'al olish</span>${status}`,
-          text: `[E] Mash'al olish`,
-          variantClass: 'camp',
-        });
-      } else {
-        this.lootUi.setCustomPrompt({
-          html: `<span class="key-pill">E</span><span>Gulxan — o'tin yo'q</span>${torchHtml}${status}`,
-          text: `[E] Gulxan — o'tin yo'q${torchText}`,
-          variantClass: 'empty',
-        });
-      }
+      // Mash'al: qo'l bo'sh bo'lsa E — "Mash'al olish"; o'tin bo'lsa E — o'tin tashlash, F — mash'al olish;
+      // qo'lda mash'al bo'lsa F — tashlash (firePromptUz, triggerCampAction ham shu qoidadan)
+      const prompt = firePromptUz({ wood, lit: bestFire.lit, torchHeld: this.myTorchSec > 0 });
+      this.lootUi.setCustomPrompt({
+        html: `${firePromptHtml(prompt)}${this.campStatusHtml(bestFire)}`,
+        text: firePromptText(prompt),
+        variantClass: prompt.variant,
+      });
     }
   }
 
   /**
    * [E] lager nishonida: g'aramdan o'tin olish yoki gulxanga tashlash (server ack bilan). O'tin bo'lmasa va gulxan
-   * yonib tursa (mash'al yo'q) — E mash'al oladi.
+   * yonib tursa (mash'al yo'q) — E mash'al oladi (spetsifikatsiya bo'yicha asosiy yo'l; promptdagi bilan bir xil).
    */
   private triggerCampAction(): void {
     const tgt = this.campTarget;
@@ -2805,15 +2778,11 @@ export class Game {
       }
       void this.requestTakeWood(tgt.id);
     } else {
-      if (this.me.wood <= 0) {
-        if (this.torchTarget?.kind === 'take' && this.torchTarget.fireId === tgt.id) {
-          void this.requestTakeTorch(tgt.id);
-          return;
-        }
-        this.lootUi.showStatus(CAMP_ERROR_MESSAGES_UZ.NO_WOOD, 'error', 2200);
-        return;
-      }
-      void this.requestFeedFire(tgt.id);
+      const fire = this.camp?.getFires(this.nowSec).find((f) => f.id === tgt.id);
+      const e = firePromptUz({ wood: this.me.wood, lit: !!fire?.lit, torchHeld: this.myTorchSec > 0 }).e;
+      if (e === 'takeTorch') void this.requestTakeTorch(tgt.id);
+      else if (e === 'feed') void this.requestFeedFire(tgt.id);
+      else this.lootUi.showStatus(CAMP_ERROR_MESSAGES_UZ.NO_WOOD, 'error', 2200);
     }
   }
 
