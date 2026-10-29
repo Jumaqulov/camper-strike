@@ -10,6 +10,7 @@ import {
   type WolfInstance,
 } from './WolfAssetRegistry';
 import { pickWolfLod, wolfCastsShadowAt, wolfMixerStride, type WolfLodLevel } from './wolfLod';
+import { WOLF_STEALTH_FUR_TINT, wolfStealthEyeGlow } from './wolfStealth';
 
 export interface WolfModelState {
   state: WolfState;
@@ -93,6 +94,36 @@ function boostAlphaEyes(root: THREE.Object3D): void {
   });
 }
 
+/**
+ * "Tun soyasi": nusxaning standart materiallarini o'ziga klonlaydi (shablon materiallari shu coat nusxalarida
+ * umumiy — ularni o'zgartirmaymiz). Ko'z klonlari `eyes` ga yig'iladi (yorqinligi masofaga qarab, `update()` da);
+ * mo'yna to'qroq va xira (`WOLF_STEALTH_FUR_TINT`). Qaytaradi: barcha klonlar (`dispose()` da tozalanadi).
+ */
+function cloneStealthMaterials(root: THREE.Object3D, eyes: THREE.MeshStandardMaterial[]): THREE.Material[] {
+  const clones = new Map<THREE.Material, THREE.Material>();
+  const swap = (m: THREE.Material): THREE.Material => {
+    if (!(m instanceof THREE.MeshStandardMaterial)) return m;
+    const done = clones.get(m);
+    if (done) return done;
+    const c = m.clone();
+    c.userData.sharedAsset = false;
+    if (m.name === WOLF_EYES_MATERIAL) {
+      eyes.push(c);
+    } else {
+      c.color.multiplyScalar(WOLF_STEALTH_FUR_TINT);
+      c.roughness = 1;
+    }
+    clones.set(m, c);
+    return c;
+  };
+  root.traverse((o) => {
+    const mesh = o as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    mesh.material = Array.isArray(mesh.material) ? mesh.material.map(swap) : swap(mesh.material);
+  });
+  return [...clones.values()];
+}
+
 const LOOPING: ReadonlySet<WolfClipName> = new Set<WolfClipName>(['Idle', 'Sniff', 'Alert', 'Walk', 'Run']);
 const FADE = 0.16;
 
@@ -125,13 +156,25 @@ export class WolfModel {
   /** Mikser kadr hisoblagichi va yig'ilgan dt (uzoqda har 2-/4-kadr yangilanadi, animatsiya tezligi saqlanadi). */
   private mixerFrame = 0;
   private mixerDtAcc = 0;
+  /**
+   * "Tun soyasi": nusxaning o'z ko'z materiallari (GLB klonlari yoki zaxira ko'zi) — yorqinligi kameragacha masofa
+   * bo'yicha (`wolfStealthEyeGlow`), barcha LOD darajalarida bir xil (LOD faqat geometriyani almashtiradi).
+   */
+  private stealthEyes: THREE.MeshStandardMaterial[] = [];
+  /** Soya uchun klonlangan GLB materiallari (shablonniki o'zgarmaydi) — `dispose()` da tozalanadi. */
+  private stealthMats: THREE.Material[] = [];
+  /** So'nggi kamera masofasi (m); birinchi `update()` gacha noma'lum — soya ko'zlari xira boshlanadi. */
+  private camDist = Infinity;
 
   /** Tur bo'yicha masshtab (root ga qo'llangan). */
   readonly scale: number;
+  /** "Tun soyasi" (`wolfCoatTraits(coat).stealthy`): ko'zlari xira, mo'ynasi to'q. */
+  readonly stealthy: boolean;
 
   /** @param coat rang varianti (`WolfSnap.coat`, 0..4) — u bo'ri turini ham belgilaydi (`wolfCoatTraits`). */
   constructor(readonly coat = 0) {
     this.scale = wolfModelScale(coat);
+    this.stealthy = wolfCoatTraits(coat).stealthy;
     this.root.scale.setScalar(this.scale);
     void preloadWolfAssets(coat);
     if (isWolfAssetReady(coat)) this.attach();
@@ -176,6 +219,13 @@ export class WolfModel {
     for (const m of this.inst.skinnedMeshes) m.castShadow = on;
   }
 
+  /** Soya ko'zlari yorqinligi (oddiy bo'rida `stealthEyes` bo'sh — hech narsa qilmaydi). */
+  private applyStealthEyes(): void {
+    if (!this.stealthEyes.length) return;
+    const glow = wolfStealthEyeGlow(this.camDist);
+    for (const m of this.stealthEyes) m.emissiveIntensity = glow;
+  }
+
   private attach(): void {
     if (this.inst || this.disposed) return;
     const inst = instantiateWolf(this.coat);
@@ -207,6 +257,10 @@ export class WolfModel {
     }
     if (wolfCoatTraits(this.coat).kind === 'alpha') boostAlphaEyes(inst.root);
     this.disposeFallback();
+    if (this.stealthy) {
+      this.stealthMats = cloneStealthMaterials(inst.root, this.stealthEyes);
+      this.applyStealthEyes();
+    }
     this.current = null;
   }
 
@@ -215,11 +269,18 @@ export class WolfModel {
     const body = new THREE.BoxGeometry(0.6, 0.55, 1.4);
     const head = new THREE.BoxGeometry(0.4, 0.38, 0.55);
     const leg = new THREE.BoxGeometry(0.14, 0.6, 0.14);
-    const fur = new THREE.MeshStandardMaterial({ color: '#2a2b2e', roughness: 0.9 });
+    // Soya — to'qroq gavda, ko'zlari masofaga qarab xira (`applyStealthEyes`)
+    const fur = this.stealthy
+      ? new THREE.MeshStandardMaterial({ color: '#16161a', roughness: 1 })
+      : new THREE.MeshStandardMaterial({ color: '#2a2b2e', roughness: 0.9 });
     const alpha = wolfCoatTraits(this.coat).kind === 'alpha';
     const eye = new THREE.MeshStandardMaterial({ color: '#000', emissive: '#ffb020', emissiveIntensity: alpha ? 5 : 3 });
     this.fallbackGeos.push(body, head, leg);
     this.fallbackMats.push(fur, eye);
+    if (this.stealthy) {
+      this.stealthEyes.push(eye);
+      this.applyStealthEyes();
+    }
     const b = new THREE.Mesh(body, fur);
     b.position.set(0, 0.85, 0.1);
     const h = new THREE.Mesh(head, fur);
@@ -254,6 +315,7 @@ export class WolfModel {
       this.root.remove(this.fallback);
       this.fallback = null;
     }
+    if (this.stealthEyes.length) this.stealthEyes = this.stealthEyes.filter((m) => !this.fallbackMats.includes(m));
     for (const g of this.fallbackGeos) g.dispose();
     for (const m of this.fallbackMats) m.dispose();
     this.fallbackGeos = [];
@@ -285,14 +347,17 @@ export class WolfModel {
   }
 
   /**
-   * Har kadr. `camDist` — kameragacha masofa (m): LOD (18/40 m, 2 m gisterezis), soya (40 m dan yo'q) va mikser
-   * yangilanish qadami (70 m dan har 2-, 110 m dan har 4-kadr, 160 m dan yangilanmaydi — pozitsiya lerp qoladi).
+   * Har kadr. `camDist` — kameragacha masofa (m): LOD (18/40 m, 2 m gisterezis), soya (40 m dan yo'q), mikser
+   * yangilanish qadami (70 m dan har 2-, 110 m dan har 4-kadr, 160 m dan yangilanmaydi — pozitsiya lerp qoladi)
+   * va "Tun soyasi" ko'zlari yorqinligi (`wolfStealthEyeGlow`).
    */
   update(dt: number, s: WolfModelState, camDist = 0): void {
     const lod = pickWolfLod(camDist, this.lod);
     if (lod !== this.lod) this.applyLod(lod);
     const shadow = wolfCastsShadowAt(camDist);
     if (shadow !== this.shadowOn) this.applyShadow(shadow);
+    this.camDist = camDist;
+    this.applyStealthEyes();
     if (!this.mixer) {
       // Zaxira: oddiy "yurish" tebranishi
       if (this.fallback) this.fallback.rotation.z = s.speed > 0.3 ? Math.sin(performance.now() / 90) * 0.05 : 0;
@@ -336,5 +401,8 @@ export class WolfModel {
       this.inst = null;
     }
     this.disposeFallback();
+    for (const m of this.stealthMats) m.dispose();
+    this.stealthMats = [];
+    this.stealthEyes = [];
   }
 }

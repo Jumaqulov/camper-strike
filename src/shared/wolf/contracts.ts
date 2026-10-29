@@ -137,7 +137,11 @@ export interface WolfCoatTraits {
   biteMul: number;
   /** Modelning ko'rinish masshtabi (xitboks ham shunga mos kengayadi). */
   scale: number;
-  /** "Soya": klientda nafas/xirillash yaqindan eshitiladi, HUD "yaqinda bo'ri" ogohlantirishi kechroq. */
+  /**
+   * "Soya": klientda nafas/xirillash va panja tovushi yaqindan eshitiladi, HUD "yaqinda bo'ri" ogohlantirishi
+   * kechroq, ko'zlari xira yonadi, uvlashi HUD/mini-xaritada joyini ko'rsatmaydi; botlar tunda yaqinroqdan sezadi
+   * (`wolfNoticeRange`).
+   */
   stealthy: boolean;
 }
 
@@ -156,6 +160,17 @@ export const WOLF_COAT_TRAITS: readonly WolfCoatTraits[] = [
 /** Noma'lum coat → oddiy bo'ri. */
 export function wolfCoatTraits(coat: number | undefined): WolfCoatTraits {
   return (Number.isInteger(coat) ? WOLF_COAT_TRAITS[coat!] : undefined) ?? WOLF_COAT_TRAITS[0]!;
+}
+
+/** "Tun soyasi" (stealthy): tunda (wolf_night) botlar uni shu ko'paytuvchi bilan qisqargan masofadan sezadi. */
+export const WOLF_STEALTH_NOTICE_MUL = 0.6;
+
+/**
+ * Bot bo'rini sezadigan masofa (m): tunda soya — `base` × WOLF_STEALTH_NOTICE_MUL (qorong'ida yaxshi yashirinadi),
+ * kunduzgi (klassik) rejimlarda va boshqa turlarda — `base`.
+ */
+export function wolfNoticeRange(coat: number | undefined, base: number, night: boolean): number {
+  return night && wolfCoatTraits(coat).stealthy ? base * WOLF_STEALTH_NOTICE_MUL : base;
 }
 
 /** To'da boshlig'ining uvlashi shu radiusdagi (m) bo'rilarni WOLF_ALPHA_BUFF_SEC davomida tezlashtiradi. */

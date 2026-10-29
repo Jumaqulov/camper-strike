@@ -111,6 +111,7 @@ import {
   WOLF_SPAWN_CLEARANCE,
   evaluateNightWave,
   isWolfThreatState,
+  wolfNoticeRange,
   type NightSnap,
   type NightWave,
   type WolfBiteEvent,
@@ -1847,6 +1848,7 @@ export class Room {
   /**
    * Botlar uchun: `maxDist` ichidagi eng yaqin tirik bo'ri. Shu o'yinchini ovlayotgan yoki
    * stalk/hunt/attack holatidagi bo'ri (tahdid) masofadan qat'i nazar oddiy sayr qilayotganidan ustun.
+   * Tunda "Tun soyasi" qisqaroq masofadan seziladi (`wolfNoticeRange`).
    */
   nearestWolfThreat(p: ServerPlayer, maxDist: number): ServerWolf | null {
     let best: ServerWolf | null = null;
@@ -1855,7 +1857,7 @@ export class Room {
     for (const w of this.wolves.values()) {
       if (!w.alive) continue;
       const d = Math.hypot(w.pos.x - p.pos.x, w.pos.z - p.pos.z);
-      if (d > maxDist) continue;
+      if (d > wolfNoticeRange(w.coat, maxDist, this.isNight)) continue;
       const threat = w.targetId === p.id || isWolfThreatState(w.state);
       if (threat !== bestThreat ? threat : d < bestD) {
         best = w;

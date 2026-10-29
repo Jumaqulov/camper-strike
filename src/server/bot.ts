@@ -909,6 +909,7 @@ export class BotBrain {
       this.wolfFleeGoal = null;
       return null;
     }
+    // 22 m ichida (tunda "Tun soyasi" qorong'ida yaqinroqdan seziladi — wolfNoticeRange)
     const w = this.room.nearestWolfThreat(me, 22);
     if (!w) {
       this.wolfFleeGoal = null;

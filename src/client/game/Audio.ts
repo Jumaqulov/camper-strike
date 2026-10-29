@@ -52,6 +52,20 @@ const WOLF_HOWL_MAX_DIST = 160;
 const WOLF_BREATH_MAX_DIST = 35;
 
 /**
+ * Qadam tovushi masofa ko'paytuvchisi (0..1): FOOTSTEP_FULL_DIST gacha to'liq, keyin kvadratik so'nadi,
+ * FOOTSTEP_MAX_DIST dan nari 0. `rangeMul` < 1 — ikkala chegara qisqaradi ("Tun soyasi" panjalari nafasidek
+ * faqat yaqindan, `wolfAudioRangeMul`).
+ */
+export function footstepDistanceGain(dist: number, rangeMul = 1): number {
+  const range = Math.min(1, Math.max(0.1, rangeMul));
+  const full = FOOTSTEP_FULL_DIST * range;
+  const max = FOOTSTEP_MAX_DIST * range;
+  if (dist > max) return 0;
+  const k = 1 - Math.max(0, dist - full) / (max - full);
+  return k * k;
+}
+
+/**
  * Barcha ovozlar WebAudio yordamida protsedural tarzda yaratiladi (tashqi fayllar kerak emas).
  * 3D pozitsion ovoz uchun HRTF PannerNode ishlatiladi.
  */
@@ -993,15 +1007,18 @@ export class AudioSys {
     this.click(d, this.ctx!.currentTime, 2600, 0.3);
   }
 
-  /** Qadam tovushi yuzaga qarab: maysa (yumshoq), shag'al (g'ichirlash), tuproq, yog'och (taqillash), tosh, metall. */
-  footstep(pos?: P3, vol = 0.25, surface: SurfaceKind = 'grass'): void {
+  /**
+   * Qadam tovushi yuzaga qarab: maysa (yumshoq), shag'al (g'ichirlash), tuproq, yog'och (taqillash), tosh, metall.
+   * `rangeMul` — eshitilish masofasi ko'paytuvchisi ("Tun soyasi" panjalari — qisqa, `wolfAudioRangeMul`).
+   */
+  footstep(pos?: P3, vol = 0.25, surface: SurfaceKind = 'grass', rangeMul = 1): void {
     if (pos) {
       // Qadamlar faqat yaqindan eshitiladi: panner'ning sust (1/d) so'nishi ustiga aniq chegara va
       // kuchli so'nish — 30 m dan nari umuman chalinmaydi, 10 m da ~kuchning uchdan biri, 3 m da to'liq.
       const dist = Math.hypot(pos.x - this.listenerPos.x, pos.y - this.listenerPos.y, pos.z - this.listenerPos.z);
-      if (dist > FOOTSTEP_MAX_DIST) return;
-      const k = 1 - Math.max(0, dist - FOOTSTEP_FULL_DIST) / (FOOTSTEP_MAX_DIST - FOOTSTEP_FULL_DIST);
-      vol *= k * k;
+      const k = footstepDistanceGain(dist, rangeMul);
+      if (k <= 0) return;
+      vol *= k;
     }
     const d = this.dest(pos);
     if (!d) return;

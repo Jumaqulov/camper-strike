@@ -26,7 +26,7 @@ import {
   type WolfSnap,
   type WolfState,
 } from '../../shared/wolf';
-import { WolfModel, preloadWolfAssets, wolfAudioRangeMul, wolfWarningFor, type WolfWarning } from './wolf';
+import { WolfModel, preloadWolfAssets, wolfAudioRangeMul, wolfHowlRevealsPosition, wolfWarningFor, type WolfWarning } from './wolf';
 import {
   CAMP_ERROR_MESSAGES_UZ,
   CAMP_INTERACT_RANGE_M,
@@ -2422,7 +2422,8 @@ export class Game {
           w.stepTimer = gallop ? 0.16 : 0.3;
           const surf = detectSurface(this.worldDef, w.pos.x, w.pos.y, w.pos.z);
           // Yurganda yumshoq panjalar, chopganda sal og'irroq — lekin o'yinchi qadamidan baland emas
-          this.audio.footstep({ x: w.pos.x, y: w.pos.y, z: w.pos.z }, gallop ? 0.3 : 0.14, surf);
+          // (soya panjalari nafasidek faqat yaqindan — rangeMul)
+          this.audio.footstep({ x: w.pos.x, y: w.pos.y, z: w.pos.z }, gallop ? 0.3 : 0.14, surf, rangeMul);
         }
       }
     }
@@ -2961,11 +2962,12 @@ export class Game {
 
   /**
    * Bo'ri uvladi (server broadcast): ovoz; tunda — ekran chetida uvlash tomoniga qizil 🐺 indikatori (3 s) va
-   * mini-xaritada so'nib boradigan belgi.
+   * mini-xaritada so'nib boradigan belgi. "Tun soyasi" joyini oshkor qilmaydi — uvlashi faqat eshitiladi.
    */
   private onWolfHowl(e: WolfHowlEvent): void {
     this.audio.wolfHowl({ x: e.x, y: e.y + 1, z: e.z });
     if (!this.isNight || this.match?.phase !== 'playing') return;
+    if (!wolfHowlRevealsPosition(this.wolves.get(e.id)?.coat)) return;
     const v = this.viewPose();
     this.hud.howlIndicator(bearingToward(v, e, v.yaw));
     this.howlMarks.push({ x: e.x, z: e.z, at: this.nowSec });
