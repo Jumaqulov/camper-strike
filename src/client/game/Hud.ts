@@ -241,6 +241,32 @@ export class Hud {
     else if (level === 'out') el.textContent = "GULXAN O'CHDI — BO'RILAR KELMOQDA!";
   }
 
+  private nightBannerTimer = 0;
+  /**
+   * "Tong otguncha" hodisa banneri (yordam yuki tushdi va h.k.): `durationMs` davomida ko'rinadi, keyin yashirinadi.
+   * Bo'ri/lager ogohlantirishlaridan alohida element (#night-banner).
+   */
+  setNightBanner(text: string, durationMs = 6000): void {
+    const el = $('night-banner');
+    el.textContent = text;
+    el.classList.remove('hidden');
+    // Animatsiyani qaytadan boshlash
+    el.classList.remove('show');
+    void el.offsetWidth;
+    el.classList.add('show');
+    if (this.nightBannerTimer) window.clearTimeout(this.nightBannerTimer);
+    this.nightBannerTimer = window.setTimeout(() => {
+      el.classList.add('hidden');
+      this.nightBannerTimer = 0;
+    }, durationMs);
+  }
+
+  clearNightBanner(): void {
+    if (this.nightBannerTimer) window.clearTimeout(this.nightBannerTimer);
+    this.nightBannerTimer = 0;
+    $('night-banner').classList.add('hidden');
+  }
+
   private lastDownedKey = '';
   /**
    * "Tong otguncha" yiqilgan holat: banner "YIQILDINGIZ", qon ketish sanog'i va (kimdir turg'izayotganda)

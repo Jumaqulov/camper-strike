@@ -283,6 +283,32 @@ const GEAR_HELMET_MAT = new THREE.MeshStandardMaterial({ color: '#4b5a3c', rough
 for (const g of [GEAR_VEST_GEO, GEAR_HELMET_GEO, GEAR_HELMET_BRIM_GEO]) g.userData.sharedAsset = true;
 for (const m of [GEAR_VEST_MAT, GEAR_STRAP_MAT, GEAR_HELMET_MAT]) m.userData.sharedAsset = true;
 
+// Signal raketasi belgisi: qizil tsilindr (patron) + oq uchlik qalpoq + "chiziq" (umumiy, dispose qilinmaydi)
+const FLARE_BODY_GEO = new THREE.CylinderGeometry(0.03, 0.03, 0.22, 10);
+const FLARE_CAP_GEO = new THREE.CylinderGeometry(0.032, 0.032, 0.035, 10);
+const FLARE_BODY_MAT = new THREE.MeshStandardMaterial({ color: '#c8281e', roughness: 0.55, emissive: '#5a0d08', emissiveIntensity: 0.35 });
+const FLARE_CAP_MAT = new THREE.MeshStandardMaterial({ color: '#e8e2d6', roughness: 0.6 });
+for (const g of [FLARE_BODY_GEO, FLARE_CAP_GEO]) g.userData.sharedAsset = true;
+for (const m of [FLARE_BODY_MAT, FLARE_CAP_MAT]) m.userData.sharedAsset = true;
+
+function buildStylizedFlareGroup(): THREE.Group {
+  const group = new THREE.Group();
+  group.name = 'loot_marker_flare';
+  const body = new THREE.Mesh(FLARE_BODY_GEO, FLARE_BODY_MAT);
+  // Yotgan patron (biroz qiya)
+  body.rotation.z = Math.PI / 2;
+  body.rotation.y = 0.5;
+  body.position.y = 0.035;
+  body.castShadow = true;
+  group.add(body);
+  const cap = new THREE.Mesh(FLARE_CAP_GEO, FLARE_CAP_MAT);
+  cap.rotation.z = Math.PI / 2;
+  cap.rotation.y = 0.5;
+  cap.position.set(Math.cos(0.5) * 0.125, 0.035, -Math.sin(0.5) * 0.125);
+  group.add(cap);
+  return group;
+}
+
 function buildStylizedGearGroup(kind: 'armor' | 'helmet'): THREE.Group {
   const group = new THREE.Group();
   group.name = `loot_marker_${kind}`;
@@ -667,6 +693,8 @@ export class LootWorldRenderer {
       root.add(buildStylizedMedkitGroup());
     } else if (item.kind === 'armor' || item.kind === 'helmet') {
       root.add(buildStylizedGearGroup(item.kind));
+    } else if (item.kind === 'flare') {
+      root.add(buildStylizedFlareGroup());
     } else {
       root.add(buildStylizedGrenadeGroup());
     }

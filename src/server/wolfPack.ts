@@ -165,9 +165,10 @@ export class WolfPack {
     const wolves = [...room.wolves.values()].filter((w) => w.alive && w.state !== 'flee').sort((a, b) => (a.id < b.id ? -1 : 1));
     if (wolves.length === 0) return;
 
-    // Nishon ballari (bo'riga bog'liq bo'lmagan qism)
+    // Nishon ballari (bo'riga bog'liq bo'lmagan qism). Faol signal raketasi doirasidagi o'yinchi taqsimlanmaydi
+    // (isWolfPreyExposed) — to'da uni tashlaydi, raketa so'ngach yana ko'radi.
     const prey: PreyInfo[] = [];
-    const preyAll = [...room.players.values()].filter((p) => room.isWolfPrey(p));
+    const preyAll = [...room.players.values()].filter((p) => room.isWolfPreyExposed(p));
     for (const p of preyAll) {
       if (!this.sightings.has(p.id)) continue;
       const fire = room.nearestLitFire(p.pos.x, p.pos.z);
@@ -188,7 +189,7 @@ export class WolfPack {
       const lock = this.retaliate.get(w.id);
       if (lock) {
         const lp = room.players.get(lock.targetId);
-        if (lp && room.isWolfPrey(lp) && this.sightings.has(lp.id)) {
+        if (lp && room.isWolfPreyExposed(lp) && this.sightings.has(lp.id)) {
           assigned.set(w.id, lp);
           counts.set(lp.id, (counts.get(lp.id) ?? 0) + 1);
           continue;

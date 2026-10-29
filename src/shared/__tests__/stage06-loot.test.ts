@@ -8,6 +8,7 @@ import { EYE_HEIGHT, GRENADES_PER_LIFE, MAX_HP } from '../constants';
 import { getForestSquarePoiSites } from '../forestSquare';
 import {
   hasLineOfSightToContainer,
+  LOOT_CATALOG,
   LOOT_CATALOG_IDS,
   MEDKIT_HEAL_AMOUNT,
   type LootCatalogId,
@@ -562,7 +563,12 @@ describe('STAGE 06 — Server-Authoritative Loot, Containers, Inventory, Unarmed
       }
 
       // 4c) Verify all 4 weapons, all 4 ammo types, medkit, and grenade exist across the 26 containers
+      // (faqat tun rejimidagi buyumlar — signal raketasi — bu FFA xonasida generatsiya qilinmaydi)
       for (const cid of LOOT_CATALOG_IDS) {
+        if (LOOT_CATALOG[cid].nightOnly) {
+          assert.equal(catalogCounts.get(cid) ?? 0, 0, `${cid} faqat wolf_night konteynerlarida bo'ladi`);
+          continue;
+        }
         const count = catalogCounts.get(cid) ?? 0;
         assert.ok(
           count >= 1,

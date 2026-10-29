@@ -60,6 +60,7 @@ const ITEM_KIND_ICONS: Record<LootItemKind, string> = {
   grenade: '💣',
   armor: '🦺',
   helmet: '⛑️',
+  flare: '🎇',
 };
 
 function escapeHtml(s: string): string {
@@ -420,6 +421,9 @@ export class LootUI {
     }
     if (item.kind === 'helmet') {
       return 'Kaska · bosh zarari −50%';
+    }
+    if (item.kind === 'flare') {
+      return `Signal raketasi · bo'rilarni 20 s qo'rqitadi [X] (×${item.quantity})`;
     }
     return `×${item.quantity}`;
   }

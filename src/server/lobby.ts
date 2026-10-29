@@ -35,6 +35,8 @@ import {
   type ReviveAck,
   type ReviveReq,
   type TakeTorchReq,
+  type UseFlareAck,
+  type UseFlareReq,
 } from '../shared/wolf';
 import { DEFAULT_PUBLIC_LAYOUT_SEED, type MapId } from '../shared/world';
 import { Room } from './room';
@@ -235,6 +237,8 @@ export class Lobby {
     );
     // Tong otguncha: yiqilgan sherikni turg'izishni boshlash ([E], ReviveAck bilan)
     socket.on('night:revive', (req: ReviveReq, ack?: Ack<ReviveAck>) => room?.onRevive(socket.id, req, ack));
+    // Tong otguncha: signal raketasini otish ([X], UseFlareAck bilan)
+    socket.on('night:useFlare', (req: UseFlareReq, ack?: Ack<UseFlareAck>) => room?.onUseFlare(socket.id, req, ack));
     socket.on('chat', (text: string) => room?.onChat(socket.id, text));
     socket.on('switchTeam', () => {
       room?.onSwitchTeam(socket.id);

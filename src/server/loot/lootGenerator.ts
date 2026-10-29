@@ -96,6 +96,103 @@ function synthesizeContainerAnchors(cnt: NormalizedContainerPlacement): WorldIte
   ];
 }
 
+/**
+ * Ko'p slotli sintetik ankorlar (yordam yuki kabi runtime konteynerlar uchun): quti ichida (0.6×0.4 m)
+ * `n` ta nuqta ikki qatorda, konteyner burilishi (yaw) hisobga olingan.
+ */
+export function synthesizeAnchorGrid(
+  cnt: { id: string; assetId: ContainerAssetId; position: Vec3; rotationY: number },
+  n: number,
+): WorldItemAnchor[] {
+  const out: WorldItemAnchor[] = [];
+  const cols = Math.max(1, Math.ceil(n / 2));
+  const cs = Math.cos(cnt.rotationY);
+  const sn = Math.sin(cnt.rotationY);
+  for (let i = 0; i < n; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const lx = cols > 1 ? -0.26 + (0.52 * col) / (cols - 1) : 0;
+    const lz = n > 1 ? (row === 0 ? -0.1 : 0.1) : 0;
+    const ly = 0.25;
+    const wx = cnt.position.x + lx * cs + lz * sn;
+    const wz = cnt.position.z - lx * sn + lz * cs;
+    out.push({
+      id: `${cnt.id}:anchor:synth_${i}`,
+      name: `synth_slot_${i}`,
+      sourceInstanceId: cnt.id,
+      assetId: cnt.assetId,
+      category: 'inside_container',
+      localPosition: [lx, ly, lz],
+      worldPosition: { x: q3(wx), y: q3(cnt.position.y + ly), z: q3(wz) },
+      up: [0, 1, 0],
+      requiresOpenDoorOrLid: true,
+    });
+  }
+  return out;
+}
+
+/** Runtime konteyner (xarita ta'rifida yo'q — masalan yordam yuki) spetsifikatsiyasi. */
+export interface RuntimeContainerSpec {
+  id: string;
+  kind: ContainerKind;
+  /** Chat/panel yorlig'i (bo'lmasa tur yorlig'i). */
+  labelUz?: string;
+  position: Vec3;
+  yaw: number;
+  interactionRadius?: number;
+  /** Ichidagi buyumlar (slot tartibida). */
+  items: readonly LootCatalogId[];
+}
+
+/**
+ * Runtime konteyner yozuvini yaratadi (server tomonidagi `ServerContainerRecord`): sintetik ankorlar,
+ * buyumlar `itm:<roomId>:r<roundId>:<cntId>:<slot>` identifikatorlari bilan. Dunyo ta'rifiga tegilmaydi.
+ */
+export function buildRuntimeContainerRecord(spec: RuntimeContainerSpec, roomId: string, roundId: number): ServerContainerRecord {
+  const assetId = KIND_TO_ASSET_ID[spec.kind];
+  const placement: NormalizedContainerPlacement = {
+    id: spec.id,
+    locationId: spec.id,
+    assetId,
+    kind: spec.kind,
+    position: { x: spec.position.x, y: spec.position.y, z: spec.position.z },
+    rotationY: spec.yaw,
+    interactionRadius: spec.interactionRadius ?? 1.6,
+  };
+  const anchors = synthesizeAnchorGrid(placement, Math.max(2, spec.items.length));
+  const items = new Map<string, PublicLootItem>();
+  spec.items.forEach((catalogId, slotIdx) => {
+    const itemId = `itm:${roomId}:r${roundId}:${spec.id}:${slotIdx}`;
+    items.set(itemId, buildPublicLootItem(itemId, catalogId, placement, anchors[slotIdx]!));
+  });
+  return {
+    id: placement.id,
+    locationId: placement.locationId,
+    assetId,
+    kind: spec.kind,
+    labelUz: spec.labelUz ?? CONTAINER_KIND_LABELS_UZ[spec.kind],
+    position: { x: placement.position.x, y: placement.position.y, z: placement.position.z },
+    yaw: placement.rotationY,
+    interactionRadius: placement.interactionRadius,
+    status: 'closed',
+    opened: false,
+    openFraction: 0,
+    version: 1,
+    items,
+    takenItemIds: new Set<string>(),
+    anchors,
+  };
+}
+
+/** Generator sozlamalari (rejimga bog'liq). */
+export interface LootGeneratorOptions {
+  /** wolf_night: signal raketasi (`item:flare`) oddiy konteynerlarda kam-kam uchraydi. */
+  flares?: boolean;
+}
+
+/** Raketa oddiy konteynerning uchinchi slotida chiqish ehtimoli (faqat `flares` yoqilganda). */
+export const FLARE_SLOT_CHANCE = 0.12;
+
 function buildPublicLootItem(
   id: string,
   catalogId: LootCatalogId,
@@ -141,8 +238,10 @@ export function generateRoomContainersAndLoot(
   secretLootSeed: number,
   roomId: string,
   roundId = 1,
+  opts: LootGeneratorOptions = {},
 ): Map<string, ServerContainerRecord> {
   const rng = createSeededRng(secretLootSeed);
+  const flares = opts.flares === true;
 
   const stageContainers = world.stage04aLayout?.containers;
   const placements: NormalizedContainerPlacement[] =
@@ -278,11 +377,12 @@ export function generateRoomContainersAndLoot(
         slotCatalogIds.push(getAmmoCatalogId(w));
         slotCatalogIds.push(rng() < 0.5 ? 'heal:medkit' : 'throwable:grenade');
         if (targetItemCount >= 3) {
-          // Uchinchi slot: granata/aptechka yoki (30%) zirh/kaska
+          // Uchinchi slot: granata/aptechka yoki (30%) zirh/kaska; wolf_night da kam-kam (12%) signal raketasi
           const gearRoll = rng();
           slotCatalogIds.push(
             gearRoll < 0.15 ? 'gear:vest' : gearRoll < 0.3 ? 'gear:helmet' : rng() < 0.5 ? 'throwable:grenade' : 'heal:medkit',
           );
+          if (flares && rng() < FLARE_SLOT_CHANCE) slotCatalogIds[2] = 'item:flare';
         }
       }
     }

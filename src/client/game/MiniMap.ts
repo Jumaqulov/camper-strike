@@ -34,6 +34,8 @@ export interface MiniMapMarker {
 export interface MiniMapCamp {
   fires: readonly { x: number; z: number; lit: boolean; main: boolean }[];
   piles: readonly { x: number; z: number; available: boolean }[];
+  /** Yarim tungi yordam yuki (qizil romb, ochilmaganda pulsatsiya; radar chetida ko'rsatiladi). */
+  supply?: { x: number; z: number; opened: boolean } | null;
 }
 
 interface Poi {
@@ -339,6 +341,42 @@ export class MiniMap {
         ctx.lineWidth = 1.5;
         ctx.strokeStyle = f.lit ? 'rgba(255, 230, 160, 0.9)' : 'rgba(0,0,0,0.8)';
         ctx.stroke();
+      }
+      // Yordam yuki: qizil romb (ochilmagan — pulsatsiya va shu'la), radardan tashqarida bo'lsa chetida
+      const sup = camp.supply;
+      if (sup) {
+        let [sx, sz] = toScreen(sup.x, sup.z);
+        if (!whole) {
+          const ddx = sx - half;
+          const ddz = sz - half;
+          const dist = Math.hypot(ddx, ddz);
+          const lim = radius - 8;
+          if (dist > lim) {
+            sx = half + (ddx / dist) * lim;
+            sz = half + (ddz / dist) * lim;
+          }
+        }
+        const pulse = sup.opened ? 1 : 0.75 + 0.25 * Math.sin(performance.now() / 180);
+        const r = (whole ? 6 : 5.5) * pulse;
+        if (!sup.opened) {
+          ctx.fillStyle = 'rgba(255, 60, 40, 0.28)';
+          ctx.beginPath();
+          ctx.arc(sx, sz, r * 2.1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = sup.opened ? 0.6 : 1;
+        ctx.fillStyle = sup.opened ? '#9a4a40' : '#ff3b2a';
+        ctx.beginPath();
+        ctx.moveTo(sx, sz - r);
+        ctx.lineTo(sx + r, sz);
+        ctx.lineTo(sx, sz + r);
+        ctx.lineTo(sx - r, sz);
+        ctx.closePath();
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(255, 235, 225, 0.9)';
+        ctx.stroke();
+        ctx.globalAlpha = 1;
       }
     }
 

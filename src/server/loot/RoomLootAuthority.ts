@@ -13,6 +13,7 @@ import {
   LOOT_CATALOG,
   LOOT_ERROR_MESSAGES_UZ,
   MAX_AMMO_RESERVE,
+  MAX_FLARES_PER_PLAYER,
   MAX_GRENADES_LOOT_MODE,
   MAX_MEDKITS_PER_PLAYER,
   MAX_WEAPON_SLOTS,
@@ -33,7 +34,13 @@ import {
   type UseMedkitAck,
 } from '../../shared/loot';
 import { eyeHeightOf } from '../../shared/stance';
-import { generateRoomContainersAndLoot, type ServerContainerRecord } from './lootGenerator';
+import {
+  buildRuntimeContainerRecord,
+  generateRoomContainersAndLoot,
+  type LootGeneratorOptions,
+  type RuntimeContainerSpec,
+  type ServerContainerRecord,
+} from './lootGenerator';
 
 export interface ServerPlayerInventory {
   playerId: string;
@@ -44,6 +51,8 @@ export interface ServerPlayerInventory {
   ammo: AmmoState;
   grenades: number;
   medkits: number;
+  /** Signal raketalari (wolf_night). */
+  flares: number;
   armor: number;
   helmet: number;
 }
@@ -156,6 +165,7 @@ export class RoomLootAuthority {
     readonly roomId: string,
     readonly lootEnabled: boolean,
     initialRoundId = 1,
+    private readonly genOpts: LootGeneratorOptions = {},
   ) {
     this.roundId = initialRoundId;
     this.containers = generateRoomContainersAndLoot(
@@ -163,6 +173,7 @@ export class RoomLootAuthority {
       this.secretLootSeed,
       this.roomId,
       this.roundId,
+      this.genOpts,
     );
   }
 
@@ -241,7 +252,9 @@ export class RoomLootAuthority {
       this.secretLootSeed,
       this.roomId,
       this.roundId,
+      this.genOpts,
     );
+    // Runtime konteynerlar (yordam yuki) ham o'chadi — ular raundga tegishli
     this.containers.clear();
     for (const [id, record] of freshContainers) {
       this.containers.set(id, record);
@@ -275,6 +288,7 @@ export class RoomLootAuthority {
         ammo: emptyAmmo(),
         grenades: 0,
         medkits: 0,
+        flares: 0,
         armor: 0,
         helmet: 0,
       };
@@ -289,6 +303,7 @@ export class RoomLootAuthority {
         ammo: fullAmmo(),
         grenades: GRENADES_PER_LIFE,
         medkits: 0,
+        flares: 0,
         armor: 0,
         helmet: 0,
       };
@@ -383,6 +398,32 @@ export class RoomLootAuthority {
     return this.inventories.get(playerId)?.medkits ?? 0;
   }
 
+  /** O'yinchidagi signal raketalari soni (wolf_night). */
+  getFlareCount(playerId: string): number {
+    return this.inventories.get(playerId)?.flares ?? 0;
+  }
+
+  /** Bitta signal raketasini sarflaydi (inventar versiyasi oshadi). Raketa yo'q bo'lsa false. */
+  consumeFlare(playerId: string): boolean {
+    const inv = this.inventories.get(playerId);
+    if (!inv || inv.flares <= 0) return false;
+    inv.flares--;
+    inv.inventoryVersion = ++this.nextInventoryVersion;
+    return true;
+  }
+
+  /**
+   * Runtime konteyner qo'shadi (xarita ta'rifida yo'q — masalan yarim tungi yordam yuki). Oddiy konteynerlar kabi
+   * ochiladi/olinadi/sinxronlanadi; `resetForRound` da o'chadi. Shu id bilan konteyner bo'lsa almashtiriladi.
+   * Qaytaradi: ommaviy holat (klientlarga `loot:snapshot` yuborish chaqiruvchining ishi).
+   */
+  addRuntimeContainer(spec: RuntimeContainerSpec): PublicContainerState {
+    const record = buildRuntimeContainerRecord(spec, this.roomId, this.roundId);
+    this.containers.set(record.id, record);
+    this.version++;
+    return this.getPublicContainerState(record.id)!;
+  }
+
   getPlayerInventorySnap(playerId: string): PlayerInventorySnap | null {
     const inv = this.inventories.get(playerId);
     if (!inv) return null;
@@ -430,6 +471,9 @@ export class RoomLootAuthority {
     if (inv.helmet > 0) {
       items.push({ slotIndex: 7, catalogId: 'gear:helmet', kind: 'helmet', nameUz: LOOT_CATALOG['gear:helmet'].nameUz, quantity: inv.helmet });
     }
+    if (inv.flares > 0) {
+      items.push({ slotIndex: 8, catalogId: 'item:flare', kind: 'flare', nameUz: LOOT_CATALOG['item:flare'].nameUz, quantity: inv.flares });
+    }
 
     return {
       playerId: inv.playerId,
@@ -443,11 +487,13 @@ export class RoomLootAuthority {
       ammo: cloneAmmo(inv.ammo),
       grenades: inv.grenades,
       medkits: inv.medkits,
+      flares: inv.flares,
       armor: inv.armor,
       helmet: inv.helmet,
       maxWeaponSlots: MAX_WEAPON_SLOTS,
       maxMedkits: MAX_MEDKITS_PER_PLAYER,
       maxGrenades: this.lootEnabled ? MAX_GRENADES_LOOT_MODE : GRENADES_PER_LIFE,
+      maxFlares: MAX_FLARES_PER_PLAYER,
       items,
     };
   }
@@ -1010,6 +1056,11 @@ export class RoomLootAuthority {
     if (item.kind === 'helmet') {
       if (inv.helmet >= HELMET_MAX) return 'HELMET_FULL';
       inv.helmet = HELMET_MAX;
+      return null;
+    }
+    if (item.kind === 'flare') {
+      if (inv.flares >= MAX_FLARES_PER_PLAYER) return 'FLARES_FULL';
+      inv.flares = Math.min(MAX_FLARES_PER_PLAYER, inv.flares + item.quantity);
       return null;
     }
     return 'INVALID_REQUEST';

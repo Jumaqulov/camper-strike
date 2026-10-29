@@ -5,6 +5,7 @@ import { angleDiff, clamp, lerp, type Vec3 } from '../../shared/math';
 import { MAX_INPUT_BATCH_SIZE } from '../../shared/netMovement';
 import { computeCameraClearDistance, rayBox, raycastWorld, rayVsPlayer } from '../../shared/physics';
 import {
+  FLARE_ERROR_MESSAGES_UZ,
   NIGHT_REVIVE_RANGE_M,
   NIGHT_REVIVE_SEC,
   REVIVE_ERROR_MESSAGES_UZ,
@@ -14,9 +15,12 @@ import {
   isWolfId,
   isWolfThreatState,
   wolfCoatTraits,
+  type NightFlareEvent,
   type NightRevivedEvent,
+  type NightSupplyDropEvent,
   type ReviveAck,
   type ReviveReq,
+  type UseFlareAck,
   type WolfBiteEvent,
   type WolfHowlEvent,
   type WolfSnap,
@@ -34,7 +38,15 @@ import {
   isTorchWeapon,
   woodBlocksSprint,
 } from '../../shared/wolf/camp';
-import { CampRenderer, TorchLightPool, type CampFireView, type CampPileView, type TorchProp } from './night';
+import {
+  CampRenderer,
+  FlareRenderer,
+  SupplyDropRenderer,
+  TorchLightPool,
+  type CampFireView,
+  type CampPileView,
+  type TorchProp,
+} from './night';
 import { DawnTracker, dawnBlendFactor, dawnExposure } from './night/dawnLighting';
 import {
   DEFAULT_CONTAINER_EXTRA_MARGIN_M,
@@ -247,6 +259,13 @@ export class Game {
   private torchCrackleId = '';
   private heavyHintAt = -99;
   /**
+   * wolf_night: signal raketalari (FlareRenderer — hodisa + NightSnap.flares) va yarim tungi yordam yuki
+   * (SupplyDropRenderer — hodisa + NightSnap.supply); [X] so'rovi yuborilgan, ack kutilmoqda.
+   */
+  private flareFx: FlareRenderer | null = null;
+  private supplyFx: SupplyDropRenderer | null = null;
+  private flareBusy = false;
+  /**
    * wolf_night yiqilgan holat (serverdan, snapshot): harakat/qurol/[E] yo'q, kamera pastda, banner.
    * `myDownedView` — kamera ko'z balandligi uchun silliqlangan 0..1.
    */
@@ -386,6 +405,9 @@ export class Game {
     if (this.isNight) {
       this.camp = new CampRenderer(this.scene);
       this.torchLights = new TorchLightPool(this.scene);
+      // Raketa va yordam yuki yoritgichlari ham prewarm'dan oldin (yorug'lik soni o'zgarmasin)
+      this.flareFx = new FlareRenderer(this.scene);
+      this.supplyFx = new SupplyDropRenderer(this.scene);
     }
     this.lootUi = new LootUI({
       onOpenContainer: (containerId) => {
@@ -404,6 +426,9 @@ export class Game {
       },
       onUseMedkit: () => {
         void this.requestUseMedkit();
+      },
+      onUseFlare: () => {
+        void this.requestUseFlare();
       },
     });
     this.inventoryUi.setVisible(this.lootPreview);
@@ -706,6 +731,8 @@ export class Game {
     });
     this.on<CampfireEvent>('campfire', (e) => this.onCampfireEvent(e));
     this.on<NightRevivedEvent>('night:revived', (e) => this.onRevived(e));
+    this.on<NightSupplyDropEvent>('night:supplyDrop', (e) => this.onSupplyDrop(e));
+    this.on<NightFlareEvent>('night:flare', (e) => this.onFlareEvent(e));
     this.on<KillEvent>('kill', (e) => this.onKill(e));
     this.on<ExplosionEvent>('explosion', (e) => this.onExplosion(e));
     this.on<AmmoEvent>('ammo', (e) => {
@@ -744,6 +771,12 @@ export class Game {
       const updated = s.containers.find((c) => c.id === activeId) ?? null;
       this.lootUi.setActiveContainer(updated);
     }
+    // Yordam yuki (runtime konteyner) ochilgani — mayoq so'nadi
+    const supplyId = this.supplyFx?.getId();
+    if (supplyId) {
+      const sup = s.containers.find((c) => c.id === supplyId);
+      if (sup) this.supplyFx!.setOpened(sup.opened);
+    }
   }
 
   private onContainerState(c: PublicContainerState) {
@@ -762,6 +795,57 @@ export class Game {
     if (this.lootUi.getActiveContainerId() === c.id) {
       this.lootUi.setActiveContainer(c);
     }
+    if (this.supplyFx && this.supplyFx.getId() === c.id) this.supplyFx.setOpened(c.opened);
+  }
+
+  /** Yordam yuki tushdi (server broadcast): ovoz, 6 s banner, parashyut/mayoq animatsiyasi; chat serverdan keladi. */
+  private onSupplyDrop(e: NightSupplyDropEvent): void {
+    this.supplyFx?.onDrop(e, this.nowSec);
+    this.audio.supplyDrop({ x: e.x, y: e.y + 2, z: e.z });
+    this.hud.setNightBanner('📦 YORDAM YUKI TUSHDI — xaritaga qarang', 6000);
+  }
+
+  /** Signal raketasi otildi (server broadcast): vizual + ovoz; o'zimizniki bo'lsa inventar ack bilan yangilanadi. */
+  private onFlareEvent(e: NightFlareEvent): void {
+    this.flareFx?.onEvent(e, this.nowSec);
+    this.audio.flareLaunch({ x: e.x, y: e.y + 1.5, z: e.z });
+    if (e.byId !== this.myId) this.lootUi.showStatus(`🎇 ${e.byName} signal raketasini otdi`, 'info', 2200);
+  }
+
+  /** [X] — signal raketasini otish (wolf_night). Server 1 raketa sarflaydi, hamma uchun 'night:flare' yuboradi. */
+  private requestUseFlare(): Promise<UseFlareAck | null> {
+    if (!this.isNight || this.flareBusy) return Promise.resolve(null);
+    const notPlaying = this.match?.phase !== 'playing';
+    if (notPlaying || !this.me.alive || this.myDowned) return Promise.resolve(null);
+    const have = this.inventorySnap?.flares ?? this.me.flares;
+    if (have <= 0) {
+      this.lootUi.showStatus(`🎇 ${FLARE_ERROR_MESSAGES_UZ.NO_FLARE} — konteynerlar va yordam yukida bo'ladi`, 'error', 2200);
+      return Promise.resolve(null);
+    }
+    this.flareBusy = true;
+    this.sendInput();
+    return new Promise((resolve) => {
+      this.socket.timeout(3000).emit('night:useFlare', {}, (err: Error | null, ack?: UseFlareAck) => {
+        this.flareBusy = false;
+        if (this.disposed) return resolve(null);
+        if (err || !ack) {
+          this.lootUi.showStatus("Server javob bermadi — qayta urinib ko'ring", 'error', 2200);
+          return resolve(null);
+        }
+        if (!ack.ok) {
+          if (ack.error) this.lootUi.showStatus(`🎇 ${FLARE_ERROR_MESSAGES_UZ[ack.error] ?? 'Xato'}`, 'error', 2200);
+          return resolve(ack);
+        }
+        this.myModel.playInteract();
+        this.me.flares = ack.flares;
+        if (this.inventorySnap) {
+          this.inventorySnap.flares = ack.flares;
+          this.inventoryUi.updateInventory(this.inventorySnap);
+        }
+        this.lootUi.showStatus(`🎇 Signal raketasi otildi — bo'rilar 20 s qochadi (qoldi: ${ack.flares})`, 'success', 2400);
+        resolve(ack);
+      });
+    });
   }
 
   private onInventoryState(inv: PlayerInventorySnap) {
@@ -1102,6 +1186,9 @@ export class Game {
     const night = this.camp ? m.survival?.night ?? null : null;
     if (this.camp && night && night.fires) {
       this.camp.sync(night.fires, night.piles ?? [], performance.now() / 1000);
+      // Raketalar va yordam yuki — kech qo'shilgan/kuzatuvchi ham ko'rsin (hodisa kelmagan bo'lsa)
+      this.flareFx?.sync(night.flares, this.nowSec);
+      this.supplyFx?.sync(night.supply, this.nowSec);
     } else if (this.camp) {
       // Jonli holat yo'q (yakun) — gulxanlar natijalar ekranida o'z-o'zidan "yonib tugamasin"
       this.camp.freezeFuel(performance.now() / 1000);
@@ -1926,6 +2013,11 @@ export class Game {
     // Stage 06: [H] Aptechka ishlatish
     if (inp.justPressed('KeyH') && !notPlaying) {
       void this.requestUseMedkit();
+    }
+
+    // wolf_night: [X] Signal raketasi — bo'rilarni 20 s qo'rqitadi
+    if (inp.justPressed('KeyX') && !notPlaying && this.isNight) {
+      void this.requestUseFlare();
     }
 
     // Stage 06: [0] Qurolni g'ilofga solish (qo'lni bo'shatish)
@@ -2810,6 +2902,9 @@ export class Game {
   /** Har kadr: gulxan animatsiyasi (kamera pozitsiyasi bilan) va yaqin gulxanlarning chirsillashi. */
   private updateCamp(dt: number, t: number): void {
     const camp = this.camp;
+    // Raketalar va yordam yuki lager bo'lmasa ham yangilanadi (raund boshida sync hali kelmagan bo'lishi mumkin)
+    this.flareFx?.update(dt, t, this.camera.position);
+    this.supplyFx?.update(dt, t, this.camera.position);
     if (!camp || !camp.hasCamp()) return;
     camp.update(dt, t, this.camera.position);
     const cam = this.camera.position;
@@ -2861,7 +2956,8 @@ export class Game {
         ? this.camp.nearestAvailablePileDist(this.me.body.pos.x, this.me.body.pos.z)
         : null;
     const torchSec = this.me.alive && !this.myDowned ? this.myTorchLeft() : 0;
-    this.survivalUi.setCampStatus(main ? { fuelSec: main.fuelSec, lit: main.lit, pileM, torchSec } : null);
+    const flareSec = this.flareFx?.maxLeftSec(t) ?? 0;
+    this.survivalUi.setCampStatus(main ? { fuelSec: main.fuelSec, lit: main.lit, pileM, torchSec, flareSec } : null);
     if (!main || !this.me.alive) {
       this.hud.setCampWarning('');
       return;
@@ -3142,7 +3238,14 @@ export class Game {
           });
         }
       }
-      const camp = this.camp?.hasCamp() ? { fires: this.camp.getFires(t), piles: this.camp.getPiles() } : null;
+      const supplySnap = this.match?.survival?.night?.supply;
+      const camp = this.camp?.hasCamp()
+        ? {
+            fires: this.camp.getFires(t),
+            piles: this.camp.getPiles(),
+            supply: supplySnap ? { x: supplySnap.x, z: supplySnap.z, opened: supplySnap.opened } : null,
+          }
+        : null;
       this.miniMap.update(center, allies, this.zoneSnap ? this.currentZoneForMinimap(t) : null, camp);
     }
     this.updateZone(t);
@@ -3294,6 +3397,11 @@ export class Game {
     this.camp = null;
     this.torchLights?.dispose();
     this.torchLights = null;
+    this.flareFx?.dispose();
+    this.flareFx = null;
+    this.supplyFx?.dispose();
+    this.supplyFx = null;
+    this.hud.clearNightBanner();
     for (const rem of this.remotes.values()) rem.model.dispose();
     for (const [, mesh] of this.grenadeMeshes) {
       this.scene.remove(mesh);

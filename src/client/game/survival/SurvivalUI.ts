@@ -44,6 +44,13 @@ export function formatTorchPillUz(torchSec: number): { text: string; cls: '' | '
   return { text: `🔥 Mash'al ${s} s`, cls: s <= 8 ? 'low' : '' };
 }
 
+/** Faol signal raketasi pilli (hammaga): "🎇 Raketa 14 s" (oxirgi 5 s — 'low'); raketa yo'q — null. */
+export function formatFlarePillUz(flareSec: number): { text: string; cls: '' | 'low' } | null {
+  if (!Number.isFinite(flareSec) || flareSec <= 0) return null;
+  const s = Math.max(1, Math.ceil(flareSec));
+  return { text: `🎇 Raketa ${s} s`, cls: s <= 5 ? 'low' : '' };
+}
+
 /**
  * Safdan chiqqan o'yinchiga qaytish qatori (Tong otguncha): keyingi to'lqin boshida asosiy gulxan yonib tursa
  * qaytadi; oxirgi to'lqinda — tong otguncha tomosha qiladi; hamma halok bo'lgan bo'lsa — alohida urg'u.
@@ -119,8 +126,8 @@ export class SurvivalUI {
   private myRole: SurvivalPlayerRole | null = null;
   private spectatorPose: SpectatorCameraPose | null = null;
   private killerHtml = '';
-  /** Asosiy gulxan holati (Game har kadr ekstrapolyatsiya qilib beradi); null — lager yo'q. `torchSec` — qo'ldagi mash'al. */
-  private camp: { fuelSec: number; lit: boolean; pileM?: number | null; torchSec?: number } | null = null;
+  /** Asosiy gulxan holati (Game har kadr ekstrapolyatsiya qilib beradi); null — lager yo'q. `torchSec` — qo'ldagi mash'al, `flareSec` — faol raketa. */
+  private camp: { fuelSec: number; lit: boolean; pileM?: number | null; torchSec?: number; flareSec?: number } | null = null;
 
   private spectatorBannerVisible = false;
   private winnerOverlayVisible = false;
@@ -234,7 +241,7 @@ export class SurvivalUI {
   }
 
   /** Asosiy lager gulxani holati (tun rejimi) — pill'da "🔥 Lager m:ss" sifatida chiqadi; `torchSec` — "🔥 Mash'al N s". */
-  setCampStatus(camp: { fuelSec: number; lit: boolean; pileM?: number | null; torchSec?: number } | null): void {
+  setCampStatus(camp: { fuelSec: number; lit: boolean; pileM?: number | null; torchSec?: number; flareSec?: number } | null): void {
     this.camp = camp;
   }
 
@@ -334,11 +341,12 @@ export class SurvivalUI {
     const nightText = night && snap.phase === 'playing' && snap.night ? formatNightPillUz(snap.night) : '';
     const campPill = night && snap.phase === 'playing' && this.camp ? formatCampPillUz(this.camp.fuelSec, this.camp.lit, this.camp.pileM ?? null) : null;
     const torchPill = night && snap.phase === 'playing' && this.camp ? formatTorchPillUz(this.camp.torchSec ?? 0) : null;
+    const flarePill = night && snap.phase === 'playing' && this.camp ? formatFlarePillUz(this.camp.flareSec ?? 0) : null;
     const pillKey = `${snap.roundId}|${snap.phase}|${snap.timeLeft}|${countLabel}|${
       !night && snap.phase === 'playing' && snap.zone
         ? `${formatZoneStatusUz(snap.zone)}|${snap.zone.shrinking ? 1 : 0}`
         : ''
-    }${night ? `|${phaseLabel}|${nightText}|${campPill ? `${campPill.text}|${campPill.cls}` : ''}|${torchPill ? `${torchPill.text}|${torchPill.cls}` : ''}` : ''}`;
+    }${night ? `|${phaseLabel}|${nightText}|${campPill ? `${campPill.text}|${campPill.cls}` : ''}|${torchPill ? `${torchPill.text}|${torchPill.cls}` : ''}|${flarePill ? `${flarePill.text}|${flarePill.cls}` : ''}` : ''}`;
     if (this.topPillEl && pillKey !== this.lastPillKey) {
       this.lastPillKey = pillKey;
       // Vaqt segmenti: countdown/ended — soniya, playing — mm:ss, waiting — ko'rsatilmaydi
@@ -359,7 +367,9 @@ export class SurvivalUI {
           night
             ? `${nightText ? `<span class="s07-pill-night">${esc(nightText)}</span>` : ''}${
                 campPill ? `<span class="s07-pill-camp ${campPill.cls}">${esc(campPill.text)}</span>` : ''
-              }${torchPill ? `<span class="s07-pill-torch ${torchPill.cls}">${esc(torchPill.text)}</span>` : ''}`
+              }${torchPill ? `<span class="s07-pill-torch ${torchPill.cls}">${esc(torchPill.text)}</span>` : ''}${
+                flarePill ? `<span class="s07-pill-flare ${flarePill.cls}">${esc(flarePill.text)}</span>` : ''
+              }`
             : snap.phase === 'playing' && snap.zone
               ? `<span class="s07-pill-zone${snap.zone.shrinking ? ' shrinking' : ''}">${esc(formatZoneStatusUz(snap.zone))}</span>`
               : ''

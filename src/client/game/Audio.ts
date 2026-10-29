@@ -880,6 +880,40 @@ export class AudioSys {
     }
   }
 
+  /**
+   * Yordam yuki tushdi (wolf_night): parashyut "vush"i (keng shovqin, pastga sirg'anadi) va yerga "tup" urilish
+   * (past zarba + yog'och taqillashi). Uzoqdan ham eshitiladi (120 m), joyi bo'yicha.
+   */
+  supplyDrop(pos?: P3): void {
+    const d = this.wolfDest(pos, 4, 10, 25, 120);
+    if (!d) return;
+    const t = this.ctx!.currentTime;
+    // Parashyut shovqini: 2.6 s, yuqoridan pastga (lowpass 1800 → 500)
+    this.noise(d, t, 2.6, 'lowpass', 1800, 500, 0.6, 0.35, 0.4);
+    this.noise(d, t + 0.3, 2.2, 'bandpass', 900, 350, 0.9, 0.22, 0.5);
+    // Urilish: past "tup" + yog'och taqillashi
+    const hit = t + 2.9;
+    this.tone(d, hit, 'sine', 95, 38, 0.45, 0.9);
+    this.noise(d, hit, 0.22, 'lowpass', 1400, 200, 0.8, 0.7, 0.004);
+    this.noise(d, hit + 0.05, 0.09, 'bandpass', 2600, 1200, 2.5, 0.35, 0.002);
+    this.noise(d, hit + 0.16, 0.07, 'bandpass', 2100, 1000, 2.5, 0.2, 0.002);
+  }
+
+  /** Signal raketasi otildi (wolf_night): vishillash (hiss, 1.1 s ko'tariladi) + yuqorida "pop". */
+  flareLaunch(pos?: P3): void {
+    const d = this.wolfDest(pos, 3, 8, 20, 110);
+    if (!d) return;
+    const t = this.ctx!.currentTime;
+    this.noise(d, t, 1.15, 'bandpass', 1400, 4200, 1.2, 0.5, 0.02);
+    this.tone(d, t, 'sawtooth', 320, 1250, 1.1, 0.12);
+    // Pop: yuqorida yorilish
+    const pop = t + 1.15;
+    this.noise(d, pop, 0.14, 'bandpass', 2800, 900, 0.8, 0.9, 0.003);
+    this.tone(d, pop, 'triangle', 640, 180, 0.22, 0.4);
+    // Yonib turgan raketaning past jizillashi
+    this.noise(d, pop + 0.1, 1.6, 'bandpass', 3200, 2400, 2.0, 0.08, 0.2);
+  }
+
   /** Gulxan o'chdi: uzun "pshsh" bug' vishillashi + past "puf", ~1.6 s. */
   campfireOut(pos?: P3): void {
     const d = this.wolfDest(pos, 3, 6, 5, 50);

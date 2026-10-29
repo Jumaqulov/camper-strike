@@ -3,7 +3,7 @@ import type { ContainerAssetId } from '../structures/contracts';
 import type { AmmoState, WeaponId } from '../weapons';
 import type { ContainerKind } from '../world';
 
-export type LootItemKind = 'weapon' | 'ammo' | 'medkit' | 'grenade' | 'armor' | 'helmet';
+export type LootItemKind = 'weapon' | 'ammo' | 'medkit' | 'grenade' | 'armor' | 'helmet' | 'flare';
 
 export type AmmoType = 'rifle_ammo' | 'pistol_ammo' | 'shotgun_ammo' | 'sniper_ammo';
 
@@ -19,7 +19,8 @@ export type LootCatalogId =
   | 'heal:medkit'
   | 'throwable:grenade'
   | 'gear:vest'
-  | 'gear:helmet';
+  | 'gear:helmet'
+  | 'item:flare';
 
 export interface LootCatalogEntry {
   catalogId: LootCatalogId;
@@ -35,6 +36,8 @@ export interface LootCatalogEntry {
   spawnWeight: number;
   /** True if this item uses an existing GLB weapon model; false if it uses a stylized procedural marker. */
   hasGlbAsset: boolean;
+  /** Faqat "Tong otguncha" (wolf_night) konteynerlarida paydo bo'ladi (boshqa rejimlarda generatsiya qilinmaydi). */
+  nightOnly?: boolean;
 }
 
 export interface PublicLootItem {
@@ -105,6 +108,8 @@ export interface PlayerInventorySnap {
   ammo: AmmoState;
   grenades: number;
   medkits: number;
+  /** Signal raketalari (wolf_night loot buyumi, [X] bilan otiladi). */
+  flares: number;
   /** Zirh nimcha mustahkamligi 0..ARMOR_MAX (0 = yo'q). */
   armor: number;
   /** Kaska mustahkamligi 0..HELMET_MAX (0 = yo'q). */
@@ -112,6 +117,7 @@ export interface PlayerInventorySnap {
   maxWeaponSlots: number;
   maxMedkits: number;
   maxGrenades: number;
+  maxFlares: number;
   items: InventoryEntrySnap[];
 }
 
@@ -134,6 +140,7 @@ export type LootErrorCode =
   | 'GRENADES_FULL'
   | 'ARMOR_FULL'
   | 'HELMET_FULL'
+  | 'FLARES_FULL'
   | 'WEAPON_NOT_OWNED'
   | 'NO_MEDKITS'
   | 'HP_ALREADY_FULL'

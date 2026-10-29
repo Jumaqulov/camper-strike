@@ -1,4 +1,5 @@
 import {
+  MAX_FLARES_PER_PLAYER,
   MAX_GRENADES_LOOT_MODE,
   MAX_MEDKITS_PER_PLAYER,
   type PlayerInventorySnap,
@@ -11,6 +12,8 @@ import { onWeaponAssetsReady } from '../WeaponAssetRegistry';
 export interface InventoryUICallbacks {
   onSelectWeapon: (weapon: WeaponId | null) => void;
   onUseMedkit: () => void;
+  /** wolf_night: signal raketasini otish (chip bosilganda; [X] tugmasi Game da). */
+  onUseFlare?: () => void;
 }
 
 export interface InventoryUIDiagnostics {
@@ -198,7 +201,8 @@ export class InventoryUI {
       const a = s.ammo[w];
       return `${w}:${a ? a.mag : 0}/${a ? a.reserve : 0}`;
     }).join('|');
-    const renderKey = `${s.inventoryVersion}|${s.equippedWeapon ?? 'none'}|${s.ownedWeapons.join(',')}|${s.medkits}/${s.maxMedkits}|${s.grenades}/${s.maxGrenades}|${s.armor ?? 0}|${s.helmet ?? 0}|${ammoKey}|w${this.wood ?? '-'}|t${this.torch ? 1 : 0}`;
+    const flares = s.flares ?? 0;
+    const renderKey = `${s.inventoryVersion}|${s.equippedWeapon ?? 'none'}|${s.ownedWeapons.join(',')}|${s.medkits}/${s.maxMedkits}|${s.grenades}/${s.maxGrenades}|${s.armor ?? 0}|${s.helmet ?? 0}|${ammoKey}|w${this.wood ?? '-'}|t${this.torch ? 1 : 0}|f${flares}`;
     if (renderKey === this.lastRenderKey) return;
     this.lastRenderKey = renderKey;
 
@@ -255,6 +259,15 @@ export class InventoryUI {
         : `<div class="s06-util-btn wood-chip ${wood > 0 ? 'has-item' : 'empty'}" title="O'tin: g'aramdan [E] bilan oling, gulxanga [E] bilan tashlang (${wood}/${WOOD_CARRY_MAX})">
           <span class="s06-util-icon">🪵</span><span class="s06-util-count">${wood}/${WOOD_CARRY_MAX}</span>
         </div>`;
+    // Signal raketasi chipi (faqat tun rejimida yoki raketa bo'lsa): [X] bilan otiladi
+    const maxFlares = s.maxFlares ?? MAX_FLARES_PER_PLAYER;
+    const flareHtml =
+      wood === null && flares <= 0
+        ? ''
+        : `<button type="button" class="s06-util-btn flare-btn ${flares > 0 ? 'has-item' : 'empty'}" data-action="flare"
+          title="Signal raketasi [X]: 20 s davomida 30 m radiusda bo'rilarni qo'rqitadi (${flares}/${maxFlares})">
+          <span class="s06-util-icon">🎇</span><span class="s06-util-count">${flares}</span><span class="s06-util-key">X</span>
+        </button>`;
 
     this.stripEl.innerHTML = `
       <div class="s06-inv-weapons">
@@ -288,6 +301,7 @@ export class InventoryUI {
           <span class="s06-util-icon">⛑️</span><span class="s06-util-count">${helmet > 0 ? Math.round(helmet) : '—'}</span>
         </div>
         ${woodHtml}
+        ${flareHtml}
       </div>
     `;
 
@@ -306,6 +320,14 @@ export class InventoryUI {
       medkitBtn.addEventListener('click', (ev) => {
         ev.stopPropagation();
         this.callbacks.onUseMedkit();
+      });
+    }
+
+    const flareBtn = this.stripEl.querySelector<HTMLButtonElement>('[data-action="flare"]');
+    if (flareBtn) {
+      flareBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        this.callbacks.onUseFlare?.();
       });
     }
 

@@ -242,6 +242,7 @@ export const NIGHT_MIN_MINUTES = 3;
 export const NIGHT_MAX_MINUTES = 20;
 
 import type { CampfireSnap, WoodPileSnap } from './camp';
+import type { NightFlareSnap, NightSupplySnap } from './flare';
 
 /** Klientga yuboriladigan tun holati (SurvivalStateSnap.night). */
 export interface NightSnap {
@@ -256,6 +257,10 @@ export interface NightSnap {
   fires: CampfireSnap[];
   /** O'tin g'aramlari. */
   piles: WoodPileSnap[];
+  /** Yarim tungi yordam yuki (3-to'lqindan; tushmagan bo'lsa yo'q). */
+  supply?: NightSupplySnap;
+  /** Faol signal raketalari (bo'lsa). */
+  flares?: NightFlareSnap[];
 }
 
 export interface NightWaveEval {

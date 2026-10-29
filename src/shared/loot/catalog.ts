@@ -6,6 +6,8 @@ export const MAX_WEAPON_SLOTS = 4;
 export const MAX_MEDKITS_PER_PLAYER = 3;
 export const MEDKIT_HEAL_AMOUNT = 45;
 export const MAX_GRENADES_LOOT_MODE = 3;
+/** Signal raketalari (wolf_night): o'yinchida ko'pi bilan shuncha. */
+export const MAX_FLARES_PER_PLAYER = 2;
 export const DEFAULT_CONTAINER_EXTRA_MARGIN_M = 0.55;
 export const GROUND_ITEM_PICKUP_RADIUS_M = 2.4;
 
@@ -38,6 +40,7 @@ export const LOOT_CATALOG_IDS: readonly LootCatalogId[] = [
   'throwable:grenade',
   'gear:vest',
   'gear:helmet',
+  'item:flare',
 ] as const;
 
 export const LOOT_CATALOG: Record<LootCatalogId, LootCatalogEntry> = {
@@ -182,6 +185,18 @@ export const LOOT_CATALOG: Record<LootCatalogId, LootCatalogEntry> = {
     spawnWeight: 12,
     hasGlbAsset: false,
   },
+  'item:flare': {
+    catalogId: 'item:flare',
+    kind: 'flare',
+    nameUz: 'Signal raketasi',
+    shortNameUz: 'Raketa',
+    descriptionUz: "Osmonga otilganda 20 soniya davomida 30 m radiusda bo'rilarni qo'rqitib turadi ([X]).",
+    defaultQuantity: 1,
+    maxStack: MAX_FLARES_PER_PLAYER,
+    spawnWeight: 3,
+    hasGlbAsset: false,
+    nightOnly: true,
+  },
 };
 
 export const CONTAINER_KIND_LABELS_UZ: Record<ContainerKind, string> = {
@@ -210,6 +225,7 @@ export const LOOT_ERROR_MESSAGES_UZ: Record<LootErrorCode, string> = {
   GRENADES_FULL: "Granatalar limiti to'lgan (maks. 3 ta).",
   ARMOR_FULL: "Zirh nimchangiz allaqachon butun (100).",
   HELMET_FULL: 'Kaskangiz allaqachon butun (100).',
+  FLARES_FULL: "Signal raketalari limiti to'lgan (maks. 2 ta).",
   WEAPON_NOT_OWNED: "Bu qurol hali topilmagan (inventarda yo'q).",
   NO_MEDKITS: 'Sizda tibbiy quti (aptechka) yo‘q.',
   HP_ALREADY_FULL: "Joningiz allaqachon to'la (100 HP).",

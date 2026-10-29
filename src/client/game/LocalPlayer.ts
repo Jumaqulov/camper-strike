@@ -36,6 +36,8 @@ export class LocalPlayer {
   switchUntil = 0;
   grenades = GRENADES_PER_LIFE;
   medkits = 0;
+  /** wolf_night: signal raketalari (serverdan inventar snapshoti). */
+  flares = 0;
   lastGrenade = -10;
   bloom = 0;
   scoped = false;
@@ -70,6 +72,7 @@ export class LocalPlayer {
       this.ammo = emptyAmmo();
       this.grenades = 0;
       this.medkits = 0;
+      this.flares = 0;
       this.scoped = false;
       this.reloadWeapon = null;
     } else {
@@ -78,6 +81,7 @@ export class LocalPlayer {
       this.ammo = fullAmmo();
       this.grenades = GRENADES_PER_LIFE;
       this.medkits = 0;
+      this.flares = 0;
     }
   }
 
@@ -116,6 +120,7 @@ export class LocalPlayer {
       this.ammo = emptyAmmo();
       this.grenades = 0;
       this.medkits = 0;
+      this.flares = 0;
       this.switchUntil = this.weapon ? t + WEAPONS[this.weapon].switchTime : t;
     } else {
       this.weapon = e.weapon !== undefined ? e.weapon : (this.weapon ?? 'rifle');
@@ -123,6 +128,7 @@ export class LocalPlayer {
       this.ammo = fullAmmo();
       this.grenades = GRENADES_PER_LIFE;
       this.medkits = 0;
+      this.flares = 0;
       this.switchUntil = this.weapon ? t + WEAPONS[this.weapon].switchTime : t;
     }
     this.stamina = 1;
@@ -144,6 +150,7 @@ export class LocalPlayer {
       ammo: AmmoState;
       grenades: number;
       medkits: number;
+      flares?: number;
       armor?: number;
       helmet?: number;
     },
@@ -176,6 +183,7 @@ export class LocalPlayer {
     }
     this.grenades = snap.grenades;
     this.medkits = snap.medkits;
+    this.flares = snap.flares ?? 0;
     this.armor = snap.armor ?? 0;
     this.helmet = snap.helmet ?? 0;
     const prevWeapon = this.weapon;

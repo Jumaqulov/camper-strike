@@ -14,6 +14,9 @@ import { eyeHeightOf, hitboxScaleOf } from '../shared/stance';
 import { sampleTerrainHeight } from '../shared/world';
 import { WEAPONS, WEAPON_SLOTS, isMeleeWeapon, type WeaponId } from '../shared/weapons';
 import {
+  BOT_FLARE_COOLDOWN_SEC,
+  BOT_FLARE_NO_FIRE_M,
+  BOT_FLARE_WOLF_DIST_M,
   CAMPFIRE_LOW_FUEL_SEC,
   CAMPFIRE_MAX_FUEL_SEC,
   CAMPFIRE_RADIUS_M,
@@ -36,6 +39,7 @@ const LOOT_KIND_PRIORITY: Record<PublicLootItem['kind'], number> = {
   helmet: 3,
   medkit: 4,
   grenade: 5,
+  flare: 6,
 };
 
 interface BotLootTarget {
@@ -85,6 +89,8 @@ const BOT_TORCH_MIN_FUEL_SEC = 30;
 /** Bot yiqilgan sherigini shu masofadan (m) turg'izishga boradi — faqat yaqinda (BOT_REVIVE_WOLF_CLEAR_M) bo'ri tahdidi bo'lmasa. */
 const BOT_REVIVE_SEARCH_M = 40;
 const BOT_REVIVE_WOLF_CLEAR_M = 14;
+/** Yordam yuki (wolf_night): qurolsiz/o'qsiz bot shu masofadan (m) uni ustuvor loot maqsadi qiladi. */
+const BOT_SUPPLY_SEARCH_M = 80;
 /** Bot o'tin olib kelishga faqat gulxan o'tini shu qiymatdan (s) kamayganda chiqadi. */
 const BOT_FETCH_FUEL_SEC = 60;
 /** Bo'ridan qochgan bot shu masofadagi (m) yonib turgan gulxanga yuguradi (wolf_night). */
@@ -172,6 +178,8 @@ export class BotBrain {
   /** Bo'ridan qochish maqsadi (nav tuguni) va u tanlangan vaqt. */
   private wolfFleeGoal: Vec3 | null = null;
   private wolfFleeGoalAt = -99;
+  /** Signal raketasi (wolf_night): keyingi otish mumkin bo'lgan vaqt (BOT_FLARE_COOLDOWN_SEC). */
+  private nextFlareAt = 0;
   // --- Lager AI (wolf_night): o'tin olib kelish, gulxanni boqish ---
   private campTask: BotCampTask | null = null;
   private campBlacklist = new Map<string, number>();
@@ -394,6 +402,9 @@ export class BotBrain {
         return inv.armor <= 0;
       case 'helmet':
         return inv.helmet <= 0;
+      case 'flare':
+        // Signal raketasi (wolf_night): bo'rilarga qarshi zaxira
+        return this.room.isNight && inv.flares < inv.maxFlares;
       default:
         return false;
     }
@@ -462,6 +473,7 @@ export class BotBrain {
     const inv = this.room.loot.getPlayerInventorySnap(me.id);
     const need = this.lootNeed(inv);
     if (need === 0 || !inv) return;
+    const supply = this.room.isNight ? this.room.getSupplyDrop() : null;
     const maxDist = need === 2 ? 160 : 45;
     // Nusxasiz o'qish (to'liq snapshot har think'da klonlanmaydi); tanlangan maqsad uchun joylar nusxalanadi
     const view = this.room.loot.botLootView();
@@ -499,7 +511,9 @@ export class BotBrain {
       if (c.opened && !this.anyItem(c.items, (it) => this.wantsItem(it, inv))) continue;
       if (zt && !this.insideCircle(c.position, zt, 2)) continue;
       const d = Math.hypot(c.position.x - me.pos.x, c.position.z - me.pos.z);
-      if (d > maxDist) continue;
+      // Yordam yuki (wolf_night) uzoqroqdan ham (BOT_SUPPLY_SEARCH_M) ko'rinadi; qolganlari avvalgidek
+      const isSupply = !!supply && c.id === supply.id;
+      if (d > maxDist && !(isSupply && d <= BOT_SUPPLY_SEARCH_M)) continue;
       // Ochilmagan konteyner noma'lum — ozgina jarima, ochiq va kerakli buyumi bor konteyner afzal.
       // Qurolsiz bot qurol bo'lishi ehtimoli yuqori konteynerlarni (qurol shkafi, ta'minot qutisi) afzal ko'radi.
       let score = d + (c.opened ? 0 : 4);
@@ -508,6 +522,11 @@ export class BotBrain {
         else if (c.kind === 'weapon_locker') score -= 18;
         else if (c.kind === 'supply_crate') score -= 8;
         else if (c.kind === 'ammo_box') score += 12;
+      }
+      // wolf_night: yarim tungi yordam yuki (qurol + o'q + raketalar) — 80 m ichida, yaqinda bo'ri tahdidi
+      // bo'lmasa — yuqori ustuvorlik (ayniqsa qurolsiz/o'qsiz botga)
+      if (isSupply && d <= BOT_SUPPLY_SEARCH_M && this.room.nearestWolfThreat(me, BOT_REVIVE_WOLF_CLEAR_M) === null) {
+        score -= need === 2 ? 60 : 30;
       }
       if (score < bestScore) {
         const candidates = this.approachCandidates(c).sort(
@@ -922,6 +941,19 @@ export class BotBrain {
     }
 
     const speed = RUN_SPEED * (weapon ? WEAPONS[weapon].speedMul : 1);
+    // wolf_night: bo'ri ovlab yaqinlashdi (≤ 6 m), yaqinda yonib turgan gulxan yo'q, mash'al yo'q — signal
+    // raketasi bo'lsa otamiz (30 s da bir marta); raketa otilgach bo'rilar qochadi, keyingi tick odatdagidek
+    if (this.room.isNight && hunting && dH <= BOT_FLARE_WOLF_DIST_M && t >= this.nextFlareAt && !this.room.hasTorch(me)) {
+      const fire = this.room.nearestLitFire(me.pos.x, me.pos.z);
+      const fireNear = !!fire && Math.hypot(fire.x - me.pos.x, fire.z - me.pos.z) <= BOT_FLARE_NO_FIRE_M;
+      if (!fireNear && this.room.loot.getFlareCount(me.id) > 0) {
+        this.nextFlareAt = t + BOT_FLARE_COOLDOWN_SEC;
+        if (this.room.botUseFlare(me).ok) {
+          applyWorldMovement(me, 0, 0, false, dt, this.room.world);
+          return 'flee';
+        }
+      }
+    }
     // Yonib turgan gulxan doirasidamiz (wolf_night): bo'ri olovga kirmaydi va tishlamaydi — doiradan chiqib
     // qochmaymiz, gulxanning bo'riga teskari tomonida kutamiz
     const shelter = this.room.litFireContaining(me.pos.x, me.pos.z, 0);

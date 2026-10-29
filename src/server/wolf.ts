@@ -61,6 +61,11 @@ export interface ServerWolf extends Body {
   alphaBuffUntil: number;
   /** Tong otdi ('flee'): shu vaqtgacha qochadi, keyin xonadan olib tashlanadi; boshqa holatlarda Infinity. */
   fleeUntil: number;
+  /**
+   * Signal raketasidan qo'rqib qochish ('flee' holati, lekin tong emas): shu vaqtgacha qochadi, keyin oddiy
+   * sayrga qaytadi (xonadan olib tashlanmaydi). 0 — qo'rqmagan.
+   */
+  scaredUntil: number;
   /** To'dadagi vazifa (WolfPack har tick beradi; nishon yo'q — null). Snapshotga 'd'/'f' sifatida chiqadi. */
   role: WolfRole | null;
   brain: WolfBrain;
@@ -198,6 +203,21 @@ export class WolfBrain {
     this.setState('flee', t);
   }
 
+  /**
+   * Signal raketasi (wolf_night): bo'ri `sec` soniya qochadi (tong qochishi bilan bir xil 'flee' holati, lekin
+   * `scaredUntil` bilan — muddati tugagach sayrga qaytadi, xonadan olib tashlanmaydi). Nishon va izlar tashlanadi;
+   * to'da buyrug'i bekor. Tong otgan bo'lsa (fleeUntil cheklangan) o'zgarmaydi.
+   */
+  startScared(t: number, sec: number): void {
+    const me = this.me;
+    if (!me.alive || Number.isFinite(me.fleeUntil)) return;
+    me.scaredUntil = Math.max(me.scaredUntil, t + sec);
+    this.order = null;
+    me.role = null;
+    if (me.state === 'flee') return;
+    this.startFlee(t);
+  }
+
   /** Zarba yedi: hujumchi nishonga aylanadi, hujum paytida bo'lmasa qisqa seskanadi. */
   onDamaged(attacker: ServerPlayer | null, t: number): void {
     const me = this.me;
@@ -277,8 +297,9 @@ export class WolfBrain {
     return dH < WOLF_SMELL_RANGE * mul ? 1 : 0;
   }
 
+  /** Ovlash mumkin: tirik ishtirokchi, yiqilmagan va faol signal raketasi doirasidan tashqarida. */
   private isHuntable(p: ServerPlayer): boolean {
-    return this.room.isWolfPrey(p);
+    return this.room.isWolfPreyExposed(p);
   }
 
   private sense(t: number): void {
@@ -482,8 +503,18 @@ export class WolfBrain {
     this.tNow = t;
     // Tong otdi: faza 'ended' bo'lsa ham qochishda davom etadi (pastdagi 'idle' tarmog'i uni bekor qilmasin)
     if (me.state === 'flee') {
-      this.updateFlee(dt, t);
-      return;
+      if (me.scaredUntil > 0 && !Number.isFinite(me.fleeUntil) && t >= me.scaredUntil) {
+        // Raketadan qo'rqish tugadi — sayrga qaytadi (nishonsiz, yangi sayr maqsadi bilan)
+        me.scaredUntil = 0;
+        this.fleeGoal = null;
+        this.roamGoal = null;
+        this.repathAt = 0;
+        this.nextSenseAt = t + 1.0;
+        this.setState('idle', t);
+      } else {
+        this.updateFlee(dt, t);
+        return;
+      }
     }
     if (this.room.phase !== 'playing') {
       if (me.state !== 'idle') this.setState('idle', t);
