@@ -70,9 +70,16 @@ Yuqoridagi "barchasi bajarildi" yozuvi to'liq to'g'ri emas edi. Kod bo'yicha tek
 | 7 O'tin og'irligi | Botlar 3 ta o'tin bilan ham sprint qilardi | Botlar ham o'yinchilar qoidasiga bo'ysunadi — be50929 |
 | 8 To'da taktikasi | Qanot bo'rilar amalda oldidan hujum qilardi; ec15ca2 dan keyin haqiqiy gulxanda bo'rilar bir joyga to'planardi | Haydovchi oldinda chalg'itadi, qanotlar orqaga aylanib keladi; halqa joylari buyumlar/devorlarni chetlab o'tadi; mash'alli o'yinchi "olov yonida" hisoblanadi — 945de6e, 8166ee0, 298c018 |
 
-Spetsifikatsiyadan farqli qilingan, hali ko'rib chiqilishi kerak bo'lgan bandlar:
-- **4** — "gulxanni o'chirmay saqlab turgan vaqt" yo'q, o'rniga "qayta yoqish soni" sanaladi.
-- **6** — mash'al `E` emas, `F` bilan olinadi; sozlamalardagi tugmalar ro'yxatida `F` va `X` yo'q.
-- **10** — yordam yuki joyi tasodifiy emas (har xonada bir xil), faqat asosiy gulxandan 35–70 m halqaga tushadi.
-- **11** — signal raketasi hamma bo'rilarni emas, faqat 45 m ichidagilarni qo'rqitadi.
-- **12** — "Hamma tirik qoldi" yulduzi butun jamoa qirilib, qayta tirilsa ham beriladi; "to'lqin boshlig'i" o'rniga oq bo'ri (faqat 3-to'lqindan) hisoblanadi.
+Yakuniy tekshiruv topgan kamchiliklar ham tuzatildi (6a19f17, 40bf701, 194e555, b330d7e, 6aed151): bo'ri orqaga yurganda teskari yurish animatsiyasi, sirpanishda tanasi harakat yo'nalishiga buriladi, tong lavhasi ustida bo'ri banneri chiqmaydi, mash'al halqasi devorga borganda qayta quriladi, qochayotgan bo'ri to'siqqa tiqilmaydi, chalg'itish taktikasi faqat "Tong otguncha"da.
+
+Spetsifikatsiyadan farqli qilingan bandlar ham spetsifikatsiyaga moslandi:
+
+| Band | Farq | Tuzatish |
+|---|---|---|
+| 4 Statistika | "Gulxanni saqlab turgan vaqt" o'rniga "qayta yoqish soni" sanalardi | Har bir o'yinchining o'tini gulxanni necha soniya yondirgani hisoblanadi ("🔥 Olov" ustuni, m:ss); "Olov qo'riqchisi" unvoni va MVP ochkosi shunga qarab; chiqib ketganlar unvon olmaydi — 32a9310 |
+| 6 Mash'al | Asosiy tugma `F` edi, yordamda `F`/`X` yo'q edi | Bo'sh qo'l bilan gulxanda `E` — mash'al olish (`F` qo'shimcha: olish/tashlash); tugmalar ro'yxatida `E`, `F`, `X` — 3e7b22d |
+| 10 Yordam yuki | Joyi har xonada bir xil, 35–70 m halqada | Har xona va raundda tasodifiy joy (maxfiy urug'), asosiy gulxandan 40–160 m, lagerlar va buyumlardan uzoqda; quti yerga tushmaguncha ochilmaydi; kech kirganlarda mayoq vaqti to'g'ri — 911e833 |
+| 11 Signal raketasi | Faqat 45 m ichidagi bo'rilar qo'rqardi | 20 s davomida **hamma** bo'rilar qochadi, raketa yonib turganda paydo bo'lganlari ham; matnlar bir xil; qurolli botlar ham xavfda raketa otadi — 911e833 |
+| 12 Yulduzlar | "Hamma tirik qoldi" qirilib qayta tirilganda ham berilardi; boshliq har doim chiqmasdi | Tun davomida hech kim halok bo'lmasa (yiqilib turg'izilgan — hisob emas; halok bo'lib yoki yiqilgan holda chiqib ketgan — hisob); "To'lqin boshlig'i o'ldirildi"; 3-to'lqindan oq bo'ri albatta chiqadi — 32a9310 |
+
+Hozir barcha 13 band va ikkala yo'l-yo'lakay tuzatish spetsifikatsiyaga mos.
