@@ -950,6 +950,20 @@ export class Room {
   }
 
   /**
+   * POI'dagi bezak gulxan o'chog'i (`campfire_pit_01` tashqi joylashuvi — xarita bezagi, tosh halqa) — tun gulxani
+   * shu nuqtada yonadi. Yo'q bo'lsa null. y — relyef balandligi.
+   */
+  private campfirePitAt(poiId: ForestSquarePoiId): Vec3 | null {
+    const placements = this.world.stage04aLayout?.outdoorPlacements;
+    if (!placements) return null;
+    const pit = placements.find((o) => o.assetId === 'campfire_pit_01' && o.siteId === poiId);
+    if (!pit) return null;
+    const x = pit.position.x;
+    const z = pit.position.z;
+    return { x, y: sampleTerrainHeight(this.world.terrain, x, z), z };
+  }
+
+  /**
    * Lager joylashuvi (deterministik, publicLayoutSeed bo'yicha): asosiy gulxan — uylar guruhi hovlisida,
    * yana ikkitasi boshqa POI'larda (≥ 60 m oraliq); o'tin g'aramlari eng yaqin gulxandan 25–55 m da,
    * bir-biridan va gulxanlardan ≥ 12 m, turli yo'nalishlarda. Nomzod topilmasa — tasodifiy (seedli) sayr
@@ -974,6 +988,14 @@ export class Room {
       if (fires.length >= NIGHT_CAMPFIRE_COUNT) break;
       const site = byId.get(poiId);
       if (!site) continue;
+      // POI'da bezak gulxan o'chog'i (campfire_pit_01) bo'lsa — tun gulxani aynan uning ustida yonadi (o'choq
+      // gulxan uchun yaratilgan: bo'shliq tekshiruvi o'tkazilmaydi; klient tunda bezak o'choqni yashiradi), shu
+      // POI'da ikki gulxan ko'rinmasin. Oraliq sharti (≥ 60 m) buzilsa — eski tugun qidiruvi.
+      const pit = this.campfirePitAt(poiId);
+      if (pit && !fires.some((t) => Math.hypot(t.x - pit.x, t.z - pit.z) < CAMP_FIRE_MIN_GAP_M)) {
+        fires.push(pit);
+        continue;
+      }
       const c = this.findFireNode(site.center, site.flatRadius, roamSet, fires, CAMP_FIRE_MIN_GAP_M);
       if (c) fires.push(c);
     }

@@ -762,7 +762,8 @@ export function buildForestSampleScene(
       layout.containers,
       layout.worldAnchors.filter((a) => a.category === 'inside_container'),
     );
-    const outdoorHandle = buildOutdoorScene(layout.outdoorPlacements ?? [], initialQuality);
+    // Tunda bezak gulxan o'choqlari yashirinadi: tun gulxani (CampRenderer) aynan o'sha nuqtada yonadi
+    const outdoorHandle = buildOutdoorScene(layout.outdoorPlacements ?? [], initialQuality, { hideCampfirePits: night });
 
     group.add(buildingsHandle.group);
     group.add(interiorsHandle.group);

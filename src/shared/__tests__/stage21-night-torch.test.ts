@@ -136,11 +136,13 @@ function groundAt(room: Room, x: number, z: number) {
 /** Gulxandan `len` m gacha to'siqsiz yo'nalish (16 ta burchak sinab chiqiladi). */
 function openDirFromFire(room: Room, fire: { x: number; y: number; z: number }, len: number): { dx: number; dz: number } {
   const nav = room.nav;
-  const a = { x: fire.x, y: fire.y, z: fire.z };
+  // Kesma gulxan tosh halqasi (campfire_pit_01 kollayderi) tashqarisidan boshlanadi — tun gulxani o'choq ustida yonadi
+  const RING = 1.2;
   for (let k = 0; k < 16; k++) {
     const ang = (k / 16) * Math.PI * 2;
     const dx = Math.cos(ang);
     const dz = Math.sin(ang);
+    const a = { x: fire.x + dx * RING, y: fire.y, z: fire.z + dz * RING };
     const bx = fire.x + dx * len;
     const bz = fire.z + dz * len;
     const b = { x: bx, y: sampleTerrainHeight(room.world.terrain, bx, bz), z: bz };

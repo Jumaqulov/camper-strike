@@ -112,13 +112,18 @@ function openDirFromFire(
   lenBack = 0,
 ): { dx: number; dz: number } {
   const nav = room.nav;
-  const a = { x: fire.x, y: fire.y, z: fire.z };
-  for (let k = 0; k < 16; k++) {
-    const ang = (k / 16) * Math.PI * 2;
+  // Kesma gulxan o'chog'i (tosh halqa, o'rindiq/stol bezaklari) tashqarisidan boshlanadi — tun gulxani o'choq
+  // ustida yonadi; 64 burchak (ikki tomonlama tekshiruvda tor hovlida ham yo'nalish topilsin)
+  const RING = 2.0;
+  const N = 64;
+  for (let k = 0; k < N; k++) {
+    const ang = (k / N) * Math.PI * 2;
     const dx = Math.cos(ang);
     const dz = Math.sin(ang);
     let ok = true;
     for (const l of lenBack > 0 ? [len, -lenBack] : [len]) {
+      const s = Math.sign(l) * RING;
+      const a = { x: fire.x + dx * s, y: fire.y, z: fire.z + dz * s };
       const bx = fire.x + dx * l;
       const bz = fire.z + dz * l;
       const b = { x: bx, y: sampleTerrainHeight(room.world.terrain, bx, bz), z: bz };
@@ -134,22 +139,43 @@ function openDirFromFire(
 
 /** Halqasi (standoff radiusida, 12 nuqta) eng ochiq yonib turgan gulxan. */
 function mostOpenFire(room: Room) {
-  let best: { fire: { id: string; x: number; y: number; z: number }; open: number } | null = null;
-  for (const f of room.campfires.values()) {
-    if (!f.lit) continue;
-    let open = 0;
-    for (let k = 0; k < 12; k++) {
+  // Bosqich 26: tun gulxanlari bezak o'choqlar ustida — POI bezaklari (kulbalar, o'rindiqlar, panjaralar) orasida
+  // yonadi; halqa testlari ochiq maydon talab qiladi: yonib turgan gulxan ochiq sayr maydoniga ko'chiriladi (halqa
+  // 12 nuqtasi tugunli va to'siqsiz, kamida bir yo'nalishda ikki tomonga 22 m to'siqsiz; boshqa gulxanlardan ≥ 40 m).
+  // Gulxan — ish vaqtidagi obyekt, dunyo tavsifi (kollayderlar, gameplayHash) o'zgarmaydi.
+  const nav = room.nav;
+  const fires = [...room.campfires.values()].filter((f) => f.lit);
+  assert.ok(fires.length > 0, 'yonib turgan gulxan bor');
+  const fire = fires.find((f) => f.main) ?? fires[0]!;
+  const nodeNear = (pt: Vec3, from: Vec3, tol: number): boolean => {
+    const ni = nav.nearest(pt);
+    if (ni < 0) return false;
+    const c = nav.center(ni);
+    return Math.hypot(c.x - pt.x, c.z - pt.z) <= tol && Math.abs(c.y - from.y) <= 0.8 && nav.segmentClear(from, c);
+  };
+  for (const i of nav.roamList) {
+    const c = nav.center(i);
+    if (fires.some((f) => f !== fire && Math.hypot(f.x - c.x, f.z - c.z) < 40)) continue;
+    let ok = true;
+    for (let k = 0; k < 12 && ok; k++) {
       const ang = (k / 12) * Math.PI * 2;
-      const pt = { x: f.x + Math.cos(ang) * CAMPFIRE_STANDOFF_M, y: f.y, z: f.z + Math.sin(ang) * CAMPFIRE_STANDOFF_M };
-      const ni = room.nav.nearest(pt);
-      if (ni < 0) continue;
-      const c = room.nav.center(ni);
-      if (Math.hypot(c.x - pt.x, c.z - pt.z) <= 3 && Math.abs(c.y - f.y) <= 1.0) open++;
+      ok = nodeNear({ x: c.x + Math.cos(ang) * CAMPFIRE_STANDOFF_M, y: c.y, z: c.z + Math.sin(ang) * CAMPFIRE_STANDOFF_M }, c, 2);
     }
-    if (!best || open > best.open) best = { fire: f, open };
+    if (!ok) continue;
+    let line = false;
+    for (let k = 0; k < 16 && !line; k++) {
+      const ang = (k / 16) * Math.PI * 2;
+      const dx = Math.cos(ang) * 22;
+      const dz = Math.sin(ang) * 22;
+      line = nodeNear({ x: c.x + dx, y: c.y, z: c.z + dz }, c, 2.5) && nodeNear({ x: c.x - dx, y: c.y, z: c.z - dz }, c, 2.5);
+    }
+    if (!line) continue;
+    fire.x = c.x;
+    fire.y = c.y;
+    fire.z = c.z;
+    return fire;
   }
-  assert.ok(best, 'yonib turgan gulxan bor');
-  return best!.fire;
+  throw new Error('gulxan uchun ochiq maydon topilmadi');
 }
 
 /** Vaqtni suradi; `pinned` dagilar joyida qoladi va joni to'ldiriladi. */

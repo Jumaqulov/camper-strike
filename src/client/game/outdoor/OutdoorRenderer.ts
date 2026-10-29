@@ -307,13 +307,26 @@ function buildCampfireFlameGroup(placement: OutdoorPlacement): THREE.Group {
  * - Renders Uzbek POI text overlays on `wooden_signpost_01` boards and stylized low-poly flame cones
  *   at `fire_anchor` (`[0, 0.15, 0]`) on lit `campfire_pit_01` placements.
  */
+export interface OutdoorSceneOptions {
+  /**
+   * "Tong otguncha" (tun): bezak gulxan o'choqlari (`campfire_pit_01` — tosh halqa, o'tinlar, olov konuslari)
+   * chizilmaydi — tun gulxani (`CampRenderer`) aynan shu o'choq nuqtasida o'z halqasi va olovi bilan yonadi,
+   * bitta lagerda ikki gulxan ko'rinmasin. Kollayderlar dunyo tavsifida qoladi (fizika o'zgarmaydi).
+   */
+  hideCampfirePits?: boolean;
+}
+
 export function buildOutdoorScene(
-  placements: readonly OutdoorPlacement[],
+  allPlacements: readonly OutdoorPlacement[],
   initialQuality: QualityLevel = 'medium',
+  options: OutdoorSceneOptions = {},
 ): OutdoorSceneHandles {
   if (!areAllOutdoorAssetsLoaded()) {
     void preloadOutdoorAssets();
   }
+  const placements: readonly OutdoorPlacement[] = options.hideCampfirePits
+    ? allPlacements.filter((p) => p.assetId !== 'campfire_pit_01')
+    : allPlacements;
 
   const group = new THREE.Group();
   group.name = 'stage08a_outdoor_scene';
