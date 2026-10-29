@@ -27,6 +27,15 @@ import {
   type WolfState,
 } from '../shared/wolf';
 import type { FearSource, Room, ServerPlayer } from './room';
+import {
+  WOLF_FLANK_DRIVER_CLOSE_M,
+  WOLF_FLANK_ENGAGE_M,
+  WOLF_FLANK_HOLD_MAX_SEC,
+  WOLF_FLANK_STALK_M,
+  preyFacingDot,
+  type PackOrder,
+  type WolfRole,
+} from './wolfPack';
 
 /** Server tomonidagi bo'ri: fizik tana + holat; AI `WolfBrain` da. */
 export interface ServerWolf extends Body {
@@ -52,6 +61,8 @@ export interface ServerWolf extends Body {
   alphaBuffUntil: number;
   /** Tong otdi ('flee'): shu vaqtgacha qochadi, keyin xonadan olib tashlanadi; boshqa holatlarda Infinity. */
   fleeUntil: number;
+  /** To'dadagi vazifa (WolfPack har tick beradi; nishon yo'q — null). Snapshotga 'd'/'f' sifatida chiqadi. */
+  role: WolfRole | null;
   brain: WolfBrain;
 }
 
@@ -100,6 +111,15 @@ export class WolfBrain {
   private fleeGoalAt = 0;
   /** Joriy tick vaqti (speedFor to'da boshlig'i tezlashuvini shu bilan tekshiradi). */
   private tNow = 0;
+  /** To'da koordinatorining joriy buyrug'i (null — to'da nishon bermadi, o'z sezgisi bilan ishlaydi). */
+  private order: PackOrder | null = null;
+  /** Qanot nuqtasida kutish boshlangan vaqt (0 — kutmayapti). */
+  private flankHoldSince = 0;
+  private lastPackHowlAt = -99;
+  /** Olov halqasi bo'ylab siljish: oxirgi tekshiruvdagi burchak/vaqt, to'silganda kengroq radius muddati. */
+  private slideAngPrev = 0;
+  private slideCheckAt = 0;
+  private slideWideUntil = 0;
 
   constructor(
     private readonly room: Room,
@@ -122,7 +142,39 @@ export class WolfBrain {
     this.stuckPos = vcopy(this.me.pos);
     this.stuckCheckAt = t + 1.5;
     this.nextHowlAt = t + 4 + Math.random() * 10;
+    this.order = null;
+    this.flankHoldSince = 0;
+    this.me.role = null;
     this.setState('idle', t);
+  }
+
+  /**
+   * To'da koordinatori buyrug'i (har tick, AI yangilanishidan oldin). Nishon o'zgarsa to'daning oxirgi ma'lum
+   * joyi/vaqti qabul qilinadi (to'da xabardorligi); tishlash paytida nishon almashmaydi (buyruq keyingi tickda
+   * kuchga kiradi). `null` — to'da nishon bermadi: bo'ri o'z sezgisi bilan ishlaydi (eski xatti-harakat).
+   */
+  setPackOrder(order: PackOrder | null, _t: number): void {
+    this.order = order;
+    if (!order) return;
+    const p = this.room.players.get(order.targetId) ?? null;
+    if (!p || !this.isHuntable(p)) {
+      this.order = null;
+      return;
+    }
+    if (this.target !== p) {
+      if (this.me.state === 'attack') return;
+      this.target = p;
+      this.investigatePos = null;
+      this.path = [];
+      this.pathIdx = 0;
+      this.repathAt = 0;
+      this.flankHoldSince = 0;
+      this.lastSensedAt = order.sensedAt;
+      this.lastSensedPos = vcopy(order.sensedPos);
+    } else if (order.sensedAt > this.lastSensedAt) {
+      this.lastSensedAt = order.sensedAt;
+      this.lastSensedPos = vcopy(order.sensedPos);
+    }
   }
 
   /**
@@ -155,6 +207,8 @@ export class WolfBrain {
       this.lastSensedAt = t;
       this.lastSensedPos = vcopy(attacker.pos);
       this.investigatePos = null;
+      // To'da: hujumchi haqida xabar; bu bo'ri WOLF_PACK_RETALIATE_SEC davomida aynan uni ovlaydi
+      if (this.isHuntable(attacker)) this.room.pack.report(me, attacker, t, true);
     }
     if (me.state !== 'attack' && me.state !== 'dead') {
       this.setState('hit', t, WOLF_HIT_FLINCH);
@@ -229,15 +283,20 @@ export class WolfBrain {
 
   private sense(t: number): void {
     const me = this.me;
+    const pack = this.room.pack;
     let best: ServerPlayer | null = null;
     let bestLevel: SenseLevel = 0;
     let bestD = Infinity;
+    let curLevel: SenseLevel = 0;
     for (const p of this.room.players.values()) {
       if (!this.isHuntable(p)) continue;
       const dH = Math.hypot(p.pos.x - me.pos.x, p.pos.z - me.pos.z);
       // Joriy nishon sezgi uchun ustunlikka ega (bir xil darajada yaqinroq bo'lmasa ham ushlab turadi)
       const level = this.senseLevel(p, dH);
       if (level === 0) continue;
+      // To'da xabardorligi: ko'rilgan / yaqindan hidi olingan / ovlanayotgan o'yinchi to'daga ma'lum qilinadi
+      if (level === 2 || dH < 6 || p === this.target) pack.report(me, p, t);
+      if (p === this.target) curLevel = level;
       const dEff = p === this.target ? dH * 0.6 : dH;
       if (level > bestLevel || (level === bestLevel && dEff < bestD)) {
         best = p;
@@ -246,6 +305,15 @@ export class WolfBrain {
       }
     }
     this.seenNow = false;
+    if (this.order && this.target) {
+      // To'da buyrug'i bor: nishonni to'da tanlaydi, bo'ri faqat o'z sezgisi bilan izini yangilaydi
+      if (curLevel > 0) {
+        this.lastSensedAt = t;
+        this.lastSensedPos = vcopy(this.target.pos);
+        this.seenNow = curLevel === 2;
+      }
+      return;
+    }
     if (!best) return;
     const dH = Math.hypot(best.pos.x - me.pos.x, best.pos.z - me.pos.z);
     if (bestLevel === 2 || dH < 6 || best === this.target) {
@@ -478,8 +546,16 @@ export class WolfBrain {
       // Vaqtli holat: joyida turadi (alert — nishon tomonga qaraydi)
       const look = this.target?.pos ?? this.investigatePos;
       if (look) this.turnTowards(Math.atan2(-(look.x - me.pos.x), -(look.z - me.pos.z)), dt, 3);
+    } else if (this.target && this.order?.howl && this.order.targetId === this.target.id && t - this.lastPackHowlAt > 20) {
+      // To'da: to'lqinda birinchi nishon uzoqdan olindi — haydovchi bir marta uvlaydi (keyin quvadi)
+      this.lastPackHowlAt = t;
+      this.nextHowlAt = t + UNREACHABLE_HOWL_SEC;
+      this.setState('howl', t, 3.0);
+      this.room.wolfHowl(me);
     } else if (this.target) {
       const tgt = this.target;
+      // To'da buyrug'i shu nishon uchunmi (vazifa: haydovchi / qanot, halqa o'rni)
+      const order = this.order && this.order.targetId === tgt.id ? this.order : null;
       const dH = Math.hypot(tgt.pos.x - me.pos.x, tgt.pos.z - me.pos.z);
       const dy = tgt.pos.y - me.pos.y;
       const fresh = t - this.lastSensedAt < 1.0;
@@ -504,7 +580,29 @@ export class WolfBrain {
         const fz = me.pos.z - fire.z;
         const fd = Math.hypot(fx, fz);
         const standoff = fire.standoff;
-        if (fd > standoff + 0.4) {
+        // To'da halqa o'rni: o'z burchagiga halqa bo'ylab siljish kerakmi
+        const myAng = Math.atan2(fz, fx);
+        const slotDA = order?.standoffAngle !== undefined ? angleDiff(myAng, order.standoffAngle) : 0;
+        const sliding = order?.standoffAngle !== undefined && Math.abs(slotDA) > 0.12 && fd < standoff + 6;
+        if (!sliding) {
+          this.slideAngPrev = myAng;
+          this.slideCheckAt = t + 1.2;
+        } else if (t >= this.slideCheckAt) {
+          // Halqa bo'ylab siljish to'sildi (burchak o'zgarmadi): bir muddat kengroq radiusda aylanib o'tadi
+          if (Math.abs(angleDiff(this.slideAngPrev, myAng)) < 0.06) this.slideWideUntil = t + 2.5;
+          this.slideAngPrev = myAng;
+          this.slideCheckAt = t + 1.2;
+        }
+        if (sliding) {
+          const ringR = t < this.slideWideUntil ? standoff + 3 : standoff;
+          const sp = this.speedFor('stalk');
+          const tangential = sp * Math.min(1, 0.3 + Math.abs(slotDA) * 2);
+          const sgn = Math.sign(slotDA);
+          const radial = Math.max(-sp, Math.min(sp, (ringR - fd) * 2));
+          wishX = -Math.sin(myAng) * sgn * tangential + (fx / Math.max(fd, 1e-3)) * radial;
+          wishZ = Math.cos(myAng) * sgn * tangential + (fz / Math.max(fd, 1e-3)) * radial;
+          this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt, 8);
+        } else if (fd > standoff + 0.4) {
           // Olov chetiga yaqinlashadi (markaz tomon, lekin doiraga kirmaydi)
           const m = this.moveTowards(
             { x: fire.x + (fx / Math.max(fd, 1e-3)) * standoff, y: me.pos.y, z: fire.z + (fz / Math.max(fd, 1e-3)) * standoff },
@@ -519,6 +617,8 @@ export class WolfBrain {
           const sp = this.speedFor('stalk');
           wishX = (fx / Math.max(fd, 1e-3)) * sp;
           wishZ = (fz / Math.max(fd, 1e-3)) * sp;
+        } else if (order?.standoffAngle !== undefined) {
+          // O'z halqa o'rnida: turib nishonga qaraydi (to'da o'rab olgan)
         } else if (me.state === 'alert') {
           // Chetida aylanib yuradi (soat yo'nalishida, sekin)
           const sp = this.speedFor('idle') * 0.6;
@@ -553,13 +653,43 @@ export class WolfBrain {
         this.biteDone = false;
         this.setState('attack', t, WOLF_ATTACK_DURATION);
       } else {
-        const huntState: WolfState = fresh ? 'hunt' : 'stalk';
+        let huntState: WolfState = fresh ? 'hunt' : 'stalk';
+        let moveGoal = goal;
+        let hold = false;
+        if (fresh && order?.role === 'flanker' && order.flankGoal) {
+          // Qanot: nishon atrofidagi qanot nuqtasiga boradi; nishon yaqin (≤ 11 m) va haydovchi yetib kelgan
+          // (≤ 6 m) yoki nishon orqa o'girgan bo'lsa — to'g'ri hujumga o'tadi; uzoq kutmaydi (≤ 4 s)
+          const facingAway = preyFacingDot(tgt.yaw, tgt.pos, me.pos) < 0;
+          const engage = dH < WOLF_FLANK_ENGAGE_M && (order.driverDist <= WOLF_FLANK_DRIVER_CLOSE_M || facingAway);
+          const waited = this.flankHoldSince > 0 && t - this.flankHoldSince > WOLF_FLANK_HOLD_MAX_SEC;
+          if (!engage && !waited) {
+            moveGoal = this.outsideFear(order.flankGoal);
+            const dGoal = Math.hypot(moveGoal.x - me.pos.x, moveGoal.z - me.pos.z);
+            huntState = dH > WOLF_FLANK_STALK_M ? 'stalk' : 'hunt';
+            if (dGoal < 1.2 || (this.flankHoldSince > 0 && dGoal < 2.5)) {
+              hold = true;
+              huntState = 'stalk';
+              if (this.flankHoldSince === 0) this.flankHoldSince = t;
+            } else {
+              this.flankHoldSince = 0;
+            }
+          }
+        } else {
+          this.flankHoldSince = 0;
+        }
         if (me.state !== huntState) this.setState(huntState, t);
-        const speed = this.speedFor(huntState);
-        const direct = this.hasDirectLine(goal);
-        const m = this.followPath(goal, speed, t, dt, direct);
-        wishX = m.wishX;
-        wishZ = m.wishZ;
+        if (hold) {
+          // Qanot nuqtasida nishonga qarab kutadi
+          this.path = [];
+          this.pathIdx = 0;
+          this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt, 8);
+        } else {
+          const speed = this.speedFor(huntState);
+          const direct = this.hasDirectLine(moveGoal);
+          const m = this.followPath(moveGoal, speed, t, dt, direct);
+          wishX = m.wishX;
+          wishZ = m.wishZ;
+        }
         // Yaqin masofada nishonga qarab turadi (yo'l tuguniga emas)
         if (dH < 3) this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt, 8);
         if (!fresh && this.lastSensedPos && dH < 1.5) {

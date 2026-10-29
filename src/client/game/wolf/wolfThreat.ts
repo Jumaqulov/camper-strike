@@ -17,7 +17,10 @@ export const WOLF_STEALTH_HUNT_WARN_DIST = 18;
 /** Soyaning doimiy ovozlari (nafas, irillash) eshitilish masofasi ko'paytuvchisi. */
 export const WOLF_STEALTH_AUDIO_MUL = 0.45;
 
-export type WolfWarnLevel = '' | 'near' | 'hunt';
+/** Qanot (orqadan aylanib kelayotgan, ovdagi bo'ri) shu masofadan (m) ogohlantiradi. */
+export const WOLF_FLANK_WARN_DIST = 18;
+
+export type WolfWarnLevel = '' | 'near' | 'hunt' | 'flank';
 
 export interface WolfThreatView {
   x: number;
@@ -26,6 +29,8 @@ export interface WolfThreatView {
   targetId: string | null;
   alive: boolean;
   coat?: number;
+  /** To'dadagi vazifa (snapshot `WolfSnap.role`): 'd' — haydovchi, 'f' — qanot. */
+  role?: 'd' | 'f';
 }
 
 export interface WolfWarning {
@@ -40,26 +45,42 @@ export function wolfAudioRangeMul(coat: number | undefined): number {
 }
 
 /**
- * HUD ogohlantirishi: 'hunt' — tirik bo'ri meni quvyapti (soya — faqat yaqin bo'lsa), 'near' — bo'ri yaqinda
+ * HUD ogohlantirishi: 'flank' — meni ovlayotgan bo'ri (hunt/attack) 18 m ichida orqamdan kelyapti (`me.yaw`
+ * berilsa; to'da qanoti), 'hunt' — tirik bo'ri meni quvyapti (soya — faqat yaqin bo'lsa), 'near' — bo'ri yaqinda
  * (soya — qisqaroq masofada). Qochayotgan ('flee', tong otdi) va o'lik bo'rilar e'tiborga olinmaydi.
  */
 export function wolfWarningFor(
   wolves: Iterable<WolfThreatView>,
-  me: { x: number; z: number; alive: boolean },
+  me: { x: number; z: number; alive: boolean; yaw?: number },
   myId: string,
 ): WolfWarning {
   if (!me.alive) return { level: '', nameUz: null };
   let near = false;
+  let hunt: WolfWarning | null = null;
   for (const w of wolves) {
     if (!w.alive || w.state === 'flee' || w.state === 'dead') continue;
     const traits = wolfCoatTraits(w.coat);
-    const d = Math.hypot(w.x - me.x, w.z - me.z);
+    const dx = w.x - me.x;
+    const dz = w.z - me.z;
+    const d = Math.hypot(dx, dz);
     if (w.targetId === myId && isWolfThreatState(w.state) && (!traits.stealthy || d < WOLF_STEALTH_HUNT_WARN_DIST)) {
-      return { level: 'hunt', nameUz: traits.nameUz };
+      if (
+        me.yaw !== undefined &&
+        (w.state === 'hunt' || w.state === 'attack') &&
+        d < WOLF_FLANK_WARN_DIST &&
+        d > 1e-3 &&
+        // O'yinchi old yo'nalishi (-sin yaw, -cos yaw) bilan dot < 0 — bo'ri orqada
+        (-Math.sin(me.yaw) * dx - Math.cos(me.yaw) * dz) / d < 0
+      ) {
+        return { level: 'flank', nameUz: traits.nameUz };
+      }
+      hunt ??= { level: 'hunt', nameUz: traits.nameUz };
+      continue;
     }
     const mul = traits.stealthy ? WOLF_STEALTH_WARN_MUL : 1;
     const alerted = w.state === 'alert' || w.state === 'stalk' || w.state === 'hunt';
     if (d < WOLF_WARN_NEAR_DIST * mul || (alerted && d < WOLF_WARN_ALERT_DIST * mul)) near = true;
   }
+  if (hunt) return hunt;
   return { level: near ? 'near' : '', nameUz: null };
 }

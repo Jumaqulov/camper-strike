@@ -41,7 +41,7 @@ s.on('connect', async () => {
       if (states.get(w.id) !== w.state) {
         states.set(w.id, w.state);
         const d = me ? Math.hypot(w.x - me.x, w.z - me.z).toFixed(0) : '?';
-        console.log(`${((now - t0) / 1000).toFixed(1)}s ${w.id} -> ${w.state} tgt=${w.targetId ?? '-'} dMe=${d}`);
+        console.log(`${((now - t0) / 1000).toFixed(1)}s ${w.id} -> ${w.state} tgt=${w.targetId ?? '-'} role=${w.role ?? '-'} dMe=${d}`);
       }
     }
     if (now - lastPrint > 5000) {

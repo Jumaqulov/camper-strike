@@ -98,6 +98,7 @@ import {
   type WolfSnap,
 } from '../shared/wolf';
 import { WolfBrain, type ServerWolf } from './wolf';
+import { WolfPack } from './wolfPack';
 import type {
   ChatMsg, ClientState, ContainerOpenAck, ContainerOpenReq, CreateRoomOpts, EquipWeaponAck, EquipWeaponReq,
   HitConfirm, HurtEvent, KillEvent, LootPickupAck, LootPickupReq, MatchState,
@@ -364,6 +365,8 @@ export class Room {
   private departed = new Map<string, ServerPlayer>();
   /** Vahshiy bo'rilar (server boshqaradi; survivalda raund boshida paydo bo'ladi, klassikda doimiy). */
   readonly wolves = new Map<string, ServerWolf>();
+  /** To'da koordinatori: nishon taqsimoti (yolg'iz/gulxandan uzoq afzal), haydovchi/qanot vazifalari, halqa o'rinlari. */
+  readonly pack: WolfPack = new WolfPack(this);
   private wolfSeq = 0;
   /** Xona sozlamasidagi bo'rilar soni (chat buyruqlari bilan o'zgartiriladi; wolf_night da to'lqin belgilaydi). */
   private wolfCount: number;
@@ -1472,6 +1475,7 @@ export class Room {
       biteMul: 1,
       alphaBuffUntil: 0,
       fleeUntil: Infinity,
+      role: null,
       brain: null as unknown as WolfBrain,
     };
     this.applyWaveStats(w);
@@ -1497,6 +1501,7 @@ export class Room {
     w.respawnAt = Infinity;
     w.alphaBuffUntil = 0;
     w.fleeUntil = Infinity;
+    w.role = null;
     w.brain.onSpawn(this.now());
     this.announceAlpha(w);
   }
@@ -1516,8 +1521,14 @@ export class Room {
     return true;
   }
 
-  /** Bo'rilar AI, jasadlar va qayta paydo bo'lish — har tick. */
+  /** wolf_night: joriy to'lqin indeksi (0..NIGHT_WAVE_COUNT-1), raunddan tashqarida -1. */
+  currentNightWaveIdx(): number {
+    return this.nightWaveIdx;
+  }
+
+  /** Bo'rilar AI, jasadlar va qayta paydo bo'lish — har tick (to'da koordinatori bo'rilar AI dan oldin). */
   private updateWolves(dt: number, t: number): void {
+    this.pack.update(t);
     for (const [id, w] of this.wolves) {
       if (w.alive) {
         // Tong otgach qochgan bo'ri yo'qoladi (klient snapshotda yo'q bo'rini sahnadan olib tashlaydi)
@@ -3485,6 +3496,7 @@ export class Room {
           coat: w.coat,
         };
         if (w.targetId) ws.targetId = w.targetId;
+        if (w.role && w.alive) ws.role = w.role === 'driver' ? 'd' : 'f';
         wolves.push(ws);
       }
       if (wolves.length) snap.wolves = wolves;

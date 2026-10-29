@@ -215,15 +215,17 @@ export class Hud {
    * Bo'ri xavfi: 'hunt' — sizni quvyapti, 'near' — yaqin atrofda hushyor, '' — yo'q.
    * `nameUz` — quvayotgan bo'ri turi ("To'da boshlig'i", "Tun soyasi", ...), bo'lmasa oddiy vahshiy bo'ri.
    */
-  setWolfWarning(level: '' | 'near' | 'hunt', nameUz: string | null = null): void {
+  setWolfWarning(level: '' | 'near' | 'hunt' | 'flank', nameUz: string | null = null): void {
     const key = level === 'hunt' ? `hunt:${nameUz ?? ''}` : level;
     if (key === this.lastWolfWarn) return;
     this.lastWolfWarn = key;
     const el = $('wolf-warn');
+    const red = level === 'hunt' || level === 'flank';
     el.classList.toggle('hidden', level === '');
-    el.classList.toggle('hunt', level === 'hunt');
-    $('hud').classList.toggle('wolf-hunted', level === 'hunt');
-    if (level === 'hunt') el.textContent = `${(nameUz || "Vahshiy bo'ri").toUpperCase()} SIZNI QUVYAPTI · qoching yoki oting!`;
+    el.classList.toggle('hunt', red);
+    $('hud').classList.toggle('wolf-hunted', red);
+    if (level === 'flank') el.textContent = "BO'RILAR ORQADAN AYLANMOQDA! · orqaga qarang";
+    else if (level === 'hunt') el.textContent = `${(nameUz || "Vahshiy bo'ri").toUpperCase()} SIZNI QUVYAPTI · qoching yoki oting!`;
     else if (level === 'near') el.textContent = "Yaqinda bo'ri bor · sekin yuring";
   }
 

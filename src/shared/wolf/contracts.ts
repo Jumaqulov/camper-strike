@@ -30,6 +30,8 @@ export interface WolfSnap {
   targetId?: string;
   /** Rang varianti 0..4: charcoal, red, tan, black, white (klient `WOLF_COAT_URLS` bo'yicha GLB tanlaydi). */
   coat?: number;
+  /** To'dadagi vazifa (faqat nishon bor bo'lsa): 'd' — haydovchi (old tomondan), 'f' — qanot (orqadan aylanadi). */
+  role?: 'd' | 'f';
 }
 
 /** Bo'ri uvladi (klient: pozitsion ovoz). */

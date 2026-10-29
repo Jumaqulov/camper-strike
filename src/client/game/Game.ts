@@ -2884,7 +2884,7 @@ export class Game {
       alive: w.alive,
       coat: w.coat,
     }));
-    return wolfWarningFor(views, { x: p.x, z: p.z, alive: this.me.alive }, this.myId);
+    return wolfWarningFor(views, { x: p.x, z: p.z, alive: this.me.alive, yaw: this.me.yaw }, this.myId);
   }
 
   /** O'ldirgan bo'ri turi nomi: lokal bo'ri (coat) bo'yicha, bo'lmasa server bergan ism. */
