@@ -16,6 +16,8 @@ export interface WolfModelState {
   state: WolfState;
   /** Gorizontal tezlik (m/s) — sayrda Idle/Walk tanlash uchun. */
   speed: number;
+  /** Bo'ri yuzi tomonga emas, orqaga siljiyapti (`wolfBackpedal`) — Walk teskari o'ynaydi. */
+  backwards?: boolean;
 }
 
 /** Klip tabiiy tezliklari (m/s, timeScale 1): Run 2.4 m/0.6 s = 4 m/s, Walk 1.2 m/s. */
@@ -32,14 +34,57 @@ export const WOLF_RUN_CLIP_ENTER_SPEED = 2.8;
 export const WOLF_RUN_CLIP_EXIT_SPEED = 2.5;
 
 /**
+ * Orqaga yurish: harakat bilan yuz orasidagi burchak kosinusi shundan past bo'lsa (harakat yuzdan 120° dan ko'proq
+ * og'gan) — orqaga; qaytish uchun -0.2 dan oshishi kerak (gisterezis: burilish/snapshot shovqinida klip
+ * oldinga-orqaga almashib turmaydi).
+ */
+export const WOLF_BACKPEDAL_ENTER_COS = -0.5;
+export const WOLF_BACKPEDAL_EXIT_COS = -0.2;
+/** Shundan sekin (m/s) — orqaga yurish yo'q (to'xtagan bo'rida yo'nalish ma'nosiz; klip baribir Idle/Alert). */
+export const WOLF_BACKPEDAL_MIN_SPEED = 0.3;
+/**
+ * Silliqlangan tezlik vektori moduli shu ulushdan kam bo'lsa (tezlik modulining o'zi bilan solishtirganda) —
+ * harakat izchil emas (har tik yo'nalish almashadi, zigzag): yo'nalish ishonchsiz, orqaga yurish yo'q
+ * (aks holda Walk har necha kadrda teskari/oldinga almashib turardi).
+ */
+export const WOLF_BACKPEDAL_MIN_COHERENCE = 0.5;
+
+/**
+ * Bo'ri orqaga siljiyaptimi (gisterezis bilan). `velX/velZ` — silliqlangan gorizontal tezlik vektori (m/s, jahon
+ * o'qlarida), `yaw` — joriy yo'nalish (oldinga = (-sin yaw, -cos yaw)), `speed` — xuddi shunday silliqlangan tezlik
+ * moduli (izchillik uchun). Haydovchi soxta hamladan keyin o'ljaga qarab chekinadi, olov halqasidan orqaga silliq
+ * chekinadi — shunda oyoqlar oldinga yugurmasin ("moonwalk").
+ */
+export function wolfBackpedal(prev: boolean, velX: number, velZ: number, yaw: number, speed: number): boolean {
+  const v = Math.hypot(velX, velZ);
+  if (!(v > WOLF_BACKPEDAL_MIN_SPEED) || !Number.isFinite(yaw) || v < WOLF_BACKPEDAL_MIN_COHERENCE * speed) return false;
+  const fwd = velX * -Math.sin(yaw) + velZ * -Math.cos(yaw);
+  return fwd / v < (prev ? WOLF_BACKPEDAL_EXIT_COS : WOLF_BACKPEDAL_ENTER_COS);
+}
+
+/**
  * Holat → klip. Idle/sniff harakatda Walk ga o'tadi; Walk sig'magan tezlikda (gisterezis bilan) Run.
  * 'flee' (tong otdi — o'rmonga qochish) ham shu yo'l bilan: WOLF_RUN_SPEED da Run, to'xtaganda Alert.
+ * Orqaga siljiyotgan (`backwards`) bo'ri yugurmaydi — Walk (teskari o'ynaladi, `wolfClipTimeScale`).
  */
 export function wolfClipFor(s: WolfModelState, current: WolfClipName | null = null): WolfClipName {
   const clip = baseClipFor(s);
+  if (s.backwards && (clip === 'Walk' || clip === 'Run')) return 'Walk';
   if (clip !== 'Walk') return clip;
   const runAbove = current === 'Run' ? WOLF_RUN_CLIP_EXIT_SPEED : WOLF_RUN_CLIP_ENTER_SPEED;
   return s.speed > runAbove ? 'Run' : 'Walk';
+}
+
+/**
+ * Yurish/yugurish klipi tezligi (timeScale) haqiqiy tezlikka mos (katta bo'rining qadami ham masshtab bo'yicha
+ * uzun), CLIP_TIMESCALE_MIN..MAX ichida. Orqaga Walk — manfiy: klip teskari o'ynaydi (orqaga qadam tashlaydi).
+ * Boshqa kliplar — 1.
+ */
+export function wolfClipTimeScale(clip: WolfClipName, s: WolfModelState, scale = 1): number {
+  if (clip !== 'Run' && clip !== 'Walk') return 1;
+  const base = (clip === 'Run' ? RUN_CLIP_SPEED : WALK_CLIP_SPEED) * scale;
+  const ts = THREE.MathUtils.clamp(s.speed / base, CLIP_TIMESCALE_MIN, CLIP_TIMESCALE_MAX);
+  return s.backwards && clip === 'Walk' ? -ts : ts;
 }
 
 function baseClipFor(s: WolfModelState): WolfClipName {
@@ -370,10 +415,9 @@ export class WolfModel {
     this.play(clip, restart);
     this.lastState = s.state;
     if (this.current === 'Run' || this.current === 'Walk') {
-      // Yurish/yugurish tezligini haqiqiy tezlikka moslash (katta bo'rining qadami ham masshtab bo'yicha uzun)
-      const base = (this.current === 'Run' ? RUN_CLIP_SPEED : WALK_CLIP_SPEED) * this.scale;
+      // Yurish/yugurish tezligini haqiqiy tezlikka moslash; orqaga siljisa Walk teskari (manfiy timeScale)
       const a = this.actions.get(this.current);
-      if (a) a.setEffectiveTimeScale(THREE.MathUtils.clamp(s.speed / base, CLIP_TIMESCALE_MIN, CLIP_TIMESCALE_MAX));
+      if (a) a.setEffectiveTimeScale(wolfClipTimeScale(this.current, s, this.scale));
     }
     const stride = wolfMixerStride(camDist);
     this.mixerDtAcc = Math.min(0.5, this.mixerDtAcc + dt);

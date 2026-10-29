@@ -15,6 +15,7 @@ import { wolfVoiceMood } from '../Audio';
 import { registerWolfTemplateForTest } from '../wolf/WolfAssetRegistry';
 import { WOLF_RUN_CLIP_ENTER_SPEED, WolfModel, wolfClipFor, wolfModelScale } from '../wolf/WolfModel';
 import {
+  WOLF_FLANK_WARN_DIST,
   WOLF_STEALTH_AUDIO_MUL,
   WOLF_STEALTH_HUNT_WARN_DIST,
   WOLF_WARN_ALERT_DIST,
@@ -140,6 +141,29 @@ describe("'Tun soyasi' (stealthy) — ovoz va HUD ogohlantirishi", () => {
     assert.equal(wolfWarningFor([wolf({ x: 2, state: 'flee', targetId: 'me' })], ME, 'me').level, '');
     assert.equal(wolfWarningFor([wolf({ x: 2, state: 'dead', alive: false })], ME, 'me').level, '');
     assert.equal(wolfWarningFor([wolf({ x: 2, state: 'hunt', targetId: 'me' })], { ...ME, alive: false }, 'me').level, '');
+  });
+});
+
+describe("HUD 'flank' — orqamdagi qanot (me.yaw bilan)", () => {
+  // yaw = 0: o'yinchi -z ga qaraydi; +z — orqasi
+  const MEY = { ...ME, yaw: 0 };
+
+  it("1. Orqa nuqtada 'stalk' da poylab turgan qanot ham 'flank' (banner 'hunt' ga sakramaydi); oldinda — 'hunt'", () => {
+    const behind = wolfWarningFor([wolf({ z: 10, state: 'stalk', targetId: 'me' })], MEY, 'me');
+    assert.deepEqual(behind, { level: 'flank', nameUz: wolfCoatTraits(WOLF_COAT_CHARCOAL).nameUz });
+    const front = wolfWarningFor([wolf({ z: -10, state: 'stalk', targetId: 'me' })], MEY, 'me');
+    assert.equal(front.level, 'hunt');
+    // Hujumga o'tsa ham 'flank' qoladi (stalk → hunt → attack)
+    for (const state of ['stalk', 'hunt', 'attack'] as const) {
+      assert.equal(wolfWarningFor([wolf({ z: 10, state, targetId: 'me' })], MEY, 'me').level, 'flank', state);
+    }
+  });
+
+  it("2. 'flank' faqat meni ovlayotgan, 18 m ichidagi bo'rida; yaw berilmasa — 'hunt'", () => {
+    assert.equal(wolfWarningFor([wolf({ z: WOLF_FLANK_WARN_DIST + 2, state: 'stalk', targetId: 'me' })], MEY, 'me').level, 'hunt');
+    assert.equal(wolfWarningFor([wolf({ z: 10, state: 'stalk', targetId: 'other' })], MEY, 'me').level, 'near', 'boshqani poylayapti');
+    assert.equal(wolfWarningFor([wolf({ z: 10, state: 'alert', targetId: 'me' })], MEY, 'me').level, 'near', 'hushyor — xavf emas');
+    assert.equal(wolfWarningFor([wolf({ z: 10, state: 'stalk', targetId: 'me' })], ME, 'me').level, 'hunt', 'yaw yo‘q');
   });
 });
 

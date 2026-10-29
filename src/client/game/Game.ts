@@ -26,7 +26,15 @@ import {
   type WolfSnap,
   type WolfState,
 } from '../../shared/wolf';
-import { WolfModel, preloadWolfAssets, wolfAudioRangeMul, wolfHowlRevealsPosition, wolfWarningFor, type WolfWarning } from './wolf';
+import {
+  WolfModel,
+  preloadWolfAssets,
+  wolfAudioRangeMul,
+  wolfBackpedal,
+  wolfHowlRevealsPosition,
+  wolfHudWarning,
+  type WolfWarning,
+} from './wolf';
 import {
   CAMP_ERROR_MESSAGES_UZ,
   CAMP_INTERACT_RANGE_M,
@@ -175,6 +183,11 @@ interface WolfRemote {
   targetId: string | null;
   alive: boolean;
   speed: number;
+  /** Gorizontal tezlik vektori (m/s, snapshotlar siljishidan, `speed` kabi silliqlangan) — orqaga yurishni aniqlash. */
+  velX: number;
+  velZ: number;
+  /** Orqaga yurish (`wolfBackpedal`, gisterezis bilan) — Walk teskari o'ynaydi. */
+  backwards: boolean;
   /** Irillash ovozi oxirgi marta chalingan vaqt (spam bo'lmasin). */
   growlAt: number;
   stepTimer: number;
@@ -2373,6 +2386,9 @@ export class Game {
           targetId: s0.targetId ?? null,
           alive: s0.state !== 'dead',
           speed: 0,
+          velX: 0,
+          velZ: 0,
+          backwards: false,
           growlAt: -99,
           stepTimer: 0,
         };
@@ -2387,6 +2403,11 @@ export class Game {
       const dtSnap = b ? Math.max(1e-3, b.t - a.t) : 1 / 30;
       const snapSpeed = Math.hypot(s1.x - s0.x, s1.z - s0.z) / dtSnap;
       w.speed = teleport ? 0 : lerp(w.speed, snapSpeed, Math.min(1, dt * 12));
+      // Tezlik vektori (bir xil silliqlash) yuz yo'nalishiga qarshi va izchil bo'lsa — orqaga yuradi (soxta hamladan
+      // keyin chekinish, olov halqasidan chekinish): Walk teskari, oyoqlar oldinga yugurmaydi — `wolfBackpedal`
+      w.velX = teleport ? 0 : lerp(w.velX, (s1.x - s0.x) / dtSnap, Math.min(1, dt * 12));
+      w.velZ = teleport ? 0 : lerp(w.velZ, (s1.z - s0.z) / dtSnap, Math.min(1, dt * 12));
+      w.backwards = wolfBackpedal(w.backwards, w.velX, w.velZ, w.yaw, w.speed);
       const newState = s1.state;
       const scale = w.model.scale;
       const mouth = { x: w.pos.x, y: w.pos.y + 0.9 * scale, z: w.pos.z };
@@ -2426,7 +2447,7 @@ export class Game {
       m.root.position.copy(w.pos);
       m.root.rotation.y = w.yaw;
       // Kameragacha masofa: LOD (18/40 m), soya (40 m) va mikser qadami (70/110/160 m)
-      m.update(dt, { state: w.state, speed: w.speed }, this.camera.position.distanceTo(w.pos));
+      m.update(dt, { state: w.state, speed: w.speed, backwards: w.backwards }, this.camera.position.distanceTo(w.pos));
       // Yugurgan bo'rining panja tovushi: og'ir, tez (chopganda zarbdor)
       if (w.alive && w.speed > 2.0) {
         w.stepTimer -= dt;
@@ -3054,7 +3075,8 @@ export class Game {
 
   /**
    * HUD: bo'ri xavfi darajasi (quvyapti / yaqinda) va quvayotgan bo'ri turi. Qochayotgan ('flee') bo'rilar
-   * xavf emas; "Tun soyasi" kechroq (yaqinroqdan) seziladi — `wolfWarningFor`.
+   * xavf emas; "Tun soyasi" kechroq (yaqinroqdan) seziladi — `wolfWarningFor`. Raund tugagach (tong epilogi
+   * ham) banner yo'q — `wolfHudWarning`.
    */
   private wolfThreatLevel(): WolfWarning {
     if (!this.me.alive || this.wolves.size === 0) return { level: '', nameUz: null };
@@ -3067,7 +3089,7 @@ export class Game {
       alive: w.alive,
       coat: w.coat,
     }));
-    return wolfWarningFor(views, { x: p.x, z: p.z, alive: this.me.alive, yaw: this.me.yaw }, this.myId);
+    return wolfHudWarning(this.match?.phase, views, { x: p.x, z: p.z, alive: this.me.alive, yaw: this.me.yaw }, this.myId);
   }
 
   /** O'ldirgan bo'ri turi nomi: lokal bo'ri (coat) bo'yicha, bo'lmasa server bergan ism. */

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import * as THREE from 'three';
 import { MATCH_END_DURATION } from '../../../shared/constants';
 import type { SurvivalStateSnap } from '../../../shared/survival';
+import { WOLF_COAT_CHARCOAL } from '../../../shared/wolf/contracts';
 import { NIGHT_DAWN_EPILOGUE_SEC } from '../../../shared/wolf/night';
 import {
   WOLF_DEPART_FADE_SEC,
@@ -12,9 +13,10 @@ import {
   wolfDepartAlpha,
 } from '../night/dawnEpilogue';
 import { SurvivalUI } from '../survival/SurvivalUI';
+import { WOLF_WARN_NEAR_DIST, wolfHudWarning, wolfWarningFor, type WolfThreatView } from '../wolf/wolfThreat';
 
-// Tong epilogi: natija varag'i qachon chiqadi (server qolgan vaqti bo'yicha), epilog banneri va
-// snapshotdan chiqqan qochoq bo'rilarni so'ndirish. Node, minimal document stubi.
+// Tong epilogi: natija varag'i qachon chiqadi (server qolgan vaqti bo'yicha), epilog banneri,
+// snapshotdan chiqqan qochoq bo'rilarni so'ndirish va epilogda bo'ri HUD banneri yo'qligi. Node, minimal document stubi.
 
 describe('Tong epilogi — vaqt yordamchilari', () => {
   it("1. Epilog: 'ended' + 'dawn' va qolgan vaqt natija ekranidan (MATCH_END_DURATION) ko'p; boshqa hollarda yo'q", () => {
@@ -268,5 +270,27 @@ describe('SurvivalUI — tong epilogi', () => {
     ui.setMode('forest_survival');
     ui.update(dawnSnap({ winReason: 'last_standing', winnerId: 'me', winnerName: 'Sardor', winnerIds: undefined }), 'me', null);
     assert.match(overlay.innerHTML, /G'ALABA!/);
+  });
+});
+
+describe("Tong epilogi — 'Yaqinda bo'ri bor' banneri 'Tong otdi!' ustida chiqmaydi", () => {
+  it("7. Raund tong bilan tugadi: 14 m ichidagi 'idle'/'howl' bo'ri — banner yo'q; tun davomida — 'near'", () => {
+    // Game.wolfThreatLevel → wolfHudWarning(match.phase, ...); survival raundida match.phase = survival.phase
+    const survival = dawnSnap();
+    assert.ok(isDawnEnding(survival) && dawnEpilogueActive(survival), 'tong epilogi');
+    const me = { x: 0, z: 0, alive: true, yaw: 0 };
+    // Tongda server bo'rini 'idle' ga o'tkazadi (nishoni tozalanadi), keyin uvlaydi va shundan keyingina qochadi
+    const idle: WolfThreatView = { x: 9, z: 0, state: 'idle', targetId: null, alive: true, coat: WOLF_COAT_CHARCOAL };
+    const howl: WolfThreatView = { ...idle, x: 0, z: 11, state: 'howl' };
+    assert.ok(Math.hypot(idle.x, idle.z) < WOLF_WARN_NEAR_DIST);
+    assert.equal(wolfWarningFor([idle], me, 'me').level, 'near', 'sof wolfWarningFor fazani bilmaydi');
+    assert.deepEqual(wolfHudWarning(survival.phase, [idle, howl], me, 'me'), { level: '', nameUz: null });
+    // Snapshot kechikishida hali meni ovlayotgan bo'ri ham — tongda tishlamaydi, banner yo'q
+    assert.equal(wolfHudWarning(survival.phase, [{ ...idle, state: 'stalk', targetId: 'me' }], me, 'me').level, '');
+    // Epilogdan keyingi natija varag'i ham 'ended'
+    assert.equal(wolfHudWarning(dawnSnap({ timeLeft: 1 }).phase, [idle], me, 'me').level, '');
+    // Tun davom etyapti (yoki match hali kelmagan) — avvalgidek
+    assert.equal(wolfHudWarning('playing', [idle], me, 'me').level, 'near');
+    assert.equal(wolfHudWarning(undefined, [idle], me, 'me').level, 'near');
   });
 });

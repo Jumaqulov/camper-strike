@@ -45,9 +45,10 @@ export function wolfAudioRangeMul(coat: number | undefined): number {
 }
 
 /**
- * HUD ogohlantirishi: 'flank' — meni ovlayotgan bo'ri (hunt/attack) 18 m ichida orqamdan kelyapti (`me.yaw`
- * berilsa; to'da qanoti), 'hunt' — tirik bo'ri meni quvyapti (soya — faqat yaqin bo'lsa), 'near' — bo'ri yaqinda
- * (soya — qisqaroq masofada). Qochayotgan ('flee', tong otdi) va o'lik bo'rilar e'tiborga olinmaydi.
+ * HUD ogohlantirishi: 'flank' — meni ovlayotgan bo'ri (stalk/hunt/attack) 18 m ichida orqamda (`me.yaw` berilsa;
+ * to'da qanoti — orqamdagi nuqtada 'stalk' da poylab turganda ham), 'hunt' — tirik bo'ri meni quvyapti (soya — faqat
+ * yaqin bo'lsa), 'near' — bo'ri yaqinda (soya — qisqaroq masofada). Qochayotgan ('flee', tong otdi) va o'lik bo'rilar
+ * e'tiborga olinmaydi.
  */
 export function wolfWarningFor(
   wolves: Iterable<WolfThreatView>,
@@ -64,9 +65,9 @@ export function wolfWarningFor(
     const dz = w.z - me.z;
     const d = Math.hypot(dx, dz);
     if (w.targetId === myId && isWolfThreatState(w.state) && (!traits.stealthy || d < WOLF_STEALTH_HUNT_WARN_DIST)) {
+      // Holat bo'yicha ajratilmaydi: qanot orqa nuqtasida 'stalk' ga cho'kkanda banner 'hunt' ga sakramasin
       if (
         me.yaw !== undefined &&
-        (w.state === 'hunt' || w.state === 'attack') &&
         d < WOLF_FLANK_WARN_DIST &&
         d > 1e-3 &&
         // O'yinchi old yo'nalishi (-sin yaw, -cos yaw) bilan dot < 0 — bo'ri orqada
@@ -83,4 +84,19 @@ export function wolfWarningFor(
   }
   if (hunt) return hunt;
   return { level: near ? 'near' : '', nameUz: null };
+}
+
+/**
+ * HUD banneri: `wolfWarningFor`, lekin raund tugagach (`MatchState.phase` 'ended' — tong epilogi va natija ekrani
+ * ham) hech narsa. Tongda bo'rilar avval 'idle'/'howl' da turadi (tishlamaydi, keyin qochadi), o'yinchi qotgan —
+ * "Yaqinda bo'ri bor · sekin yuring" "Tong otdi!" belgisi ustida chiqmasin.
+ */
+export function wolfHudWarning(
+  roundPhase: string | null | undefined,
+  wolves: Iterable<WolfThreatView>,
+  me: { x: number; z: number; alive: boolean; yaw?: number },
+  myId: string,
+): WolfWarning {
+  if (roundPhase === 'ended') return { level: '', nameUz: null };
+  return wolfWarningFor(wolves, me, myId);
 }
