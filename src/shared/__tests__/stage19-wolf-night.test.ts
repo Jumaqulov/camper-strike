@@ -1303,14 +1303,28 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
     }
   });
 
-  it("22. Tun statistikasi: bo'ri o'ldirish/zarar, o'tin, qayta yoqish; yakunda nightSummary (MVP, mukofotlar), keyingi sanoqda null", () => {
+  it("22. Tun statistikasi: bo'ri o'ldirish/zarar, o'tin, qayta yoqish, gulxanni yoqib turgan vaqt; yakunda nightSummary (MVP, mukofotlar), keyingi sanoqda null", () => {
     const { io, emitted } = createFakeIo();
     const room = makeNightRoom(io, { timeLimit: 3 });
     try {
       const { p } = startSoloNight(room);
       p.spawnTime = -99;
       assert.deepEqual(room.getNightStatsForTest(), [
-        { id: 'p1', name: 'Ovchi', isBot: false, wolfKills: 0, alphaKills: 0, wolfDamage: 0, logsFed: 0, relights: 0, survived: false, revives: 0, downs: 0 },
+        {
+          id: 'p1',
+          name: 'Ovchi',
+          isBot: false,
+          wolfKills: 0,
+          alphaKills: 0,
+          wolfDamage: 0,
+          logsFed: 0,
+          fireKeepSec: 0,
+          relights: 0,
+          survived: false,
+          revives: 0,
+          downs: 0,
+          deaths: 0,
+        },
       ]);
       assert.equal(room.getSurvivalState()!.nightSummary, null, "o'yin davomida natija yo'q");
       assert.equal(lastMatch(emitted).survival?.nightSummary, null);
@@ -1344,6 +1358,11 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       assert.equal(st.wolfDamage, 150);
       assert.equal(st.logsFed, 3);
       assert.equal(st.relights, 1);
+      assert.equal(st.fireKeepSec, 0, "o'tin hali yonmadi");
+      // 4) 3 s o'tadi: 2-gulxanda p1 ning o'tini yonadi (asosiy gulxanda avval egasiz 100 s yonadi)
+      room.advanceTimeForTest(3, 1 / 30);
+      const kept = room.getNightStatsForTest()[0]!.fireKeepSec;
+      assert.ok(Math.abs(kept - 3) < 0.05, `gulxanni yoqib turgan vaqt ~3 s (${kept})`);
 
       // Tong otadi
       room.setSurvivalConfigForTest({ roundDurationSec: 2 });
@@ -1356,8 +1375,11 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       assert.equal(sum.stats.length, 1);
       const s = sum.stats[0]!;
       assert.equal(s.survived, true);
+      // Tong otguncha 2-gulxan yonishda davom etdi; natijada butun soniya
+      assert.equal(s.fireKeepSec, Math.round(room.getNightStatsForTest()[0]!.fireKeepSec), 'natijada butun soniya');
+      assert.ok(s.fireKeepSec >= 3 && s.fireKeepSec < 30, `${s.fireKeepSec}`);
       const score = nightPlayerScore(s);
-      assert.equal(score, 1 * 3 + 3 * 2 + 1 * 3 + 4 + 1, 'bo‘ri 3 + o‘tin 6 + yoqish 3 + tong 4 + zarar 1');
+      assert.equal(score, 1 * 3 + 3 * 2 + 4 + 1, 'bo‘ri 3 + o‘tin 6 + tong 4 + zarar 1 (qayta yoqish ball bermaydi, < 30 s)');
       const byKind = new Map(sum.awards.map((a) => [a.kind, a] as const));
       assert.deepEqual(
         [...byKind.keys()].sort(),
@@ -1368,7 +1390,7 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       assert.equal(byKind.get('mvp')!.titleUz, NIGHT_AWARD_TITLES_UZ.mvp);
       assert.equal(byKind.get('hunter')!.value, 1);
       assert.equal(byKind.get('woodsman')!.value, 3);
-      assert.equal(byKind.get('firekeeper')!.value, 1);
+      assert.equal(byKind.get('firekeeper')!.value, s.fireKeepSec, "olov qo'riqchisi — yoqib turgan soniyalar");
       const m = lastMatch(emitted);
       assert.equal(m.phase, 'ended');
       assert.deepEqual(m.survival?.nightSummary, sum, 'MatchState.survival.nightSummary');
@@ -1394,10 +1416,12 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
       alphaKills: 0,
       wolfDamage: 0,
       logsFed: 0,
+      fireKeepSec: 0,
       relights: 0,
       survived: false,
       revives: 0,
       downs: 0,
+      deaths: 0,
       ...o,
     });
     const brief = (sum: ReturnType<typeof computeNightSummary>) => sum.awards.map((a) => [a.kind, a.playerId, a.value]);
@@ -1425,9 +1449,9 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
     assert.deepEqual(surv.stats.map((x) => x.id), ['b', 'a']);
     assert.equal(surv.difficulty, 'hard');
     // Teng ball: kiritish tartibi hal qiladi
-    const tie = computeNightSummary([mk('a', { logsFed: 3 }), mk('b', { relights: 2 })], 'normal', true);
-    assert.deepEqual(brief(tie), [['mvp', 'a', 6], ['woodsman', 'a', 3], ['firekeeper', 'b', 2]]);
-    const tie2 = computeNightSummary([mk('b', { relights: 2 }), mk('a', { logsFed: 3 })], 'normal', true);
+    const tie = computeNightSummary([mk('a', { logsFed: 3 }), mk('b', { fireKeepSec: 180 })], 'normal', true);
+    assert.deepEqual(brief(tie), [['mvp', 'a', 6], ['woodsman', 'a', 3], ['firekeeper', 'b', 180]]);
+    const tie2 = computeNightSummary([mk('b', { fireKeepSec: 180 }), mk('a', { logsFed: 3 })], 'normal', true);
     assert.equal(tie2.awards[0]!.playerId, 'b', 'teng ballda birinchi kelgan');
     // Teng bo'ri soni: balli yuqorisi (saralangan tartibda birinchi) ovchi
     const hunt = computeNightSummary([mk('a', { wolfKills: 2 }), mk('b', { wolfKills: 2, logsFed: 1 })], 'normal', true);
@@ -1437,12 +1461,12 @@ describe("Bosqich 19 — Tong otguncha (wolf_night)", () => {
     assert.deepEqual(brief(alpha), [['mvp', 'a', 3 + 3 + 3], ['hunter', 'a', 1]]);
     // Har mukofot boshqa o'yinchiga
     const mix = computeNightSummary(
-      [mk('h', { wolfKills: 4 }), mk('w', { logsFed: 5 }), mk('f', { relights: 3, survived: true })],
+      [mk('h', { wolfKills: 4 }), mk('w', { logsFed: 5 }), mk('f', { fireKeepSec: 270, relights: 3, survived: true })],
       'normal',
       true,
     );
     assert.deepEqual(mix.stats.map((x) => x.id), ['f', 'h', 'w']);
-    assert.deepEqual(brief(mix), [['mvp', 'f', 13], ['hunter', 'h', 4], ['woodsman', 'w', 5], ['firekeeper', 'f', 3]]);
+    assert.deepEqual(brief(mix), [['mvp', 'f', 13], ['hunter', 'h', 4], ['woodsman', 'w', 5], ['firekeeper', 'f', 270]]);
     for (const a of mix.awards) assert.equal(a.titleUz, NIGHT_AWARD_TITLES_UZ[a.kind]);
     assert.equal(mix.awards.find((a) => a.kind === 'hunter')!.playerName, 'H');
   });

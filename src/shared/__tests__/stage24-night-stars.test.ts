@@ -29,10 +29,12 @@ const mk = (id: string, o: Partial<NightPlayerStats> = {}): NightPlayerStats => 
   alphaKills: 0,
   wolfDamage: 0,
   logsFed: 0,
+  fireKeepSec: 0,
   relights: 0,
   survived: false,
   revives: 0,
   downs: 0,
+  deaths: 0,
   ...o,
 });
 
@@ -67,12 +69,15 @@ describe('Stage 24 — computeNightStars (sof)', () => {
     assert.ok(two.find((s) => s.kind === 'alpha_slain')!.earned);
   });
 
-  it('3. Kimdir o‘lib tirilmadi → all_alive yo‘q; qaytib tirilgan (survived) — tirik hisoblanadi', () => {
-    const dead = computeNightStars([mk('a', { survived: true }), mk('b', { survived: false, downs: 1 })], true, facts());
+  it('3. Kimdir o‘lib tirilmadi → all_alive yo‘q; yiqilib turg‘izilgan — tirik; halok bo‘lib qaytgan — yo‘q', () => {
+    const dead = computeNightStars([mk('a', { survived: true }), mk('b', { survived: false, downs: 1, deaths: 1 })], true, facts());
     assert.deepEqual(earnedKinds(dead), ['fire_kept']);
-    // Yiqilgan/qayta tirilgan, lekin tongda tirik — survived true bo'lib keladi
+    // Yiqilib turg'izilgan (halok bo'lmagan), tongda tirik — yulduz bor
     const back = computeNightStars([mk('a', { survived: true }), mk('b', { survived: true, downs: 2 })], true, facts());
     assert.ok(back.find((s) => s.kind === 'all_alive')!.earned);
+    // Halok bo'lib keyingi to'lqinda qaytgan — tongda tirik bo'lsa ham yulduz yo'q
+    const respawned = computeNightStars([mk('a', { survived: true }), mk('b', { survived: true, deaths: 1 })], true, facts());
+    assert.equal(respawned.find((s) => s.kind === 'all_alive')!.earned, false);
     // Raundni boshlagan, lekin statistikasi yo'q (bo'lmasligi kerak) — tirik deb olinmaydi
     const missing = computeNightStars([mk('a', { survived: true })], true, facts({ startedContenderIds: ['a', 'ghost'] }));
     assert.equal(missing.find((s) => s.kind === 'all_alive')!.earned, false);
@@ -86,9 +91,16 @@ describe('Stage 24 — computeNightStars (sof)', () => {
     assert.equal(weird.find((s) => s.kind === 'all_alive')!.earned, false);
   });
 
-  it('5. Chiqib ketgan hisobga olinmaydi; hamma chiqib ketsa — all_alive yo‘q; 0 s raund yoki faktlarsiz — yulduz yo‘q', () => {
+  it('5. Tirik chiqib ketgan hisobga olinmaydi (halok bo‘lib ketgani — hisoblanadi); hamma chiqib ketsa — all_alive yo‘q; 0 s raund yoki faktlarsiz — yulduz yo‘q', () => {
     const left = computeNightStars([mk('a', { survived: true }), mk('b', { survived: false })], true, facts({ leftIds: ['b'] }));
     assert.ok(left.find((s) => s.kind === 'all_alive')!.earned, 'chiqib ketgan b hisobga olinmaydi');
+    // Halok bo'lib, keyin chiqib ketgan — o'limi hisoblanadi
+    const diedLeft = computeNightStars(
+      [mk('a', { survived: true }), mk('b', { survived: false, deaths: 1 })],
+      true,
+      facts({ leftIds: ['b'] }),
+    );
+    assert.equal(diedLeft.find((s) => s.kind === 'all_alive')!.earned, false, "halok bo'lib chiqib ketgan");
     const allLeft = computeNightStars([mk('a'), mk('b')], true, facts({ leftIds: ['a', 'b'] }));
     assert.equal(allLeft.find((s) => s.kind === 'all_alive')!.earned, false);
     assert.deepEqual(earnedKinds(computeNightStars([mk('a', { survived: true, alphaKills: 1 })], true, facts({ elapsedSec: 0 }))), []);

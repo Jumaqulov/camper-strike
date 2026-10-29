@@ -433,10 +433,12 @@ describe('Bosqich 20 — Tong otguncha: yiqilish, turg\'izish va to\'lqinda qayt
       alphaKills: 0,
       wolfDamage: 0,
       logsFed: 0,
+      fireKeepSec: 0,
       relights: 0,
       survived: false,
       revives: 0,
       downs: 0,
+      deaths: 0,
       ...o,
     });
     const none = computeNightSummary([mk('a'), mk('b', { downs: 2 })], 'normal', true);

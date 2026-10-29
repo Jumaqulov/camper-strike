@@ -1642,6 +1642,7 @@ html, body {
 .s07-alpha { margin-left: 4px; font-size: 10.5px; font-weight: 900; color: #7a5410; }
 .s07-st.is-alive { color: #276a33; }
 .s07-st.is-dead { color: #7a2a1a; }
+.s07-st.is-left { color: #6b5a3f; font-style: italic; }
 .s07-night-table tr.is-mvp td {
   color: #2a1a05;
   font-weight: 900;

@@ -329,12 +329,18 @@ const DAWN_BOT_WATCH_M = 80;
 const DAWN_BOT_TURN_RATE = 4;
 /**
  * wolf_night rang turlari (to'lqin bo'yicha): 2-to'lqindan chaqqon (qizil) va tun soyasi (qora) shu ehtimollar
- * bilan; 3-to'lqindan to'da boshlig'i (oq) — har to'lqin boshida birinchi yangi/qayta tug'ilgan bo'ri, keyin
- * NIGHT_ALPHA_CHANCE bilan; bir vaqtda ko'pi bilan bittasi tirik. Qolganlari — oddiy (kulrang/qo'ng'ir).
+ * bilan; 3-to'lqindan to'da (to'lqin) boshlig'i (oq) — har to'lqin boshida birinchi yangi bo'ri yoki uzoqdagi oddiy
+ * bo'ri o'rniga (ensureNightAlpha), keyin qayta tug'ilganda NIGHT_ALPHA_CHANCE bilan; bir vaqtda ko'pi bilan bittasi
+ * tirik. Qolganlari — oddiy (kulrang/qo'ng'ir).
  */
 const NIGHT_SWIFT_CHANCE = 0.25;
 const NIGHT_SHADOW_CHANCE = 0.2;
 const NIGHT_ALPHA_CHANCE = 0.25;
+/**
+ * To'lqin boshida tong otishiga shundan kam (s) qolgan bo'lsa oddiy bo'ri oq bo'riga almashtirilmaydi (ovlashga
+ * vaqt yo'q). Haqiqiy tunda (kamida 3 daqiqa) 3-/4-to'lqin boshida tonggacha ≥ 45 s qoladi — kafolat ishlaydi.
+ */
+const NIGHT_ALPHA_SWAP_MIN_DAWN_SEC = 15;
 
 let roomSeq = 0;
 
@@ -429,6 +435,11 @@ export class Room {
   private nightSummary: NightRoundSummary | null = null;
   /** wolf_night: asosiy gulxan shu raundda nechta marta o'chdi ("gulxan o'chmadi" yulduzi uchun). */
   private mainFireOuts = 0;
+  /**
+   * wolf_night: har gulxandagi o'tin ulushlari yonish navbatida (kim tashlagan, necha soniya) — "gulxanni yoqib
+   * turgan vaqt" (fireKeepSec) uchun. Ro'yxatga kirmagan qismi (raund boshidagi o'tin) egasiz va birinchi yonadi.
+   */
+  private fireFuelShares = new Map<string, { id: string; sec: number }[]>();
   /** wolf_night: lager gulxanlari va o'tin g'aramlari (joylar xona uchun deterministik; boshqa rejimlarda bo'sh). */
   readonly campfires = new Map<string, ServerCampfire>();
   readonly woodPiles = new Map<string, ServerWoodPile>();
@@ -710,6 +721,33 @@ export class Room {
       if (o !== self && o.alive && o.coat === WOLF_COAT_WHITE) return true;
     }
     return false;
+  }
+
+  /**
+   * wolf_night, to'lqin boshi (3-to'lqindan): to'lqin boshlig'i (oq bo'ri) albatta chiqadi. Bo'rilar soni o'smagan
+   * bo'lsa (masalan, oson qiyinlikda yakka o'yinchi: 2- va 3-to'lqinda ham 2 ta) yangi bo'ri qo'shilmaydi — shunda
+   * o'yinchilardan eng uzoqdagi oddiy tirik bo'ri o'rniga oq bo'ri keladi (son o'zgarmaydi). Tirik oddiy bo'ri
+   * bo'lmasa (hammasi o'lik) — birinchi qayta tug'ilgani oq bo'ladi (`nightAlphaDue`, pickWolfCoat). Tonggacha
+   * NIGHT_ALPHA_SWAP_MIN_DAWN_SEC dan kam qolganda chaqirilmaydi.
+   */
+  private ensureNightAlpha(): void {
+    if (!this.isNight || !this.nightAlphaDue || this.hasLivingAlpha(null)) return;
+    let far: ServerWolf | null = null;
+    let farD = -1;
+    for (const w of this.wolves.values()) {
+      if (!w.alive || w.coat === WOLF_COAT_WHITE) continue;
+      let d = Infinity;
+      for (const p of this.players.values()) {
+        if (p.alive && p.ready) d = Math.min(d, Math.hypot(p.pos.x - w.pos.x, p.pos.z - w.pos.z));
+      }
+      if (d > farD) {
+        farD = d;
+        far = w;
+      }
+    }
+    if (!far) return;
+    this.wolves.delete(far.id);
+    this.addWolf();
   }
 
   /**
@@ -1111,7 +1149,9 @@ export class Room {
   private updateCamp(dt: number, t: number): void {
     for (const f of this.campfires.values()) {
       if (!f.lit) continue;
+      const fuelBefore = f.fuelSec;
       f.fuelSec = Math.max(0, f.fuelSec - dt);
+      this.creditFireKeep(f, fuelBefore);
       if (f.fuelSec <= 0) {
         f.lit = false;
         f.lowWarned = false;
@@ -1198,10 +1238,13 @@ export class Room {
     const n = Math.min(p.wood, fits);
     p.wood -= n;
     const wasLit = f.lit;
+    const fuelBefore = f.fuelSec;
     f.fuelSec = Math.min(CAMPFIRE_MAX_FUEL_SEC, f.fuelSec + CAMPFIRE_WOOD_FUEL_SEC * n);
     f.lit = true;
     f.lowWarned = f.fuelSec <= CAMPFIRE_LOW_FUEL_SEC;
     if (!wasLit) this.campRoamCache.clear();
+    // Ulush — gulxanga haqiqatan qo'shilgan soniyalar (sig'imdan ortgan qismi hech kimga yozilmaydi)
+    this.addFireFuelShare(f, p.id, f.fuelSec - fuelBefore, !wasLit);
     const st = this.nightStats.get(p.id);
     if (st) {
       st.logsFed += n;
@@ -1214,6 +1257,49 @@ export class Room {
         : `🔥 ${p.name} ${f.name} gulxanini qayta yoqdi (${n} o'tin)`,
     );
     return { ok: true, wood: p.wood, fuelSec: Math.round(f.fuelSec) };
+  }
+
+  /** O'tin ulushini gulxan navbati oxiriga qo'shadi (o'chgan gulxan qayta yoqilganda eski navbat tashlanadi). */
+  private addFireFuelShare(f: ServerCampfire, playerId: string, sec: number, relit: boolean): void {
+    if (relit) this.fireFuelShares.delete(f.id);
+    if (!(sec > 0)) return;
+    let shares = this.fireFuelShares.get(f.id);
+    if (!shares) {
+      shares = [];
+      this.fireFuelShares.set(f.id, shares);
+    }
+    const last = shares[shares.length - 1];
+    if (last && last.id === playerId) last.sec += sec;
+    else shares.push({ id: playerId, sec });
+  }
+
+  /**
+   * Gulxan shu tickda `fuelBefore` dan f.fuelSec gacha yondi: yongan soniyalar navbat boshidan egalariga
+   * fireKeepSec bo'lib yoziladi. Egasiz o'tin (raund boshidagi) birinchi yonadi. Ulushlar yig'indisi gulxandagi
+   * o'tindan ko'p bo'lsa (mash'al o'tin oldi) — farq navbat boshidan hech kimga yozilmay olib tashlanadi.
+   */
+  private creditFireKeep(f: ServerCampfire, fuelBefore: number): void {
+    const shares = this.fireFuelShares.get(f.id);
+    if (!shares) return;
+    let total = 0;
+    for (const s of shares) total += s.sec;
+    let drop = Math.max(0, total - fuelBefore);
+    let burn = Math.max(0, fuelBefore - f.fuelSec - Math.max(0, fuelBefore - total));
+    while (shares.length > 0 && (drop > 0 || burn > 0)) {
+      const s = shares[0]!;
+      const d = Math.min(drop, s.sec);
+      s.sec -= d;
+      drop -= d;
+      const b = Math.min(burn, s.sec);
+      s.sec -= b;
+      burn -= b;
+      if (b > 0) {
+        const st = this.nightStats.get(s.id);
+        if (st) st.fireKeepSec += b;
+      }
+      if (s.sec <= 1e-6) shares.shift();
+    }
+    if (f.fuelSec <= 0 || shares.length === 0) this.fireFuelShares.delete(f.id);
   }
 
   onTakeWood(id: string, rawReq: TakeWoodReq | unknown, ack?: (res: CampActionAck) => void): CampActionAck {
@@ -1748,10 +1834,13 @@ export class Room {
     w.hp = Math.max(1, Math.round(WOLF_MAX_HP * w.hpMul));
   }
 
-  /** wolf_night: to'da boshlig'i paydo bo'lganini chatda e'lon qiladi. */
+  /** wolf_night: to'lqin boshlig'i (oq bo'ri, "To'da boshlig'i") paydo bo'lganini chatda e'lon qiladi. */
   private announceAlpha(w: ServerWolf): void {
     if (!this.isNight || w.coat !== WOLF_COAT_WHITE) return;
-    this.systemChat(`🐺 ${wolfCoatTraits(w.coat).nameUz} keldi! Oq bo'ri katta va chidamli, uvlasa atrofdagi bo'rilar tezlashadi.`);
+    this.systemChat(
+      `🐺 ${wolfCoatTraits(w.coat).nameUz} keldi — bu to'lqin boshlig'i! Oq bo'ri katta va chidamli, uvlasa ` +
+        "atrofdagi bo'rilar tezlashadi. Uni o'ldirsangiz — jamoaga yulduz.",
+    );
   }
 
   addWolf(): ServerWolf | null {
@@ -1939,11 +2028,13 @@ export class Room {
     if (idx > 0) this.respawnEliminatedAtWave(ev.wave.wave);
     // Tunning yarmi (SUPPLY_DROP_WAVE boshi): yordam yuki tushadi (bir marta; to'lqinlar sakrab o'tsa ham)
     if (ev.wave.wave >= SUPPLY_DROP_WAVE && !firstWave && !this.supplyDrop) this.spawnSupplyDrop();
-    // 3-to'lqindan har to'lqin boshida to'da boshlig'i chiqadi (tirigi bo'lmasa)
+    // 3-to'lqindan har to'lqin boshida to'lqin boshlig'i chiqadi (tirigi bo'lmasa): yangi bo'ri bo'lib, son o'smasa —
+    // uzoqdagi oddiy bo'ri o'rniga (ensureNightAlpha)
     this.nightAlphaDue = ev.wave.wave >= 3 && !this.hasLivingAlpha(null);
     const n = nightWolvesForWave(ev.wave, this.aliveNightContenders(), this.nightDifficulty);
     this.wolfCount = clamp(firstWave ? n : Math.max(n, this.wolfCount), 0, NIGHT_WOLF_CAP);
     this.syncWolvesToCount();
+    if (ev.dawnInSec >= NIGHT_ALPHA_SWAP_MIN_DAWN_SEC) this.ensureNightAlpha();
   }
 
   /**
@@ -3148,6 +3239,9 @@ export class Room {
     victim.crouched = false;
     victim.authority.clear();
     victim.deaths++;
+    // wolf_night: halok bo'lish "hamma tirik qoldi" yulduzini yo'qotadi (keyin qaytsa yoki chiqib ketsa ham)
+    const victimStats = this.nightStats.get(victim.id);
+    if (victimStats) victimStats.deaths++;
     // Qo'ldagi o'tin va mash'al o'lim bilan yo'qoladi (wolf_night); yiqilgan holat ham tugaydi
     victim.wood = 0;
     victim.torchUntil = 0;
@@ -3573,6 +3667,7 @@ export class Room {
     this.nightStats.clear();
     this.nightSummary = null;
     this.mainFireOuts = 0;
+    this.fireFuelShares.clear();
     for (const id of contenderIds) {
       const p = this.players.get(id);
       if (!p) continue;
@@ -3584,17 +3679,20 @@ export class Room {
         alphaKills: 0,
         wolfDamage: 0,
         logsFed: 0,
+        fireKeepSec: 0,
         relights: 0,
         survived: false,
         revives: 0,
         downs: 0,
+        deaths: 0,
       });
     }
   }
 
   /**
    * wolf_night raundi tugadi: kim tirik qolgani yoziladi (tong otganda — birgalikdagi g'oliblar, aks holda
-   * hech kim) va computeNightSummary bilan natija/mukofotlar hisoblanadi (yakun ekranida yuboriladi).
+   * hech kim), chiqib ketganlar belgilanadi (mukofot olmaydi) va computeNightSummary bilan natija/mukofotlar
+   * hisoblanadi (yakun ekranida yuboriladi). Gulxanni yoqib turgan vaqt butun soniyaga yaxlitlanadi.
    */
   private finishNightStats(dawn: boolean): void {
     const survivors = new Set(dawn && this.survival ? this.survival.getWinnerIds() : []);
@@ -3603,9 +3701,12 @@ export class Room {
     for (const st of this.nightStats.values()) {
       const p = this.players.get(st.id);
       if (p) st.name = p.name;
-      else leftIds.push(st.id);
+      else {
+        leftIds.push(st.id);
+        st.left = true;
+      }
       st.survived = survivors.has(st.id) && !!p?.alive;
-      list.push({ ...st });
+      list.push({ ...st, fireKeepSec: Math.round(st.fireKeepSec) });
     }
     // Yulduzlar: raund boshidagi ishtirokchilar (nightStats kalitlari), chiqib ketganlar, asosiy gulxan o'chishlari
     this.nightSummary = computeNightSummary(list, this.nightDifficulty, dawn, {
@@ -3642,6 +3743,7 @@ export class Room {
     this.nightStats.clear();
     this.nightSummary = null;
     this.mainFireOuts = 0;
+    this.fireFuelShares.clear();
     // Tong otguncha: sanoq paytida ham gulxan/g'aramlar snapshotga chiqadi — o'tgan tunning o'chgan gulxanlari
     // va bo'sh g'aramlari ko'rinib qolmasin (raund boshida yana bir bor tiklanadi)
     if (this.isNight) this.resetCampForRound();

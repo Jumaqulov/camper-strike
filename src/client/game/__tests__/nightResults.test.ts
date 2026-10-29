@@ -24,10 +24,12 @@ const stat = (over: Partial<NightPlayerStats> & { id: string; name: string }): N
   alphaKills: 0,
   wolfDamage: 0,
   logsFed: 0,
+  fireKeepSec: 0,
   relights: 0,
   survived: false,
   revives: 0,
   downs: 0,
+  deaths: 0,
   ...over,
 });
 
@@ -37,8 +39,8 @@ function sampleSummary(): NightRoundSummary {
   return computeNightSummary(
     [
       stat({ id: 'me', name: 'Sardor', wolfKills: 2, logsFed: 9, survived: true }),
-      stat({ id: 'b1', name: 'Bot Ali', isBot: true, wolfKills: 6, alphaKills: 1, relights: 2, survived: true }),
-      stat({ id: 'x', name: EVIL, logsFed: 1 }),
+      stat({ id: 'b1', name: 'Bot Ali', isBot: true, wolfKills: 6, alphaKills: 1, fireKeepSec: 135, relights: 2, survived: true }),
+      stat({ id: 'x', name: EVIL, logsFed: 1, deaths: 1 }),
     ],
     'hard',
     true,
@@ -79,6 +81,53 @@ describe('nightResults — tun statistikasi jadvali', () => {
     assert.match(rows[2]!, /Halok bo'ldi/);
   });
 
+  it('1b. "Olov" ustuni — gulxanni yoqib turgan vaqt "daqiqa:soniya"; qayta yoqish faqat izohda; ustun sarlavhasi', () => {
+    const summary = sampleSummary();
+    const rows = rowsOf(buildNightStatsRowsHtml(summary, 'me'));
+    // Bot Ali: 135 s → "2:15", 2 marta qayta yoqgan — izohda (alohida ustun emas)
+    assert.match(rows[0]!, /<td class="s07-num" title="O'chgan gulxanni 2 marta qayta yoqdi">2:15<\/td>/);
+    // Men: yoqib turmagan — "0:00", izohsiz
+    assert.match(rows[1]!, /<td class="s07-num">0:00<\/td>/);
+    // Yaxlitlanadi, tarmoqdan kelgan noto'g'ri qiymat — "0:00"
+    summary.stats[0]!.fireKeepSec = 59.6;
+    summary.stats[1]!.fireKeepSec = Number.NaN;
+    const again = rowsOf(buildNightStatsRowsHtml(summary, 'me'));
+    assert.match(again[0]!, />1:00<\/td>/);
+    assert.match(again[1]!, />0:00<\/td>/);
+    const board = buildNightSummaryBoardHtml(sampleSummary(), 'me');
+    assert.match(board, /🔥<span class="s07-word"> Olov<\/span><\/th>/);
+    assert.doesNotMatch(board, /> Yoqish</, 'eski "Yoqish" (qayta yoqish) ustuni yo‘q');
+  });
+
+  it('1c. Chiqib ketgan: jadval oxirida "Chiqib ketdi" (halok emas), mukofot olmaydi', () => {
+    const summary = computeNightSummary(
+      [
+        stat({ id: 'gone', name: 'Ketdi', wolfKills: 9, logsFed: 8, fireKeepSec: 400 }),
+        stat({ id: 'me', name: 'Sardor', wolfKills: 1, survived: true }),
+      ],
+      'normal',
+      true,
+    );
+    // Chiqib ketmagan bo'lsa — eng yuqori ball unda
+    assert.equal(summary.awards.find((a) => a.kind === 'mvp')!.playerId, 'gone');
+    const left = computeNightSummary(
+      [
+        stat({ id: 'gone', name: 'Ketdi', wolfKills: 9, logsFed: 8, fireKeepSec: 400, left: true }),
+        stat({ id: 'me', name: 'Sardor', wolfKills: 1, survived: true }),
+      ],
+      'normal',
+      true,
+    );
+    assert.deepEqual(left.stats.map((s) => s.id), ['me', 'gone'], 'chiqib ketgan — oxirida');
+    assert.ok(left.awards.every((a) => a.playerId !== 'gone'), 'chiqib ketganga mukofot yo‘q');
+    assert.deepEqual(left.awards.map((a) => a.kind), ['mvp', 'hunter']);
+    const rows = rowsOf(buildNightStatsRowsHtml(left, 'me'));
+    assert.match(rows[1]!, /class="is-out"/);
+    assert.match(rows[1]!, /s07-st is-left[^>]*>🚪<span class="s07-word"> Chiqib ketdi</);
+    assert.doesNotMatch(rows[1]!, /Halok bo'ldi/);
+    assert.match(rows[1]!, />6:40<\/td>/, 'statistikasi ko‘rinadi');
+  });
+
   it('2. Ismlar HTML-qochiriladi (jadval va mukofotlarda)', () => {
     const summary = sampleSummary();
     summary.awards = [{ kind: 'mvp', playerId: 'x', playerName: EVIL, value: 1, titleUz: '<b>t</b>' }];
@@ -112,6 +161,8 @@ describe('nightResults — mukofotlar va qiyinlik', () => {
       assert.ok(html.includes(escHtml(t)), t);
     }
     assert.ok(html.includes(escHtml("6 bo'ri")));
+    // Olov qo'riqchisi — yoqib turgan vaqt bo'yicha (qayta yoqish emas): Bot Ali, 2:15
+    assert.match(html, /is-firekeeper[\s\S]*Bot Ali[\s\S]*s07-award-value">2:15</);
     // O'tinchi — men: "Siz" belgisi
     assert.match(html, /Sardor<span class="s07-tag">Siz<\/span>/);
   });
@@ -121,7 +172,8 @@ describe('nightResults — mukofotlar va qiyinlik', () => {
     assert.equal(formatNightAwardValueUz({ ...base, kind: 'mvp', value: 23 }), '23 ball');
     assert.equal(formatNightAwardValueUz({ ...base, kind: 'hunter', value: 5 }), "5 bo'ri");
     assert.equal(formatNightAwardValueUz({ ...base, kind: 'woodsman', value: 12 }), "12 o'tin");
-    assert.equal(formatNightAwardValueUz({ ...base, kind: 'firekeeper', value: 3 }), '3 marta');
+    assert.equal(formatNightAwardValueUz({ ...base, kind: 'firekeeper', value: 135 }), '2:15', 'vaqt, birliksiz');
+    assert.equal(formatNightAwardValueUz({ ...base, kind: 'firekeeper', value: 9 }), '0:09');
     assert.equal(buildNightAwardsHtml({ difficulty: 'easy', dawn: false, stats: [], awards: [] }, 'me'), '');
   });
 
@@ -150,7 +202,7 @@ describe('nightResults — yulduzlar qatori', () => {
     assert.match(stars[1]!, /s07-star-glyph" aria-hidden="true">☆</);
     assert.ok(stars[1]!.includes(escHtml("Asosiy gulxan bir marta ham o'chmadi")));
     assert.match(stars[2]!, /^is-alpha_slain is-earned"/);
-    assert.ok(stars[2]!.includes(escHtml("To'da boshlig'i o'ldirildi")));
+    assert.ok(stars[2]!.includes(escHtml("To'lqin boshlig'i o'ldirildi")));
     assert.ok(html.includes('<div class="s07-stars-total">2/3 yulduz</div>'));
     assert.equal(formatNightStarsTotalUz(summary.stars), '2/3 yulduz');
 
@@ -332,7 +384,7 @@ describe('SurvivalUI — tun natijasi varag‘i', () => {
       [
         stat({ id: 'me', name: 'Sardor', wolfKills: 2, survived: true }),
         stat({ id: 'd', name: 'Dilshod', revives: 3, downs: 1, survived: true }),
-        stat({ id: 'b1', name: 'Bot Ali', isBot: true, logsFed: 4, relights: 1 }),
+        stat({ id: 'b1', name: 'Bot Ali', isBot: true, logsFed: 4, fireKeepSec: 60, relights: 1 }),
       ],
       'normal',
       true,
@@ -341,7 +393,8 @@ describe('SurvivalUI — tun natijasi varag‘i', () => {
     const medicAt = html.indexOf('is-medic');
     assert.ok(medicAt >= 0, html);
     assert.ok(html.indexOf('is-hunter') < html.indexOf('is-woodsman'));
-    assert.ok(html.indexOf('is-firekeeper') < medicAt, 'tabib — oxirgi nishon');
+    const fireAt = html.indexOf('is-firekeeper');
+    assert.ok(fireAt >= 0 && fireAt < medicAt, 'tabib — oxirgi nishon');
     assert.ok(html.includes('Tabib'));
     assert.ok(html.includes('3 marta'));
     assert.match(html, /Dilshod<span class="s07-tag">Siz<\/span>/);

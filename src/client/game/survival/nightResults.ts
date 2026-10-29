@@ -8,6 +8,7 @@ import {
   NIGHT_STAR_KINDS,
   NIGHT_STAR_TITLES_UZ,
   countNightStars,
+  formatNightKeepTime,
   sanitizeNightDifficulty,
   type NightAward,
   type NightAwardKind,
@@ -49,11 +50,12 @@ const AWARD_ICONS: Readonly<Record<NightAwardKind, string>> = {
   firekeeper: '🔥',
   medic: '⛑️',
 };
+/** Birliklar (firekeeper — vaqt "2:15" ko'rinishida, birliksiz). */
 const AWARD_UNITS_UZ: Readonly<Record<NightAwardKind, string>> = {
   mvp: 'ball',
   hunter: "bo'ri",
   woodsman: "o'tin",
-  firekeeper: 'marta',
+  firekeeper: '',
   medic: 'marta',
 };
 /** MVP alohida taxtachada; qolganlari doim shu tartibda. */
@@ -62,8 +64,9 @@ const SECONDARY_AWARDS: readonly NightAwardKind[] = ['hunter', 'woodsman', 'fire
 const ME_TAG = '<span class="s07-tag">Siz</span>';
 const BOT_TAG = '<span class="s07-bot" title="Bot">🤖</span>';
 
-/** Mukofot qiymati birligi bilan: "23 ball", "5 bo'ri", "12 o'tin", "3 marta". */
+/** Mukofot qiymati birligi bilan: "23 ball", "5 bo'ri", "12 o'tin", "3 marta"; olov qo'riqchisi — vaqt "2:15". */
 export function formatNightAwardValueUz(a: NightAward): string {
+  if (a.kind === 'firekeeper') return formatNightKeepTime(count(a.value));
   return `${count(a.value)} ${AWARD_UNITS_UZ[a.kind] ?? ''}`.trim();
 }
 
@@ -86,21 +89,26 @@ export function buildNightStatsRowsHtml(summary: NightRoundSummary, myId: string
   return summary.stats
     .map((s, i) => {
       const isMe = s.id === myId;
-      const cls = [s.id === mvpId ? 'is-mvp' : '', isMe ? 'is-me' : '', s.survived ? '' : 'is-out']
+      const left = s.left === true;
+      const cls = [s.id === mvpId ? 'is-mvp' : '', isMe ? 'is-me' : '', s.survived && !left ? '' : 'is-out']
         .filter(Boolean)
         .join(' ');
       const alphas = count(s.alphaKills);
       const alphaHtml = alphas > 0 ? `<span class="s07-alpha" title="To'da boshliqlari">👑${alphas}</span>` : '';
-      const statusHtml = s.survived
-        ? `<span class="s07-st is-alive" title="Tong ko'rdi">🌅<span class="s07-word"> Tong ko'rdi</span></span>`
-        : `<span class="s07-st is-dead" title="Halok bo'ldi">💀<span class="s07-word"> Halok bo'ldi</span></span>`;
+      const relights = count(s.relights);
+      const keepTitle = relights > 0 ? ` title="O'chgan gulxanni ${relights} marta qayta yoqdi"` : '';
+      const statusHtml = left
+        ? `<span class="s07-st is-left" title="Chiqib ketdi">🚪<span class="s07-word"> Chiqib ketdi</span></span>`
+        : s.survived
+          ? `<span class="s07-st is-alive" title="Tong ko'rdi">🌅<span class="s07-word"> Tong ko'rdi</span></span>`
+          : `<span class="s07-st is-dead" title="Halok bo'ldi">💀<span class="s07-word"> Halok bo'ldi</span></span>`;
       return `
               <tr${cls ? ` class="${cls}"` : ''}>
                 <td><span class="s07-rank">#${i + 1}</span></td>
                 <td class="s07-name">${escHtml(s.name)}${s.isBot ? BOT_TAG : ''}${isMe ? ME_TAG : ''}</td>
                 <td class="s07-num">${count(s.wolfKills)}${alphaHtml}</td>
                 <td class="s07-num">${count(s.logsFed)}</td>
-                <td class="s07-num">${count(s.relights)}</td>
+                <td class="s07-num"${keepTitle}>${formatNightKeepTime(count(s.fireKeepSec))}</td>
                 <td class="s07-status">${statusHtml}</td>
               </tr>`;
     })
@@ -202,7 +210,7 @@ export function buildNightSummaryBoardHtml(summary: NightRoundSummary, myId: str
                     <th>O'yinchi</th>
                     <th class="s07-num" title="O'ldirilgan bo'rilar (👑 — to'da boshliqlari)">🐺<span class="s07-word"> Bo'ri</span></th>
                     <th class="s07-num" title="Gulxanga tashlangan o'tin">🪵<span class="s07-word"> O'tin</span></th>
-                    <th class="s07-num" title="O'chgan gulxanni qayta yoqish">🔥<span class="s07-word"> Yoqish</span></th>
+                    <th class="s07-num" title="Gulxanni o'chirmay yoqib turgan vaqt — tashlagan o'tini yongan daqiqa:soniya">🔥<span class="s07-word"> Olov</span></th>
                     <th>Holat</th>
                   </tr>
                 </thead>
