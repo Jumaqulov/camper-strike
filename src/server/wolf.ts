@@ -104,6 +104,11 @@ const RING_SLOT_GIVE_UP_SEC = 5;
 /** Halqa bo'ylab siljish kengroq radiusda ham to'silsa (o'rin burchagiga yetib bo'lmaydi) shuncha (s) joyida turadi. */
 const RING_SLIDE_HOLD_SEC = 3;
 /**
+ * Siljish tekshiruvlari orasida bo'rining o'zi shundan (m) ko'p yurgan bo'lsa joyida kutish boshlanmaydi: burchak
+ * o'zgarmagani to'siq emas, radial yurish (mash'alchi to'g'ri bo'riga yurib keldi — chekinmoqda) bo'lishi mumkin.
+ */
+const RING_SLIDE_HOLD_MOVE_M = 0.5;
+/**
  * Davriy qayta yo'l topish (keepPath): maqsad oxirgi A* maqsadidan PATH_KEEP_GOAL_M (m) ichida va yo'lda tugun
  * qolgan bo'lsa yangi yo'l faqat eski yo'lning qolganidan PATH_KEEP_GAIN_M (m) qisqa bo'lsa olinadi.
  */
@@ -215,8 +220,9 @@ export class WolfBrain {
   /** Haydovchi chalg'itishdagi navbatdagi aldab tashlanish vaqti (0 — chalg'itmayapti). */
   private feintLungeAt = 0;
   private lastPackHowlAt = -99;
-  /** Olov halqasi bo'ylab siljish: oxirgi tekshiruvdagi burchak/vaqt, to'silganda kengroq radius muddati. */
+  /** Olov halqasi bo'ylab siljish: oxirgi tekshiruvdagi burchak/joy/vaqt, to'silganda kengroq radius muddati. */
   private slideAngPrev = 0;
+  private slidePosPrev = { x: 0, z: 0 };
   private slideCheckAt = 0;
   private slideWideUntil = 0;
   /** Kengroq radiusda ham to'silgan siljish: shu vaqtgacha joyida turib nishonga qaraydi (devorga tiralmaydi). */
@@ -1163,25 +1169,32 @@ export class WolfBrain {
         }
         if (slotPt) this.slotPathAt = t;
         const sliding = !slotPt && order?.standoffAngle !== undefined && Math.abs(slotDA) > 0.12 && fd < standoff + 6;
-        if (!sliding) this.slideHoldUntil = 0;
+        // Joyida kutish faqat halqadan tashqarida: olov bo'riga yaqinlashsa (mash'alchi unga yurib keldi) kutish
+        // tashlanadi — pastdagi siljish tarmog'i kengroq radiusga chekintiradi (faqat yumshoq surish bilan orqaga
+        // yugurib, seskanib, to'xtab, yana seskanib turmaydi)
+        if (!sliding || fd < standoff) this.slideHoldUntil = 0;
         if (!sliding || t < this.slideHoldUntil) {
           // Siljimayapti yoki joyida kutmoqda: tekshiruv to'xtaydi (kutish tugagach yana siljib ko'radi)
           this.slideAngPrev = myAng;
+          this.slidePosPrev = { x: me.pos.x, z: me.pos.z };
           this.slideCheckAt = t + 1.2;
         } else if (t >= this.slideCheckAt) {
           // Halqa bo'ylab siljish to'sildi (burchak o'zgarmadi): bir muddat kengroq radiusda aylanib o'tadi. Kengroq
           // radiusda ham to'silgan bo'lsa o'rin burchagiga yetib bo'lmaydi (devor, xarita cheti): RING_SLIDE_HOLD_SEC
           // joyida turadi — devorga tiralib turmaydi, tiqilish tekshiruvi uni nav tuguniga ko'chirmaydi; keyin
-          // kengroq radiusda yana urinib ko'radi (mash'alchi siljigan / o'rin almashgan bo'lishi mumkin)
+          // kengroq radiusda yana urinib ko'radi (mash'alchi siljigan / o'rin almashgan bo'lishi mumkin). Bo'rining
+          // o'zi yurgan bo'lsa (radial chekinish) yoki halqa ichida bo'lsa kutmaydi — kengroq radiusda siljiydi
           if (Math.abs(angleDiff(this.slideAngPrev, myAng)) < 0.06) {
-            if (t < this.slideWideUntil) {
+            const moved = Math.hypot(me.pos.x - this.slidePosPrev.x, me.pos.z - this.slidePosPrev.z);
+            if (t < this.slideWideUntil && moved < RING_SLIDE_HOLD_MOVE_M && fd >= standoff) {
               this.slideHoldUntil = t + RING_SLIDE_HOLD_SEC;
               this.slideWideUntil = this.slideHoldUntil + 2.5;
             } else {
-              this.slideWideUntil = t + 2.5;
+              this.slideWideUntil = Math.max(this.slideWideUntil, t + 2.5);
             }
           }
           this.slideAngPrev = myAng;
+          this.slidePosPrev = { x: me.pos.x, z: me.pos.z };
           this.slideCheckAt = t + 1.2;
         }
         const ux = fx / Math.max(fd, 1e-3);

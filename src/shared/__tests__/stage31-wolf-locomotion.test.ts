@@ -4,7 +4,7 @@ import type { Server, Socket } from 'socket.io';
 import { Room, type ServerPlayer } from '../../server/room';
 import type { ServerWolf } from '../../server/wolf';
 import { WOLF_DRIVER_FEINT_M, WOLF_DRIVER_LUNGE_M, angularSeparation, type PackOrder } from '../../server/wolfPack';
-import { MAX_HP } from '../constants';
+import { MAX_HP, WALK_SPEED } from '../constants';
 import type { Vec3 } from '../math';
 import { collidesAtWorld } from '../physics';
 import type { CreateRoomOpts } from '../protocol';
@@ -15,7 +15,8 @@ import { TORCH_STANDOFF_M, WOLF_RADIUS, WOLF_WALK_SPEED } from '../wolf';
 // tomoniga buradi (orqasi/yoni bilan to'liq tezlikda chopmaydi), aylanib o'tayotgan qanot ortga sirpanmaydi;
 // chalg'itayotgan haydovchi otilgandan keyin sekin (yurish tezligida) chekinadi; qochayotgan bo'ri (tong, raketa)
 // daraxt/quti burchagida qotib qolmaydi; halqa o'rni burchagiga yetib bo'lmasa bo'ri devorga tiralib turmaydi —
-// joyida kutadi (nav tuguniga ko'chirilmaydi); qo'zg'almas halqa o'rniga yo'l ikki A* yo'li orasida chayqalmaydi.
+// joyida kutadi (nav tuguniga ko'chirilmaydi), mash'alchi unga yurib kelsa kutish tashlanadi — chekinadi (qayta-qayta
+// seskanmaydi); qo'zg'almas halqa o'rniga yo'l ikki A* yo'li orasida chayqalmaydi.
 // Xona haqiqiy Room, io/socket soxta; vaqt room.advanceTimeForTest bilan suriladi, Math.random urug'langan.
 
 function createFakeIo(): Server {
@@ -132,6 +133,7 @@ interface BrainInternals {
   slipUntil: number;
   stuckCount: number;
   slideHoldUntil: number;
+  flinching: boolean;
   lastWishX: number;
   lastWishZ: number;
   startSlip(t: number): void;
@@ -404,6 +406,30 @@ function forceSlot(w: ServerWolf, angle: number, r: number): void {
 }
 
 /**
+ * Mash'alchi xarita chetidagi devor joyida (mash'al 300 s), 3 bo'ri ochiq tomonda 13 m da; birinchi bo'rining halqa
+ * o'rni (burchak devor tomonda, radius TORCH_STANDOFF_M) majburan devor ichida — o'rin nuqtasi to'siq ichida.
+ */
+function wallSlotScene(room: Room, p: ServerPlayer): { pos0: Vec3; wolves: ServerWolf[]; blocked: ServerWolf } {
+  const spot = findWallSpots(room).find((s) => !s.inner);
+  assert.ok(spot, 'xarita chetida devor joyi');
+  const pos0 = spot.pos;
+  pin(p, pos0);
+  p.torchUntil = room.now() + 300;
+  const wolves = freshWolves(room, 3);
+  const open = spot.wallDir + Math.PI;
+  wolves.forEach((w, k) => {
+    const ang = open + (k - 1) * 0.4;
+    const c = room.nav.center(room.nav.nearest(groundAt(room, pos0.x + Math.cos(ang) * 13, pos0.z + Math.sin(ang) * 13)));
+    placeWolf(w, c, pos0);
+  });
+  const blocked = wolves[0]!;
+  const sp = groundAt(room, pos0.x + Math.cos(spot.wallDir) * TORCH_STANDOFF_M, pos0.z + Math.sin(spot.wallDir) * TORCH_STANDOFF_M);
+  assert.ok(collidesAtWorld(room.world, sp.x, sp.y + 0.05, sp.z, WOLF_RADIUS + 0.15, 1.0), "o'rin nuqtasi to'siq ichida");
+  forceSlot(blocked, spot.wallDir, TORCH_STANDOFF_M);
+  return { pos0, wolves, blocked };
+}
+
+/**
  * checkStuck o'rab olinadi (har tick chaqiriladi): tiqilish tekshiruvi bo'rini nav tuguniga ko'chirgan (teleport)
  * holatlar soni va shu tickda istak (yurishga urinish) bormi.
  */
@@ -567,23 +593,8 @@ describe("Bosqich 31 — bo'ri harakati: sirpanishda tana yo'nalishi, chalg'itis
         const room = makeNightRoom({ publicLayoutSeed: seed });
         try {
           const p = startNight(room);
-          const spot = findWallSpots(room).find((s) => !s.inner);
-          assert.ok(spot, 'xarita chetida devor joyi');
-          const pos0 = spot.pos;
-          pin(p, pos0);
-          p.torchUntil = room.now() + 300;
-          const wolves = freshWolves(room, 3);
-          const open = spot.wallDir + Math.PI;
-          wolves.forEach((w, k) => {
-            const ang = open + (k - 1) * 0.4;
-            const c = room.nav.center(room.nav.nearest(groundAt(room, pos0.x + Math.cos(ang) * 13, pos0.z + Math.sin(ang) * 13)));
-            placeWolf(w, c, pos0);
-          });
           // Birinchi bo'rining o'rni — devor tomonda (o'rin nuqtasi to'siq ichida)
-          const blocked = wolves[0]!;
-          const sp = groundAt(room, pos0.x + Math.cos(spot.wallDir) * TORCH_STANDOFF_M, pos0.z + Math.sin(spot.wallDir) * TORCH_STANDOFF_M);
-          assert.ok(collidesAtWorld(room.world, sp.x, sp.y + 0.05, sp.z, WOLF_RADIUS + 0.15, 1.0), "o'rin nuqtasi to'siq ichida");
-          forceSlot(blocked, spot.wallDir, TORCH_STANDOFF_M);
+          const { pos0, wolves, blocked } = wallSlotScene(room, p);
           const stuck = watchStuck(blocked);
           const flinch0 = wolves.map((w) => w.brain.fearFlinchCount);
           const step = 1 / 30;
@@ -650,5 +661,61 @@ describe("Bosqich 31 — bo'ri harakati: sirpanishda tana yo'nalishi, chalg'itis
     }
     const slow = report.filter((r) => r.endsWith('yetmadi') || Number(r.split(': ')[1]!.split(' ')[0]) > 10);
     assert.deepEqual(slow, [], `hamma boshlang'ich joydan o'ringa ≤ 10 s da yetadi: ${report.join(', ')}`);
+  });
+
+  it("7. Devor yonida joyida kutayotgan bo'ri tomon mash'alchi yurib keladi (WALK_SPEED): bo'ri chekinadi — olov ichida kutmaydi, qayta-qayta seskanmaydi", () => {
+    const report: string[] = [];
+    for (const seed of [6501, 1]) {
+      for (const nth of [1, 2, 3]) {
+        withSeededRandom(3107 + seed + nth * 101, () => {
+          const room = makeNightRoom({ publicLayoutSeed: seed });
+          try {
+            const p = startNight(room);
+            const { pos0, wolves, blocked } = wallSlotScene(room, p);
+            const b = brainOf(blocked);
+            const stuck = watchStuck(blocked);
+            const step = 1 / 30;
+            const t0 = room.now();
+            // Mash'alchi devor yonida turadi — bo'ri (10 s dan keyin) n-chi marta joyida kuta boshlaguncha
+            let holds = 0;
+            let wasHeld = false;
+            for (let i = 0; i < 30 * 60 && holds < nth; i++) {
+              for (const w of wolves) room.pack.report(w, p, room.now());
+              room.advanceTimeForTest(step, step);
+              pin(p, pos0);
+              const held = room.now() < b.slideHoldUntil;
+              if (held && !wasHeld && room.now() - t0 >= 10) holds++;
+              wasHeld = held;
+            }
+            assert.equal(holds, nth, `seed=${seed}: bo'ri ${nth}-marta joyida kuta boshladi`);
+            // Mash'alchi kutayotgan bo'ri tomon yurish tezligida 2.5 s yuradi (2.5 m gacha), keyin 1.5 s turadi. Bo'ri
+            // halqa ichida (uvlash/seskanishdan tashqari) joyida kutmasligi kerak — chekinadi
+            const flinch0 = blocked.brain.fearFlinchCount;
+            let cur = { ...pos0 };
+            let heldInside = 0;
+            for (let i = 0; i < 30 * 4; i++) {
+              const dx = blocked.pos.x - cur.x;
+              const dz = blocked.pos.z - cur.z;
+              const dl = Math.hypot(dx, dz);
+              if (i < 30 * 2.5 && dl > 2.5) cur = groundAt(room, cur.x + (dx / dl) * WALK_SPEED * step, cur.z + (dz / dl) * WALK_SPEED * step);
+              for (const w of wolves) room.pack.report(w, p, room.now());
+              room.advanceTimeForTest(step, step);
+              pin(p, cur);
+              const inside = distXZ(blocked.pos, cur) < TORCH_STANDOFF_M - 0.3;
+              if (inside && blocked.state !== 'howl' && !b.flinching && room.now() < b.slideHoldUntil) heldInside++;
+            }
+            const flinches = blocked.brain.fearFlinchCount - flinch0;
+            report.push(`seed=${seed} #${nth}: seskanish=${flinches} olov ichida kutdi=${heldInside} tick teleport=${stuck.teleports}`);
+            assert.equal(heldInside, 0, `olov ichida joyida kutmadi (${report.at(-1)})`);
+            // Uvlab turgan bo'riga mash'alchi yetib kelsa bir marta seskanadi — keyin chekinib ulguradi (kutish olov
+            // ichida davom etganda faqat yumshoq surish bilan qochib, har ~0.2 s seskanardi)
+            assert.ok(flinches <= 2, `qayta-qayta seskanmadi (${report.at(-1)})`);
+            assert.equal(stuck.teleports, 0, `nav tuguniga ko'chirilmadi (${report.at(-1)})`);
+          } finally {
+            room.destroy();
+          }
+        });
+      }
+    }
   });
 });
