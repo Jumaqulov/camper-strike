@@ -24,6 +24,8 @@ import {
   NIGHT_REVIVE_RANGE_M,
   WOOD_CARRY_MAX,
   isWolfThreatState,
+  woodBlocksSprint,
+  woodSpeedMul,
 } from '../shared/wolf';
 import { findLocalPath, standingHeights } from './botLocalPath';
 import { applyAuthoritativeWeaponSwitch } from './combat/weaponSwitchAuthority';
@@ -95,8 +97,24 @@ const BOT_SUPPLY_SEARCH_M = 80;
 const BOT_FETCH_FUEL_SEC = 60;
 /** Bo'ridan qochgan bot shu masofadagi (m) yonib turgan gulxanga yuguradi (wolf_night). */
 const BOT_FLEE_TO_FIRE_M = 30;
+/**
+ * Qo'li to'la (WOOD_CARRY_MAX o'tin — sprint yo'q, bo'ridan qochib qutulolmaydi) bot uzoqroqdagi gulxanga ham
+ * yuguradi (m): ochiq joyda qochish befoyda, gulxan doirasida esa o'tinni darhol tashlaydi (shelterAtFire).
+ */
+const BOT_FLEE_TO_FIRE_LOADED_M = 45;
 /** Gulxan doirasida panalangan bot olov markazidan shuncha (m) nari turadi — o'tin tashlash masofasida. */
 const BOT_FIRE_SHELTER_OFFSET_M = 1.5;
+
+/**
+ * Bot harakat tezligi (m/s) — odamdagi o'tin og'irligi qoidasi bilan bir xil (`computeWishVelocity`): qo'l to'la
+ * (WOOD_CARRY_MAX) bo'lsa sprint yo'q — asos RUN_SPEED o'rniga WALK_SPEED; `woodSpeedMul` har doim qo'llanadi.
+ * `weaponMul` — qurol ko'paytuvchisi. `walk` — sayr rejimi (asos WALK_SPEED, qurol ko'paytuvchisisiz — avvalgidek),
+ * lekin yugurish tezligidan oshmaydi (to'la qo'lda sayr ham og'ir).
+ */
+export function botMoveSpeed(weaponMul: number, wood: number | undefined, walk = false): number {
+  const run = (woodBlocksSprint(wood) ? WALK_SPEED : RUN_SPEED) * weaponMul * woodSpeedMul(wood);
+  return walk ? Math.min(run, WALK_SPEED * woodSpeedMul(wood)) : run;
+}
 
 const BOT_NAMES = [
   'Amaki Bobur',
@@ -930,7 +948,7 @@ export class BotBrain {
       }
       if (dH < 6) {
         // Juda yaqin — otishda davom etib orqaga tisarilamiz
-        const sp = RUN_SPEED * def.speedMul * 0.7;
+        const sp = botMoveSpeed(def.speedMul, me.wood) * 0.7;
         wishX = -(dx / dH) * sp;
         wishZ = -(dz / dH) * sp;
       }
@@ -940,7 +958,8 @@ export class BotBrain {
       return 'fight';
     }
 
-    const speed = RUN_SPEED * (weapon ? WEAPONS[weapon].speedMul : 1);
+    // Qo'li to'la o'tinli bot qochganda ham sprint qilolmaydi (botMoveSpeed)
+    const speed = botMoveSpeed(weapon ? WEAPONS[weapon].speedMul : 1, me.wood);
     // wolf_night: bo'ri ovlab yaqinlashdi (≤ 6 m), yaqinda yonib turgan gulxan yo'q, mash'al yo'q — signal
     // raketasi bo'lsa otamiz (30 s da bir marta); raketa otilgach bo'rilar qochadi, keyingi tick odatdagidek
     if (this.room.isNight && hunting && dH <= BOT_FLARE_WOLF_DIST_M && t >= this.nextFlareAt && !this.room.hasTorch(me)) {
@@ -1039,11 +1058,11 @@ export class BotBrain {
   }
 
   /**
-   * Qochish maqsadi: wolf_night da BOT_FLEE_TO_FIRE_M ichida yonib turgan gulxan bo'lsa va bo'ri yo'lni
-   * to'smasa — gulxan markazidagi nav tuguni (doiraga kirgach shelterAtFire). Aks holda bo'ridan teskari
-   * yo'nalish atrofida (0°, ±30°, ±60°, ±95°, ±130°) ~14 m dagi nav tugunlari sinab chiqiladi — bo'ridan
-   * kamida 4 m uzoqlashtiradigan va yo'li bor birinchisi olinadi (to'g'ri qochish devorga olib borsa, yon
-   * tomonga o'tiladi). Topilmasa — xom teskari nuqta, yo'lsiz.
+   * Qochish maqsadi: wolf_night da BOT_FLEE_TO_FIRE_M (qo'l to'la o'tin bilan — BOT_FLEE_TO_FIRE_LOADED_M) ichida
+   * yonib turgan gulxan bo'lsa va bo'ri yo'lni to'smasa — gulxan markazidagi nav tuguni (doiraga kirgach
+   * shelterAtFire). Aks holda bo'ridan teskari yo'nalish atrofida (0°, ±30°, ±60°, ±95°, ±130°) ~14 m dagi nav
+   * tugunlari sinab chiqiladi — bo'ridan kamida 4 m uzoqlashtiradigan va yo'li bor birinchisi olinadi (to'g'ri
+   * qochish devorga olib borsa, yon tomonga o'tiladi). Topilmasa — xom teskari nuqta, yo'lsiz.
    */
   private pickWolfFleeGoal(wolfPos: Vec3, dH: number): { goal: Vec3; path: Vec3[] } {
     const me = this.me;
@@ -1058,7 +1077,8 @@ export class BotBrain {
       // (ax, az) — bo'ridan bizga: bo'ri gulxan tomonida va uning narigi chetidan oldinda bo'lsa, yo'l to'silgan
       const wolfAhead = -(fdx * ax + fdz * az) / fd;
       const wolfInWay = wolfAhead > 0.5 && dH < fd + CAMPFIRE_RADIUS_M;
-      if (fd <= BOT_FLEE_TO_FIRE_M && !wolfInWay) {
+      const fireRange = woodBlocksSprint(me.wood) ? BOT_FLEE_TO_FIRE_LOADED_M : BOT_FLEE_TO_FIRE_M;
+      if (fd <= fireRange && !wolfInWay) {
         const ni = nav.nearest({ x: fire.x, y: fire.y, z: fire.z });
         if (ni >= 0) {
           const c = nav.center(ni);
@@ -1171,7 +1191,8 @@ export class BotBrain {
     let jump = false;
     const activeWeapon: WeaponId = me.weapon ?? 'rifle';
     const def = WEAPONS[activeWeapon];
-    const speed = RUN_SPEED * def.speedMul;
+    // wolf_night: o'tin og'irligi odamdagidek (to'la qo'lda sprint yo'q); boshqa rejimlarda o'tin 0 — o'zgarishsiz
+    const speed = botMoveSpeed(def.speedMul, me.wood);
     const lootMode = this.room.lootEnabled;
     const meleeNow = isMeleeWeapon(me.weapon);
     const canFight = !!me.weapon && (meleeNow || me.ammo[me.weapon].mag + me.ammo[me.weapon].reserve > 0);
@@ -1379,7 +1400,7 @@ export class BotBrain {
         if (dl < (this.pathIsLocal ? (isLast ? 0.35 : 0.5) : 0.8)) {
           this.pathIdx++;
         } else {
-          const sp = this.walkMode ? WALK_SPEED : speed;
+          const sp = this.walkMode ? botMoveSpeed(def.speedMul, me.wood, true) : speed;
           wishX = (dx / dl) * sp;
           wishZ = (dz / dl) * sp;
           lookYaw = Math.atan2(-dx, -dz);
