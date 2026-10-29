@@ -346,7 +346,7 @@ describe("Bosqich 23 — Tong otguncha: yarim tungi yordam yuki va signal raketa
     }
   });
 
-  it("3. Raketa otish: 1 ta sarflanadi, 'night:flare' va chat; ovlayotgan bo'ri qochadi, 20 s davomida ≥ ~30 m da turadi, tishlamaydi, to'da nishon bermaydi; keyin qaytadi (o'chmaydi)", () => {
+  it("3. Raketa otish: 1 ta sarflanadi, 'night:flare' va chat; ovlayotgan bo'ri qochadi, 20 s davomida uzoqlashadi (≥ 10 m), tishlamaydi, to'da nishon bermaydi; keyin qaytadi (o'chmaydi)", () => {
     const { io, emitted } = createFakeIo();
     const room = makeNightRoom(io);
     try {

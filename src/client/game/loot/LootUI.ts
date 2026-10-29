@@ -7,6 +7,7 @@ import {
   type PublicLootItem,
 } from '../../../shared/loot';
 import type { ContainerKind } from '../../../shared/world';
+import { FLARE_DURATION_SEC } from '../../../shared/wolf';
 
 export interface LootUICallbacks {
   onOpenContainer: (containerId: string) => void;
@@ -423,7 +424,7 @@ export class LootUI {
       return 'Kaska · bosh zarari −50%';
     }
     if (item.kind === 'flare') {
-      return `Signal raketasi · hamma bo'rilarni 20 s qo'rqitadi [X] (×${item.quantity})`;
+      return `Signal raketasi · hamma bo'rilarni ${FLARE_DURATION_SEC} s qo'rqitadi [X] (×${item.quantity})`;
     }
     return `×${item.quantity}`;
   }

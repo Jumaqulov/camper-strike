@@ -2465,6 +2465,11 @@ export class Room {
   removePlayer(id: string): void {
     const p = this.players.get(id);
     if (!p) return;
+    // wolf_night: yiqilgan holda (qon ketishi tugamay) chiqib ketish ham halok bo'lish — "hamma tirik qoldi" yulduzi
+    if (p.downed) {
+      const st = this.nightStats.get(id);
+      if (st) st.deaths++;
+    }
     this.players.delete(id);
     this.loot.removePlayer(id);
     p.socket?.leave(this.channel);

@@ -454,6 +454,26 @@ describe('Bosqich 33 — xona: chiqib ketganlar va "Hamma tirik qoldi" yulduzi',
       room.destroy();
     }
   });
+
+  it("9b. Yiqilgan holda (qon ketishi tugamay) chiqib ketgan — o'lim hisoblanadi, 'Hamma tirik qoldi' yo'q", () => {
+    const { io } = createFakeIo();
+    const room = makeNightRoom(io);
+    try {
+      const [p1, p2] = startNight(room, ['p1', 'p2']);
+      const w = [...room.wolves.values()][0]!;
+      room.damageForTest(p1!, w, MAX_HP, 'wolf');
+      assert.equal(p1!.downed, true);
+      room.wolves.clear();
+      room.removePlayer('p1');
+      const sum = finishAtDawn(room, [p2!]);
+      const gone = sum.stats.find((s) => s.id === 'p1')!;
+      assert.equal(gone.left, true);
+      assert.equal(gone.deaths, 1);
+      assert.equal(starOf(sum, 'all_alive'), false, "yiqilib chiqib ketgan — o'limi hisoblanadi");
+    } finally {
+      room.destroy();
+    }
+  });
 });
 
 describe("Bosqich 33 — to'lqin boshlig'i albatta chiqadi", () => {
