@@ -132,6 +132,18 @@ export interface DevWolfView {
   state: string;
   targetId: string | null;
   alive: boolean;
+  /** 3D model (WolfModel bilan strukturaviy mos): LOD darajasi va chizilayotgan uchburchaklar. */
+  model: { readonly lodLevel: number; readonly lodTriangles: number; usesAsset(): boolean };
+}
+
+/** Bo'ri LOD statistikasi (QA): har darajadagi bo'rilar soni va jami chizilayotgan uchburchaklar. */
+export interface WolfLodStats {
+  lod0: number;
+  lod1: number;
+  lod2: number;
+  trisDrawn: number;
+  /** GLB o'rniga procedural zaxira bilan chizilayotganlar. */
+  fallback: number;
 }
 
 /** Game asboblarga beradigan tor interfeys: faqat kerakli obyektlar, getter/setter'lar va amallar. */
@@ -333,8 +345,10 @@ export interface DevGameTools {
   getBrowserGuardState?: () => unknown;
   getOtherPlayerCount?: () => number;
   getOtherPlayers?: () => Array<{ id: string; name: string; pos: Vec3; weapon: WeaponId | null; crouched: boolean }>;
-  /** Bo'rilar (klient interpolyatsiyasidan): pozitsiya, holat, nishon. */
-  getWolves?: () => DevWolfView[];
+  /** Bo'rilar (klient interpolyatsiyasidan): pozitsiya, holat, nishon, LOD. */
+  getWolves?: () => Array<Omit<DevWolfView, 'model'> & { lod: number; tris: number; asset: boolean }>;
+  /** Bo'ri LOD statistikasi: har darajadagi bo'rilar soni va jami chizilayotgan uchburchaklar (QA). */
+  getWolfLodStats?: () => WolfLodStats;
   getContainersCount?: () => number;
   /** 08B: Camper Buddy asset + per-model animator/weapon-mount diagnostics. */
   getCharacterDiagnostics?: () => {
@@ -750,7 +764,25 @@ export function installDevGameTools(h: DevGameHooks): () => void {
         state: w.state,
         targetId: w.targetId,
         alive: w.alive,
+        lod: w.model.lodLevel,
+        tris: w.model.lodTriangles,
+        asset: w.model.usesAsset(),
       })),
+    getWolfLodStats: () => {
+      const st: WolfLodStats = { lod0: 0, lod1: 0, lod2: 0, trisDrawn: 0, fallback: 0 };
+      for (const w of h.getWolves()) {
+        if (!w.model.usesAsset()) {
+          st.fallback++;
+          continue;
+        }
+        const l = w.model.lodLevel;
+        if (l === 0) st.lod0++;
+        else if (l === 1) st.lod1++;
+        else st.lod2++;
+        st.trisDrawn += w.model.lodTriangles;
+      }
+      return st;
+    },
     getOtherPlayerCount: () => Array.from(h.getRemotes()).length,
     getOtherPlayers: () =>
       Array.from(h.getRemotes()).map((r) => ({

@@ -44,6 +44,24 @@ export const TORCH_FEAR_RADIUS_M = 4;
 export const TORCH_STANDOFF_M = TORCH_FEAR_RADIUS_M + 1.0;
 /** Bo'ri yonib turgan gulxan doirasidan tashqarida, shu masofada (markazdan) to'xtab aylanadi (m). */
 export const CAMPFIRE_STANDOFF_M = CAMPFIRE_RADIUS_M + 1.5;
+
+// ---------- Bo'rining olovdan qo'rqishi (gulxan, mash'al, raketa uchun umumiy; manba radiusiga qo'shiladi, m) ----------
+/**
+ * Nishon "olov himoyasida" gisterezisi: radius + ENTER ichiga kirsa himoyalangan, faqat radius + EXIT dan
+ * chiqsa himoyasiz. Bitta chegara bo'lsa chetdagi 1 m halqada turgan o'yinchi uchun bo'ri "halqada tur" ↔
+ * "ov qil → olovga tegib seskan" orasida har tickda almashib tebranadi.
+ */
+export const FEAR_PROTECT_ENTER_M = 1.0;
+export const FEAR_PROTECT_EXIT_M = 1.6;
+/** Bo'ri shu chegara (radius + FLINCH) ichida olovni "sezadi": yumshoq halqada tashqariga suriladi. */
+export const FEAR_FLINCH_M = 1.0;
+/**
+ * Yumshoq halqa kengligi: radius + FLINCH − SOFT dan ichkarida (radius + 0.5) qattiq seskanish (alert, yugurib
+ * chiqadi); undan tashqarida — faqat tashqariga silliq surish (holat o'zgarmaydi, yo'l to'xtamaydi).
+ */
+export const FEAR_SOFT_BAND_M = 0.5;
+/** Nav yo'li va harakat maqsadi olov markazidan kamida radius + shu masofada bo'ladi (tugun bloklanadi). */
+export const FEAR_PATH_MARGIN_M = 1.2;
 /** Mash'al bilan ishlatish mumkin bo'lgan qurollar (bir qo'l band): pichoq va to'pponcha. */
 export const TORCH_ALLOWED_WEAPONS: readonly string[] = ['knife', 'pistol'];
 export function isTorchWeapon(w: string | null | undefined): boolean {

@@ -4,6 +4,9 @@ import { applyWorldMovement, raycastWorld, type Body } from '../shared/physics';
 import { hitboxScaleOf } from '../shared/stance';
 import { sampleTerrainHeight } from '../shared/world';
 import {
+  FEAR_FLINCH_M,
+  FEAR_PATH_MARGIN_M,
+  FEAR_SOFT_BAND_M,
   WOLF_ALPHA_BUFF_SPEED_MUL,
   WOLF_ATTACK_COOLDOWN,
   WOLF_ATTACK_DURATION,
@@ -83,6 +86,14 @@ const ROAM_SNIFF_CHANCE = 0.06;
 const SENSE_INTERVAL = 0.15;
 /** Qochayotgan bo'ri shu oraliqda (s) yoki maqsadga yetganda yangi uzoq maqsad tanlaydi. */
 const FLEE_REGOAL_SEC = 4;
+/** Halqada turish o'lik zonasi (m): standoff ± shu ichida bo'ri qimirlamaydi (mikro-qadam tebranishi bo'lmasin). */
+const RING_DEADBAND_M = 0.4;
+/** Halqadan shuncha (m) uzoqda bo'lsa chetiga nav yo'li bilan (olovni aylanib) boradi, yaqinroq — to'g'ri radial. */
+const RING_PATH_DIST_M = 3;
+/** Maqsad yaqinida yetib keldi deb hisoblanadigan masofa (m): undan yaqin maqsadga qadam bosilmaydi. */
+const ARRIVE_M = 0.35;
+/** Olov sabab majburiy qayta yo'l topish oralig'i (s) — yo'l tuguni olov ichida qolsa har tick A* ishlamasin. */
+const FEAR_REPATH_MIN_SEC = 0.5;
 
 /**
  * Bo'ri sun'iy intellekti: sayr → hid/tovush bo'yicha tekshirish → ov (yugurib quvish) → tashlanib tishlash.
@@ -125,6 +136,12 @@ export class WolfBrain {
   private slideAngPrev = 0;
   private slideCheckAt = 0;
   private slideWideUntil = 0;
+  /** Olov sabab oxirgi majburiy qayta yo'l topish vaqti. */
+  private fearRepathAt = -99;
+  /** Hozir qattiq seskanish (olovdan yugurib chiqish) holatidami (hisob uchun chekka aniqlash). */
+  private flinching = false;
+  /** Qattiq olov seskanishlari soni (radius + 0.5 ichiga tushib yugurib chiqish) — testlar/QA uchun. */
+  fearFlinchCount = 0;
 
   constructor(
     private readonly room: Room,
@@ -364,35 +381,52 @@ export class WolfBrain {
     me.yaw += Math.abs(d) <= step ? d : Math.sign(d) * step;
   }
 
-  private moveTowards(goal: Vec3, speed: number, dt: number): { wishX: number; wishZ: number; arrived: boolean } {
+  /**
+   * Maqsad tomon istak tezligi; ARRIVE_M ichida — qimirlamaydi (o'lik zona). `turn=false` — yo'nalishni
+   * burmaydi (chaqiruvchi nishonga qaratadi; ikki turnTowards bir tickda bir-birini chayqatmasin).
+   */
+  private moveTowards(goal: Vec3, speed: number, dt: number, turn = true): { wishX: number; wishZ: number; arrived: boolean } {
     const me = this.me;
     const dx = goal.x - me.pos.x;
     const dz = goal.z - me.pos.z;
     const dl = Math.hypot(dx, dz);
-    if (dl < 0.35) return { wishX: 0, wishZ: 0, arrived: true };
-    this.turnTowards(Math.atan2(-dx, -dz), dt);
+    if (dl < ARRIVE_M) return { wishX: 0, wishZ: 0, arrived: true };
+    if (turn) this.turnTowards(Math.atan2(-dx, -dz), dt);
     return { wishX: (dx / dl) * speed, wishZ: (dz / dl) * speed, arrived: false };
   }
 
-  /** Nav-graf yo'li bo'ylab (zinaga chiqmaydi); yaqin va ko'rinadigan maqsadga to'g'ri yuradi. */
-  private followPath(goal: Vec3, speed: number, t: number, dt: number, direct: boolean): { wishX: number; wishZ: number } {
+  /**
+   * Nav-graf yo'li bo'ylab (zinaga chiqmaydi); yaqin va ko'rinadigan maqsadga to'g'ri yuradi. `avoidFear` —
+   * A* yonib turgan gulxan / mash'al / raketa doiralarini (radius + FEAR_PATH_MARGIN_M) bloklangan tugun deb
+   * chetlab o'tadi; yo'l tuguni keyinroq olov ichida qolsa (gulxan qayta yoqildi) qayta yo'l topiladi.
+   */
+  private followPath(goal: Vec3, speed: number, t: number, dt: number, direct: boolean, avoidFear = true, turn = true): { wishX: number; wishZ: number } {
     const me = this.me;
     if (direct) {
       this.path = [];
       this.pathIdx = 0;
       this.repathAt = 0;
-      const m = this.moveTowards(goal, speed, dt);
+      const m = this.moveTowards(goal, speed, dt, turn);
       return { wishX: m.wishX, wishZ: m.wishZ };
     }
-    if (t >= this.repathAt || this.pathIdx >= this.path.length) {
-      this.path = this.room.nav.findPath(me.pos, goal);
+    // Keyingi yo'l tuguni olov ichida (yo'l topilgandan keyin yoqilgan gulxan / yaqinlashgan mash'al): qayta yo'l
+    if (avoidFear && t >= this.repathAt - 0.5 && t - this.fearRepathAt >= FEAR_REPATH_MIN_SEC && this.pathIdx < this.path.length - 1) {
+      const wp = this.path[this.pathIdx]!;
+      if (this.room.fearSourceContaining(wp.x, wp.z, FEAR_PATH_MARGIN_M)) {
+        this.repathAt = 0;
+        this.fearRepathAt = t;
+      }
+    }
+    // Yo'l bo'sh (topilmagan) bo'lsa har tick qayta A* ishlamaydi — faqat repathAt kelganda
+    if (t >= this.repathAt || (this.path.length > 0 && this.pathIdx >= this.path.length)) {
+      this.path = this.room.nav.findPath(me.pos, goal, avoidFear ? this.fearBlocked() : undefined);
       this.pathIdx = 0;
       this.repathAt = t + 0.7 + Math.random() * 0.3;
-      if (this.path.length === 0) {
-        // Yo'l topilmadi — to'g'ri yuramiz (eshik oldi, ochiq joy)
-        const m = this.moveTowards(goal, speed, dt);
-        return { wishX: m.wishX, wishZ: m.wishZ };
-      }
+    }
+    if (this.path.length === 0) {
+      // Yo'l topilmadi — to'g'ri yuramiz (eshik oldi, ochiq joy)
+      const m = this.moveTowards(goal, speed, dt, turn);
+      return { wishX: m.wishX, wishZ: m.wishZ };
     }
     const node = this.path[this.pathIdx]!;
     const dx = node.x - me.pos.x;
@@ -400,29 +434,72 @@ export class WolfBrain {
     if (Math.hypot(dx, dz) < 0.9) {
       this.pathIdx++;
       if (this.pathIdx >= this.path.length) {
-        const m = this.moveTowards(goal, speed, dt);
+        const m = this.moveTowards(goal, speed, dt, turn);
         return { wishX: m.wishX, wishZ: m.wishZ };
       }
     }
-    const m = this.moveTowards(this.path[this.pathIdx]!, speed, dt);
+    const m = this.moveTowards(this.path[this.pathIdx]!, speed, dt, turn);
     return { wishX: m.wishX, wishZ: m.wishZ };
   }
 
   /**
-   * Olov manbai (yonib turgan gulxan yoki mash'al ko'targan o'yinchi) doirasidagi (+1 m, olovdan qochish
-   * chegarasi) maqsadni doira chetiga — manbaning `standoff` masofasida, bo'ri turgan tomonga — suradi.
-   * Aks holda bo'ri maqsadga yurish bilan olovdan qochish orasida tebranadi.
+   * A* uchun bloklovchi predikat: nuqta hozir faol olov manbai (radius + FEAR_PATH_MARGIN_M) ichida. Manbalar
+   * yo'q bo'lsa undefined (A* oddiy tez yo'l). Manbalar ro'yxati bir marta olinadi, har tugun uchun ≤ bir necha
+   * masofa hisobi.
+   */
+  private fearBlocked(): ((x: number, z: number) => boolean) | undefined {
+    const src = this.room.fearSources();
+    if (src.length === 0) return undefined;
+    return (x, z) => {
+      for (const f of src) {
+        const r = f.radius + FEAR_PATH_MARGIN_M;
+        const dx = x - f.x;
+        const dz = z - f.z;
+        if (dx * dx + dz * dz <= r * r) return true;
+      }
+      return false;
+    };
+  }
+
+  /** Kesma (a→b) faol olov manbai doirasini (radius + FEAR_FLINCH_M) kesib o'tadimi. */
+  private segmentCrossesFear(a: Vec3, b: Vec3): boolean {
+    const src = this.room.fearSources();
+    if (src.length === 0) return false;
+    const dx = b.x - a.x;
+    const dz = b.z - a.z;
+    const len2 = dx * dx + dz * dz;
+    for (const f of src) {
+      const r = f.radius + FEAR_FLINCH_M;
+      let px = a.x;
+      let pz = a.z;
+      if (len2 > 1e-9) {
+        const u = Math.max(0, Math.min(1, ((f.x - a.x) * dx + (f.z - a.z) * dz) / len2));
+        px = a.x + dx * u;
+        pz = a.z + dz * u;
+      }
+      const ex = px - f.x;
+      const ez = pz - f.z;
+      if (ex * ex + ez * ez < r * r) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Olov manbai (yonib turgan gulxan, mash'al ko'targan o'yinchi, raketa) doirasidagi (radius + FEAR_PATH_MARGIN_M)
+   * maqsadni doira chetiga — manbaning `standoff` masofasiga — suradi. Maqsad doira chetiga yaqin bo'lsa (masalan,
+   * himoyasiz nishon 1 m halqada) o'z yo'nalishi bo'ylab tashqariga (eng yaqin chet nuqta), chuqur ichkarida bo'lsa
+   * bo'ri turgan tomonga. Aks holda bo'ri maqsadga yurish bilan olovdan qochish orasida tebranadi.
    */
   private outsideFear(goal: Vec3): Vec3 {
-    const fire = this.room.fearSourceContaining(goal.x, goal.z, 1);
+    const fire = this.room.fearSourceContaining(goal.x, goal.z, FEAR_PATH_MARGIN_M);
     if (!fire) return goal;
     const me = this.me;
-    let dx = me.pos.x - fire.x;
-    let dz = me.pos.z - fire.z;
+    let dx = goal.x - fire.x;
+    let dz = goal.z - fire.z;
     let dl = Math.hypot(dx, dz);
-    if (dl < 1e-3) {
-      dx = goal.x - fire.x;
-      dz = goal.z - fire.z;
+    if (dl < fire.radius * 0.6) {
+      dx = me.pos.x - fire.x;
+      dz = me.pos.z - fire.z;
       dl = Math.hypot(dx, dz);
     }
     if (dl < 1e-3) {
@@ -435,11 +512,13 @@ export class WolfBrain {
     return { x, y: sampleTerrainHeight(this.room.world.terrain, x, z), z };
   }
 
-  private hasDirectLine(goal: Vec3): boolean {
+  /** Maqsadga to'g'ri chiziq bor (≤ 14 m, to'siqsiz; `avoidFear` — olov doirasini ham kesib o'tmaydi). */
+  private hasDirectLine(goal: Vec3, avoidFear = true): boolean {
     const me = this.me;
     const dH = Math.hypot(goal.x - me.pos.x, goal.z - me.pos.z);
     if (dH > 14 || dH < 1e-3) return dH < 1e-3;
     if (Math.abs(goal.y - me.pos.y) > 1.2) return false;
+    if (avoidFear && this.segmentCrossesFear(me.pos, goal)) return false;
     const a = { x: me.pos.x, y: me.pos.y + 0.6, z: me.pos.z };
     const dir = { x: (goal.x - me.pos.x) / dH, y: 0, z: (goal.z - me.pos.z) / dH };
     return !raycastWorld(this.room.world, a, dir, dH);
@@ -492,7 +571,8 @@ export class WolfBrain {
       this.repathAt = 0;
     }
     const goal = this.fleeGoal;
-    const m = this.followPath(goal, this.speedFor('flee'), t, dt, this.hasDirectLine(goal));
+    // Qochishda olovdan qo'rqmaydi — yo'l rejalashtirish ham olov doiralarini hisobga olmaydi
+    const m = this.followPath(goal, this.speedFor('flee'), t, dt, this.hasDirectLine(goal, false), false);
     applyWorldMovement(me, m.wishX, m.wishZ, false, dt, this.room.world);
     this.checkStuck(t, m.wishX !== 0 || m.wishZ !== 0);
   }
@@ -523,9 +603,13 @@ export class WolfBrain {
       return;
     }
 
-    // Olovdan qo'rqish: yonib turgan gulxan yoki mash'al ko'targan o'yinchi doirasiga (+1 m) tushib qolsa —
-    // tashqariga yugurib chiqadi (mash'al egasi bo'riga yaqinlashsa, bo'ri chekinadi)
-    const burning = this.room.fearSourceContaining(me.pos.x, me.pos.z, 1);
+    // Olovdan qo'rqish: yonib turgan gulxan / mash'al ko'targan o'yinchi / raketa doirasi (radius + FEAR_FLINCH_M).
+    // Ikki qavat: chuqur (radius + 0.5 dan ichkarida) — qattiq seskanish: alert, tashqariga yugurib chiqadi
+    // (mash'al egasi bo'riga yaqinlashsa, bo'ri chekinadi); yumshoq halqa (radius + 0.5 .. + 1.0) — holat va yo'l
+    // o'zgarmaydi, faqat istak tezligiga tashqariga silliq surish qo'shiladi (halqada turgan bo'ri sal oshib
+    // ketsa yoki yo'l tuguni chetga tegsa seskanib tebranmaydi).
+    const burning = this.room.fearSourceContaining(me.pos.x, me.pos.z, FEAR_FLINCH_M);
+    let softPush: { ox: number; oz: number; k: number } | null = null;
     if (burning) {
       let ox = me.pos.x - burning.x;
       let oz = me.pos.z - burning.z;
@@ -537,14 +621,26 @@ export class WolfBrain {
         ox /= ol;
         oz /= ol;
       }
-      if (me.state !== 'alert') this.setState('alert', t);
-      me.targetId = this.target ? this.target.id : null;
-      this.turnTowards(Math.atan2(-ox, -oz), dt, 10);
-      const sp = this.speedFor('hunt');
-      applyWorldMovement(me, ox * sp, oz * sp, false, dt, this.room.world);
-      this.checkStuck(t, true);
-      return;
+      const depth = burning.radius + FEAR_FLINCH_M - ol;
+      if (depth >= FEAR_SOFT_BAND_M) {
+        if (!this.flinching) {
+          this.flinching = true;
+          this.fearFlinchCount++;
+        }
+        if (me.state !== 'alert') this.setState('alert', t);
+        me.targetId = this.target ? this.target.id : null;
+        this.path = [];
+        this.pathIdx = 0;
+        this.repathAt = 0;
+        this.turnTowards(Math.atan2(-ox, -oz), dt, 10);
+        const sp = this.speedFor('hunt');
+        applyWorldMovement(me, ox * sp, oz * sp, false, dt, this.room.world);
+        this.checkStuck(t, true);
+        return;
+      }
+      softPush = { ox, oz, k: Math.min(1, Math.max(0, depth / FEAR_SOFT_BAND_M)) };
     }
+    this.flinching = false;
 
     if (t >= this.nextSenseAt) {
       this.nextSenseAt = t + SENSE_INTERVAL;
@@ -594,11 +690,11 @@ export class WolfBrain {
       const goal = fresh ? tgt.pos : this.outsideFear(this.lastSensedPos ?? tgt.pos);
       const unreachable = dy > WOLF_UNREACHABLE_DY && dH < 8;
       // Nishon yonib turgan gulxan doirasida yoki o'zi mash'al ko'targan: olovga kirmaydi — chetida
-      // (manba `standoff` masofasida) to'xtab qaraydi, uvlaydi
-      const fire: FearSource | null = this.room.fearSourceContaining(tgt.pos.x, tgt.pos.z, 0);
+      // (manba `standoff` masofasida) to'xtab qaraydi, uvlaydi. Himoya — xona gisterezisi (kirish radius + 1.0,
+      // chiqish radius + 1.6; to'da koordinatori bilan bir xil javob), chetdagi halqada turgan nishon uchun
+      // "halqada tur" ↔ "ov qil" almashinuvi bo'lmaydi.
+      const fire: FearSource | null = this.room.preyFearSource(tgt);
       if (fire) {
-        this.path = [];
-        this.pathIdx = 0;
         this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt);
         if (t >= this.nextHowlAt) {
           this.nextHowlAt = t + UNREACHABLE_HOWL_SEC;
@@ -624,37 +720,56 @@ export class WolfBrain {
           this.slideAngPrev = myAng;
           this.slideCheckAt = t + 1.2;
         }
+        const ux = fx / Math.max(fd, 1e-3);
+        const uz = fz / Math.max(fd, 1e-3);
+        const stalkSp = this.speedFor('stalk');
         if (sliding) {
+          this.path = [];
+          this.pathIdx = 0;
           const ringR = t < this.slideWideUntil ? standoff + 3 : standoff;
-          const sp = this.speedFor('stalk');
-          const tangential = sp * Math.min(1, 0.3 + Math.abs(slotDA) * 2);
+          const tangential = stalkSp * Math.min(1, 0.3 + Math.abs(slotDA) * 2);
           const sgn = Math.sign(slotDA);
-          const radial = Math.max(-sp, Math.min(sp, (ringR - fd) * 2));
-          wishX = -Math.sin(myAng) * sgn * tangential + (fx / Math.max(fd, 1e-3)) * radial;
-          wishZ = Math.cos(myAng) * sgn * tangential + (fz / Math.max(fd, 1e-3)) * radial;
+          const radial = Math.max(-stalkSp, Math.min(stalkSp, (ringR - fd) * 2));
+          wishX = -Math.sin(myAng) * sgn * tangential + ux * radial;
+          wishZ = Math.cos(myAng) * sgn * tangential + uz * radial;
           this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt, 8);
-        } else if (fd > standoff + 0.4) {
-          // Olov chetiga yaqinlashadi (markaz tomon, lekin doiraga kirmaydi)
-          const m = this.moveTowards(
-            { x: fire.x + (fx / Math.max(fd, 1e-3)) * standoff, y: me.pos.y, z: fire.z + (fz / Math.max(fd, 1e-3)) * standoff },
-            this.speedFor('stalk'),
-            dt,
-          );
-          wishX = m.wishX;
-          wishZ = m.wishZ;
+        } else if (fd > standoff + RING_DEADBAND_M) {
+          // Olov chetiga yaqinlashadi (markaz tomon, lekin doiraga kirmaydi): uzoqdan nav yo'li bilan (olovni
+          // aylanib), yaqinda radial, halqaga yetganda sekinlashib (proporsional tezlik — oshib ketmaydi)
+          const ringPt = { x: fire.x + ux * standoff, y: me.pos.y, z: fire.z + uz * standoff };
+          if (fd > standoff + RING_PATH_DIST_M) {
+            ringPt.y = sampleTerrainHeight(this.room.world.terrain, ringPt.x, ringPt.z);
+            const m = this.followPath(ringPt, stalkSp, t, dt, this.hasDirectLine(ringPt), true, false);
+            wishX = m.wishX;
+            wishZ = m.wishZ;
+          } else {
+            this.path = [];
+            this.pathIdx = 0;
+            const sp = Math.min(stalkSp, Math.max(0.4, (fd - standoff) * 2));
+            const m = this.moveTowards(ringPt, sp, dt, false);
+            wishX = m.wishX;
+            wishZ = m.wishZ;
+          }
           this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt, 8);
-        } else if (fd < standoff - 0.6) {
-          // Juda yaqin — orqaga chekinadi
-          const sp = this.speedFor('stalk');
-          wishX = (fx / Math.max(fd, 1e-3)) * sp;
-          wishZ = (fz / Math.max(fd, 1e-3)) * sp;
+        } else if (fd < standoff - RING_DEADBAND_M) {
+          // Juda yaqin — orqaga silliq chekinadi (qanchalik ichkarida, shunchalik tez)
+          this.path = [];
+          this.pathIdx = 0;
+          const sp = Math.min(stalkSp, Math.max(0.4, (standoff - fd) * 2.5));
+          wishX = ux * sp;
+          wishZ = uz * sp;
         } else if (order?.standoffAngle !== undefined) {
-          // O'z halqa o'rnida: turib nishonga qaraydi (to'da o'rab olgan)
+          // O'z halqa o'rnida: turib nishonga qaraydi (to'da o'rab olgan) — qimirlamaydi
+          this.path = [];
+          this.pathIdx = 0;
         } else if (me.state === 'alert') {
-          // Chetida aylanib yuradi (soat yo'nalishida, sekin)
+          // Chetida aylanib yuradi (soat yo'nalishida, sekin), radiusni halqada ushlab
+          this.path = [];
+          this.pathIdx = 0;
           const sp = this.speedFor('idle') * 0.6;
-          wishX = (-fz / Math.max(fd, 1e-3)) * sp;
-          wishZ = (fx / Math.max(fd, 1e-3)) * sp;
+          const radial = Math.max(-sp, Math.min(sp, (standoff - fd) * 2));
+          wishX = -uz * sp + ux * radial;
+          wishZ = ux * sp + uz * radial;
         }
       } else if (unreachable) {
         // Nishon balandda (loft/tom): pastda turib qaraydi, vaqti-vaqti bilan uvlaydi
@@ -715,14 +830,18 @@ export class WolfBrain {
           this.pathIdx = 0;
           this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt, 8);
         } else {
+          // Maqsad hech qachon olov doirasi (radius + FEAR_PATH_MARGIN_M) ichida bo'lmaydi: himoyasiz nishon
+          // chetdagi halqada tursa — unga eng yaqin chet nuqtaga boradi (tishlash masofasida)
+          moveGoal = this.outsideFear(moveGoal);
           const speed = this.speedFor(huntState);
           const direct = this.hasDirectLine(moveGoal);
-          const m = this.followPath(moveGoal, speed, t, dt, direct);
+          const near = dH < 3;
+          const m = this.followPath(moveGoal, speed, t, dt, direct, true, !near);
           wishX = m.wishX;
           wishZ = m.wishZ;
+          // Yaqin masofada nishonga qarab turadi (yo'l tuguniga emas)
+          if (near) this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt, 8);
         }
-        // Yaqin masofada nishonga qarab turadi (yo'l tuguniga emas)
-        if (dH < 3) this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt, 8);
         if (!fresh && this.lastSensedPos && dH < 1.5) {
           // Oxirgi joyga yetdi, lekin nishon yo'q — hidlaydi
           this.lastSensedAt = -99;
@@ -763,8 +882,22 @@ export class WolfBrain {
     }
 
     if (timed && this.stateUntil > 0 && t >= this.stateUntil && me.state !== 'attack') {
-      // Vaqtli holat tugadi — keyingi tickda asosiy mantiq yangi holat tanlaydi
-      this.setState(this.target ? 'hunt' : 'idle', t);
+      // Vaqtli holat tugadi — keyingi tickda asosiy mantiq yangi holat tanlaydi (nishon olov himoyasida bo'lsa
+      // to'g'ridan-to'g'ri 'alert': uvlashdan keyin 'hunt' ga sakrab yana 'alert' ga qaytmasin)
+      const next: WolfState = this.target ? (this.room.preyFearSource(this.target) ? 'alert' : 'hunt') : 'idle';
+      this.setState(next, t);
+    }
+
+    if (softPush && me.state !== 'attack') {
+      // Yumshoq olov halqasi: ichkariga yo'nalgan istak olib tashlanadi, tashqariga proporsional surish qo'shiladi
+      const inward = -(wishX * softPush.ox + wishZ * softPush.oz);
+      if (inward > 0) {
+        wishX += softPush.ox * inward;
+        wishZ += softPush.oz * inward;
+      }
+      const sp = this.speedFor('stalk') * softPush.k;
+      wishX += softPush.ox * sp;
+      wishZ += softPush.oz * sp;
     }
 
     applyWorldMovement(me, wishX, wishZ, false, dt, this.room.world);

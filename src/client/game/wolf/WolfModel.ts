@@ -1,6 +1,15 @@
 import * as THREE from 'three';
 import { wolfCoatTraits, type WolfState } from '../../../shared/wolf';
-import { instantiateWolf, isWolfAssetReady, onWolfAssetReady, preloadWolfAssets, type WolfClipName, type WolfInstance } from './WolfAssetRegistry';
+import {
+  instantiateWolf,
+  isWolfAssetReady,
+  onWolfAssetReady,
+  preloadWolfAssets,
+  wolfLodTriangles,
+  type WolfClipName,
+  type WolfInstance,
+} from './WolfAssetRegistry';
+import { pickWolfLod, wolfCastsShadowAt, wolfMixerStride, type WolfLodLevel } from './wolfLod';
 
 export interface WolfModelState {
   state: WolfState;
@@ -109,6 +118,13 @@ export class WolfModel {
   private unsubReady: (() => void) | null = null;
   private disposed = false;
   private lastState: WolfState = 'idle';
+  /** Joriy LOD darajasi (kamera masofasi bo'yicha, gisterezis bilan) va har darajadagi uchburchak soni. */
+  private lod: WolfLodLevel = 0;
+  private lodTris: [number, number, number] = [0, 0, 0];
+  private shadowOn = true;
+  /** Mikser kadr hisoblagichi va yig'ilgan dt (uzoqda har 2-/4-kadr yangilanadi, animatsiya tezligi saqlanadi). */
+  private mixerFrame = 0;
+  private mixerDtAcc = 0;
 
   /** Tur bo'yicha masshtab (root ga qo'llangan). */
   readonly scale: number;
@@ -129,12 +145,53 @@ export class WolfModel {
     return this.inst !== null;
   }
 
+  /** Joriy LOD darajasi (0 — to'liq; zaxira model ham 0). */
+  get lodLevel(): WolfLodLevel {
+    return this.lod;
+  }
+
+  /** Hozir chizilayotgan uchburchaklar soni (joriy LOD bo'yicha; zaxira model — 0). */
+  get lodTriangles(): number {
+    return this.inst ? this.lodTris[this.lod] : 0;
+  }
+
+  /** LOD geometriyasini almashtiradi (bir xil skelet/bindMatrix; `null` — mesh ko'rinmaydi, masalan ko'zlar LOD2 da). */
+  private applyLod(level: WolfLodLevel): void {
+    this.lod = level;
+    if (!this.inst) return;
+    for (const [mesh, set] of this.inst.lods) {
+      const g = set[level];
+      if (!g) {
+        mesh.visible = false;
+        continue;
+      }
+      mesh.visible = true;
+      if (mesh.geometry !== g) mesh.geometry = g;
+    }
+  }
+
+  private applyShadow(on: boolean): void {
+    this.shadowOn = on;
+    if (!this.inst) return;
+    for (const m of this.inst.skinnedMeshes) m.castShadow = on;
+  }
+
   private attach(): void {
     if (this.inst || this.disposed) return;
     const inst = instantiateWolf(this.coat);
     if (!inst) return;
     this.inst = inst;
     this.root.add(inst.root);
+    this.lodTris = [0, 0, 0];
+    for (const set of inst.lods.values()) {
+      const [a, b, c] = wolfLodTriangles(set);
+      this.lodTris[0] += a;
+      this.lodTris[1] += b;
+      this.lodTris[2] += c;
+    }
+    // Nusxa LOD0 bilan keladi; oldin (zaxira paytida) tanlangan daraja/soya qo'llanadi
+    if (this.lod !== 0) this.applyLod(this.lod);
+    if (!this.shadowOn) this.applyShadow(false);
     this.mixer = new THREE.AnimationMixer(inst.root);
     for (const [name, clip] of inst.clips) {
       const a = this.mixer.clipAction(clip);
@@ -227,7 +284,15 @@ export class WolfModel {
     return this.root.getWorldPosition(out).add(new THREE.Vector3(0, 0.95 * this.scale, 0));
   }
 
-  update(dt: number, s: WolfModelState): void {
+  /**
+   * Har kadr. `camDist` — kameragacha masofa (m): LOD (18/40 m, 2 m gisterezis), soya (40 m dan yo'q) va mikser
+   * yangilanish qadami (70 m dan har 2-, 110 m dan har 4-kadr, 160 m dan yangilanmaydi — pozitsiya lerp qoladi).
+   */
+  update(dt: number, s: WolfModelState, camDist = 0): void {
+    const lod = pickWolfLod(camDist, this.lod);
+    if (lod !== this.lod) this.applyLod(lod);
+    const shadow = wolfCastsShadowAt(camDist);
+    if (shadow !== this.shadowOn) this.applyShadow(shadow);
     if (!this.mixer) {
       // Zaxira: oddiy "yurish" tebranishi
       if (this.fallback) this.fallback.rotation.z = s.speed > 0.3 ? Math.sin(performance.now() / 90) * 0.05 : 0;
@@ -245,7 +310,13 @@ export class WolfModel {
       const a = this.actions.get(this.current);
       if (a) a.setEffectiveTimeScale(THREE.MathUtils.clamp(s.speed / base, CLIP_TIMESCALE_MIN, CLIP_TIMESCALE_MAX));
     }
-    this.mixer.update(dt);
+    const stride = wolfMixerStride(camDist);
+    this.mixerDtAcc = Math.min(0.5, this.mixerDtAcc + dt);
+    if (stride === 0) return;
+    this.mixerFrame = (this.mixerFrame + 1) % 4;
+    if (this.mixerFrame % stride !== 0) return;
+    this.mixer.update(this.mixerDtAcc);
+    this.mixerDtAcc = 0;
   }
 
   dispose(): void {

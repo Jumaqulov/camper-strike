@@ -2412,7 +2412,8 @@ export class Game {
       const m = w.model;
       m.root.position.copy(w.pos);
       m.root.rotation.y = w.yaw;
-      m.update(dt, { state: w.state, speed: w.speed });
+      // Kameragacha masofa: LOD (18/40 m), soya (40 m) va mikser qadami (70/110/160 m)
+      m.update(dt, { state: w.state, speed: w.speed }, this.camera.position.distanceTo(w.pos));
       // Yugurgan bo'rining panja tovushi: og'ir, tez (chopganda zarbdor)
       if (w.alive && w.speed > 2.0) {
         w.stepTimer -= dt;

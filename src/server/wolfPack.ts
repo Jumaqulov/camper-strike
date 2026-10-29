@@ -264,7 +264,8 @@ export class WolfPack {
       }
       this.driverByPrey.set(preyId, driver.id);
 
-      const fire = room.fearSourceContaining(p.pos.x, p.pos.z, 0);
+      // Olov himoyasi — xona gisterezisi (WolfBrain bilan bir xil javob: halqa o'rinlari va "chetida tur" mos keladi)
+      const fire = room.preyFearSource(p);
       let slots: Map<string, number> | null = null;
       if (fire) {
         // Halqa o'rinlari: guruh tarkibi o'zgarmaguncha saqlanadi (to'plangan bo'rilar har tick o'rin almashmasin).

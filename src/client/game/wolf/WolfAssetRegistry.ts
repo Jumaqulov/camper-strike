@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { WOLF_LOD1_CELL_M, WOLF_LOD2_CELL_M, clusterDecimateSkinned, geometryTriangleCount } from './wolfLod';
 
 /**
  * Vahshiy bo'ri GLB (`scripts/generate-wolf-glb.mjs`): bitta skinlangan mesh (wolf_main + wolf_eyes),
@@ -43,13 +44,64 @@ export interface WolfAssetTemplate {
   validation: WolfValidation;
 }
 
+/**
+ * Bir skinlangan mesh uchun LOD geometriyalari: [LOD0 (asl), LOD1, LOD2]; `null` — shu darajada mesh chizilmaydi
+ * (ko'zlar LOD2 da). Hammasi bir xil suyak tartibi/bindMatrix bilan ishlaydi — `mesh.geometry = lod` almashtiriladi.
+ * Shablon (coat) uchun bir marta quriladi, nusxalar bo'lishadi.
+ */
+export type WolfLodGeometries = readonly [THREE.BufferGeometry, THREE.BufferGeometry, THREE.BufferGeometry | null];
+
 export interface WolfInstance {
   root: THREE.Object3D;
   skinnedMeshes: THREE.SkinnedMesh[];
   bones: Map<string, THREE.Bone>;
   sockets: Map<string, THREE.Object3D>;
   clips: ReadonlyMap<WolfClipName, THREE.AnimationClip>;
+  /** Har skinlangan mesh uchun LOD geometriyalari (shablon bilan umumiy; dispose qilinmaydi). */
+  lods: ReadonlyMap<THREE.SkinnedMesh, WolfLodGeometries>;
   dispose(): void;
+}
+
+/** GLB dagi ko'z materiali nomi (LOD2 da ko'z primitivi tashlanadi). */
+const WOLF_EYES_MATERIAL_NAME = 'wolf_eyes';
+/** LOD0 geometriya → LOD to'plami (shablon va SkeletonUtils.clone nusxalari geometriyani bo'lishadi). */
+const lodSets = new WeakMap<THREE.BufferGeometry, WolfLodGeometries>();
+
+function isEyesMesh(m: THREE.SkinnedMesh): boolean {
+  const mats = Array.isArray(m.material) ? m.material : [m.material];
+  return mats.some((mat) => mat.name === WOLF_EYES_MATERIAL_NAME);
+}
+
+/** Mesh uchun LOD to'plami (bir marta quriladi): asosiy tana — klaster dekimatsiya, ko'zlar — LOD1 asl, LOD2 yo'q. */
+function buildLods(m: THREE.SkinnedMesh): WolfLodGeometries {
+  const g0 = m.geometry;
+  const existing = lodSets.get(g0);
+  if (existing) return existing;
+  let set: WolfLodGeometries;
+  if (isEyesMesh(m)) {
+    set = [g0, g0, null];
+  } else {
+    const g1 = clusterDecimateSkinned(g0, WOLF_LOD1_CELL_M).geometry;
+    const g2 = clusterDecimateSkinned(g0, WOLF_LOD2_CELL_M).geometry;
+    for (const g of [g1, g2]) {
+      // Bir xil saxiy culling sferasi (animatsiya pozasi uchun), umumiy aktiv
+      g.boundingSphere = new THREE.Sphere(CULL_SPHERE_CENTER.clone(), CULL_SPHERE_RADIUS);
+      g.userData.sharedAsset = true;
+    }
+    set = [g0, g1, g2];
+  }
+  lodSets.set(g0, set);
+  return set;
+}
+
+/** LOD0 geometriya uchun qurilgan LOD to'plami (testlar/diagnostika), yo'q bo'lsa null. */
+export function wolfLodGeometriesFor(geo: THREE.BufferGeometry): WolfLodGeometries | null {
+  return lodSets.get(geo) ?? null;
+}
+
+/** LOD to'plamining har darajadagi uchburchak soni ([lod0, lod1, lod2]). */
+export function wolfLodTriangles(set: WolfLodGeometries): [number, number, number] {
+  return [geometryTriangleCount(set[0]), geometryTriangleCount(set[1]), geometryTriangleCount(set[2])];
 }
 
 type AssetState = 'idle' | 'loading' | 'ready' | 'failed';
@@ -138,6 +190,8 @@ function prepareTemplate(scene: THREE.Object3D): void {
       // Vertex ranglar GLB da; ko'z materiali emissive (qorong'ida yonadi)
       if (mat instanceof THREE.MeshStandardMaterial) mat.vertexColors = true;
     }
+    // LOD geometriyalari (coat shabloni uchun bir marta, ~5 ms): nusxalar bo'lishadi
+    buildLods(m);
   });
 }
 
@@ -288,7 +342,11 @@ export function instantiateWolf(coat = 0): WolfInstance | null {
   const shared = skinnedMeshes[0]?.skeleton;
   const skeletons = new Set<THREE.Skeleton>();
   const bones = new Map<string, THREE.Bone>();
+  const lods = new Map<THREE.SkinnedMesh, WolfLodGeometries>();
   for (const m of skinnedMeshes) {
+    // Nusxa geometriyani shablon bilan bo'lishadi — LOD to'plami shu kalit bo'yicha
+    const set = lodSets.get(m.geometry) ?? buildLods(m);
+    lods.set(m, set);
     if (shared && m.skeleton !== shared) {
       const same =
         m.skeleton.bones.length === shared.bones.length && m.skeleton.bones.every((b, i) => b === shared.bones[i]);
@@ -313,6 +371,7 @@ export function instantiateWolf(coat = 0): WolfInstance | null {
     bones,
     sockets,
     clips: cm,
+    lods,
     dispose() {
       if (disposed) return;
       disposed = true;

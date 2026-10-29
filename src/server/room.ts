@@ -54,6 +54,8 @@ import {
   isTorchWeapon,
   CAMPFIRE_RADIUS_M,
   CAMPFIRE_STANDOFF_M,
+  FEAR_PROTECT_ENTER_M,
+  FEAR_PROTECT_EXIT_M,
   TORCH_BURN_SEC,
   TORCH_FEAR_RADIUS_M,
   TORCH_FUEL_COST_SEC,
@@ -400,6 +402,8 @@ export class Room {
   readonly wolves = new Map<string, ServerWolf>();
   /** To'da koordinatori: nishon taqsimoti (yolg'iz/gulxandan uzoq afzal), haydovchi/qanot vazifalari, halqa o'rinlari. */
   readonly pack: WolfPack = new WolfPack(this);
+  /** O'lja → himoyalayotgan olov manbai (gisterezis, `refreshPreyFear`); yo'q — himoyasiz. */
+  private readonly preyFear = new Map<string, FearSource>();
   private wolfSeq = 0;
   /** Xona sozlamasidagi bo'rilar soni (chat buyruqlari bilan o'zgartiriladi; wolf_night da to'lqin belgilaydi). */
   private wolfCount: number;
@@ -825,6 +829,53 @@ export class Room {
       }
     }
     return null;
+  }
+
+  /**
+   * Hozir faol barcha olov manbalari (yonib turgan gulxanlar, faol raketalar, mash'al ko'targanlar) — bo'ri
+   * yo'l rejalashtirishi (A* bloklangan tugunlar, to'g'ri chiziq tekshiruvi) uchun. Kichik massiv (≤ 3 gulxan +
+   * bir nechta mash'al/raketa), har chaqiruvda yangi.
+   */
+  fearSources(exceptTorchOf: ServerPlayer | null = null): FearSource[] {
+    const out: FearSource[] = [];
+    for (const f of this.campfires.values()) {
+      if (f.lit) out.push({ x: f.x, y: f.y, z: f.z, radius: CAMPFIRE_RADIUS_M, standoff: CAMPFIRE_STANDOFF_M, kind: 'fire' });
+    }
+    if (!this.isNight) return out;
+    const t = this.now();
+    for (const fl of this.flares.values()) {
+      if (t < fl.until) out.push({ x: fl.x, y: fl.y, z: fl.z, radius: FLARE_FEAR_RADIUS_M, standoff: FLARE_STANDOFF_M, kind: 'flare' });
+    }
+    for (const p of this.players.values()) {
+      if (p === exceptTorchOf || !this.hasTorch(p, t)) continue;
+      out.push({ x: p.pos.x, y: p.pos.y, z: p.pos.z, radius: TORCH_FEAR_RADIUS_M, standoff: TORCH_STANDOFF_M, kind: 'torch', playerId: p.id });
+    }
+    return out;
+  }
+
+  /**
+   * O'lja olov himoyasida (gisterezis bilan): `preyFear` har tick `refreshPreyFear` da yangilanadi — radius +
+   * FEAR_PROTECT_ENTER_M ichiga kirsa himoyalangan, faqat radius + FEAR_PROTECT_EXIT_M dan chiqsa himoyasiz.
+   * Bo'ri AI (WolfBrain) va to'da koordinatori (WolfPack) uchun yagona manba — ikkisi ham bir xil javob oladi,
+   * chetdagi halqada turgan nishon uchun qaror tickdan tickga almashmaydi.
+   */
+  preyFearSource(p: ServerPlayer): FearSource | null {
+    return this.preyFear.get(p.id) ?? null;
+  }
+
+  /** Har tick (bo'rilar AI dan oldin): barcha o'ljalar uchun olov himoyasi gisterezisini yangilaydi. */
+  private refreshPreyFear(): void {
+    for (const id of this.preyFear.keys()) if (!this.players.has(id)) this.preyFear.delete(id);
+    for (const p of this.players.values()) {
+      if (!this.isWolfPrey(p)) {
+        this.preyFear.delete(p.id);
+        continue;
+      }
+      const was = this.preyFear.has(p.id);
+      const f = this.fearSourceContaining(p.pos.x, p.pos.z, was ? FEAR_PROTECT_EXIT_M : FEAR_PROTECT_ENTER_M);
+      if (f) this.preyFear.set(p.id, f);
+      else this.preyFear.delete(p.id);
+    }
   }
 
   /** Nuqtani (FLARE_FEAR_RADIUS_M + margin) o'z ichiga olgan faol signal raketasi, bo'lmasa null. */
@@ -1746,6 +1797,7 @@ export class Room {
 
   /** Bo'rilar AI, jasadlar va qayta paydo bo'lish — har tick (to'da koordinatori bo'rilar AI dan oldin). */
   private updateWolves(dt: number, t: number): void {
+    this.refreshPreyFear();
     this.pack.update(t);
     for (const [id, w] of this.wolves) {
       if (w.alive) {

@@ -173,7 +173,26 @@ export class NavGraph {
     return this.center(list[Math.floor(Math.random() * list.length)]);
   }
 
-  findPath(from: Vec3, to: Vec3): Vec3[] {
+  /**
+   * Bloklovchi predikat bilan kesma tekshiruvi: ~1 m qadamda namuna olinadi (yo'l silliqlashda qisqartma kesma
+   * bloklangan hudud — masalan, yonib turgan gulxan doirasi — ustidan o'tib ketmasin).
+   */
+  private segmentUnblocked(a: Vec3, b: Vec3, blocked: (x: number, z: number) => boolean): boolean {
+    const d = Math.hypot(b.x - a.x, b.z - a.z);
+    const steps = Math.max(1, Math.ceil(d / 1.0));
+    for (let s = 1; s < steps; s++) {
+      const t = s / steps;
+      if (blocked(a.x + (b.x - a.x) * t, a.z + (b.z - a.z) * t)) return false;
+    }
+    return true;
+  }
+
+  /**
+   * A* yo'l. `blocked(x, z)` berilsa shu tugunlar (va silliqlashdagi qisqartma kesmalar) chetlab o'tiladi —
+   * boshlang'ich va maqsad tugunlari bloklangan bo'lsa ham ruxsat (bo'ri hozir turgan joy / maqsad chetidagi
+   * nuqta). Bloklangan holda yo'l topilmasa [] (chaqiruvchi to'g'ri yuradi).
+   */
+  findPath(from: Vec3, to: Vec3, blocked?: (x: number, z: number) => boolean): Vec3[] {
     const s = this.nearest(from);
     const g = this.nearest(to);
     if (s < 0 || g < 0) return [];
@@ -203,6 +222,7 @@ export class NavGraph {
       const ccz = cz[cur];
       for (const nb of this.neighbors[cur]) {
         if (closed[nb]) continue;
+        if (blocked && nb !== g && blocked(cx[nb], cz[nb])) continue;
         const tentative = gScore[cur] + Math.hypot(cx[nb] - ccx, cz[nb] - ccz);
         if (tentative < gScore[nb]) {
           gScore[nb] = tentative;
@@ -221,7 +241,7 @@ export class NavGraph {
     let i = 0;
     while (i < pts.length - 1) {
       let j = Math.min(pts.length - 1, i + 8);
-      while (j > i + 1 && !this.segmentClear(pts[i], pts[j])) j--;
+      while (j > i + 1 && (!this.segmentClear(pts[i], pts[j]) || (blocked && !this.segmentUnblocked(pts[i], pts[j], blocked)))) j--;
       out.push(pts[j]);
       i = j;
     }
