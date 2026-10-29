@@ -1,6 +1,6 @@
 import { WALK_SPEED } from '../shared/constants';
 import { angleDiff, vcopy, vdist, type Vec3 } from '../shared/math';
-import { applyWorldMovement, raycastWorld, type Body } from '../shared/physics';
+import { applyWorldMovement, collidesAtWorld, raycastWorld, type Body } from '../shared/physics';
 import { hitboxScaleOf } from '../shared/stance';
 import { sampleTerrainHeight } from '../shared/world';
 import {
@@ -33,10 +33,14 @@ import {
 } from '../shared/wolf';
 import type { FearSource, Room, ServerPlayer } from './room';
 import {
-  WOLF_FLANK_DRIVER_CLOSE_M,
+  WOLF_DRIVER_FEINT_M,
+  WOLF_DRIVER_LUNGE_M,
   WOLF_FLANK_ENGAGE_M,
   WOLF_FLANK_HOLD_MAX_SEC,
+  WOLF_FLANK_LATE_SEC,
+  WOLF_FLANK_REAR_DEG,
   WOLF_FLANK_STALK_M,
+  WOLF_FLANK_SWING_M,
   preyFacingDot,
   type PackOrder,
   type WolfRole,
@@ -108,6 +112,23 @@ const WALL_CIRCLE_STEP_SEC = 3;
 const WALL_CIRCLE_STEP_RAD = 1.2;
 /** Bo'ri tanasi to'qnashuv radiusi (WOLF_RADIUS; o'yinchi radiusi emas). */
 const WOLF_MOVE_OPTS = { radius: WOLF_RADIUS };
+/** Qanot orqa sektori (rad): nishon→haydovchi yo'nalishidan shundan ko'p burilgan. */
+const FLANK_REAR_RAD = (WOLF_FLANK_REAR_DEG * Math.PI) / 180;
+/** Qanot o'z nuqtasi burchagiga shuncha (rad) yetmagan bo'lsa ham qanot maydonida deb hisoblanadi. */
+const FLANK_AREA_TOL_RAD = (15 * Math.PI) / 180;
+/** Qanot nuqtasi nishon atrofida shundan (rad) yaqin burchakda bo'lsa to'g'ri boradi, uzoq — kengroq doirada aylanadi. */
+const FLANK_SWING_DIRECT_RAD = (40 * Math.PI) / 180;
+/** Aylanib o'tishdagi oraliq nuqta qanot burchagidan shuncha (rad) oldinda. */
+const FLANK_SWING_LEAD_RAD = (45 * Math.PI) / 180;
+/** Oraliq nuqta qayta hisoblanish oralig'i (s). */
+const FLANK_SWING_REEVAL_SEC = 0.25;
+/** Haydovchi chalg'itishda shu oraliqda (s) aldab tashlanadi va tashlanish shuncha (s) davom etadi. */
+const FEINT_LUNGE_EVERY_SEC = 1.8;
+const FEINT_LUNGE_SEC = 0.5;
+/** Tiqilgandan keyin bo'sh yo'nalish bo'ylab sirpanish davomiyligi (s). */
+const SLIP_SEC = 0.8;
+/** Istak bor-u tezlik deyarli nol bo'lsa shuncha (s) o'tib sirpanish boshlanadi. */
+const SNAG_SEC = 0.25;
 
 /**
  * Bo'ri sun'iy intellekti: sayr → hid/tovush bo'yicha tekshirish → ov (yugurib quvish) → tashlanib tishlash.
@@ -136,6 +157,23 @@ export class WolfBrain {
   private stuckCheckAt = 0;
   private stuckPos: Vec3 = { x: 0, y: 0, z: 0 };
   private stuckCount = 0;
+  /**
+   * Tiqilib qoldi: shu vaqtgacha "to'g'ri chiziq bor" deb to'g'ri yurilmaydi, nav yo'li bilan aylanib o'tadi
+   * (hasDirectLine bitta nur — past to'nka/tosh ustidan o'tadi, tana esa unga tiraladi).
+   */
+  private noDirectUntil = 0;
+  /**
+   * Harakat daraxt/quti burchagiga tiralsa (o'qlar bo'yicha fizika ikkala o'qni ham to'xtatadi): shu vaqtgacha
+   * istak tezligi bo'sh yo'nalishga (o'q yoki yon qadam, birlik vektor) buriladi — bo'ri to'siqdan sirpanib chiqadi.
+   */
+  private slipUntil = 0;
+  private slipDir: { x: number; z: number } | null = null;
+  private slipSide = 1;
+  /** Istak bor, lekin bo'ri joyidan siljimayapti — shu vaqt (s) davom etmoqda. */
+  private snagSec = 0;
+  /** Oxirgi nolmas istak tezligi (tiqilganda sirpanish yo'nalishini tanlash uchun). */
+  private lastWishX = 0;
+  private lastWishZ = 0;
   /** Tong otgach qochish maqsadi (uzoqdagi nav tuguni) va tanlangan vaqti. */
   private fleeGoal: Vec3 | null = null;
   private fleeGoalAt = 0;
@@ -147,6 +185,13 @@ export class WolfBrain {
   private order: PackOrder | null = null;
   /** Qanot nuqtasida kutish boshlangan vaqt (0 — kutmayapti). */
   private flankHoldSince = 0;
+  /** Qanot hujumga o'tdi (orqadan tashlanmoqda) — qaror shu nishon va vazifa uchun qaytmaydi. */
+  private flankEngaged = false;
+  /** Qanotning aylanib o'tish oraliq nuqtasi (null — qanot nuqtasiga to'g'ri) va hisoblangan vaqti. */
+  private swingGoal: Vec3 | null = null;
+  private swingGoalAt = -99;
+  /** Haydovchi chalg'itishdagi navbatdagi aldab tashlanish vaqti (0 — chalg'itmayapti). */
+  private feintLungeAt = 0;
   private lastPackHowlAt = -99;
   /** Olov halqasi bo'ylab siljish: oxirgi tekshiruvdagi burchak/vaqt, to'silganda kengroq radius muddati. */
   private slideAngPrev = 0;
@@ -190,11 +235,19 @@ export class WolfBrain {
     this.nextAttackAt = t;
     this.nextSenseAt = t;
     this.stuckCount = 0;
+    this.noDirectUntil = 0;
+    this.slipUntil = 0;
+    this.slipDir = null;
+    this.snagSec = 0;
     this.stuckPos = vcopy(this.me.pos);
     this.stuckCheckAt = t + 1.5;
     this.nextHowlAt = t + 4 + Math.random() * 10;
     this.order = null;
     this.flankHoldSince = 0;
+    this.flankEngaged = false;
+    this.swingGoal = null;
+    this.swingGoalAt = -99;
+    this.feintLungeAt = 0;
     this.me.role = null;
     this.losBlockedSince = 0;
     this.losCheckAt = 0;
@@ -226,6 +279,10 @@ export class WolfBrain {
       this.pathIdx = 0;
       this.repathAt = 0;
       this.flankHoldSince = 0;
+      this.flankEngaged = false;
+      this.swingGoal = null;
+      this.swingGoalAt = -99;
+      this.feintLungeAt = 0;
       this.lastSensedAt = order.sensedAt;
       this.lastSensedPos = vcopy(order.sensedPos);
     } else if (order.sensedAt > this.lastSensedAt) {
@@ -475,7 +532,7 @@ export class WolfBrain {
    */
   private followPath(goal: Vec3, speed: number, t: number, dt: number, direct: boolean, avoidFear = true, turn = true): { wishX: number; wishZ: number } {
     const me = this.me;
-    if (direct) {
+    if (direct && t >= this.noDirectUntil) {
       this.path = [];
       this.pathIdx = 0;
       this.repathAt = 0;
@@ -633,13 +690,83 @@ export class WolfBrain {
     return null;
   }
 
+  /**
+   * Qanotning aylanib o'tish maqsadi: qanot nuqtasi nishon atrofida FLANK_SWING_DIRECT_RAD dan uzoq burchakda
+   * bo'lsa — WOLF_FLANK_SWING_M doiradagi, qanot turgan burchakdan nuqta tomonga FLANK_SWING_LEAD_RAD oldindagi
+   * oraliq nuqta (qanot old tomondan, haydovchi yonidan nishonga kesib o'tmaydi — kengroq aylanadi); yaqin
+   * burchakda yoki oraliq nuqta nav-grafdan tashqarida bo'lsa — qanot nuqtasining o'zi.
+   */
+  private flankSwingGoal(tgt: ServerPlayer, flankGoal: Vec3, t: number): Vec3 {
+    if (t - this.swingGoalAt < FLANK_SWING_REEVAL_SEC) return this.swingGoal ?? flankGoal;
+    const me = this.me;
+    const aMe = Math.atan2(me.pos.z - tgt.pos.z, me.pos.x - tgt.pos.x);
+    const dA = angleDiff(aMe, Math.atan2(flankGoal.z - tgt.pos.z, flankGoal.x - tgt.pos.x));
+    let goal: Vec3 | null = null;
+    if (Math.abs(dA) > FLANK_SWING_DIRECT_RAD) {
+      const a = aMe + Math.sign(dA) * Math.min(Math.abs(dA), FLANK_SWING_LEAD_RAD);
+      const x = tgt.pos.x + Math.cos(a) * WOLF_FLANK_SWING_M;
+      const z = tgt.pos.z + Math.sin(a) * WOLF_FLANK_SWING_M;
+      const pt = { x, y: sampleTerrainHeight(this.room.world.terrain, x, z), z };
+      const ni = this.room.nav.nearest(pt);
+      if (ni >= 0) {
+        const c = this.room.nav.center(ni);
+        if (Math.hypot(c.x - x, c.z - z) <= 3) goal = this.outsideFear(pt);
+      }
+    }
+    this.swingGoal = goal;
+    this.swingGoalAt = t;
+    return goal ?? flankGoal;
+  }
+
+  /** Haydovchi chalg'itishda aldab tashlanish payti: har FEINT_LUNGE_EVERY_SEC da FEINT_LUNGE_SEC davomida. */
+  private feintLunge(t: number): boolean {
+    if (this.feintLungeAt === 0 || t >= this.feintLungeAt + FEINT_LUNGE_SEC) this.feintLungeAt = t + FEINT_LUNGE_EVERY_SEC;
+    return t >= this.feintLungeAt;
+  }
+
+  /**
+   * Tiqilganda sirpanish yo'nalishi (birlik vektor): avval istakning o'qlari — kichik komponent o'qi oldin (katta
+   * komponent bo'ylab to'siqqa tiralgan bo'lishi ehtimoli ko'p), o'q istakning kamida chorak qismini olib borsin;
+   * bo'lmasa (to'siqqa deyarli tik tiralgan) — istakka tik chap/o'ng yon qadam. Yo'nalish bo'ylab qisqa qadam
+   * (oyoqdan baland — mayda relyef hisobga olinmaydi) to'siqsiz bo'lishi kerak; topilmasa null.
+   */
+  private freeSlipDir(): { x: number; z: number } | null {
+    const me = this.me;
+    const wx = this.lastWishX;
+    const wz = this.lastWishZ;
+    const wl = Math.hypot(wx, wz);
+    if (wl < 1e-6) return null;
+    const free = (d: { x: number; z: number }) =>
+      !collidesAtWorld(this.room.world, me.pos.x + d.x * 0.5, me.pos.y + 0.3, me.pos.z + d.z * 0.5, WOLF_RADIUS, 0.8);
+    const cands: { x: number; z: number }[] = [];
+    const ax = { x: Math.sign(wx), z: 0 };
+    const az = { x: 0, z: Math.sign(wz) };
+    const axes = Math.abs(wx) < Math.abs(wz) ? [[ax, wx], [az, wz]] : [[az, wz], [ax, wx]];
+    for (const [d, comp] of axes as [{ x: number; z: number }, number][]) if (Math.abs(comp) >= wl * 0.25) cands.push(d);
+    // Yon qadam tomoni har safar almashadi (bir tomonda yana tiralsa, keyingisida narigi tomonga)
+    this.slipSide = -this.slipSide;
+    const side = this.slipSide;
+    cands.push({ x: (-wz / wl) * side, z: (wx / wl) * side }, { x: (wz / wl) * side, z: (-wx / wl) * side });
+    for (const d of cands) if (free(d)) return d;
+    return null;
+  }
+
+  /** Tiqilish/tiralish: to'g'ri yurish bir muddat taqiqlanadi (nav yo'li), bo'sh yo'nalish bo'lsa — u bo'ylab sirpanish. */
+  private startSlip(t: number): void {
+    this.repathAt = 0;
+    this.noDirectUntil = t + 2;
+    this.slipDir = this.freeSlipDir();
+    this.slipUntil = this.slipDir ? t + SLIP_SEC : 0;
+    this.snagSec = 0;
+  }
+
   private checkStuck(t: number, wishing: boolean): void {
     const me = this.me;
     if (t < this.stuckCheckAt) return;
     const moved = Math.hypot(me.pos.x - this.stuckPos.x, me.pos.z - this.stuckPos.z);
     if (wishing && moved < 0.5) {
       this.stuckCount++;
-      this.repathAt = 0;
+      this.startSlip(t);
       if (this.stuckCount >= 3) {
         // Geometriyaga tiqildi: eng yaqin nav katagiga (≤3 m) qaytaramiz, nishonni/maqsadni tashlaymiz
         const nav = this.room.nav;
@@ -802,6 +929,8 @@ export class WolfBrain {
       const tgt = this.target;
       // To'da buyrug'i shu nishon uchunmi (vazifa: haydovchi / qanot, halqa o'rni)
       const order = this.order && this.order.targetId === tgt.id ? this.order : null;
+      // Qanot hujum qarori faqat qanot vazifasida saqlanadi (haydovchiga aylansa / buyruq yo'q — tashlanadi)
+      if (order?.role !== 'flanker') this.flankEngaged = false;
       const dH = Math.hypot(tgt.pos.x - me.pos.x, tgt.pos.z - me.pos.z);
       const dy = tgt.pos.y - me.pos.y;
       const fresh = t - this.lastSensedAt < 1.0;
@@ -849,6 +978,8 @@ export class WolfBrain {
       // "halqada tur" ↔ "ov qil" almashinuvi bo'lmaydi.
       const fire: FearSource | null = this.room.preyFearSource(tgt);
       if (fire) {
+        // Olovdan chiqsa to'da qaytadan chalg'itib aylanadi — qanot hujum qarori tashlanadi
+        this.flankEngaged = false;
         this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt);
         if (t >= this.nextHowlAt) {
           this.nextHowlAt = t + UNREACHABLE_HOWL_SEC;
@@ -860,11 +991,22 @@ export class WolfBrain {
         const fx = me.pos.x - fire.x;
         const fz = me.pos.z - fire.z;
         const fd = Math.hypot(fx, fz);
-        const standoff = fire.standoff;
+        // Halqa radiusi: to'da o'rni bezak (panjara, g'aram) to'sgan joyda bo'lsa kengroq (standoffR)
+        const standoff = order?.standoffR ?? fire.standoff;
         // To'da halqa o'rni: o'z burchagiga halqa bo'ylab siljish kerakmi
         const myAng = Math.atan2(fz, fx);
         const slotDA = order?.standoffAngle !== undefined ? angleDiff(myAng, order.standoffAngle) : 0;
-        const sliding = order?.standoffAngle !== undefined && Math.abs(slotDA) > 0.12 && fd < standoff + 6;
+        // O'rin nuqtasi uzoqda (halqaning narigi tomoni, kulba/panjara ortida): halqa bo'ylab sirpanmaydi (bezakka
+        // tiqiladi) — olov va bezaklarni hisobga olgan nav yo'li bilan boradi; yaqinida — oddiy siljish/turish
+        let slotPt: Vec3 | null = null;
+        if (order?.standoffAngle !== undefined) {
+          const sx = fire.x + Math.cos(order.standoffAngle) * standoff;
+          const sz = fire.z + Math.sin(order.standoffAngle) * standoff;
+          if (Math.hypot(sx - me.pos.x, sz - me.pos.z) > RING_PATH_DIST_M) {
+            slotPt = { x: sx, y: sampleTerrainHeight(this.room.world.terrain, sx, sz), z: sz };
+          }
+        }
+        const sliding = !slotPt && order?.standoffAngle !== undefined && Math.abs(slotDA) > 0.12 && fd < standoff + 6;
         if (!sliding) {
           this.slideAngPrev = myAng;
           this.slideCheckAt = t + 1.2;
@@ -877,7 +1019,15 @@ export class WolfBrain {
         const ux = fx / Math.max(fd, 1e-3);
         const uz = fz / Math.max(fd, 1e-3);
         const stalkSp = this.speedFor('stalk');
-        if (sliding) {
+        if (slotPt) {
+          // Uzoqda yo'nalish bo'ylab qaraydi, o'rniga yaqinlashganda — nishonga
+          const far = Math.hypot(slotPt.x - me.pos.x, slotPt.z - me.pos.z) > RING_PATH_DIST_M * 2;
+          const m = this.followPath(slotPt, stalkSp, t, dt, this.hasDirectLine(slotPt), true, false);
+          wishX = m.wishX;
+          wishZ = m.wishZ;
+          if (far && (wishX !== 0 || wishZ !== 0)) this.turnTowards(Math.atan2(-wishX, -wishZ), dt, 10);
+          else this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt, 8);
+        } else if (sliding) {
           this.path = [];
           this.pathIdx = 0;
           const ringR = t < this.slideWideUntil ? standoff + 3 : standoff;
@@ -985,16 +1135,28 @@ export class WolfBrain {
         let huntState: WolfState = fresh ? 'hunt' : 'stalk';
         let moveGoal = goal;
         let hold = false;
+        let feint = false;
         if (fresh && order?.role === 'flanker' && order.flankGoal) {
-          // Qanot: nishon atrofidagi qanot nuqtasiga boradi; nishon yaqin (≤ 11 m) va haydovchi yetib kelgan
-          // (≤ 6 m) yoki nishon orqa o'girgan bo'lsa — to'g'ri hujumga o'tadi; uzoq kutmaydi (≤ 4 s)
-          const facingAway = preyFacingDot(tgt.yaw, tgt.pos, me.pos) < 0;
-          const engage = dH < WOLF_FLANK_ENGAGE_M && (order.driverDist <= WOLF_FLANK_DRIVER_CLOSE_M || facingAway);
-          const waited = this.flankHoldSince > 0 && t - this.flankHoldSince > WOLF_FLANK_HOLD_MAX_SEC;
-          if (!engage && !waited) {
-            moveGoal = this.outsideFear(order.flankGoal);
-            const dGoal = Math.hypot(moveGoal.x - me.pos.x, moveGoal.z - me.pos.z);
-            huntState = dH > WOLF_FLANK_STALK_M ? 'stalk' : 'hunt';
+          // Qanot: kengroq doira bo'ylab o'z tomonidan aylanib (old tomondan kesib o'tmaydi) qanot nuqtasiga
+          // yuguradi, u yerda poylab kutadi. Orqa sektorda (nishon→haydovchi yo'nalishidan > 90°, ≤ 11 m) nishon
+          // orqa o'girgan yoki to'da hujumga o'tgan bo'lsa tashlanadi; kutish (≤ 4 s) va hujumdan keyin orqaga
+          // yetolmaslik (≤ 3 s) cheklangan — keyin turgan joyidan tashlanadi. Tashlangach qaror qaytmaydi.
+          if (!this.flankEngaged) {
+            // Qanot maydoni: orqa sektor va o'z nuqtasi burchagigacha FLANK_AREA_TOL_RAD qolgan (yon tomondan emas,
+            // haqiqatan orqadan tashlansin)
+            const myRel = Math.abs(angleDiff(order.driverAng, Math.atan2(me.pos.z - tgt.pos.z, me.pos.x - tgt.pos.x)));
+            const goalRel = Math.abs(angleDiff(order.driverAng, Math.atan2(order.flankGoal.z - tgt.pos.z, order.flankGoal.x - tgt.pos.x)));
+            const rear = dH < WOLF_FLANK_ENGAGE_M && myRel >= Math.max(FLANK_REAR_RAD, goalRel - FLANK_AREA_TOL_RAD);
+            const facingAway = preyFacingDot(tgt.yaw, tgt.pos, me.pos) < 0;
+            const waited = this.flankHoldSince > 0 && t - this.flankHoldSince > WOLF_FLANK_HOLD_MAX_SEC;
+            const late = order.commit && t - order.commitAt > WOLF_FLANK_LATE_SEC;
+            if ((rear && (order.commit || facingAway)) || waited || late) this.flankEngaged = true;
+          }
+          if (!this.flankEngaged) {
+            const flankGoal = this.outsideFear(order.flankGoal);
+            const dGoal = Math.hypot(flankGoal.x - me.pos.x, flankGoal.z - me.pos.z);
+            moveGoal = this.flankSwingGoal(tgt, flankGoal, t);
+            huntState = dGoal > WOLF_FLANK_STALK_M ? 'hunt' : 'stalk';
             if (dGoal < 1.2 || (this.flankHoldSince > 0 && dGoal < 2.5)) {
               hold = true;
               huntState = 'stalk';
@@ -1003,14 +1165,37 @@ export class WolfBrain {
               this.flankHoldSince = 0;
             }
           }
+        } else if (fresh && order?.role === 'driver' && !order.commit && dH <= WOLF_DRIVER_FEINT_M + 1.5) {
+          // Haydovchi chalg'itadi (qanotlar orqaga aylanguncha): nishon oldida WOLF_DRIVER_FEINT_M da irillab
+          // (stalk) unga qarab turadi, vaqti-vaqti bilan WOLF_DRIVER_LUNGE_M gacha aldab otilib, yana chekinadi
+          this.flankHoldSince = 0;
+          feint = true;
+          const lunge = this.feintLunge(t);
+          const r = lunge ? WOLF_DRIVER_LUNGE_M : WOLF_DRIVER_FEINT_M;
+          const ux = (me.pos.x - tgt.pos.x) / Math.max(dH, 1e-3);
+          const uz = (me.pos.z - tgt.pos.z) / Math.max(dH, 1e-3);
+          moveGoal = { x: tgt.pos.x + ux * r, y: me.pos.y, z: tgt.pos.z + uz * r };
+          huntState = lunge ? 'hunt' : 'stalk';
         } else {
           this.flankHoldSince = 0;
+          this.feintLungeAt = 0;
         }
         if (me.state !== huntState) this.setState(huntState, t);
         if (hold) {
           // Qanot nuqtasida nishonga qarab kutadi
           this.path = [];
           this.pathIdx = 0;
+          this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt, 8);
+        } else if (feint) {
+          // Chalg'itish: nishon bilan bir chiziqda qisqa masofaga chekinadi/otiladi (yo'l topilmaydi), proporsional
+          // tezlik bilan (nuqtadan oshib ketmaydi), doim nishonga qaraydi
+          this.path = [];
+          this.pathIdx = 0;
+          const fg = this.outsideFear(moveGoal);
+          const dl = Math.hypot(fg.x - me.pos.x, fg.z - me.pos.z);
+          const m = this.moveTowards(fg, Math.min(this.speedFor(huntState), Math.max(0.5, dl * 3)), dt, false);
+          wishX = m.wishX;
+          wishZ = m.wishZ;
           this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt, 8);
         } else {
           // Maqsad hech qachon olov doirasi (radius + FEAR_PATH_MARGIN_M) ichida bo'lmaydi: himoyasiz nishon
@@ -1083,7 +1268,25 @@ export class WolfBrain {
       wishZ += softPush.oz * sp;
     }
 
+    const wishSp = Math.hypot(wishX, wishZ);
+    if (wishSp > 0) {
+      this.lastWishX = wishX;
+      this.lastWishZ = wishZ;
+      if (this.slipDir && t < this.slipUntil && me.state !== 'attack' && !softPush) {
+        // To'siqqa tiralgan edi: istak bo'sh yo'nalishga buriladi (to'liq tezlik bilan sirpanib chiqadi)
+        wishX = this.slipDir.x * wishSp;
+        wishZ = this.slipDir.z * wishSp;
+      }
+    }
     applyWorldMovement(me, wishX, wishZ, false, dt, this.room.world, WOLF_MOVE_OPTS);
+    // Burchakka tiralish: istak bor, tezlik esa deyarli nol (to'siq ikkala o'qni to'xtatdi) — SNAG_SEC dan keyin
+    // darhol sirpanadi (checkStuck ning 1.2 s tekshiruvini kutmaydi)
+    if (wishSp > 1 && !softPush && Math.hypot(me.vel.x, me.vel.z) < wishSp * 0.15) {
+      this.snagSec += dt;
+      if (this.snagSec >= SNAG_SEC && t >= this.slipUntil) this.startSlip(t);
+    } else {
+      this.snagSec = 0;
+    }
     this.checkStuck(t, wishX !== 0 || wishZ !== 0);
   }
 }
