@@ -32,6 +32,8 @@ export interface Body {
 
 export interface WorldMovementOptions {
   maxWalkableSlopeDeg?: number;
+  /** Tana to'qnashuv radiusi (m); berilmasa PLAYER_RADIUS. Bo'rilar WOLF_RADIUS bilan yuradi. */
+  radius?: number;
 }
 
 export function boxOverlap(x: number, y: number, z: number, r: number, h: number, b: Box): boolean {
@@ -344,7 +346,7 @@ export function moveBodyInWorld(
   const maxWalkableSlopeDeg = opts.maxWalkableSlopeDeg ?? DEFAULT_MAX_WALKABLE_SLOPE_DEG;
   const p = body.pos;
   const v = body.vel;
-  const r = PLAYER_RADIUS;
+  const r = opts.radius ?? PLAYER_RADIUS;
   // Tik turish — PLAYER_HEIGHT, o'tirish — CROUCH_HEIGHT (vertikal, gorizontal va depenetratsiya bir xil h dan)
   const h = bodyHeightOf(body);
 

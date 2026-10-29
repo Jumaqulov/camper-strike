@@ -302,6 +302,8 @@ const CAMP_FIRE_POI_ORDER: readonly ForestSquarePoiId[] = [
   'poi_ranger_house',
   'poi_service_station',
 ];
+/** Bo'ri og'zi balandligi (oyoqdan, m) — tishlash to'siq tekshiruvi va zarba yo'nalishi uchun. */
+const WOLF_MOUTH_HEIGHT = 0.9;
 /** Gulxanlar orasidagi eng kam masofa, g'aram–gulxan oralig'i va g'aramlar orasidagi eng kam masofa (m). */
 const CAMP_FIRE_MIN_GAP_M = 60;
 const CAMP_PILE_MIN_DIST_M = WOOD_PILE_MIN_DIST_M;
@@ -1950,15 +1952,36 @@ export class Room {
     }
   }
 
-  /** Bo'ri tishladi (WolfBrain hujum klipining 0.30 s lahzasida chaqiradi). */
+  /**
+   * Bo'ri nishonni tishlay oladimi — to'siq tekshiruvi: og'izdan (WOLF_MOUTH_HEIGHT) nishon ko'kragiga va
+   * oyog'i + 0.3 m ga ikkala nur ham to'siqsiz bo'lsin (devor, past deraza tokchasi, uy poli orqali tishlamaydi).
+   * Bo'ri AI hujum sharti (WolfBrain) va `wolfBite` ikkisi ham shu funksiyani ishlatadi — masofa yetarli bo'lsa ham
+   * orada devor bo'lsa zarar yo'q.
+   */
+  wolfCanReach(w: { pos: Vec3 }, p: { pos: Vec3; crouched?: boolean }): boolean {
+    const mouth = { x: w.pos.x, y: w.pos.y + WOLF_MOUTH_HEIGHT, z: w.pos.z };
+    const chest = { x: p.pos.x, y: p.pos.y + 1.0 * hitboxScaleOf(p), z: p.pos.z };
+    const feet = { x: p.pos.x, y: p.pos.y + 0.3, z: p.pos.z };
+    return this.segmentFree(mouth, chest) && this.segmentFree(mouth, feet);
+  }
+
+  /** a→b kesmasi dunyo kollayderlari va relyef bilan kesishmaydimi. */
+  private segmentFree(a: Vec3, b: Vec3): boolean {
+    const d = vdist(a, b);
+    if (d < 1e-3) return true;
+    const dir = { x: (b.x - a.x) / d, y: (b.y - a.y) / d, z: (b.z - a.z) / d };
+    return !raycastWorld(this.world, a, dir, d);
+  }
+
+  /** Bo'ri tishladi (WolfBrain hujum klipining 0.30 s lahzasida chaqiradi). Orada devor bo'lsa — hit=false. */
   wolfBite(w: ServerWolf, target: ServerPlayer | null): void {
     let hit = false;
     if (target && this.isWolfPrey(target) && this.phase === 'playing') {
       const dH = Math.hypot(target.pos.x - w.pos.x, target.pos.z - w.pos.z);
       const dy = Math.abs(target.pos.y - w.pos.y);
-      if (dH <= WOLF_BITE_CONNECT_RANGE && dy < 1.4) {
+      if (dH <= WOLF_BITE_CONNECT_RANGE && dy < 1.4 && this.wolfCanReach(w, target)) {
         hit = true;
-        const from = { x: w.pos.x, y: w.pos.y + 0.9, z: w.pos.z };
+        const from = { x: w.pos.x, y: w.pos.y + WOLF_MOUTH_HEIGHT, z: w.pos.z };
         // To'lqin ko'paytuvchisi (wolf_night); boshqa rejimlarda biteMul = 1
         this.damage(target, w, Math.max(1, Math.round(WOLF_BITE_DAMAGE * (w.biteMul || 1))), 'wolf', false, from);
       }

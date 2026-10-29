@@ -18,6 +18,7 @@ import {
   WOLF_HOWL_MAX_SEC,
   WOLF_HOWL_MIN_SEC,
   WOLF_LOSE_TARGET_SEC,
+  WOLF_RADIUS,
   WOLF_SIGHT_FOV_DOT,
   WOLF_SIGHT_NEAR,
   WOLF_SIGHT_RANGE,
@@ -94,6 +95,18 @@ const RING_PATH_DIST_M = 3;
 const ARRIVE_M = 0.35;
 /** Olov sabab majburiy qayta yo'l topish oralig'i (s) — yo'l tuguni olov ichida qolsa har tick A* ishlamasin. */
 const FEAR_REPATH_MIN_SEC = 0.5;
+/** Nishon shu masofada (m) bo'lsa og'iz→nishon to'siq tekshiruvi (devor orqali tishlamaslik) yuritiladi. */
+export const WOLF_LOS_CHECK_M = 8;
+/** To'siq tekshiruvi oralig'i (s) — chiziq ochilsa (nishon eshikdan chiqdi) shuncha vaqt ichida ov davom etadi. */
+export const WOLF_LOS_CHECK_SEC = 0.5;
+/** Shuncha soniya uzluksiz to'silgan (va nav yo'li ham yetkazmagan) nishon "devor ortida" deb qabul qilinadi. */
+export const WOLF_LOS_BLOCKED_SEC = 1.5;
+/** Devor ortidagi nishon atrofida aylanish: radius (m), keyingi nuqtaga o'tish oralig'i (s), burchak qadami (rad). */
+const WALL_CIRCLE_R = 6;
+const WALL_CIRCLE_STEP_SEC = 3;
+const WALL_CIRCLE_STEP_RAD = 1.2;
+/** Bo'ri tanasi to'qnashuv radiusi (WOLF_RADIUS; o'yinchi radiusi emas). */
+const WOLF_MOVE_OPTS = { radius: WOLF_RADIUS };
 
 /**
  * Bo'ri sun'iy intellekti: sayr → hid/tovush bo'yicha tekshirish → ov (yugurib quvish) → tashlanib tishlash.
@@ -142,6 +155,18 @@ export class WolfBrain {
   private flinching = false;
   /** Qattiq olov seskanishlari soni (radius + 0.5 ichiga tushib yugurib chiqish) — testlar/QA uchun. */
   fearFlinchCount = 0;
+  /** Og'iz→nishon to'siq tekshiruvi: bloklanish boshlangan vaqt (0 — chiziq ochiq), keyingi tekshiruv vaqti, nishon. */
+  private losBlockedSince = 0;
+  private losCheckAt = 0;
+  private losTargetId: string | null = null;
+  /** Oxirgi tekshiruvda nav yo'li nishonni tishlash joyiga olib keladimi (eshik bor). */
+  private losPathReaches = false;
+  /** Devor ortidagi nishon atrofida aylanish: joriy maqsad tuguni, tanlangan vaqti, halqa burchagi. */
+  private wallGoal: Vec3 | null = null;
+  private wallGoalAt = 0;
+  private wallAng = 0;
+  /** Testlar/QA uchun: hozir nishon devor ortida (yetib bo'lmas) deb hisoblanmoqdami. */
+  walled = false;
 
   constructor(
     private readonly room: Room,
@@ -167,6 +192,12 @@ export class WolfBrain {
     this.order = null;
     this.flankHoldSince = 0;
     this.me.role = null;
+    this.losBlockedSince = 0;
+    this.losCheckAt = 0;
+    this.losTargetId = null;
+    this.losPathReaches = false;
+    this.wallGoal = null;
+    this.walled = false;
     this.setState('idle', t);
   }
 
@@ -524,6 +555,42 @@ export class WolfBrain {
     return !raycastWorld(this.room.world, a, dir, dH);
   }
 
+  /**
+   * Nav yo'li nishonni tishlash joyiga olib keladimi: yo'l oxiridagi tugun nishondan ≤ 4 m va undan nishonga og'iz
+   * chizig'i ochiq (eshik/ochiq tomon). Uy ichidagi nishon uchun eng yaqin tugun devor ortida — yolg'on.
+   */
+  private pathReaches(tgt: ServerPlayer): boolean {
+    const path = this.room.nav.findPath(this.me.pos, tgt.pos, this.fearBlocked());
+    const last = path[path.length - 1];
+    if (!last) return false;
+    if (Math.hypot(last.x - tgt.pos.x, last.z - tgt.pos.z) > 4) return false;
+    return this.room.wolfCanReach({ pos: last }, tgt);
+  }
+
+  /**
+   * Devor ortidagi nishon atrofida aylanish uchun keyingi nuqta: nishon atrofidagi WALL_CIRCLE_R halqada burchak
+   * WALL_CIRCLE_STEP_RAD qadam bilan siljiydi, nuqta eng yaqin nav tuguniga (yer sathi, uy tashqarisi) tortiladi;
+   * nishonga juda yaqin (uy ichi/devor yoni), bo'ri turgan joy yoki olov doirasidagi tugun o'tkazib yuboriladi.
+   */
+  private pickWallGoal(tgt: ServerPlayer): Vec3 | null {
+    const me = this.me;
+    const nav = this.room.nav;
+    const terrain = this.room.world.terrain;
+    for (let k = 0; k < 6; k++) {
+      this.wallAng += WALL_CIRCLE_STEP_RAD;
+      const x = tgt.pos.x + Math.cos(this.wallAng) * WALL_CIRCLE_R;
+      const z = tgt.pos.z + Math.sin(this.wallAng) * WALL_CIRCLE_R;
+      const ni = nav.nearest({ x, y: sampleTerrainHeight(terrain, x, z), z });
+      if (ni < 0) continue;
+      const c = nav.center(ni);
+      if (Math.hypot(c.x - tgt.pos.x, c.z - tgt.pos.z) < 2.5) continue;
+      if (Math.hypot(c.x - me.pos.x, c.z - me.pos.z) < 1.5) continue;
+      if (this.room.fearSourceContaining(c.x, c.z, FEAR_PATH_MARGIN_M)) continue;
+      return c;
+    }
+    return null;
+  }
+
   private checkStuck(t: number, wishing: boolean): void {
     const me = this.me;
     if (t < this.stuckCheckAt) return;
@@ -573,7 +640,7 @@ export class WolfBrain {
     const goal = this.fleeGoal;
     // Qochishda olovdan qo'rqmaydi — yo'l rejalashtirish ham olov doiralarini hisobga olmaydi
     const m = this.followPath(goal, this.speedFor('flee'), t, dt, this.hasDirectLine(goal, false), false);
-    applyWorldMovement(me, m.wishX, m.wishZ, false, dt, this.room.world);
+    applyWorldMovement(me, m.wishX, m.wishZ, false, dt, this.room.world, WOLF_MOVE_OPTS);
     this.checkStuck(t, m.wishX !== 0 || m.wishZ !== 0);
   }
 
@@ -599,7 +666,7 @@ export class WolfBrain {
     if (this.room.phase !== 'playing') {
       if (me.state !== 'idle') this.setState('idle', t);
       me.targetId = null;
-      applyWorldMovement(me, 0, 0, false, dt, this.room.world);
+      applyWorldMovement(me, 0, 0, false, dt, this.room.world, WOLF_MOVE_OPTS);
       return;
     }
 
@@ -634,7 +701,7 @@ export class WolfBrain {
         this.repathAt = 0;
         this.turnTowards(Math.atan2(-ox, -oz), dt, 10);
         const sp = this.speedFor('hunt');
-        applyWorldMovement(me, ox * sp, oz * sp, false, dt, this.room.world);
+        applyWorldMovement(me, ox * sp, oz * sp, false, dt, this.room.world, WOLF_MOVE_OPTS);
         this.checkStuck(t, true);
         return;
       }
@@ -653,6 +720,11 @@ export class WolfBrain {
       this.repathAt = 0;
     }
     me.targetId = this.target ? this.target.id : null;
+    if (!this.target) {
+      this.walled = false;
+      this.losBlockedSince = 0;
+      this.wallGoal = null;
+    }
 
     let wishX = 0;
     let wishZ = 0;
@@ -689,6 +761,41 @@ export class WolfBrain {
       // Eskirgan iz gulxan/mash'al doirasida qolgan bo'lsa — chetigacha boradi (olovga kirib-chiqib tebranmaydi)
       const goal = fresh ? tgt.pos : this.outsideFear(this.lastSensedPos ?? tgt.pos);
       const unreachable = dy > WOLF_UNREACHABLE_DY && dH < 8;
+      // Devor orqali tishlamaslik: nishon yaqin (≤ WOLF_LOS_CHECK_M) bo'lsa har WOLF_LOS_CHECK_SEC da og'izdan
+      // ko'kragi va oyog'igacha to'siqsiz chiziq bormi tekshiriladi; WOLF_LOS_BLOCKED_SEC uzluksiz to'silgan va nav
+      // yo'li ham tishlash joyiga olib kelmaydigan (eshik yo'q — uy ichida) nishon "devor ortida" (walled):
+      // balandlikdagi nishon kabi yetib bo'lmas — devorga yopishib turmaydi, atrofida aylanib uvlaydi. Chiziq
+      // ochilsa (eshikdan chiqdi) keyingi tekshiruvda ov davom etadi.
+      if (this.losTargetId !== tgt.id) {
+        this.losTargetId = tgt.id;
+        this.losBlockedSince = 0;
+        this.losCheckAt = 0;
+        this.losPathReaches = false;
+        this.wallGoal = null;
+      }
+      // Gisterezis: devor ortida deb topilgach aylanish halqasi (WALL_CIRCLE_R + tugun siljishi) tekshiruv
+      // masofasidan chiqib ketsa ham holat tashlanmaydi (aks holda aylanish ↔ ov almashinib turadi)
+      const losRange = this.walled ? WOLF_LOS_CHECK_M + 6 : WOLF_LOS_CHECK_M;
+      if (dH <= losRange) {
+        if (t >= this.losCheckAt) {
+          this.losCheckAt = t + WOLF_LOS_CHECK_SEC;
+          if (this.room.wolfCanReach(me, tgt)) {
+            this.losBlockedSince = 0;
+            this.losPathReaches = true;
+          } else {
+            if (this.losBlockedSince === 0) this.losBlockedSince = t;
+            this.losPathReaches = this.pathReaches(tgt);
+          }
+        }
+      } else {
+        this.losBlockedSince = 0;
+        this.losCheckAt = 0;
+      }
+      const walled = this.losBlockedSince > 0 && t - this.losBlockedSince >= WOLF_LOS_BLOCKED_SEC && !this.losPathReaches;
+      if (walled && !this.walled) this.wallAng = Math.atan2(me.pos.z - tgt.pos.z, me.pos.x - tgt.pos.x);
+      this.walled = walled;
+      if (walled) this.room.pack.reportUnreachable(tgt, t);
+      else this.wallGoal = null;
       // Nishon yonib turgan gulxan doirasida yoki o'zi mash'al ko'targan: olovga kirmaydi — chetida
       // (manba `standoff` masofasida) to'xtab qaraydi, uvlaydi. Himoya — xona gisterezisi (kirish radius + 1.0,
       // chiqish radius + 1.6; to'da koordinatori bilan bir xil javob), chetdagi halqada turgan nishon uchun
@@ -771,6 +878,33 @@ export class WolfBrain {
           wishX = -uz * sp + ux * radial;
           wishZ = ux * sp + uz * radial;
         }
+      } else if (walled) {
+        // Nishon devor ortida (uy ichida, eshik yo'q): devorga yopishib turmaydi — atrofidagi (WALL_CIRCLE_R) nav
+        // tugunlari bo'ylab aylanadi, nishonga qarab turadi, vaqti-vaqti bilan uvlaydi
+        if (t >= this.nextHowlAt) {
+          this.nextHowlAt = t + UNREACHABLE_HOWL_SEC;
+          this.setState('howl', t, 3.0);
+          this.room.wolfHowl(me);
+        } else if (me.state !== 'alert' && me.state !== 'howl') {
+          this.setState('alert', t);
+        }
+        if (
+          !this.wallGoal ||
+          t - this.wallGoalAt > WALL_CIRCLE_STEP_SEC ||
+          Math.hypot(this.wallGoal.x - me.pos.x, this.wallGoal.z - me.pos.z) < 1.2
+        ) {
+          this.wallGoal = this.pickWallGoal(tgt);
+          this.wallGoalAt = t;
+          this.repathAt = 0;
+        }
+        // Uzoqdagi nuqtaga yurganda yo'nalish bo'ylab qaraydi, yaqinlashganda nishonga
+        const far = !!this.wallGoal && Math.hypot(this.wallGoal.x - me.pos.x, this.wallGoal.z - me.pos.z) > 2;
+        if (this.wallGoal) {
+          const m = this.followPath(this.wallGoal, this.speedFor('stalk'), t, dt, this.hasDirectLine(this.wallGoal), true, far);
+          wishX = m.wishX;
+          wishZ = m.wishZ;
+        }
+        if (!far) this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt, 8);
       } else if (unreachable) {
         // Nishon balandda (loft/tom): pastda turib qaraydi, vaqti-vaqti bilan uvlaydi
         this.turnTowards(Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)), dt);
@@ -793,7 +927,9 @@ export class WolfBrain {
         t >= this.nextAttackAt &&
         // Mash'al ko'targanga tashlanmaydi (yuqoridagi olov tarmog'i buni allaqachon ushlaydi — qo'shimcha himoya)
         !this.room.hasTorch(tgt, t) &&
-        Math.abs(angleDiff(me.yaw, Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)))) < 0.7
+        Math.abs(angleDiff(me.yaw, Math.atan2(-(tgt.pos.x - me.pos.x), -(tgt.pos.z - me.pos.z)))) < 0.7 &&
+        // Orada devor/tokcha bo'lsa tashlanmaydi (og'izdan ko'krak va oyoqqa to'siqsiz chiziq)
+        this.room.wolfCanReach(me, tgt)
       ) {
         this.attackStartedAt = t;
         this.biteDone = false;
@@ -900,7 +1036,7 @@ export class WolfBrain {
       wishZ += softPush.oz * sp;
     }
 
-    applyWorldMovement(me, wishX, wishZ, false, dt, this.room.world);
+    applyWorldMovement(me, wishX, wishZ, false, dt, this.room.world, WOLF_MOVE_OPTS);
     this.checkStuck(t, wishX !== 0 || wishZ !== 0);
   }
 }

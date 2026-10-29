@@ -50,6 +50,10 @@ const WOLF_FLANK_STEP_DEG = 25;
 export const WOLF_PACK_RETALIATE_SEC = 4;
 /** To'lqinda birinchi nishon shu masofadan (m) uzoqda olinsa haydovchi uvlaydi. */
 export const WOLF_PACK_HOWL_MIN_DIST_M = 18;
+/** Yetib bo'lmas (devor ortidagi) nishon haqidagi xabar shuncha soniya amal qiladi (ball jarimasi). */
+export const WOLF_PACK_UNREACHABLE_SEC = 3;
+/** Yetib bo'lmas nishon ball jarimasi — boshqa yetib boriladigan o'lja afzal (yolg'iz nishon bo'lsa baribir u). */
+export const SCORE_UNREACHABLE = 40;
 
 /** Ball koeffitsiyentlari (preyScore). */
 const SCORE_FIRE_DIST = 0.6;
@@ -101,9 +105,26 @@ export class WolfPack {
   private readonly driverByPrey = new Map<string, string>();
   /** Olov halqasidagi o'rinlar (nishon → guruh kaliti va bo'ri → burchak). */
   private readonly slotsByPrey = new Map<string, { key: string; slots: Map<string, number> }>();
+  /** Yetib bo'lmas (devor ortidagi) nishonlar: o'yinchi → xabar amal qilish muddati. */
+  private readonly unreachableUntil = new Map<string, number>();
   private lastHowlWave = -2;
 
   constructor(private readonly room: Room) {}
+
+  /**
+   * Bo'ri nishoniga yetolmaydi (og'izdan to'siqsiz chiziq yo'q va nav yo'li ham tishlash joyiga olib kelmaydi — uy
+   * ichida): WOLF_PACK_UNREACHABLE_SEC davomida bu o'ljaga SCORE_UNREACHABLE jarima — to'da yetib boriladigan
+   * boshqa o'ljani afzal ko'radi; yolg'iz nishon bo'lsa bo'rilar uning atrofida qoladi.
+   */
+  reportUnreachable(p: ServerPlayer, t: number): void {
+    this.unreachableUntil.set(p.id, t + WOLF_PACK_UNREACHABLE_SEC);
+  }
+
+  /** Testlar uchun: o'lja hozir yetib bo'lmas deb belgilanganmi. */
+  isUnreachable(playerId: string, t: number = this.room.now()): boolean {
+    const until = this.unreachableUntil.get(playerId);
+    return until !== undefined && t <= until;
+  }
 
   /** Bo'ri o'yinchini sezdi (ko'rdi / yaqindan hid oldi / tishlandi): to'daga xabar. */
   report(w: ServerWolf, p: ServerPlayer, t: number, retaliate = false): void {
@@ -161,6 +182,7 @@ export class WolfPack {
     }
     for (const id of this.wolfState.keys()) if (!room.wolves.has(id)) this.wolfState.delete(id);
     for (const [id, r] of this.retaliate) if (t > r.until || !room.wolves.has(id)) this.retaliate.delete(id);
+    for (const [id, until] of this.unreachableUntil) if (t > until || !room.players.has(id)) this.unreachableUntil.delete(id);
 
     const wolves = [...room.wolves.values()].filter((w) => w.alive && w.state !== 'flee').sort((a, b) => (a.id < b.id ? -1 : 1));
     if (wolves.length === 0) return;
@@ -203,7 +225,8 @@ export class WolfPack {
         const score =
           base -
           SCORE_PACK_DIST * Math.hypot(p.pos.x - w.pos.x, p.pos.z - w.pos.z) -
-          SCORE_PER_ASSIGNED * (counts.get(p.id) ?? 0) +
+          SCORE_PER_ASSIGNED * (counts.get(p.id) ?? 0) -
+          (this.unreachableUntil.has(p.id) ? SCORE_UNREACHABLE : 0) +
           (w.targetId === p.id ? SCORE_CURRENT_TARGET : 0);
         if (score > bestScore) {
           bestScore = score;
